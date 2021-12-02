@@ -36,3 +36,37 @@
     transform: rotate(360deg);
   }
 }
+
+.App-content {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 50px);
+  /* flex-basis: auto; */
+  justify-content: space-between;
+  align-items: stretch;
+  margin: 5px;
+  /* background-color: aqua; */
+  /* gap: 5px; */
+}
+
+.App-cotent-plot {
+  display: flex;
+  margin: 5px;
+  /* gap: 5px; */
+  justify-content: space-between;
+  align-items: stretch;
+}
+
+.plot {
+  width: calc(100vw - 300px);
+  /* background-color: brown; */
+  height: calc(100vh - 300px);
+}
+
+.markers {
+  width: 300px;
+  padding: 5px;
+  /* background-color: blue; */
+  height: calc(100vh - 300px);
+  border-left: 2px solid gainsboro;
+}

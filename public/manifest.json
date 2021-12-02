@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "SCRAN.JS",
+  "name": "Analyze single cell data in the browser",
   "icons": [
     {
       "src": "favicon.ico",
