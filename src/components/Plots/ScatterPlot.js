@@ -1,11 +1,12 @@
 import { ScatterGL } from 'scatter-gl';
 import { useEffect, useRef, useContext, useState } from 'react';
-import { ControlGroup, Button, HTMLSelect, InputGroup } from "@blueprintjs/core";
+import { ControlGroup, Button, HTMLSelect, InputGroup, Icon } from "@blueprintjs/core";
 import { Classes, Popover2 } from "@blueprintjs/popover2";
 
 import { AppContext } from '../../context/AppContext';
 
 import { randomColor } from 'randomcolor';
+import "./ScatterPlot.css";
 
 const DimPlot = () => {
     const container = useRef();
@@ -25,8 +26,8 @@ const DimPlot = () => {
             if (!tmp_scatterplot) {
                 const containerEl = container.current;
 
-                containerEl.style.width = "100%";
-                containerEl.style.height = "100%";
+                containerEl.style.width = "90%";
+                containerEl.style.height = "90%";
 
                 let lastSelectedPoints = [];
 
@@ -83,47 +84,29 @@ const DimPlot = () => {
     }, [plotRedDims]);
 
     return (
-        <>
-            {console.log(redDims)}
-            <ControlGroup vertical={false}>
+        <div className="scatter-plot">
+            <ControlGroup className="scatter-plot-control" fill={false} vertical={false}>
                 <div className="bp3-html-select .modifier">
                     <select>
                         {redDims.length == 0 ?
                             <option selected>Change reduced dimension...</option> :
                             <option>Change reduced dimension...</option>}
                         {redDims.map(x => {
-                            { console.log("x", x) }
-                            { console.log("defaultRedDims", defaultRedDims) }
                             return <option selected={x == defaultRedDims}
-                                key={x} value={x}>{x}</option>
+                                key={x} value={x}>Dimension: {x}</option>
                         })}
                     </select>
-                    {/* <span class="bp3-icon bp3-icon-double-caret-vertical"></span> */}
                 </div>
-                {/* <Button icon="geosearch"></Button> */}
-                {/* <InputGroup placeholder="Search for a Gene" /> */}
-                {/* <Popover2
-                    interactionKind="click"
-                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
-                    placement="bottom"
-                    content={
-                        <div>
-                            <h5>Color visualization by </h5>
-                            <p>...</p>
-                            <Button className={Classes.POPOVER2_DISMISS} text="Dismiss" />
-                        </div>
-                    }
-                    renderTarget={({ isOpen, ref, ...targetProps }) => (
-                        <Button {...targetProps} elementRef={ref} intent="primary" text="Popover target" />
-                    )}
-                /> */}
+                <Button>Play t-SNE Interactively</Button>
+                <Button>Color Plot by Metadata</Button>
+                <Button>What else ?</Button>
             </ControlGroup>
             {
                 plotRedDims?.plot ?
                     <div ref={container} ></div> :
                     <span>Running Analysis, please wait...</span>
             }
-        </>
+        </div>
     );
 };
 

@@ -19,8 +19,8 @@ const Header = (props) => {
     canOutsideClickClose: true,
     enforceFocus: true,
     shouldReturnFocusOnClose: true,
-    usePortal: true,
-});
+    // usePortal: true,
+  });
 
   return (
     <>
@@ -28,32 +28,17 @@ const Header = (props) => {
         <NavbarGroup align={Alignment.LEFT}>
           <NavbarHeading>SCRAN.JS</NavbarHeading>
           <NavbarDivider />
-          <span>Analyze Single-cell Datasets in the Browser</span>
+          <span>Analyze Single-cell RNA-seq Datasets</span>
           <NavbarDivider />
           {/* <Button className={Classes.MINIMAL} icon="home" text="Home" /> */}
-          <AnalysisDialog 
+          <AnalysisDialog
             icon="document"
-            title="Import Single-cell data and Start Analysis"
+            title="Import dataset and update parameters"
             buttonText="Start Analysis"
             includeFooter={true}
-            {...state}/>
-            <NavbarDivider />
-                        <Stats />
-          {/* <ImportFilesDialog
-            icon="document"
-            title="Import Single-cell data"
-            buttonText="Import Single-cell data"
-            includeFooter={true}
-            {...state}
-          />
+            {...state} />
           <NavbarDivider />
-          <InputParamsDialog
-            icon="document"
-            title="Update Analysis"
-            buttonText="Update Analysis"
-            includeFooter={true}
-            {...state}
-          /> */}
+          <Stats />
         </NavbarGroup>
       </Navbar>
     </>

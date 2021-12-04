@@ -41,13 +41,24 @@ const AppContextProvider = ({ children }) => {
   const [qcDims, setQcDims] = useState(null);
   const [fSelDims, setFSelDims] = useState (null);
 
+  // QC Data
+  const [qcData, setQcData] = useState(null);
+  const [qcThreshold, setQcThreshold] = useState(null);
+
+  // Feature Selection
+  const [fSelectionData, setFSelectionData] = useState(null);
+
   // UI dimensions reduction dropdown
   const [redDims, setRedDims] = useState([]);
   const [defaultRedDims, setDefaultRedDims] = useState(null);
   const [plotRedDims, setPlotRedDims] = useState(null);
 
+  // Cluster Analysis
+  const [clusterData, setClusterData] = useState(null);
+
   // PCA
   const [pcaData, setPcaData] = useState(null);
+  const [pcaVarExp, setPcaVarExp] = useState(null);
 
   // TSNE
   const [tsneData, setTsneData] = useState(null);
@@ -78,13 +89,18 @@ const AppContextProvider = ({ children }) => {
         error, setError,
         wasmInitialized, setWasmInitialized,
         pcaData, setPcaData,
+        pcaVarExp, setPcaVarExp,
         tsneData, setTsneData,
         initDims, setInitDims,
         qcDims, setQcDims,
+        qcData, setQcData,
+        qcThreshold, setQcThreshold,
         fSelDims, setFSelDims,
         redDims, setRedDims,
         defaultRedDims, setDefaultRedDims,
-        plotRedDims, setPlotRedDims
+        plotRedDims, setPlotRedDims,
+        clusterData, setClusterData,
+        fSelectionData, setFSelectionData
       }}
     >
       {children}

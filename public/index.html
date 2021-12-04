@@ -18,25 +18,6 @@
     -->
   <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
-  <!-- Style dependencies -->
-  <link href="https://unpkg.com/normalize.css@^7.0.0" rel="stylesheet" />
-  <!-- Blueprint stylesheets -->
-  <link href="https://unpkg.com/@blueprintjs/icons@^3.4.0/lib/css/blueprint-icons.css" rel="stylesheet" />
-  <link href="https://unpkg.com/@blueprintjs/core@^3.10.0/lib/css/blueprint.css" rel="stylesheet" />
-  <link href="https://unpkg.com/@blueprintjs/popover2/lib/css/blueprint-popover2.css" rel="stylesheet" />
-
-<!-- react grid -->
-<link href="../node_modules/react-grid-layout/css/styles.css" rel="stylesheet" />
-<link href="../node_modules/react-resizable/css/styles.css" rel="stylesheet" />
-
-  <!-- include dependencies manually -->
-  <!-- <link href="../node_modules/normalize.css/normalize.css" rel="stylesheet" />
-  <link href="../node_modules/@blueprintjs/core/lib/css/blueprint.css" rel="stylesheet" />
-  <link href="../node_modules/@blueprintjs/icons/lib/css/blueprint-icons.css" rel="stylesheet" /> -->
-  <!-- NOTE: blueprint-icons.css file must be included alongside blueprint.css! -->
-
-  <!-- add other blueprint-*.css files here -->
-
   <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.
@@ -48,10 +29,10 @@
     -->
   <title>SCRAN.JS</title>
   <script type="text/javascript">
-  
+
     const worker = new Worker("%PUBLIC_URL%/scran/scranWorker.js");
     window.Worker = worker;
-  
+
   </script>
 </head>
 

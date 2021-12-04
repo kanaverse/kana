@@ -1,4 +1,15 @@
-.Gallery {
-    height: 250px;
-    background-color: antiquewhite;
+.gallery-cont {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+    justify-content: space-evenly;
+}
+
+.gallery-elem {
+    margin: 5px;
+}
+
+.gallery-text {
+    text-align: left;
 }

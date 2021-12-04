@@ -1,0 +1,29 @@
+.col {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: stretch;
+    align-items: stretch;
+}
+
+.row-input {
+    margin: 5px;
+}
+
+.row-tooltip {
+    margin-left: 5px;
+}
+
+.analysis-dialog {
+    width: 60vw;
+}
+
+.text-100 {
+    max-width: 250px;
+}

@@ -10,7 +10,7 @@ import { useState, useEffect, useContext } from 'react';
 import { AppContext } from './context/AppContext';
 
 import DimPlot from './components/Plots/ScatterPlot.js';
-import Stats from './components/Stats';
+// import Stats from './components/Stats';
 import MarkerPlot from './components/Markers';
 // import * as Comlink from 'comlink';
 // import worker from "./scran/scranWorker";
@@ -21,8 +21,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const { setWasmInitialized, setTsneData, setRedDims, redDims,
     setInitDims, setQcDims, setFSelDims, defaultRedDims, setDefaultRedDims,
-    tsneData, plotRedDims,
-    setPlotRedDims } = useContext(AppContext);
+    tsneData, plotRedDims, setQcData, setClusterData, setFSelectionData,
+    setPlotRedDims, setPcaVarExp } = useContext(AppContext);
 
   useEffect(() => {
     console.log("calling init");
@@ -34,11 +34,13 @@ function App() {
 
   useEffect(() => {
     console.log("calling defaultreddims");
-    if (defaultRedDims == "TSNE") {
+    if (defaultRedDims === "TSNE") {
       setPlotRedDims({
         "plot": tsneData?.tsne,
         "clusters": tsneData?.clusters
       });
+    } else if (defaultRedDims === "PCA") {
+      // need PCA dims
     }
   }, [defaultRedDims])
 
@@ -57,15 +59,27 @@ function App() {
       setInitDims(payload.resp);
     } else if (payload.type === "qc_DIMS") {
       setQcDims(payload.resp);
+    } else if (payload.type === "qc_DATA") {
+      const { type, resp } = payload;
+      setQcData(resp);
     } else if (payload.type === "fSelection_DIMS") {
       setFSelDims(payload.resp);
-    } else if (payload.type === "pca_DATA") {
+    } else if (payload.type === "fSelection_DATA") {
+      const { type, resp } = payload;
+      console.log(type, resp);
+      setFSelectionData(resp);
+    }else if (payload.type === "pca_DATA") {
       const { type, resp } = payload;
       console.log(type, resp);
       let tmp = [...redDims];
       tmp.push("PCA");
       setRedDims(tmp);
+      setPcaVarExp(resp);
       // setTsneData(resp);
+    } else if (payload.type === "cluster_DATA") {
+      const { type, resp } = payload;
+      console.log(type, resp);
+      setClusterData(resp);
     } else if (payload.type === "tsne_DATA" || payload.type === "tsne_iter") {
       const { type, resp } = payload;
       console.log(type, resp);
@@ -76,8 +90,9 @@ function App() {
         setDefaultRedDims("TSNE");
       }
       setRedDims(tmp);
-    } else if (payload.type === "MARKER_GENE") {
-      
+    } else if (payload.type === "markerGene_DATA") {
+      const { type, resp } = payload;
+      console.log(type, resp);
     }
     // else {
     //   var {type, result} = workerComs(msg);
@@ -88,15 +103,13 @@ function App() {
     <div className="App">
       <Header />
       <div className="App-content">
-        <div className="App-cotent-plot">
-          <div className="plot">
-            <DimPlot />
-          </div>
-          <div className="markers">
-            <MarkerPlot />
-          </div>
+        <div className="plot">
+          <DimPlot />
         </div>
-        <div>
+        <div className="marker">
+          <MarkerPlot />
+        </div>
+        <div className="analysis">
           <Gallery />
         </div>
       </div>

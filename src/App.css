@@ -37,36 +37,67 @@
   }
 }
 
-.App-content {
+/* .App-content {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 50px);
-  /* flex-basis: auto; */
   justify-content: space-between;
   align-items: stretch;
   margin: 5px;
-  /* background-color: aqua; */
-  /* gap: 5px; */
+} */
+
+.App-content {
+  display: grid;
+  grid-gap: 5px;
+  grid-template-columns: auto 350px;
+  grid-template-rows: 60% 40%;
+  background-color: #fff;
+  /* color: #444; */
+  height: calc(100vh - 70px);
 }
 
-.App-cotent-plot {
+.plot {
+  grid-column: 1;
+  grid-row: 1;
+  /* background-color: blue; */
+}
+
+.marker {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  /* background-color: red; */
+  border-left: 2px solid gainsboro;
+}
+
+.analysis {
+  grid-column: 1 / 2;
+  grid-row: 2;
+  /* background-color: yellow; */
+  border-top: 2px solid gainsboro;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  padding: 10px;
+}
+
+/* old style */
+/* .App-cotent-plot {
   display: flex;
   margin: 5px;
-  /* gap: 5px; */
   justify-content: space-between;
   align-items: stretch;
 }
 
 .plot {
-  width: calc(100vw - 300px);
-  /* background-color: brown; */
-  height: calc(100vh - 300px);
+  width: calc(100% - 600px);
+  height: 100%;
+  border-left: 2px solid gainsboro;
+  border-right: 2px solid gainsboro;
+  padding: 5px
 }
 
-.markers {
-  width: 300px;
+.sidebar {
+  min-width: 300px;
   padding: 5px;
-  /* background-color: blue; */
-  height: calc(100vh - 300px);
-  border-left: 2px solid gainsboro;
-}
+  height: 100%;
+} */
