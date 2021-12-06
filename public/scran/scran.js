@@ -483,34 +483,53 @@ class scran {
     }
   }
 
-  tsne(perplexity, iterations, animate = false) {
-    var self = this;
+  buildNeighborIndex(approximate = true) {
+    var nn_index = this.wasm.build_neighbor_index(this.pcs.pcs(), this.n_pcs,
+      this.filteredMatrix.ncol(), approximate);
+
+    if (this.nn_index !== undefined) {
+      this.nn_index.delete();
+    }
+
+    this.nn_index = nn_index;
+    return {};
+  }
+
+  initializeTsne(perplexity) {
     var tsne = this.createMemorySpace(
       this.filteredMatrix.ncol() * 2,
       "Float64Array",
       "tsne"
     );
-
+    if (this.tsne_buffer !== undefined) {
+      this.freeMemorySpace("tsne");
+    }
+    this.tsne_buffer = tsne;
+      
+    var init_tsne = this.wasm.initialize_tsne_from_index(this.nn_index, perplexity, tsne.ptr);
+    if (this.init_tsne !== undefined) {
+      this.init_tsne.delete();
+    }
+    this.init_tsne = init_tsne;
+  }
+  
+  runTsne(iterations, animate = false) {
+    var self = this;
     // console.log(this.getVector("mat_PCA"));
     // var pcs = this.getMemorySpace("mat_PCA");
 
-    if (!this.init_tsne) {
-      this.init_tsne = this.wasm.initialize_tsne(
-        this.pcs.pcs().byteOffset, this.n_pcs,
-        this.filteredMatrix.ncol(),
-        perplexity, false, tsne.ptr);
-    }
+    var init_tsne_copy = this.init_tsne.clone();
 
     var delay = 15;
     if (animate) {
       // var maxiter = 1000;
-      this.wasm.run_tsne(this.init_tsne, delay, iterations, tsne.ptr);
-      // console.log(this.init_tsne.iterations());
+      this.wasm.run_tsne(init_tsne_copy, delay, iterations, tsne.ptr);
+      // console.log(this.init_tsne_copy.iterations());
       this._lastIter = 0;
 
       var iterator = setInterval(() => {
 
-        if (self.init_tsne.iterations() >= iterations) {
+        if (init_tsne_copy.iterations() >= iterations) {
           clearInterval(iterator);
         }
 
@@ -533,12 +552,12 @@ class scran {
           resp: JSON.parse(JSON.stringify({
             "tsne1": tsne1,
             "tsne2": tsne2,
-            "iteration": self.init_tsne.iterations()
+            "iteration": init_tsne_copy.iterations()
           })),
           msg: `Success: TSNE done, ${self.filteredMatrix.nrow()}, ${self.filteredMatrix.ncol()}`
         });
 
-        self.wasm.run_tsne(self.init_tsne, delay, iterations, tsne.ptr);
+        self.wasm.run_tsne(init_tsne_copy, delay, iterations, tsne.ptr);
       }, delay);
 
       var sh_tsne = self.getVector("tsne") //new SharedArrayBuffer(this.filteredMatrix.ncol());
@@ -555,6 +574,7 @@ class scran {
         }
       }
 
+      init_tsne_copy.delete();
       return {
         "tsne1": tsne1,
         "tsne2": tsne2,
@@ -563,8 +583,8 @@ class scran {
       }
     } else {
 
-      for (; self.init_tsne.iterations() <= iterations;) {
-        self.wasm.run_tsne(self.init_tsne, delay, iterations, tsne.ptr);
+      for (; init_tsne_copy.iterations() <= iterations;) {
+        self.wasm.run_tsne(init_tsne_copy, delay, iterations, tsne.ptr);
       }
 
       var sh_tsne = self.getVector("tsne") //new SharedArrayBuffer(this.filteredMatrix.ncol());
@@ -576,6 +596,7 @@ class scran {
         y.push(sh_tsne[i + 1]);
       }
 
+      init_tsne_copy.delete();
       return {
         "tsne": {x, y},
         "clusters": self.getVector("cluster_assignments"),
@@ -649,9 +670,225 @@ class scran {
     // }
   }
 
-  cluster(k, res) {
-    var clustering = this.wasm.cluster_snn_graph(this.n_pcs, this.filteredMatrix.ncol(),
-      this.pcs.pcs().byteOffset, k, res, false);
+  initializeUmapNeighbors(num_neighbors = 15) {
+    var nn_umap = this.wasm.find_nearest_neighbors(this.nn_index, num_neighbors);
+    if (this.nn_umap !== undefined) {
+      this.nn_umap.delete();
+    }
+    this.nn_umap = nn_umap;
+    return;
+  }
+
+  initializeUmap(num_epochs = 500, min_dist = 0.01) {
+    var umap = this.createMemorySpace(
+      this.filteredMatrix.ncol() * 2,
+      "Float64Array",
+      "umap"
+    );
+    if (this.umap_buffer !== undefined) {
+      this.freeMemorySpace("umap");
+    }
+    this.umap_buffer = umap;
+
+    var init_umap = this.wasm.initialize_umap_from_neighbors(this.nn_umap, 
+        num_epochs, min_dist, umap.ptr);
+    if (this.init_umap !== undefined) {
+      this.init_umap.delete();
+    }
+    this.init_umap = init_umap;
+
+    return;
+  }
+  
+  runUmap(animate = false) {
+    var self = this;
+    // console.log(this.getVector("mat_PCA"));
+    // var pcs = this.getMemorySpace("mat_PCA");
+
+    var init_umap_copy = this.init_umap.clone();
+    var iterations = init_umap_copy.num_epochs();
+
+    var umap = this.createMemorySpace(
+      this.filteredMatrix.ncol() * 2,
+      "Float64Array",
+      "umap_copy"
+    );
+    var copy = getVector("umap_copy");
+    var original = getVector("umap");
+    copy.set(original);
+
+    var delay = 15;
+    if (animate) {
+      // var maxiter = 1000;
+      this.wasm.run_umap(init_umap_copy, delay, iterations, umap.ptr);
+      // console.log(this.init_umap_copy.iterations());
+      this._lastIter = 0;
+
+      var iterator = setInterval(() => {
+
+        if (init_umap_copy.iterations() >= iterations) {
+          clearInterval(iterator);
+        }
+
+        var sh_umap = self.getVector("umap") //new SharedArrayBuffer(this.filteredMatrix.ncol());
+        // sh_umap.set(self.getVector("umap"));
+
+        var umap1 = [], umap2 = [];
+        for (var i = 0; i < sh_umap.length; i++) {
+          if (i % 2 == 0) {
+            umap1.push(sh_umap[i]);
+          }
+          else {
+            umap2.push(sh_umap[i]);
+            // sample.push("sample");
+          }
+        }
+
+        postMessage({
+          type: "umap_iter",
+          resp: JSON.parse(JSON.stringify({
+            "umap1": umap1,
+            "umap2": umap2,
+            "iteration": init_umap_copy.iterations()
+          })),
+          msg: `Success: TSNE done, ${self.filteredMatrix.nrow()}, ${self.filteredMatrix.ncol()}`
+        });
+
+        self.wasm.run_umap(init_umap_copy, delay, iterations, umap.ptr);
+      }, delay);
+
+      var sh_umap = self.getVector("umap") //new SharedArrayBuffer(this.filteredMatrix.ncol());
+      // sh_umap.set(self.getVector("umap"));
+
+      var umap1 = [], umap2 = [];
+      for (var i = 0; i < sh_umap.length; i++) {
+        if (i % 2 == 0) {
+          umap1.push(sh_umap[i]);
+        }
+        else {
+          umap2.push(sh_umap[i]);
+          // sample.push("sample");
+        }
+      }
+
+      init_umap_copy.delete();
+      freeMemorySpace("umap_copy");
+      return {
+        "umap1": umap1,
+        "umap2": umap2,
+        "clusters": self.getVector("cluster_assignments"),
+        "iteration": self._lastIter
+      }
+    } else {
+
+      for (; init_umap_copy.iterations() <= iterations;) {
+        self.wasm.run_umap(init_umap_copy, delay, iterations, umap.ptr);
+      }
+
+      var sh_umap = self.getVector("umap") //new SharedArrayBuffer(this.filteredMatrix.ncol());
+      // sh_umap.set(self.getVector("umap"));
+
+      var x = [], y = [];
+      for (var i = 0; i < sh_umap.length; i+=2) {
+        x.push(sh_umap[i]);
+        y.push(sh_umap[i + 1]);
+      }
+
+      init_umap_copy.delete();
+      freeMemorySpace("umap_copy");
+      return {
+        "umap": {x, y},
+        "clusters": self.getVector("cluster_assignments"),
+        "iteration": self._lastIter
+      }
+
+    }
+
+    // var iterator = setInterval(() => {
+
+    //   if (self.init_tsne.iterations() >= iterations) {
+    //     clearInterval(iterator);
+    //   }
+
+
+    //   var sh_tsne = self.getVector("tsne") //new SharedArrayBuffer(this.filteredMatrix.ncol());
+    //   // sh_tsne.set(self.getVector("tsne"));
+
+    //   var tsne1 = new Float64Array(new SharedArrayBuffer(self.filteredMatrix.ncol() * 8)),
+    //     tsne2 = new Float64Array(new SharedArrayBuffer(self.filteredMatrix.ncol() * 8));
+    //   for (var i = 0; i < sh_tsne.length; i++) {
+    //     if (i % 2 == 0) {
+    //       // tsne1.push(sh_tsne[i]);
+    //       tsne1[parseInt(i / 2)] = sh_tsne[i];
+    //     }
+    //     else {
+    //       // tsne2.push(sh_tsne[i]);
+    //       // sample.push("sample");
+    //       tsne2[Math.floor(i / 2)] = sh_tsne[i];
+    //     }
+    //   }
+
+    //   postMessage({
+    //     type: "TSNE",
+    //     resp: {
+    //       "tsne1": tsne1,
+    //       "tsne2": tsne2,
+    //       "iteration": self.init_tsne.iterations()
+    //     },
+    //     msg: `Success: TSNE done, ${self.filteredMatrix.nrow()}, ${self.filteredMatrix.ncol()}`
+    //   });
+
+    //   self.wasm.run_tsne(self.init_tsne, delay, iterations, tsne.ptr);
+    // }, delay);
+
+    // var sh_tsne = self.getVector("tsne") //new SharedArrayBuffer(this.filteredMatrix.ncol());
+    // // sh_tsne.set(self.getVector("tsne"));
+
+    // var tsne1 = new Float64Array(new SharedArrayBuffer(self.filteredMatrix.ncol() * 8)),
+    //   tsne2 = new Float64Array(new SharedArrayBuffer(self.filteredMatrix.ncol() * 8));
+    // for (var i = 0; i < sh_tsne.length; i++) {
+    //   if (i % 2 == 0) {
+    //     // tsne1.push(sh_tsne[i]);
+    //     tsne1[parseInt(i / 2)] = sh_tsne[i];
+    //   }
+    //   else {
+    //     // tsne2.push(sh_tsne[i]);
+    //     // sample.push("sample");
+    //     tsne2[Math.floor(i / 2)] = sh_tsne[i];
+    //   }
+    // }
+
+    // var cluster_sab = new Uint32Array(new SharedArrayBuffer(self.filteredMatrix.ncol() * 8));
+    // self.getVector("cluster_assignments").map((x, i) => cluster_sab[i] = x);
+
+    // return {
+    //   "tsne1": tsne1,
+    //   "tsne2": tsne2,
+    //   "clusters": cluster_sab,
+    //   "iteration": self._lastIter
+    // }
+  }
+
+  findSNNeighbors(k = 10) {
+    var snn_neighbors = this.wasm.find_nearest_neighbors(this.nn_index, k);
+    if (this.snn_neighbors !== undefined) {
+      this.snn_neighbors.delete();
+    }
+    this.snn_neighbors = snn_neighbors;
+    return;
+  }
+
+  buildSNNGraph(scheme = 0) {
+    var snn_graph = this.wasm.build_snn_graph_from_neighbors(this.snn_neighbors, scheme);
+    if (this.snn_graph !== undefined) {
+      this.snn_graph.delete();
+    }
+    this.snn_graph = snn_graph;
+    return;
+  }
+
+  clusterSNNGraph(res = 1) {
+    var clustering = this.wasm.cluster_snn_graph(this.snn_graph, res);
     var arr_clust_raw = clustering.membership(clustering.best());
     var arr_clust = arr_clust_raw.slice();
     clustering.delete();
