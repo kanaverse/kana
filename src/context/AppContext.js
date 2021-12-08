@@ -23,6 +23,7 @@ const AppContextProvider = ({ children }) => {
     cluster: {
       "clus-k": 10,
       "clus-res": 0.5,
+      "clus-scheme": 0,
     },
     tsne: {
       "tsne-iter": 500,

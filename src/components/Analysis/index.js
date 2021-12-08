@@ -1,4 +1,5 @@
-import { Button, Classes, Dialog, Text, FileInput, NumericInput, Label, H4, Tag, Icon, Position } from "@blueprintjs/core";
+import { Button, Classes, Dialog, Text, FileInput, NumericInput, 
+    Label, H4, Tag, Icon, Position, HTMLSelect } from "@blueprintjs/core";
 import { Tooltip2, Popover2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback } from "react";
 
@@ -134,6 +135,18 @@ function AnalysisDialog({
                                     <NumericInput
                                         placeholder="10" value={tmpInputParams["cluster"]["clus-k"]}
                                         onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { "clus-k": nval } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">Scheme
+                                        <Tooltip2 className="row-tooltip" content="0 for approx, 1 ..., 2 for jaccard index" position={Position.RIGHT} openOnTargetFocus={false}>
+                                            <Icon icon="help"></Icon>
+                                        </Tooltip2>
+                                    </Text>
+                                    <HTMLSelect onChange={(nval, val) => setTmpInputParams({...tmpInputParams, "cluster": { "clus-scheme": parseInt(nval?.currentTarget?.value) }})}>
+                                        <option key="0">0</option>
+                                        <option key="1">1</option>
+                                        <option key="2">2</option>
+                                    </HTMLSelect>
                                 </Label>
                                 <Label className="row-input">
                                     <Text className="text-100">Resolution
