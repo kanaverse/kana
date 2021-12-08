@@ -557,7 +557,7 @@ class scran {
 
     var res_pc = this.pcs.pcs();
 
-    var pcs_mem = this.createMemorySpace(
+    this.pca_mat = this.createMemorySpace(
       this.filteredMatrix.nrow() * npc,
       "Float64Array",
       "PCA_mat"
@@ -565,12 +565,6 @@ class scran {
 
     var pc_mat = this.getVector("PCA_mat");
     pc_mat.set(res_pc);
-
-    this._pca_mat = new this.wasm.NumericMatrix(
-      this.filteredMatrix.nrow(),
-      npc,
-      pcs_mem.ptr
-    );
 
     // console.log(pcs.vector);
     // console.log(var_exp.vector);
@@ -583,7 +577,7 @@ class scran {
 
   buildNeighborIndex(approximate = true) {
 
-    var nn_index = this.wasm.build_neighbor_index(this._pca_mat, this.n_pcs,
+    var nn_index = this.wasm.build_neighbor_index(this.pca_mat.ptr, this.n_pcs,
       this.filteredMatrix.ncol(), approximate);
 
     if (this.nn_index !== undefined) {
