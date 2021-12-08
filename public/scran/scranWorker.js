@@ -1,4 +1,4 @@
-importScripts("./scran.js");
+importScripts("./scran.api.js");
 // import {scranSTATE, scran} from './scran.js';
 // import 'scran_wasm.js';
 importScripts("https://cdn.jsdelivr.net/npm/d3-dsv@3");
@@ -11,7 +11,14 @@ var state = null;
 
 function run_steps(step, state) {
     var self = this;
-    const state_list = ["load", "qc", "fSelection", "pca", "cluster", "tsne", "markerGene"];
+    const state_list = ["load",
+        "qc", "fSelection", "pca",
+        "build_neighbor_index",
+        "snn_find_neighbors",
+        "snn_build_graph",
+        "snn_cluster_graph",
+        "markerGene"
+    ];
 
     // TODO: need to return error messages, but it stops when there's an error in 
     // a particular step
@@ -66,7 +73,7 @@ function run_steps(step, state) {
                 });
 
                 step++;
-            } catch (error) { 
+            } catch (error) {
                 console.log(error);
                 break;
             }
@@ -102,9 +109,9 @@ function run_steps(step, state) {
         case 3:
             try {
                 var t0 = performance.now();
-                var resp = data.PCA(state.params.pca["pca-npc"]);
+                var resp = data.runPCA(state.params.pca["pca-npc"]);
                 var t1 = performance.now();
-                
+
                 var ftime = (t1 - t0) / 1000;
                 postMessage({
                     type: `${state_list[step]}_DONE`,
@@ -119,13 +126,33 @@ function run_steps(step, state) {
                 });
                 step++;
             } catch (error) {
-                console.log(error);
+                console.error(step);
+                console.error(error);
                 break;
             }
         case 4:
             try {
                 var t0 = performance.now();
-                var resp = data.cluster(state.params.cluster["clus-k"], state.params.cluster["clus-res"]);
+                data.buildNeighborIndex(state.params.cluster["clus-approx"]);
+                var t1 = performance.now();
+
+                var ftime = (t1 - t0) / 1000;
+
+                postMessage({
+                    type: `${state_list[step]}_DONE`,
+                    resp: `~${ftime.toFixed(2)} sec`,
+                    msg: 'Done'
+                });
+                step++;
+            } catch (error) {
+                console.log(error);
+                break;
+            }
+        case 5:
+            try {
+                var t0 = performance.now();
+                data.findSNNeighbors(state.params.cluster["clus-k"]);
+
                 var t1 = performance.now();
 
                 var ftime = (t1 - t0) / 1000;
@@ -134,7 +161,57 @@ function run_steps(step, state) {
                     resp: `~${ftime.toFixed(2)} sec`,
                     msg: 'Done'
                 });
-                
+
+                // postMessage({
+                //     type: `${state_list[step]}_DATA`,
+                //     resp: JSON.parse(JSON.stringify(resp)),
+                //     msg: `Success: CLUS done, ${data.filteredMatrix.nrow()}, ${data.filteredMatrix.ncol()}` + " took " + (t1 - t0) + " milliseconds."
+                // });
+                step++;
+            } catch (error) {
+                console.log(error);
+                break;
+            }
+        case 6:
+            try {
+                var t0 = performance.now();
+
+                // scheme is how its weighted
+                //  0, 1, 2 (jaccard index)
+                data.buildSNNGraph(state.params.cluster["clus-scheme"]);
+
+                var t1 = performance.now();
+
+                var ftime = (t1 - t0) / 1000;
+                postMessage({
+                    type: `${state_list[step]}_DONE`,
+                    resp: `~${ftime.toFixed(2)} sec`,
+                    msg: 'Done'
+                });
+
+                // postMessage({
+                //     type: `${state_list[step]}_DATA`,
+                //     resp: JSON.parse(JSON.stringify(resp)),
+                //     msg: `Success: CLUS done, ${data.filteredMatrix.nrow()}, ${data.filteredMatrix.ncol()}` + " took " + (t1 - t0) + " milliseconds."
+                // });
+                step++;
+            } catch (error) {
+                console.log(error);
+                break;
+            }
+        case 7:
+            try {
+                var t0 = performance.now();
+                var resp = data.clusterSNNGraph(state.params.cluster["clus-res"]);
+                var t1 = performance.now();
+
+                var ftime = (t1 - t0) / 1000;
+                postMessage({
+                    type: `${state_list[step]}_DONE`,
+                    resp: `~${ftime.toFixed(2)} sec`,
+                    msg: 'Done'
+                });
+
                 postMessage({
                     type: `${state_list[step]}_DATA`,
                     resp: JSON.parse(JSON.stringify(resp)),
@@ -145,29 +222,7 @@ function run_steps(step, state) {
                 console.log(error);
                 break;
             }
-        case 5:
-            try {
-                var t0 = performance.now();
-                var resp = data.tsne(state.params.tsne["tsne-perp"], state.params.tsne["tsne-iter"]);
-
-                var ftime = (t1 - t0) / 1000;
-                postMessage({
-                    type: `${state_list[step]}_DONE`,
-                    resp: `~${ftime.toFixed(2)} sec`,
-                    msg: 'Done'
-                });
-                
-                postMessage({
-                    type: `${state_list[step]}_DATA`,
-                    resp: JSON.parse(JSON.stringify(resp)),
-                    msg: `Success: TSNE done, ${data.filteredMatrix.nrow()}, ${data.filteredMatrix.ncol()}` + " took " + (t1 - t0) + " milliseconds."
-                });
-                step++;
-            } catch (error) {
-                console.log(error);
-                break;
-            }
-        case 6:
+        case 8:
             try {
                 var t0 = performance.now();
                 var resp = data.markerGenes();
@@ -179,11 +234,60 @@ function run_steps(step, state) {
                     resp: `~${ftime.toFixed(2)} sec`,
                     msg: 'Done'
                 });
-                
+
                 postMessage({
                     type: `${state_list[step]}_DATA`,
                     resp: JSON.parse(JSON.stringify(resp)),
                     msg: `Success: MARKER_GENE done, ${data.filteredMatrix.nrow()}, ${data.filteredMatrix.ncol()}` + " took " + (t1 - t0) + " milliseconds."
+                });
+                step++;
+            } catch (error) {
+                console.log(error);
+                break;
+            }
+        case 9:
+            // t-SNE - for now to get things to work
+            try {
+                var t0 = performance.now();
+                data.initializeTsne(state.params.tsne["tsne-perp"])
+                var resp = data.runTsne(state.params.tsne["tsne-iter"]);
+
+                var ftime = (t1 - t0) / 1000;
+                postMessage({
+                    type: `${state_list[step]}_DONE`,
+                    resp: `~${ftime.toFixed(2)} sec`,
+                    msg: 'Done'
+                });
+
+                postMessage({
+                    type: `${state_list[step]}_DATA`,
+                    resp: JSON.parse(JSON.stringify(resp)),
+                    msg: `Success: TSNE done, ${data.filteredMatrix.nrow()}, ${data.filteredMatrix.ncol()}` + " took " + (t1 - t0) + " milliseconds."
+                });
+                step++;
+            } catch (error) {
+                console.log(error);
+                break;
+            }
+        case 10:
+            // UMAP - for now to get things to work
+            try {
+                var t0 = performance.now();
+                data.initializeUmapNeighbors(state.params.tsne["umap-nn"]);
+                data.initializeUmap(state.params.tsne["umap-epochs"], state.params.tsne["umap-min_dist"])
+                var resp = data.runUmap();
+
+                var ftime = (t1 - t0) / 1000;
+                postMessage({
+                    type: `${state_list[step]}_DONE`,
+                    resp: `~${ftime.toFixed(2)} sec`,
+                    msg: 'Done'
+                });
+
+                postMessage({
+                    type: `${state_list[step]}_DATA`,
+                    resp: JSON.parse(JSON.stringify(resp)),
+                    msg: `Success: TSNE done, ${data.filteredMatrix.nrow()}, ${data.filteredMatrix.ncol()}` + " took " + (t1 - t0) + " milliseconds."
                 });
                 step++;
             } catch (error) {
@@ -205,18 +309,30 @@ onmessage = function (msg) {
 
     if (payload.type == "INIT") {
         // TODO: parcel2 doesn't load inline importScripts
-        importScripts("./scran_wasm.js");
+        importScripts("./scran.js");
 
-        Module.onRuntimeInitialized = function load_done_callback() {
-            FS.mkdir(DATA_PATH, 0o777);
-            data = new scran({}, Module);
-            state = new scranSTATE();
+        loadScran()
+            .then((Module) => {
+                // FS.mkdir(DATA_PATH, 0o777);
+                data = new scran({}, Module);
+                state = new scranSTATE();
 
-            postMessage({
-                type: payload.type,
-                msg: `Success: ScranJS/WASM initialized`
-            });
-        }
+                postMessage({
+                    type: payload.type,
+                    msg: `Success: ScranJS/WASM initialized`
+                });
+            })
+
+        // Module.onRuntimeInitialized = function load_done_callback() {
+        //     FS.mkdir(DATA_PATH, 0o777);
+        //     data = new scran({}, Module);
+        //     state = new scranSTATE();
+
+        //     postMessage({
+        //         type: payload.type,
+        //         msg: `Success: ScranJS/WASM initialized`
+        //     });
+        // }
     } else if (payload.type == "RUN") {
         var diff = 0;
 

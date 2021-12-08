@@ -28,6 +28,12 @@ const AppContextProvider = ({ children }) => {
       "tsne-iter": 500,
       "tsne-perp": 30,
     },
+    umap: {
+      "umap-nn": 15,
+      "umap-epochs": 500,
+      "umap-min_dist": 0.01,
+      "umap-approx_nn": true,
+    },
     markerGene: {}
   });
 

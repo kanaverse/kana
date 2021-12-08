@@ -168,6 +168,39 @@ function AnalysisDialog({
                             </div>
                         </div>
                     </div>
+
+                    <div className="col">
+                        <div>
+                            <H4><Tag large={true} round={true}>6</Tag> UMAP: Compute UMAP embeddings and Visualize cells</H4>
+                            <div className="row">
+                                <Label className="row-input">
+                                    <Text className="text-100">Num of Neighbors (defaults to 15)</Text>
+                                    <NumericInput
+                                        placeholder="15" value={tmpInputParams["umap"]["umap-nn"]}
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { "umap-nn": nval } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">Epochs (defaults to 500)</Text>
+                                    <NumericInput
+                                        placeholder="500" value={tmpInputParams["umap"]["umap-epoch"]}
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { "umap-epoch": nval } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">Min Distance (defaults to 0.01)</Text>
+                                    <NumericInput
+                                        placeholder="0.01" value={tmpInputParams["umap"]["umap-min_dist"]}
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { "umap-min_dist": nval } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">Use Approximate Neighbor Search ? (true for fast UMAP calculation))</Text>
+                                    <NumericInput
+                                        placeholder="0.01" value={tmpInputParams["umap"]["umap-approx_nn"]}
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { "umap-approx_nn": nval } }) }} />
+                                </Label>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 {includeFooter ? (
