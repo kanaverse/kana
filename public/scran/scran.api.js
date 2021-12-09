@@ -613,6 +613,7 @@ class scran {
     // var pcs = this.getMemorySpace("mat_PCA");
 
     var init_tsne_copy = this.init_tsne.clone();
+    var tsne = this.tsne_buffer;
 
     var delay = 15;
     if (animate) {
@@ -733,7 +734,6 @@ class scran {
     var self = this;
     // console.log(this.getVector("mat_PCA"));
     // var pcs = this.getMemorySpace("mat_PCA");
-
     var init_umap_copy = this.init_umap.clone();
     var iterations = init_umap_copy.num_epochs();
 
@@ -742,20 +742,19 @@ class scran {
       "Float64Array",
       "umap_copy"
     );
-    var copy = getVector("umap_copy");
-    var original = getVector("umap");
+    var copy = this.getVector("umap_copy");
+    var original = this.getVector("umap");
     copy.set(original);
 
     var delay = 15;
     if (animate) {
       // var maxiter = 1000;
-      this.wasm.run_umap(init_umap_copy, delay, iterations, umap.ptr);
+      this.wasm.run_umap(init_umap_copy, delay, umap.ptr);
       // console.log(this.init_umap_copy.iterations());
       this._lastIter = 0;
 
       var iterator = setInterval(() => {
-
-        if (init_umap_copy.iterations() >= iterations) {
+        if (init_umap_copy.epoch() >= iterations) {
           clearInterval(iterator);
         }
 
@@ -778,15 +777,15 @@ class scran {
           resp: JSON.parse(JSON.stringify({
             "umap1": umap1,
             "umap2": umap2,
-            "iteration": init_umap_copy.iterations()
+            "iteration": init_umap_copy.epoch()
           })),
-          msg: `Success: TSNE done, ${self.filteredMatrix.nrow()}, ${self.filteredMatrix.ncol()}`
+          msg: `Success: UMAP done, ${self.filteredMatrix.nrow()}, ${self.filteredMatrix.ncol()}`
         });
 
-        self.wasm.run_umap(init_umap_copy, delay, iterations, umap.ptr);
+        self.wasm.run_umap(init_umap_copy, delay, umap.ptr);
       }, delay);
 
-      var sh_umap = self.getVector("umap") //new SharedArrayBuffer(this.filteredMatrix.ncol());
+      var sh_umap = self.getVector("umap_copy") //new SharedArrayBuffer(this.filteredMatrix.ncol());
       // sh_umap.set(self.getVector("umap"));
 
       var umap1 = [], umap2 = [];
@@ -801,7 +800,7 @@ class scran {
       }
 
       init_umap_copy.delete();
-      freeMemorySpace("umap_copy");
+      this.freeMemorySpace("umap_copy");
       return {
         "umap1": umap1,
         "umap2": umap2,
@@ -809,12 +808,11 @@ class scran {
         "iteration": self._lastIter
       }
     } else {
-
-      for (; init_umap_copy.iterations() <= iterations;) {
-        self.wasm.run_umap(init_umap_copy, delay, iterations, umap.ptr);
+      for (; init_umap_copy.epoch() < iterations;) {
+        self.wasm.run_umap(init_umap_copy, delay, umap.ptr);
       }
 
-      var sh_umap = self.getVector("umap") //new SharedArrayBuffer(this.filteredMatrix.ncol());
+      var sh_umap = self.getVector("umap_copy") //new SharedArrayBuffer(this.filteredMatrix.ncol());
       // sh_umap.set(self.getVector("umap"));
 
       var x = [], y = [];
@@ -824,7 +822,7 @@ class scran {
       }
 
       init_umap_copy.delete();
-      freeMemorySpace("umap_copy");
+      this.freeMemorySpace("umap_copy");
       return {
         "umap": { x, y },
         "clusters": self.getVector("cluster_assignments"),
@@ -917,7 +915,7 @@ class scran {
   }
 
   clusterSNNGraph(res = 1) {
-    var clustering = this.wasm.cluster_snn_graph(this.snn_graph, res);
+    var clustering = this.wasm.cluster_snn_graph_from_graph(this.snn_graph, res);
     var arr_clust_raw = clustering.membership(clustering.best());
     var arr_clust = arr_clust_raw.slice();
     clustering.delete();

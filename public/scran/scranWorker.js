@@ -251,6 +251,7 @@ function run_steps(step, state) {
                 var t0 = performance.now();
                 data.initializeTsne(state.params.tsne["tsne-perp"])
                 var resp = data.runTsne(state.params.tsne["tsne-iter"]);
+                var t1 = performance.now();
 
                 var ftime = (t1 - t0) / 1000;
                 postMessage({
@@ -273,9 +274,10 @@ function run_steps(step, state) {
             // UMAP - for now to get things to work
             try {
                 var t0 = performance.now();
-                data.initializeUmapNeighbors(state.params.tsne["umap-nn"]);
-                data.initializeUmap(state.params.tsne["umap-epochs"], state.params.tsne["umap-min_dist"])
+                data.initializeUmapNeighbors(state.params.umap["umap-nn"]);
+                data.initializeUmap(state.params.umap["umap-epochs"], state.params.umap["umap-min_dist"])
                 var resp = data.runUmap();
+                var t1 = performance.now();
 
                 var ftime = (t1 - t0) / 1000;
                 postMessage({
@@ -283,11 +285,12 @@ function run_steps(step, state) {
                     resp: `~${ftime.toFixed(2)} sec`,
                     msg: 'Done'
                 });
+                console.log(resp);
 
                 postMessage({
                     type: `${state_list[step]}_DATA`,
                     resp: JSON.parse(JSON.stringify(resp)),
-                    msg: `Success: TSNE done, ${data.filteredMatrix.nrow()}, ${data.filteredMatrix.ncol()}` + " took " + (t1 - t0) + " milliseconds."
+                    msg: `Success: UMAP done, ${data.filteredMatrix.nrow()}, ${data.filteredMatrix.ncol()}` + " took " + (t1 - t0) + " milliseconds."
                 });
                 step++;
             } catch (error) {
