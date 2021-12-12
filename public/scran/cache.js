@@ -33,6 +33,7 @@ function createCheckParams(parameters) {
       return null;
     } else {
       var output = body();
+      output["$step"] = step;
       parameters[step] = latest;
       return output;
     }

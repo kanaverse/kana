@@ -74,7 +74,7 @@ function loadFiles(args, upstream) {
       cached.inputs.genes = tsv.parse(buffer);
     }
     
-    return { "$step": step };
+    return {};
   });
 }
 
@@ -143,7 +143,6 @@ function computeQualityControlMetrics(args, upstream) {
     });
   
     return {
-      "$step": step,
       "sums": distributions.sums,
       "detected": distributions.detected,
       "proportion": distributions.proportion,
@@ -163,7 +162,6 @@ function computeQualityControlThresholds(args, upstream) {
     qct_cache["raw"] = filter_output;
 
     return {
-      "$step": step,
       "sums": filter_output.thresholds_sums()[0],
       "detected": filter_output.thresholds_detected()[0],
       "proportion": filter_output.thresholds_proportions(0)[0] // TODO: generalize...
@@ -183,9 +181,7 @@ function filterCells(args, upstream) {
 
     qcf_cache["raw"] = wasm.filter_cells(mat, discard_ptr, false);
   
-    return {
-      "$step": step
-    }
+    return {};
   });
 }
 
@@ -200,9 +196,7 @@ function logNormCounts(args, upstream) {
     freeCache(norm_cache, "raw");
     var mat = fetchFilteredMatrix();
     norm_cache["raw"] = wasm.log_norm_counts(mat, false, 0, false, 0);
-    return {
-      "$step": step
-    };
+    return {};
   });
 }
 
@@ -225,7 +219,6 @@ function modelGeneVar(args, upstream) {
     feat_cached.sorted_residuals.sort();
 
     return {
-      "$step": step,
       "means": model_output.means(0).slice(),
       "vars": model_output.variances(0).slice(),
       "fitted": model_output.fitted(0).slice(),
@@ -262,7 +255,6 @@ function runPCA(args, upstream) {
     }
 
     return {
-      "$step": step,
       "var_exp": var_exp
     };
   });
@@ -283,9 +275,7 @@ function buildNeighborIndex(args, upstream) {
     freeCache(neighbor_cached, "raw");
     var pcs = fetchPCs();
     neighbor_cached.raw = wasm.build_neighbor_index(pcs.matrix.byteOffset, pcs.num_pcs, pcs.num_obs, args.approximate);
-    return {
-      "$step": step
-    };
+    return {};
   });
 }
 
@@ -300,9 +290,7 @@ function findSNNeighbors(args, upstream) {
     freeCache(snn_cached, "raw");
     var nn_index = fetchNeighborIndex();
     snn_cached.raw = wasm.find_nearest_neighbors(nn_index, args.k);
-    return {
-      "$step": step
-    };
+    return {};
   });
 }
 
@@ -313,9 +301,7 @@ function buildSNNGraph(args, upstream) {
     freeCache(snn_cached, "raw");
     var neighbors = cached.snn_find_neighbors.raw;
     snn_cached.raw = wasm.build_snn_graph_from_neighbors(neighbors, args.scheme);
-    return {
-      "$step": step
-    };
+    return {};
   });
 }
 
@@ -330,9 +316,8 @@ function clusterSNNGraph(args, upstream) {
   
     var arr_clust = clustering.membership(clustering.best()).slice();
     return {
-      "$step": step,
       "clusters": arr_clust
-    }
+    };
   });
 }
 
@@ -361,9 +346,7 @@ function chooseClustering(args, upstream) {
       vec.set(src);
     }
 
-    return {
-      "$step": step
-    }
+    return {};
   });
 }
 
