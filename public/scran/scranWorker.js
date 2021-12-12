@@ -1,56 +1,13 @@
 importScripts("./WasmBuffer.js");
+importScripts("./cache.js");
 importScripts("https://cdn.jsdelivr.net/npm/d3-dsv@3");
 importScripts("https://cdn.jsdelivr.net/npm/d3-scale@4");
 
-const DATA_PATH = "/data";
 var wasm = null;
 var cached = {};
 var parameters = {};
-
-function initCache(key) {
-  if (! (key in cached)) {
-    cached[key] = {};
-  }
-  return cached[key];
-}
-
-function freeCache(cache, key) {
-  if (cache[key] !== undefined && cache[key] !== null) {
-    cache[key].delete();
-    cache[key] = null;
-  }
-}
-
-function checkParams(step, latest, upstream, body) {
-  var previous = parameters[step];
-  var changed = true;
-
-  if (!upstream) {
-    if (previous !== undefined) {
-      for (const [name, val] of previous.entries()) {
-        if (! (name in latest)) {
-          changed = true;
-        }
-      }
-
-      if (!changed) {
-        for (const [name, val] of latest.entries()) {
-          if (! (name in previous) || previous[name] !== val) {
-            changed = true;
-          }
-        }
-      }
-    }
-  }
-
-  if (!changed) {
-    return null;
-  } else {
-    var output = body();
-    parameters[step] = latest;
-    return output;
-  }
-}
+var initCache = createInitCache(cached);
+var checkParams = createCheckParams(parameters);
 
 /* Executor functions. The general policy here is that each function
  * corresponds to a standalone step in the linear analysis. Each function
@@ -61,16 +18,24 @@ function checkParams(step, latest, upstream, body) {
 
 function loadFiles(args, upstream) {
   var step = "inputs";
-  return checkParams(step, args, upstream, () => {
-    var input = args.files;
 
-    var files_to_load = [];
-    input.forEach(m => {
-      if (m.length > 0) {
-        files_to_load.push(m[0]);
-      }
-    });
-  
+  // Files are not directly comparable, so we just check their name and size.
+  var mock_mtx = [];
+  for (const f of args.files[0]) {
+    mock_mtx.push({ "name": f.name, "size": f.size });
+  }
+  var mock_barcodes = [];
+  for (const f of args.files[1]) {
+    mock_barcodes.push({ "name": f.name, "size": f.size });
+  }
+  var mock_genes = [];
+  for (const f of args.files[1]) {
+    mock_genes.push({ "name": f.name, "size": f.size });
+  }
+  var mock_args = { "matrix": mock_mtx, "barcodes": mock_barcodes, "genes": mock_genes };
+
+  return checkParams(step, mock_args, upstream, () => {
+    var input = args.files;
     var mtx_files = input[0];
     var input_cache = initCache(step);
     freeCache(input_cache, "matrix");
