@@ -1,5 +1,5 @@
 importScripts("./WasmBuffer.js");
-importScripts("./cache.js");
+importScripts("./utils.js");
 importScripts("https://cdn.jsdelivr.net/npm/d3-dsv@3");
 importScripts("https://cdn.jsdelivr.net/npm/d3-scale@4");
 
@@ -324,22 +324,11 @@ function clusterSNNGraph(args, upstream) {
 function chooseClustering(args, upstream) {
   var step = "choose_clustering";
   return checkParams(step, args, upstream, () => {
+    var clust_cached = initCache(step);
     var num_obs = fetchNormalizedMatrix().ncol();
+    var buffer = allocateBuffer(wasm, num_obs, "Int32Array", clust_cached);
 
-    var reallocate = true;
-    if (step in cached) {
-      if (cached[step].size != num_obs) {
-        cached[step].free();
-      } else {
-        reallocate = false;
-      }
-    }
-
-    if (reallocate) {
-      cached[step] = new WasmBuffer(wasm, num_obs, "Int32Array");
-    }
-
-    var vec = cached[step].array();
+    var vec = buffer.array();
     if (args.method == "snn_graph") {
       var clustering = cached["snn_cluster_graph"].raw;
       var src = clustering.membership(clustering.best());
@@ -357,7 +346,7 @@ function scoreMarkers(args, upstream) {
     freeCache(marker_cached, "raw");
 
     var mat = fetchNormalizedMatrix();
-    var clusters = cached["choose_clustering"];
+    var clusters = cached["choose_clustering"].buffer;
     console.log(clusters);
     marker_cached.raw = wasm.score_markers(mat, clusters.ptr, false, 0);
 
@@ -368,33 +357,62 @@ function scoreMarkers(args, upstream) {
 }
 
 /* 
+ * Special functions for handling t-SNE and UMAP; these are run in separate
+ * workers, and need some accommodation for the interactivity.
+ */
+
+var tsne_worker = null;
+
+function launchTsne(params, upstream) {
+  function executeTsne() {
+    tsne_worker.postMessage({
+        "cmd": "RUN",
+        "params": params,
+        "upstream": upstream,
+        "nn_index_ptr": fetchNeighborIndex().$$.ptr
+    });
+
+    tsne_worker.onmessage = function(msg) {
+      if (msg.data.type == "run_tsne_DATA") {
+        var buffer = msg.data.resp.buffer;
+        var contents = WasmBuffer.toArray(wasm, buffer.ptr, buffer.size, buffer.type);
+        var x = [], y = [];
+        for (var i = 0; i < contents.length; i += 2) {
+          x.push(contents[i]);
+          y.push(contents[i + 1]);
+        }
+        postMessage({
+            type: "tsne_DATA",
+            resp: { "x": x, "y": y },
+            msg: "Success: t-SNE run completed"
+        });
+      }
+    }
+  }
+
+  if (tsne_worker == null) {
+    tsne_worker = new Worker("./tsneWorker.js");
+    tsne_worker.postMessage({ 
+        "cmd": "INIT",
+        "wasmMemory": wasm.wasmMemory
+    });
+
+    tsne_worker.onmessage = function(msg) {
+      if ("status" in msg.data && msg.data.status === "SUCCESS") {
+        executeTsne();
+      } else {
+        throw "failed to initialize the t-SNE worker";
+      }
+    };
+  } else {
+    executeTsne();
+  }
+}
+
+/* 
  * Overlord function. This runs the executors and posts messages if the
  * response is not NULL.
  */
-
-function processStep(body, args, upstream) {
-  var t0 = performance.now();
-
-  var output = null;
-  try {
-    var output = body(args, upstream);
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-
-  if (output !== null) {
-    var t1 = performance.now();
-    var ftime = (t1 - t0) / 1000;
-    postMessage({
-        type: `${output["$step"]}_DONE`,
-        resp: `~${ftime.toFixed(2)} sec`,
-        msg: 'Done'
-    });
-  }
-
-  return output;
-}
 
 function runAllSteps(state) {
   var upstream = false;
@@ -487,6 +505,16 @@ function runAllSteps(state) {
     });
     upstream = true;
   }
+
+  launchTsne({
+    "init": {
+      "num_obs": fetchNormalizedMatrix().ncol(), // TODO: remove eventually when we can get this information inside the worker.
+      "perplexity": state.params.tsne["tsne-perp"]
+    },
+    "run": {
+      "iterations": state.params.tsne["tsne-iter"]
+    }
+  }, upstream);
 
   var neighbors_out = processStep(findSNNeighbors, { "k": state.params.cluster["clus-k"] }, upstream);
   if (neighbors_out !== null) {

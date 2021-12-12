@@ -41,3 +41,43 @@ function createCheckParams(parameters) {
 
   return checkParams;
 }
+
+function processStep(body, args, upstream) {
+  var t0 = performance.now();
+
+  var output = null;
+  try {
+    var output = body(args, upstream);
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+
+  if (output !== null) {
+    var t1 = performance.now();
+    var ftime = (t1 - t0) / 1000;
+    postMessage({
+        type: `${output["$step"]}_DONE`,
+        resp: `~${ftime.toFixed(2)} sec`,
+        msg: 'Done'
+    });
+  }
+
+  return output;
+}
+
+function allocateBuffer(wasm, size, type, cache) {
+  var reallocate = true;
+  if ("buffer" in cache) {
+    if (cache.buffer.size != size) {
+      cache.buffer.free();
+    } else {
+      reallocate = false;
+    }
+  }
+
+  if (reallocate) {
+    cache.buffer = new WasmBuffer(wasm, size, type);
+  }
+  return cache.buffer;
+}
