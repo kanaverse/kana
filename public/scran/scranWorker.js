@@ -6,17 +6,34 @@ importScripts("https://cdn.jsdelivr.net/npm/d3-scale@4");
 var wasm = null;
 var cached = {};
 var parameters = {};
+var upstream = new Set();
 var initCache = createInitCache(cached);
-var checkParams = createCheckParams(parameters);
+var runStep = createRunStep(parameters, upstream);
 
-/* Executor functions. The general policy here is that each function
- * corresponds to a standalone step in the linear analysis. Each function
- * should take inputs by reference from 'parameters' and should cache its
- * results in 'cached' (possibly freeing any previously cached results). 
- * The return value contains any content to be passed to the main thread.
+/* 
+ * Step executor functions. 
+ * 
+ * Each function corresponds to a standalone step in the linear analysis. It
+ * should take an `args` object containing all of the user-specified arguments
+ * for this step. These are checked against the existing argument values (if
+ * any) in `parameters`, and if they are different, the step is rerun. 
+ *
+ * Results may be cached in `cached` for use in downstream steps. Note that
+ * each step is responsible for the memory management of its cached results;
+ * for Wasm-originating objects, we suggest using `freeCache`, while for
+ * JS-allocated buffers on the Wasm heap, we suggest using `allocateBuffer`.
+ *
+ * On success, the previous `parameters` are replaced by `args` so that the
+ * next run of the same step can be skipped if there is no change. The step is
+ * also added to `upstream` so that any downstream steps know that they need
+ * to be re-run if they detect dependencies have rerun. This is all handled
+ * by `runStep`, which wraps the boilerplate around the actual step. 
+ *
+ * The return value contains an object to be passed to the main thread.
+ * This should not contain any Wasm-originating objects or allocated buffers.
  */
 
-function loadFiles(args, upstream) {
+function loadFiles(args) {
   var step = "inputs";
 
   // Files are not directly comparable, so we just check their name and size.
@@ -34,7 +51,7 @@ function loadFiles(args, upstream) {
   }
   var mock_args = { "matrix": mock_mtx, "barcodes": mock_barcodes, "genes": mock_genes };
 
-  return checkParams(step, mock_args, upstream, () => {
+  return runStep(step, mock_args, [], () => {
     var input = args.files;
     var mtx_files = input[0];
     var input_cache = initCache(step);
@@ -82,9 +99,9 @@ function fetchCountMatrix() {
   return cached["inputs"]["matrix"];
 }
 
-function computeQualityControlMetrics(args, upstream) {
+function computeQualityControlMetrics(args) {
   var step = "quality_control_metrics";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["inputs"], () => {
     var qcm_cache = initCache(step);
     freeCache(qcm_cache, "raw");
 
@@ -151,9 +168,9 @@ function computeQualityControlMetrics(args, upstream) {
   });
 }
 
-function computeQualityControlThresholds(args, upstream) {
+function computeQualityControlThresholds(args) {
   var step = "quality_control_thresholds";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["quality_control_metrics"], () => {
     var qct_cache = initCache(step);
     freeCache(qct_cache, "raw");
 
@@ -169,9 +186,9 @@ function computeQualityControlThresholds(args, upstream) {
   });
 }
 
-function filterCells(args, upstream) {
+function filterCells(args) {
   var step = "quality_control_filtered";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["quality_control_thresholds"], () => {
     var qcf_cache = initCache(step);
     freeCache(qcf_cache, "raw");
   
@@ -189,9 +206,9 @@ function fetchFilteredMatrix() { // helper for downstream functions.
   return cached["quality_control_filtered"]["raw"];
 }
 
-function logNormCounts(args, upstream) {
+function logNormCounts(args) {
   var step = "normalization";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["quality_control_filtered"], () => {
     var norm_cache = initCache(step);
     freeCache(norm_cache, "raw");
     var mat = fetchFilteredMatrix();
@@ -204,9 +221,9 @@ function fetchNormalizedMatrix() { // helper for downstream functions.
   return cached["normalization"]["raw"];
 }
 
-function modelGeneVar(args, upstream) {
+function modelGeneVar(args) {
   var step = "feature_selection";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["normalization"], () => {
     var feat_cached = initCache(step);
     freeCache(feat_cached, "raw");
 
@@ -227,9 +244,9 @@ function modelGeneVar(args, upstream) {
   });
 }
 
-function runPCA(args, upstream) {
+function runPCA(args) {
   var step = "pca";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["feature_selection"], () => {
     var pca_cached = initCache(step);
     freeCache(pca_cached, "raw");
   
@@ -268,9 +285,9 @@ function fetchPCs () {
   }
 }
 
-function buildNeighborIndex(args, upstream) {
+function buildNeighborIndex(args) {
   var step = "neighbor_index";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["pca"], () => {
     var neighbor_cached = initCache(step);
     freeCache(neighbor_cached, "raw");
     var pcs = fetchPCs();
@@ -283,9 +300,9 @@ function fetchNeighborIndex() {
   return cached["neighbor_index"]["raw"];
 }
 
-function findSNNeighbors(args, upstream) {
+function findSNNeighbors(args) {
   var step = "snn_find_neighbors";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["neighbor_index"], () => {
     var snn_cached = initCache(step);
     freeCache(snn_cached, "raw");
     var nn_index = fetchNeighborIndex();
@@ -294,9 +311,9 @@ function findSNNeighbors(args, upstream) {
   });
 }
 
-function buildSNNGraph(args, upstream) {
+function buildSNNGraph(args) {
   var step = "snn_build_graph";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["snn_find_neighbors"], () => {
     var snn_cached = initCache(step);
     freeCache(snn_cached, "raw");
     var neighbors = cached.snn_find_neighbors.raw;
@@ -305,9 +322,9 @@ function buildSNNGraph(args, upstream) {
   });
 }
 
-function clusterSNNGraph(args, upstream) {
+function clusterSNNGraph(args) {
   var step = "snn_cluster_graph";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["snn_build_graph"], () => {
     var snn_cached = initCache(step);
     freeCache(snn_cached, "raw");
   
@@ -321,9 +338,9 @@ function clusterSNNGraph(args, upstream) {
   });
 }
 
-function chooseClustering(args, upstream) {
+function chooseClustering(args) {
   var step = "choose_clustering";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["snn_cluster_graph"], () => {
     var clust_cached = initCache(step);
     var num_obs = fetchNormalizedMatrix().ncol();
     var buffer = allocateBuffer(wasm, num_obs, "Int32Array", clust_cached);
@@ -339,9 +356,9 @@ function chooseClustering(args, upstream) {
   });
 }
 
-function scoreMarkers(args, upstream) {
+function scoreMarkers(args) {
   var step = "marker_detection";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["choose_clustering", "normalization"], () => {
     var marker_cached = initCache(step);
     freeCache(marker_cached, "raw");
 
@@ -350,25 +367,31 @@ function scoreMarkers(args, upstream) {
     console.log(clusters);
     marker_cached.raw = wasm.score_markers(mat, clusters.ptr, false, 0);
 
-    return {
-      "$step": step
-    }
+    return {};
   });
 }
 
 /* 
- * Special functions for handling t-SNE and UMAP; these are run in separate
- * workers, and need some accommodation for the interactivity.
+ * Special functions for launching t-SNE and UMAP.
+ *
+ * These steps are run in separate workers, and need some accommodation for the
+ * message passing. In particular, each function is responsible for initialization
+ * of the worker, which persists for the lifetime of the application. Some 
+ * care is required to ensure that the worker is successfully initialized before
+ * performing the actual request for execution.
+ *
+ * They also need to handle the animation.
  */
 
 var tsne_worker = null;
+var tsne_initialized = true;
 
-function launchTsne(params, upstream) {
+function launchTsne(params) {
   function executeTsne() {
     tsne_worker.postMessage({
         "cmd": "RUN",
         "params": params,
-        "upstream": upstream,
+        "upstream": upstream.has("neighbor_index"),
         "nn_index_ptr": fetchNeighborIndex().$$.ptr
     });
 
@@ -396,17 +419,15 @@ function launchTsne(params, upstream) {
         "cmd": "INIT",
         "wasmMemory": wasm.wasmMemory
     });
-
-    tsne_worker.onmessage = function(msg) {
-      if ("status" in msg.data && msg.data.status === "SUCCESS") {
-        executeTsne();
-      } else {
-        throw "failed to initialize the t-SNE worker";
-      }
-    };
-  } else {
-    executeTsne();
   }
+
+  tsne_worker.onmessage = function(msg) {
+    if ("status" in msg.data && msg.data.status === "SUCCESS") {
+      executeTsne();
+    } else {
+      throw "failed to initialize the t-SNE worker";
+    }
+  };
 }
 
 /* 
@@ -415,9 +436,9 @@ function launchTsne(params, upstream) {
  */
 
 function runAllSteps(state) {
-  var upstream = false;
+  upstream.clear();
 
-  var load_out = processStep(loadFiles, { "files": state.files }, upstream);
+  var load_out = processOutput(loadFiles, { "files": state.files });
   if (load_out !== null) {
     var mat = cached.inputs.matrix;
     postMessage({
@@ -425,30 +446,27 @@ function runAllSteps(state) {
         resp: `${mat.nrow()} X ${mat.ncol()}`,
         msg: `Success: Data loaded, dimensions: ${mat.nrow()}, ${mat.ncol()}`
     });
-    upstream = true;
   }
 
-  var metrics_out = processStep(computeQualityControlMetrics, {}, upstream);
+  var metrics_out = processOutput(computeQualityControlMetrics, {});
   if (metrics_out !== null) { 
     postMessage({
         type: `${metrics_out["$step"]}_DATA`,
         resp: metrics_out,
         msg: "Success: QC metrics computed"
     });
-    upstream = true;
   }
 
-  var thresholds_out = processStep(computeQualityControlThresholds, { "nmads": state.params.qc["qc-nmads"] }, upstream);
+  var thresholds_out = processOutput(computeQualityControlThresholds, { "nmads": state.params.qc["qc-nmads"] });
   if (thresholds_out !== null) { 
     postMessage({
         type: `${thresholds_out["$step"]}_DATA`,
         resp: thresholds_out,
         msg: "Success: QC thresholds computed"
     });
-    upstream = true;
   }
 
-  var filtered_out = processStep(filterCells, {}, upstream);
+  var filtered_out = processOutput(filterCells, {});
   if (filtered_out !== null) { 
     var mat = fetchFilteredMatrix();
     postMessage({
@@ -462,108 +480,96 @@ function runAllSteps(state) {
         resp: filtered_out,
         msg: "Success: QC filtering completed"
     });
-
-    upstream = true;
   }
 
-  var norm_out = processStep(logNormCounts, {}, upstream);
+  var norm_out = processOutput(logNormCounts, {});
   if (norm_out !== null) { 
     postMessage({
         type: `${norm_out["$step"]}_DATA`,
         resp: norm_out,
         msg: "Success: Log-normalization complete"
     });
-    upstream = true;
   }
 
-  var feat_out = processStep(modelGeneVar, { "span": state.params.fSelection["fsel-span"] }, upstream);
+  var feat_out = processOutput(modelGeneVar, { "span": state.params.fSelection["fsel-span"] });
   if (feat_out !== null) { 
     postMessage({
         type: `${feat_out["$step"]}_DATA`,
         resp: feat_out,
         msg: "Success: Mean-variance relationship modelled"
     });
-    upstream = true;
   }
 
-  var pca_out = processStep(runPCA, { "num_hvgs": 4000, "num_pcs": state.params.pca["pca-npc"] }, upstream);
+  var pca_out = processOutput(runPCA, { "num_hvgs": 4000, "num_pcs": state.params.pca["pca-npc"] });
   if (norm_out !== null) { 
     postMessage({
         type: `${pca_out["$step"]}_DATA`,
         resp: pca_out,
         msg: "Success: PCA complete"
     });
-    upstream = true;
   }
 
-  var index_out = processStep(buildNeighborIndex, { "approximate": state.params.cluster["clus-approx"] }, upstream);
+  var index_out = processOutput(buildNeighborIndex, { "approximate": state.params.cluster["clus-approx"] });
   if (index_out !== null) {
     postMessage({
         type: `${index_out["$step"]}_DATA`,
         resp: index_out,
         msg: "Success: Index construction complete"
     });
-    upstream = true;
   }
 
   launchTsne({
     "init": {
-      "num_obs": fetchNormalizedMatrix().ncol(), // TODO: remove eventually when we can get this information inside the worker.
       "perplexity": state.params.tsne["tsne-perp"]
     },
     "run": {
       "iterations": state.params.tsne["tsne-iter"]
     }
-  }, upstream);
+  });
 
-  var neighbors_out = processStep(findSNNeighbors, { "k": state.params.cluster["clus-k"] }, upstream);
+  var neighbors_out = processOutput(findSNNeighbors, { "k": state.params.cluster["clus-k"] });
   if (neighbors_out !== null) {
     postMessage({
         type: `${neighbors_out["$step"]}_DATA`,
         resp: neighbors_out,
         msg: "Success: Neighbor search complete"
     });
-    upstream = true;
   }
 
-  var graph_out = processStep(buildSNNGraph, { "scheme": state.params.cluster["clus-scheme"] }, upstream);
+  var graph_out = processOutput(buildSNNGraph, { "scheme": state.params.cluster["clus-scheme"] });
   if (graph_out !== null) {
     postMessage({
         type: `${graph_out["$step"]}_DATA`,
         resp: graph_out,
         msg: "Success: Neighbor search complete"
     });
-    upstream = true;
   }
 
-  var cluster_out = processStep(clusterSNNGraph, { "resolution": state.params.cluster["clus-res"] }, upstream);
+  var cluster_out = processOutput(clusterSNNGraph, { "resolution": state.params.cluster["clus-res"] });
   if (cluster_out !== null) {
     postMessage({
         type: `${cluster_out["$step"]}_DATA`,
         resp: cluster_out,
         msg: "Success: Graph clustering complete"
     });
-    upstream = true;
   }
 
-  var choose_out = processStep(chooseClustering, { "method": "snn_graph" }, upstream);
+  var choose_out = processOutput(chooseClustering, { "method": "snn_graph" });
   if (choose_out !== null) {
     postMessage({
         type: `${choose_out["$step"]}_DATA`,
         resp: choose_out,
         msg: "Success: Clustering chosen"
     });
-    upstream = true;
   }
 
-  var marker_out = processStep(scoreMarkers, {}, upstream);
+  var marker_out = processOutput(scoreMarkers, {});
   if (marker_out !== null) {
     postMessage({
         type: `${marker_out["$step"]}_DATA`,
         resp: marker_out,
         msg: "Success: Marker detection complete"
     });
-    upstream = true;
   }
 }
 

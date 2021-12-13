@@ -4,20 +4,20 @@ importScripts("./utils.js");
 var wasm = null;
 var cached = {};
 var parameters = {};
+var upstream = new Set();
 var initCache = createInitCache(cached);
-var checkParams = createCheckParams(parameters);
+var runStep = createRunStep(parameters, upstream);
 
-function initializeTsne(args, upstream, nn_index_ptr) {
+function initializeTsne(args, nn_index_ptr) {
   var step = "init_tsne";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["neighbor_index"], () => {
     var init_cache = initCache(step);
     freeCache(init_cache, "raw");
 
-    var num_obs = args.num_obs; // TODO: query this from the status object instead. 
-    var buffer = allocateBuffer(wasm, num_obs * 2, "Float64Array", init_cache);
-      
     var index = wasm.NeighborIndex.rebind(nn_index_ptr);
     try {
+      var num_obs = index.num_obs(); 
+      var buffer = allocateBuffer(wasm, num_obs * 2, "Float64Array", init_cache);
       init_cache.raw = wasm.initialize_tsne_from_index(index, args.perplexity, buffer.ptr);
     } finally {
       index.delete();
@@ -26,9 +26,9 @@ function initializeTsne(args, upstream, nn_index_ptr) {
   });
 }
 
-function runTsne(args, upstream) {
+function runTsne(args) {
   var step = "run_tsne";
-  return checkParams(step, args, upstream, () => {
+  return runStep(step, args, ["init_tsne"], () => {
     var buffer = cached.init_tsne.buffer;
     var init_tsne_copy = cached.init_tsne.raw.deepcopy();
     try {
@@ -59,32 +59,36 @@ onmessage = function(msg) {
     importScripts("./scran.js");
     loadScran(Module).then(function(instance) {
         wasm = instance;
-        postMessage({ "status": "SUCCESS" });
+        postMessage({ 
+            "type": "init_worker",
+            "status": "SUCCESS"
+        });
     });
   } else {
-    console.log(msg);
+    upstream.clear();
+    if (msg.data.upstream) {
+      upstream.add("neighbor_index");
+    }
+
     var params = msg.data.params;
-    var upstream = msg.data.upstream;
     var nn_index_ptr = msg.data.nn_index_ptr;
 
-    var init_out = processStep((args, upstream) => initializeTsne(args, upstream, nn_index_ptr), params.init, upstream);
+    var init_out = processOutput(args => initializeTsne(args, nn_index_ptr), params.init);
     if (init_out !== null) {
       postMessage({
           type: `${init_out["$step"]}_DATA`,
           resp: init_out,
           msg: "Success: t-SNE initialized"
       });
-      upstream = true;
     }
 
-    var run_out = processStep(runTsne, params.run, upstream);
+    var run_out = processOutput(runTsne, params.run);
     if (run_out !== null) {
       postMessage({
           type: `${run_out["$step"]}_DATA`,
           resp: run_out,
           msg: "Success: t-SNE run completed"
       });
-      upstream = true;
     }
   }
 }
