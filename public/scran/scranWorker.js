@@ -376,58 +376,59 @@ function scoreMarkers(args) {
  *
  * These steps are run in separate workers, and need some accommodation for the
  * message passing. In particular, each function is responsible for initialization
- * of the worker, which persists for the lifetime of the application. Some 
- * care is required to ensure that the worker is successfully initialized before
- * performing the actual request for execution.
+ * of the worker, which persists for the lifetime of the application. We use a 
+ * promise that only resolves upon receipt of an initialization success message,
+ * after which we can post a message to actually run the step of interest.
  *
  * They also need to handle the animation.
  */
 
 var tsne_worker = null;
-var tsne_initialized = true;
-
+var tsne_promise = null;
 function launchTsne(params) {
-  function executeTsne() {
-    tsne_worker.postMessage({
-        "cmd": "RUN",
-        "params": params,
-        "upstream": upstream.has("neighbor_index"),
-        "nn_index_ptr": fetchNeighborIndex().$$.ptr
-    });
-
-    tsne_worker.onmessage = function(msg) {
-      if (msg.data.type == "run_tsne_DATA") {
-        var buffer = msg.data.resp.buffer;
-        var contents = WasmBuffer.toArray(wasm, buffer.ptr, buffer.size, buffer.type);
-        var x = [], y = [];
-        for (var i = 0; i < contents.length; i += 2) {
-          x.push(contents[i]);
-          y.push(contents[i + 1]);
-        }
-        postMessage({
-            type: "tsne_DATA",
-            resp: { "x": x, "y": y },
-            msg: "Success: t-SNE run completed"
-        });
-      }
-    }
-  }
-
   if (tsne_worker == null) {
-    tsne_worker = new Worker("./tsneWorker.js");
-    tsne_worker.postMessage({ 
-        "cmd": "INIT",
-        "wasmMemory": wasm.wasmMemory
+    tsne_promise = new Promise((resolve, reject) => {
+      tsne_worker = new Worker("./tsneWorker.js");
+      tsne_worker.postMessage({ 
+          "cmd": "INIT",
+          "wasmMemory": wasm.wasmMemory
+      });
+  
+      tsne_worker.onmessage = function(msg) {
+        var type = msg.data.type;
+        if (type == "run_tsne_DATA") {
+          var buffer = msg.data.resp.buffer;
+          var contents = WasmBuffer.toArray(wasm, buffer.ptr, buffer.size, buffer.type);
+          var x = [], y = [];
+          for (var i = 0; i < contents.length; i += 2) {
+            x.push(contents[i]);
+            y.push(contents[i + 1]);
+          }
+          postMessage({
+              type: "tsne_DATA",
+              resp: { "x": x, "y": y },
+              msg: "Success: t-SNE run completed"
+          });
+        } else if (type == "error") {
+          reject(new Error(msg.data.reason));
+        }
+
+        resolve(true);
+      }
+    })
+    .catch(error => {
+      console.log(error);
     });
   }
 
-  tsne_worker.onmessage = function(msg) {
-    if ("status" in msg.data && msg.data.status === "SUCCESS") {
-      executeTsne();
-    } else {
-      throw "failed to initialize the t-SNE worker";
-    }
-  };
+  tsne_promise.then(x => {
+    tsne_worker.postMessage({
+      "cmd": "RUN",
+      "params": params,
+      "upstream": upstream.has("neighbor_index"),
+      "nn_index_ptr": fetchNeighborIndex().$$.ptr
+    });
+  });
 }
 
 /* 

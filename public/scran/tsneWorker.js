@@ -56,12 +56,20 @@ onmessage = function(msg) {
     var Module = {};
     Module["wasmMemory"] = msg.data.wasmMemory;
     Module["buffer"] = Module["wasmMemory"].buffer;
+
     importScripts("./scran.js");
-    loadScran(Module).then(function(instance) {
+    loadScran(Module)
+    .then(instance => {
         wasm = instance;
         postMessage({ 
             "type": "init_worker",
             "status": "SUCCESS"
+        });
+    })
+    .catch(error => {
+        postMessage({ 
+            "type": "error",
+            "reason": error.toString() 
         });
     });
   } else {
@@ -72,22 +80,28 @@ onmessage = function(msg) {
 
     var params = msg.data.params;
     var nn_index_ptr = msg.data.nn_index_ptr;
+    try {
+      var init_out = processOutput(args => initializeTsne(args, nn_index_ptr), params.init);
+      if (init_out !== null) {
+        postMessage({
+            type: `${init_out["$step"]}_DATA`,
+            resp: init_out,
+            msg: "Success: t-SNE initialized"
+        });
+      }
 
-    var init_out = processOutput(args => initializeTsne(args, nn_index_ptr), params.init);
-    if (init_out !== null) {
-      postMessage({
-          type: `${init_out["$step"]}_DATA`,
-          resp: init_out,
-          msg: "Success: t-SNE initialized"
-      });
-    }
-
-    var run_out = processOutput(runTsne, params.run);
-    if (run_out !== null) {
-      postMessage({
-          type: `${run_out["$step"]}_DATA`,
-          resp: run_out,
-          msg: "Success: t-SNE run completed"
+      var run_out = processOutput(runTsne, params.run);
+      if (run_out !== null) {
+        postMessage({
+            type: `${run_out["$step"]}_DATA`,
+            resp: run_out,
+            msg: "Success: t-SNE run completed"
+        });
+      }
+    } catch(error) {
+      postMessage({ 
+          "type": "error",
+          "reason": error.toString()
       });
     }
   }
