@@ -5,7 +5,7 @@ function initializeTsne(wasm, args) {
   var step = "init_tsne";
   return utils.runStep(step, args, ["neighbor_index"], () => {
     var init_cache = utils.initCache(step);
-    utils.freeCache(init_cache, "raw");
+    utils.freeCache(init_cache["raw"]);
 
     var index = wasm.NeighborIndex.rebind(utils.cached.neighbor_index.ptr);
     try {

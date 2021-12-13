@@ -51,7 +51,7 @@ function loadFiles(wasm, args) {
     var input = args.files;
     var mtx_files = input[0];
     var input_cache = utils.initCache(step);
-    utils.freeCache(input_cache, "matrix");
+    utils.freeCache(input_cache["matrix"]);
   
     // TODO: use ReadableStream to read directly into 'buffer'.
     var reader = new FileReaderSync();
@@ -99,7 +99,7 @@ function computeQualityControlMetrics(wasm, args) {
   var step = "quality_control_metrics";
   return utils.runStep(step, args, ["inputs"], () => {
     var qcm_cache = utils.initCache(step);
-    utils.freeCache(qcm_cache, "raw");
+    utils.freeCache(qcm_cache["raw"]);
 
     var mat = fetchCountMatrix();
   
@@ -168,7 +168,7 @@ function computeQualityControlThresholds(wasm, args) {
   var step = "quality_control_thresholds";
   return utils.runStep(step, args, ["quality_control_metrics"], () => {
     var qct_cache = utils.initCache(step);
-    utils.freeCache(qct_cache, "raw");
+    utils.freeCache(qct_cache["raw"]);
 
     var metrics = utils.cached["quality_control_metrics"]["raw"];
     var filter_output = wasm.per_cell_qc_filters(metrics, false, 0, args.nmads);
@@ -186,7 +186,7 @@ function filterCells(wasm, args) {
   var step = "quality_control_filtered";
   return utils.runStep(step, args, ["quality_control_thresholds"], () => {
     var qcf_cache = utils.initCache(step);
-    utils.freeCache(qcf_cache, "raw");
+    utils.freeCache(qcf_cache["raw"]);
   
     var mat = fetchCountMatrix();
     var thresholds = utils.cached["quality_control_thresholds"]["raw"];
@@ -206,7 +206,7 @@ function logNormCounts(wasm, args) {
   var step = "normalization";
   return utils.runStep(step, args, ["quality_control_filtered"], () => {
     var norm_cache = utils.initCache(step);
-    utils.freeCache(norm_cache, "raw");
+    utils.freeCache(norm_cache["raw"]);
     var mat = fetchFilteredMatrix();
     norm_cache["raw"] = wasm.log_norm_counts(mat, false, 0, false, 0);
     return {};
@@ -221,7 +221,7 @@ function modelGeneVar(wasm, args) {
   var step = "feature_selection";
   return utils.runStep(step, args, ["normalization"], () => {
     var feat_cached = utils.initCache(step);
-    utils.freeCache(feat_cached, "raw");
+    utils.freeCache(feat_cached["raw"]);
 
     var mat = fetchNormalizedMatrix();
     var model_output = wasm.model_gene_var(mat, false, 0, args.span);
@@ -244,7 +244,7 @@ function runPCA(wasm, args) {
   var step = "pca";
   return utils.runStep(step, args, ["feature_selection"], () => {
     var pca_cached = utils.initCache(step);
-    utils.freeCache(pca_cached, "raw");
+    utils.freeCache(pca_cached["raw"]);
   
     var feat_cached = utils.cached.feature_selection;
     var threshold_at = feat_cached.sorted_residuals[feat_cached.sorted_residuals.length - args.num_hvgs];
@@ -285,7 +285,7 @@ function buildNeighborIndex(wasm, args) {
   var step = "neighbor_index";
   return utils.runStep(step, args, ["pca"], () => {
     var neighbor_cached = utils.initCache(step);
-    utils.freeCache(neighbor_cached, "raw");
+    utils.freeCache(neighbor_cached["raw"]);
     var pcs = fetchPCs();
     neighbor_cached.raw = wasm.build_neighbor_index(pcs.matrix.byteOffset, pcs.num_pcs, pcs.num_obs, args.approximate);
     return {};
@@ -300,7 +300,7 @@ function findSNNeighbors(wasm, args) {
   var step = "snn_find_neighbors";
   return utils.runStep(step, args, ["neighbor_index"], () => {
     var snn_cached = utils.initCache(step);
-    utils.freeCache(snn_cached, "raw");
+    utils.freeCache(snn_cached["raw"]);
     var nn_index = fetchNeighborIndex();
     snn_cached.raw = wasm.find_nearest_neighbors(nn_index, args.k);
     return {};
@@ -311,7 +311,7 @@ function buildSNNGraph(wasm, args) {
   var step = "snn_build_graph";
   return utils.runStep(step, args, ["snn_find_neighbors"], () => {
     var snn_cached = utils.initCache(step);
-    utils.freeCache(snn_cached, "raw");
+    utils.freeCache(snn_cached["raw"]);
     var neighbors = utils.cached.snn_find_neighbors.raw;
     snn_cached.raw = wasm.build_snn_graph_from_neighbors(neighbors, args.scheme);
     return {};
@@ -322,7 +322,7 @@ function clusterSNNGraph(wasm, args) {
   var step = "snn_cluster_graph";
   return utils.runStep(step, args, ["snn_build_graph"], () => {
     var snn_cached = utils.initCache(step);
-    utils.freeCache(snn_cached, "raw");
+    utils.freeCache(snn_cached["raw"]);
  
     var graph = utils.cached.snn_build_graph.raw;
     var clustering = wasm.cluster_snn_graph_from_graph(graph, args.resolution);
@@ -357,7 +357,7 @@ function scoreMarkers(wasm, args) {
   var step = "marker_detection";
   return utils.runStep(step, args, ["choose_clustering", "normalization"], () => {
     var marker_cached = utils.initCache(step);
-    utils.freeCache(marker_cached, "raw");
+    utils.freeCache(marker_cached["raw"]);
 
     var mat = fetchNormalizedMatrix();
     var clusters = utils.cached["choose_clustering"].buffer;

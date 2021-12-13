@@ -16,10 +16,9 @@
   };
 
   /* Free a cached Wasm-constructed object. */
-  utils.freeCache = function (cache, key) {
-    if (cache[key] !== undefined && cache[key] !== null) {
-      cache[key].delete();
-      cache[key] = null;
+  utils.freeCache = function(object) {
+    if (object !== undefined && object !== null) {
+      object.delete();
     }
     return;
   };
