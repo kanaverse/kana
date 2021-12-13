@@ -384,51 +384,45 @@ function scoreMarkers(args) {
  */
 
 var tsne_worker = null;
-var tsne_promise = null;
 function launchTsne(params) {
+  var run_msg = {
+    "cmd": "RUN",
+    "params": params,
+    "upstream": upstream.has("neighbor_index"),
+    "nn_index_ptr": fetchNeighborIndex().$$.ptr
+  };
+
   if (tsne_worker == null) {
-    tsne_promise = new Promise((resolve, reject) => {
-      tsne_worker = new Worker("./tsneWorker.js");
-      tsne_worker.postMessage({ 
-          "cmd": "INIT",
-          "wasmMemory": wasm.wasmMemory
-      });
+    tsne_worker = new Worker("./tsneWorker.js");
+    tsne_worker.postMessage({ 
+        "cmd": "INIT",
+        "wasmMemory": wasm.wasmMemory
+    });
   
-      tsne_worker.onmessage = function(msg) {
-        var type = msg.data.type;
-        if (type == "run_tsne_DATA") {
-          var buffer = msg.data.resp.buffer;
-          var contents = WasmBuffer.toArray(wasm, buffer.ptr, buffer.size, buffer.type);
-          var x = [], y = [];
-          for (var i = 0; i < contents.length; i += 2) {
-            x.push(contents[i]);
-            y.push(contents[i + 1]);
-          }
-          postMessage({
-              type: "tsne_DATA",
-              resp: { "x": x, "y": y },
-              msg: "Success: t-SNE run completed"
-          });
-        } else if (type == "error") {
-          reject(new Error(msg.data.reason));
+    tsne_worker.onmessage = function(msg) {
+      var type = msg.data.type;
+      if (type == "init_worker") {
+        tsne_worker.postMessage(run_msg);
+      } else if (type == "run_tsne_DATA") {
+        var buffer = msg.data.resp.buffer;
+        var contents = WasmBuffer.toArray(wasm, buffer.ptr, buffer.size, buffer.type);
+        var x = [], y = [];
+        for (var i = 0; i < contents.length; i += 2) {
+          x.push(contents[i]);
+          y.push(contents[i + 1]);
         }
-
-        resolve(true);
+        postMessage({
+            type: "tsne_DATA",
+            resp: { "x": x, "y": y },
+            msg: "Success: t-SNE run completed"
+        });
+      } else if (type == "error") {
+        throw msg.data.object;
       }
-    })
-    .catch(error => {
-      console.log(error);
-    });
+    }
+  } else {
+    tsne_worker.postMessage(run_msg);
   }
-
-  tsne_promise.then(x => {
-    tsne_worker.postMessage({
-      "cmd": "RUN",
-      "params": params,
-      "upstream": upstream.has("neighbor_index"),
-      "nn_index_ptr": fetchNeighborIndex().$$.ptr
-    });
-  });
 }
 
 /* 

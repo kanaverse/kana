@@ -69,7 +69,7 @@ onmessage = function(msg) {
     .catch(error => {
         postMessage({ 
             "type": "error",
-            "reason": error.toString() 
+            "object": error
         });
     });
   } else {
@@ -101,7 +101,7 @@ onmessage = function(msg) {
     } catch(error) {
       postMessage({ 
           "type": "error",
-          "reason": error.toString()
+          "object": error
       });
     }
   }
