@@ -1,23 +1,16 @@
 importScripts("./WasmBuffer.js");
 importScripts("./utils.js");
 
-var wasm = null;
-var cached = {};
-var parameters = {};
-var upstream = new Set();
-var initCache = createInitCache(cached);
-var runStep = createRunStep(parameters, upstream);
-
-function initializeTsne(args, nn_index_ptr) {
+function initializeTsne(wasm, args) {
   var step = "init_tsne";
-  return runStep(step, args, ["neighbor_index"], () => {
-    var init_cache = initCache(step);
-    freeCache(init_cache, "raw");
+  return utils.runStep(step, args, ["neighbor_index"], () => {
+    var init_cache = utils.initCache(step);
+    utils.freeCache(init_cache, "raw");
 
-    var index = wasm.NeighborIndex.rebind(nn_index_ptr);
+    var index = wasm.NeighborIndex.rebind(utils.cached.neighbor_index.ptr);
     try {
       var num_obs = index.num_obs(); 
-      var buffer = allocateBuffer(wasm, num_obs * 2, "Float64Array", init_cache);
+      var buffer = utils.allocateBuffer(wasm, num_obs * 2, "Float64Array", init_cache);
       init_cache.raw = wasm.initialize_tsne_from_index(index, args.perplexity, buffer.ptr);
     } finally {
       index.delete();
@@ -26,11 +19,11 @@ function initializeTsne(args, nn_index_ptr) {
   });
 }
 
-function runTsne(args) {
+function runTsne(wasm, args) {
   var step = "run_tsne";
-  return runStep(step, args, ["init_tsne"], () => {
-    var buffer = cached.init_tsne.buffer;
-    var init_tsne_copy = cached.init_tsne.raw.deepcopy();
+  return utils.runStep(step, args, ["init_tsne"], () => {
+    var buffer = utils.cached.init_tsne.buffer;
+    var init_tsne_copy = utils.cached.init_tsne.raw.deepcopy();
     try {
       var delay = 15;
       for (; init_tsne_copy.iterations() < args.iterations; ) {
@@ -51,6 +44,7 @@ function runTsne(args) {
   });
 }
 
+var loaded;
 onmessage = function(msg) {
   if (msg.data.cmd == "INIT") {
     var Module = {};
@@ -58,9 +52,8 @@ onmessage = function(msg) {
     Module["buffer"] = Module["wasmMemory"].buffer;
 
     importScripts("./scran.js");
-    loadScran(Module)
-    .then(instance => {
-        wasm = instance;
+    loaded = loadScran(Module);
+    loaded.then(wasm => {
         postMessage({ 
             "type": "init_worker",
             "status": "SUCCESS"
@@ -72,16 +65,17 @@ onmessage = function(msg) {
             "object": error
         });
     });
+
   } else {
-    upstream.clear();
+    utils.upstream.clear();
     if (msg.data.upstream) {
-      upstream.add("neighbor_index");
+      utils.upstream.add("neighbor_index");
+      utils.cached["neighbor_index"] = { "ptr": msg.data.nn_index_ptr };
     }
 
-    var params = msg.data.params;
-    var nn_index_ptr = msg.data.nn_index_ptr;
-    try {
-      var init_out = processOutput(args => initializeTsne(args, nn_index_ptr), params.init);
+    loaded.then(wasm => {
+      var params = msg.data.params;
+      var init_out = utils.processOutput(initializeTsne, wasm, params.init);
       if (init_out !== null) {
         postMessage({
             type: `${init_out["$step"]}_DATA`,
@@ -90,7 +84,7 @@ onmessage = function(msg) {
         });
       }
 
-      var run_out = processOutput(runTsne, params.run);
+      var run_out = utils.processOutput(runTsne, wasm, params.run);
       if (run_out !== null) {
         postMessage({
             type: `${run_out["$step"]}_DATA`,
@@ -98,11 +92,12 @@ onmessage = function(msg) {
             msg: "Success: t-SNE run completed"
         });
       }
-    } catch(error) {
+    })
+    .catch(error => {
       postMessage({ 
           "type": "error",
           "object": error
       });
-    }
+    })
   }
 }

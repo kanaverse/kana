@@ -3,37 +3,33 @@ importScripts("./utils.js");
 importScripts("https://cdn.jsdelivr.net/npm/d3-dsv@3");
 importScripts("https://cdn.jsdelivr.net/npm/d3-scale@4");
 
-var wasm = null;
-var cached = {};
-var parameters = {};
-var upstream = new Set();
-var initCache = createInitCache(cached);
-var runStep = createRunStep(parameters, upstream);
-
 /* 
  * Step executor functions. 
  * 
  * Each function corresponds to a standalone step in the linear analysis. It
  * should take an `args` object containing all of the user-specified arguments
  * for this step. These are checked against the existing argument values (if
- * any) in `parameters`, and if they are different, the step is rerun. 
+ * any) in `utils.parameters`, and if they are different, the step is rerun. 
  *
- * Results may be cached in `cached` for use in downstream steps. Note that
- * each step is responsible for the memory management of its cached results;
- * for Wasm-originating objects, we suggest using `freeCache`, while for
- * JS-allocated buffers on the Wasm heap, we suggest using `allocateBuffer`.
+ * Results may be cached in `utils.cached` for use in downstream steps; use
+ * `utils.initCache` to set up an appropriate cache location. Note that each
+ * step is responsible for the memory management of its cached results; for
+ * Wasm-originating objects, we suggest using `utils.freeCache`, while for
+ * JS-allocated buffers on the Wasm heap, we suggest using
+ * `utils.allocateBuffer`.
  *
- * On success, the previous `parameters` are replaced by `args` so that the
- * next run of the same step can be skipped if there is no change. The step is
- * also added to `upstream` so that any downstream steps know that they need
- * to be re-run if they detect dependencies have rerun. This is all handled
- * by `runStep`, which wraps the boilerplate around the actual step. 
+ * On success, the previous values in the corresponding entry of
+ * `utils.parameters` are replaced by `args` so that the next run of the same
+ * step can be skipped if there is no change. The step is also added to
+ * `utils.upstream` so that any downstream steps know that they need to be
+ * re-run if they detect dependencies have rerun. This is all handled by
+ * `runStep`, which wraps the boilerplate around the actual step. 
  *
- * The return value contains an object to be passed to the main thread.
- * This should not contain any Wasm-originating objects or allocated buffers.
+ * The return value contains an object to be passed to the main thread.  This
+ * should not contain any Wasm-originating objects or allocated buffers.
  */
 
-function loadFiles(args) {
+function loadFiles(wasm, args) {
   var step = "inputs";
 
   // Files are not directly comparable, so we just check their name and size.
@@ -51,11 +47,11 @@ function loadFiles(args) {
   }
   var mock_args = { "matrix": mock_mtx, "barcodes": mock_barcodes, "genes": mock_genes };
 
-  return runStep(step, mock_args, [], () => {
+  return utils.runStep(step, mock_args, [], () => {
     var input = args.files;
     var mtx_files = input[0];
-    var input_cache = initCache(step);
-    freeCache(input_cache, "matrix");
+    var input_cache = utils.initCache(step);
+    utils.freeCache(input_cache, "matrix");
   
     // TODO: use ReadableStream to read directly into 'buffer'.
     var reader = new FileReaderSync();
@@ -68,7 +64,7 @@ function loadFiles(args) {
       buffer.array().set(contents);
       var ext = mtx_files[0].name.split('.').pop();
       var is_compressed = (ext == "gz");
-      cached.inputs.matrix = wasm.read_matrix_market(buffer.ptr, mtx_files[0].size, is_compressed);
+      utils.cached.inputs.matrix = wasm.read_matrix_market(buffer.ptr, mtx_files[0].size, is_compressed);
     } finally {
       buffer.free();
     }
@@ -80,7 +76,7 @@ function loadFiles(args) {
       var reader = new FileReaderSync();
       var file_size = barcode_file[0].size;
       var buffer = reader.readAsText(barcode_file[0]);
-      cached.inputs.barcodes = tsv.parse(buffer);
+      utils.cached.inputs.barcodes = tsv.parse(buffer);
     }
   
     var genes_file = input[2];
@@ -88,7 +84,7 @@ function loadFiles(args) {
       var reader = new FileReaderSync();
       var file_size = genes_file[0].size;
       var buffer = reader.readAsText(genes_file[0]);
-      cached.inputs.genes = tsv.parse(buffer);
+      utils.cached.inputs.genes = tsv.parse(buffer);
     }
     
     return {};
@@ -96,14 +92,14 @@ function loadFiles(args) {
 }
 
 function fetchCountMatrix() {
-  return cached["inputs"]["matrix"];
+  return utils.cached["inputs"]["matrix"];
 }
 
-function computeQualityControlMetrics(args) {
+function computeQualityControlMetrics(wasm, args) {
   var step = "quality_control_metrics";
-  return runStep(step, args, ["inputs"], () => {
-    var qcm_cache = initCache(step);
-    freeCache(qcm_cache, "raw");
+  return utils.runStep(step, args, ["inputs"], () => {
+    var qcm_cache = utils.initCache(step);
+    utils.freeCache(qcm_cache, "raw");
 
     var mat = fetchCountMatrix();
   
@@ -168,13 +164,13 @@ function computeQualityControlMetrics(args) {
   });
 }
 
-function computeQualityControlThresholds(args) {
+function computeQualityControlThresholds(wasm, args) {
   var step = "quality_control_thresholds";
-  return runStep(step, args, ["quality_control_metrics"], () => {
-    var qct_cache = initCache(step);
-    freeCache(qct_cache, "raw");
+  return utils.runStep(step, args, ["quality_control_metrics"], () => {
+    var qct_cache = utils.initCache(step);
+    utils.freeCache(qct_cache, "raw");
 
-    var metrics = cached["quality_control_metrics"]["raw"];
+    var metrics = utils.cached["quality_control_metrics"]["raw"];
     var filter_output = wasm.per_cell_qc_filters(metrics, false, 0, args.nmads);
     qct_cache["raw"] = filter_output;
 
@@ -186,14 +182,14 @@ function computeQualityControlThresholds(args) {
   });
 }
 
-function filterCells(args) {
+function filterCells(wasm, args) {
   var step = "quality_control_filtered";
-  return runStep(step, args, ["quality_control_thresholds"], () => {
-    var qcf_cache = initCache(step);
-    freeCache(qcf_cache, "raw");
+  return utils.runStep(step, args, ["quality_control_thresholds"], () => {
+    var qcf_cache = utils.initCache(step);
+    utils.freeCache(qcf_cache, "raw");
   
     var mat = fetchCountMatrix();
-    var thresholds = cached["quality_control_thresholds"]["raw"];
+    var thresholds = utils.cached["quality_control_thresholds"]["raw"];
     var discard_ptr = thresholds.discard_overall().byteOffset;
 
     qcf_cache["raw"] = wasm.filter_cells(mat, discard_ptr, false);
@@ -203,14 +199,14 @@ function filterCells(args) {
 }
 
 function fetchFilteredMatrix() { // helper for downstream functions.
-  return cached["quality_control_filtered"]["raw"];
+  return utils.cached["quality_control_filtered"]["raw"];
 }
 
-function logNormCounts(args) {
+function logNormCounts(wasm, args) {
   var step = "normalization";
-  return runStep(step, args, ["quality_control_filtered"], () => {
-    var norm_cache = initCache(step);
-    freeCache(norm_cache, "raw");
+  return utils.runStep(step, args, ["quality_control_filtered"], () => {
+    var norm_cache = utils.initCache(step);
+    utils.freeCache(norm_cache, "raw");
     var mat = fetchFilteredMatrix();
     norm_cache["raw"] = wasm.log_norm_counts(mat, false, 0, false, 0);
     return {};
@@ -218,14 +214,14 @@ function logNormCounts(args) {
 }
 
 function fetchNormalizedMatrix() { // helper for downstream functions.
-  return cached["normalization"]["raw"];
+  return utils.cached["normalization"]["raw"];
 }
 
-function modelGeneVar(args) {
+function modelGeneVar(wasm, args) {
   var step = "feature_selection";
-  return runStep(step, args, ["normalization"], () => {
-    var feat_cached = initCache(step);
-    freeCache(feat_cached, "raw");
+  return utils.runStep(step, args, ["normalization"], () => {
+    var feat_cached = utils.initCache(step);
+    utils.freeCache(feat_cached, "raw");
 
     var mat = fetchNormalizedMatrix();
     var model_output = wasm.model_gene_var(mat, false, 0, args.span);
@@ -244,13 +240,13 @@ function modelGeneVar(args) {
   });
 }
 
-function runPCA(args) {
+function runPCA(wasm, args) {
   var step = "pca";
-  return runStep(step, args, ["feature_selection"], () => {
-    var pca_cached = initCache(step);
-    freeCache(pca_cached, "raw");
+  return utils.runStep(step, args, ["feature_selection"], () => {
+    var pca_cached = utils.initCache(step);
+    utils.freeCache(pca_cached, "raw");
   
-    var feat_cached = cached.feature_selection;
+    var feat_cached = utils.cached.feature_selection;
     var threshold_at = feat_cached.sorted_residuals[feat_cached.sorted_residuals.length - args.num_hvgs];
   
     var mat = fetchNormalizedMatrix();
@@ -279,17 +275,17 @@ function runPCA(args) {
 
 function fetchPCs () {
   return {
-    "matrix" : cached.pca.raw.pcs(),
-    "num_pcs": parameters.pca.num_pcs,
+    "matrix" : utils.cached.pca.raw.pcs(),
+    "num_pcs": utils.parameters.pca.num_pcs,
     "num_obs": fetchNormalizedMatrix().ncol()
   }
 }
 
-function buildNeighborIndex(args) {
+function buildNeighborIndex(wasm, args) {
   var step = "neighbor_index";
-  return runStep(step, args, ["pca"], () => {
-    var neighbor_cached = initCache(step);
-    freeCache(neighbor_cached, "raw");
+  return utils.runStep(step, args, ["pca"], () => {
+    var neighbor_cached = utils.initCache(step);
+    utils.freeCache(neighbor_cached, "raw");
     var pcs = fetchPCs();
     neighbor_cached.raw = wasm.build_neighbor_index(pcs.matrix.byteOffset, pcs.num_pcs, pcs.num_obs, args.approximate);
     return {};
@@ -297,38 +293,39 @@ function buildNeighborIndex(args) {
 }
 
 function fetchNeighborIndex() {
-  return cached["neighbor_index"]["raw"];
+  return utils.cached["neighbor_index"]["raw"];
 }
 
-function findSNNeighbors(args) {
+function findSNNeighbors(wasm, args) {
   var step = "snn_find_neighbors";
-  return runStep(step, args, ["neighbor_index"], () => {
-    var snn_cached = initCache(step);
-    freeCache(snn_cached, "raw");
+  return utils.runStep(step, args, ["neighbor_index"], () => {
+    var snn_cached = utils.initCache(step);
+    utils.freeCache(snn_cached, "raw");
     var nn_index = fetchNeighborIndex();
     snn_cached.raw = wasm.find_nearest_neighbors(nn_index, args.k);
     return {};
   });
 }
 
-function buildSNNGraph(args) {
+function buildSNNGraph(wasm, args) {
   var step = "snn_build_graph";
-  return runStep(step, args, ["snn_find_neighbors"], () => {
-    var snn_cached = initCache(step);
-    freeCache(snn_cached, "raw");
-    var neighbors = cached.snn_find_neighbors.raw;
+  return utils.runStep(step, args, ["snn_find_neighbors"], () => {
+    var snn_cached = utils.initCache(step);
+    utils.freeCache(snn_cached, "raw");
+    var neighbors = utils.cached.snn_find_neighbors.raw;
     snn_cached.raw = wasm.build_snn_graph_from_neighbors(neighbors, args.scheme);
     return {};
   });
 }
 
-function clusterSNNGraph(args) {
+function clusterSNNGraph(wasm, args) {
   var step = "snn_cluster_graph";
-  return runStep(step, args, ["snn_build_graph"], () => {
-    var snn_cached = initCache(step);
-    freeCache(snn_cached, "raw");
-  
-    var clustering = wasm.cluster_snn_graph_from_graph(cached.snn_build_graph.raw, args.resolution);
+  return utils.runStep(step, args, ["snn_build_graph"], () => {
+    var snn_cached = utils.initCache(step);
+    utils.freeCache(snn_cached, "raw");
+ 
+    var graph = utils.cached.snn_build_graph.raw;
+    var clustering = wasm.cluster_snn_graph_from_graph(graph, args.resolution);
     snn_cached.raw = clustering;
   
     var arr_clust = clustering.membership(clustering.best()).slice();
@@ -338,16 +335,16 @@ function clusterSNNGraph(args) {
   });
 }
 
-function chooseClustering(args) {
+function chooseClustering(wasm, args) {
   var step = "choose_clustering";
-  return runStep(step, args, ["snn_cluster_graph"], () => {
-    var clust_cached = initCache(step);
+  return utils.runStep(step, args, ["snn_cluster_graph"], () => {
+    var clust_cached = utils.initCache(step);
     var num_obs = fetchNormalizedMatrix().ncol();
-    var buffer = allocateBuffer(wasm, num_obs, "Int32Array", clust_cached);
+    var buffer = utils.allocateBuffer(wasm, num_obs, "Int32Array", clust_cached);
 
     var vec = buffer.array();
     if (args.method == "snn_graph") {
-      var clustering = cached["snn_cluster_graph"].raw;
+      var clustering = utils.cached["snn_cluster_graph"].raw;
       var src = clustering.membership(clustering.best());
       vec.set(src);
     }
@@ -356,14 +353,14 @@ function chooseClustering(args) {
   });
 }
 
-function scoreMarkers(args) {
+function scoreMarkers(wasm, args) {
   var step = "marker_detection";
-  return runStep(step, args, ["choose_clustering", "normalization"], () => {
-    var marker_cached = initCache(step);
-    freeCache(marker_cached, "raw");
+  return utils.runStep(step, args, ["choose_clustering", "normalization"], () => {
+    var marker_cached = utils.initCache(step);
+    utils.freeCache(marker_cached, "raw");
 
     var mat = fetchNormalizedMatrix();
-    var clusters = cached["choose_clustering"].buffer;
+    var clusters = utils.cached["choose_clustering"].buffer;
     console.log(clusters);
     marker_cached.raw = wasm.score_markers(mat, clusters.ptr, false, 0);
 
@@ -376,22 +373,14 @@ function scoreMarkers(args) {
  *
  * These steps are run in separate workers, and need some accommodation for the
  * message passing. In particular, each function is responsible for initialization
- * of the worker, which persists for the lifetime of the application. We use a 
- * promise that only resolves upon receipt of an initialization success message,
- * after which we can post a message to actually run the step of interest.
+ * of the worker, which persists for the lifetime of the application. We assume 
+ * that the worker will only process a RUN command when it has initialized.
  *
  * They also need to handle the animation.
  */
 
 var tsne_worker = null;
-function launchTsne(params) {
-  var run_msg = {
-    "cmd": "RUN",
-    "params": params,
-    "upstream": upstream.has("neighbor_index"),
-    "nn_index_ptr": fetchNeighborIndex().$$.ptr
-  };
-
+function launchTsne(wasm, params) {
   if (tsne_worker == null) {
     tsne_worker = new Worker("./tsneWorker.js");
     tsne_worker.postMessage({ 
@@ -401,9 +390,7 @@ function launchTsne(params) {
   
     tsne_worker.onmessage = function(msg) {
       var type = msg.data.type;
-      if (type == "init_worker") {
-        tsne_worker.postMessage(run_msg);
-      } else if (type == "run_tsne_DATA") {
+      if (type == "run_tsne_DATA") {
         var buffer = msg.data.resp.buffer;
         var contents = WasmBuffer.toArray(wasm, buffer.ptr, buffer.size, buffer.type);
         var x = [], y = [];
@@ -420,9 +407,14 @@ function launchTsne(params) {
         throw msg.data.object;
       }
     }
-  } else {
-    tsne_worker.postMessage(run_msg);
-  }
+  } 
+  
+  tsne_worker.postMessage({
+    "cmd": "RUN",
+    "params": params,
+    "upstream": utils.upstream.has("neighbor_index"),
+    "nn_index_ptr": fetchNeighborIndex().$$.ptr
+  });
 }
 
 /* 
@@ -430,12 +422,12 @@ function launchTsne(params) {
  * response is not NULL.
  */
 
-function runAllSteps(state) {
-  upstream.clear();
+function runAllSteps(wasm, state) {
+  utils.upstream.clear();
 
-  var load_out = processOutput(loadFiles, { "files": state.files });
+  var load_out = utils.processOutput(loadFiles, wasm, { "files": state.files });
   if (load_out !== null) {
-    var mat = cached.inputs.matrix;
+    var mat = utils.cached.inputs.matrix;
     postMessage({
         type: `${load_out["$step"]}_DIMS`,
         resp: `${mat.nrow()} X ${mat.ncol()}`,
@@ -443,7 +435,7 @@ function runAllSteps(state) {
     });
   }
 
-  var metrics_out = processOutput(computeQualityControlMetrics, {});
+  var metrics_out = utils.processOutput(computeQualityControlMetrics, wasm, {});
   if (metrics_out !== null) { 
     postMessage({
         type: `${metrics_out["$step"]}_DATA`,
@@ -452,7 +444,7 @@ function runAllSteps(state) {
     });
   }
 
-  var thresholds_out = processOutput(computeQualityControlThresholds, { "nmads": state.params.qc["qc-nmads"] });
+  var thresholds_out = utils.processOutput(computeQualityControlThresholds, wasm, { "nmads": state.params.qc["qc-nmads"] });
   if (thresholds_out !== null) { 
     postMessage({
         type: `${thresholds_out["$step"]}_DATA`,
@@ -461,7 +453,7 @@ function runAllSteps(state) {
     });
   }
 
-  var filtered_out = processOutput(filterCells, {});
+  var filtered_out = utils.processOutput(filterCells, wasm, {});
   if (filtered_out !== null) { 
     var mat = fetchFilteredMatrix();
     postMessage({
@@ -477,7 +469,7 @@ function runAllSteps(state) {
     });
   }
 
-  var norm_out = processOutput(logNormCounts, {});
+  var norm_out = utils.processOutput(logNormCounts, wasm, {});
   if (norm_out !== null) { 
     postMessage({
         type: `${norm_out["$step"]}_DATA`,
@@ -486,7 +478,7 @@ function runAllSteps(state) {
     });
   }
 
-  var feat_out = processOutput(modelGeneVar, { "span": state.params.fSelection["fsel-span"] });
+  var feat_out = utils.processOutput(modelGeneVar, wasm, { "span": state.params.fSelection["fsel-span"] });
   if (feat_out !== null) { 
     postMessage({
         type: `${feat_out["$step"]}_DATA`,
@@ -495,7 +487,7 @@ function runAllSteps(state) {
     });
   }
 
-  var pca_out = processOutput(runPCA, { "num_hvgs": 4000, "num_pcs": state.params.pca["pca-npc"] });
+  var pca_out = utils.processOutput(runPCA, wasm, { "num_hvgs": 4000, "num_pcs": state.params.pca["pca-npc"] });
   if (norm_out !== null) { 
     postMessage({
         type: `${pca_out["$step"]}_DATA`,
@@ -504,7 +496,7 @@ function runAllSteps(state) {
     });
   }
 
-  var index_out = processOutput(buildNeighborIndex, { "approximate": state.params.cluster["clus-approx"] });
+  var index_out = utils.processOutput(buildNeighborIndex, wasm, { "approximate": state.params.cluster["clus-approx"] });
   if (index_out !== null) {
     postMessage({
         type: `${index_out["$step"]}_DATA`,
@@ -513,7 +505,7 @@ function runAllSteps(state) {
     });
   }
 
-  launchTsne({
+  launchTsne(wasm, {
     "init": {
       "perplexity": state.params.tsne["tsne-perp"]
     },
@@ -522,7 +514,7 @@ function runAllSteps(state) {
     }
   });
 
-  var neighbors_out = processOutput(findSNNeighbors, { "k": state.params.cluster["clus-k"] });
+  var neighbors_out = utils.processOutput(findSNNeighbors, wasm, { "k": state.params.cluster["clus-k"] });
   if (neighbors_out !== null) {
     postMessage({
         type: `${neighbors_out["$step"]}_DATA`,
@@ -531,7 +523,7 @@ function runAllSteps(state) {
     });
   }
 
-  var graph_out = processOutput(buildSNNGraph, { "scheme": state.params.cluster["clus-scheme"] });
+  var graph_out = utils.processOutput(buildSNNGraph, wasm, { "scheme": state.params.cluster["clus-scheme"] });
   if (graph_out !== null) {
     postMessage({
         type: `${graph_out["$step"]}_DATA`,
@@ -540,7 +532,7 @@ function runAllSteps(state) {
     });
   }
 
-  var cluster_out = processOutput(clusterSNNGraph, { "resolution": state.params.cluster["clus-res"] });
+  var cluster_out = utils.processOutput(clusterSNNGraph, wasm, { "resolution": state.params.cluster["clus-res"] });
   if (cluster_out !== null) {
     postMessage({
         type: `${cluster_out["$step"]}_DATA`,
@@ -549,7 +541,7 @@ function runAllSteps(state) {
     });
   }
 
-  var choose_out = processOutput(chooseClustering, { "method": "snn_graph" });
+  var choose_out = utils.processOutput(chooseClustering, wasm, { "method": "snn_graph" });
   if (choose_out !== null) {
     postMessage({
         type: `${choose_out["$step"]}_DATA`,
@@ -558,7 +550,7 @@ function runAllSteps(state) {
     });
   }
 
-  var marker_out = processOutput(scoreMarkers, {});
+  var marker_out = utils.processOutput(scoreMarkers, wasm, {});
   if (marker_out !== null) {
     postMessage({
         type: `${marker_out["$step"]}_DATA`,
@@ -568,6 +560,7 @@ function runAllSteps(state) {
   }
 }
 
+var loaded; 
 onmessage = function (msg) {
   var self = this;
   console.log("in worker");
@@ -577,16 +570,17 @@ onmessage = function (msg) {
   if (payload.type == "INIT") {
       // TODO: parcel2 doesn't load inline importScripts
       importScripts("./scran.js");
-      loadScran()
-      .then((Module) => {
-         wasm = Module;
+      loaded = loadScran();
+      loaded.then(wasm => {
          postMessage({
              type: payload.type,
              msg: `Success: ScranJS/WASM initialized`
          });
       })
   } else if (payload.type == "RUN") {
-      runAllSteps(payload.payload);
+      loaded.then(wasm => {
+          runAllSteps(wasm, payload.payload);
+      });
   }
   // custom events from UI
   else if (payload.type == "setQCThresholds") {
