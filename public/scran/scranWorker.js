@@ -368,33 +368,18 @@ function scoreMarkers(wasm, args) {
   });
 }
 
-function findSNNeighbors(wasm, args) {
-  var step = "tsne_find_neighbors";
-  return utils.runStep(step, args, ["neighbor_index"], () => {
-    var snn_cached = utils.initCache(step);
-    utils.freeCache(snn_cached["raw"]);
-    return {};
-  });
-}
-
-function find_(wasm, args) {
-  var step = "tsne_find_neighbors";
-  return utils.runStep(step, args, ["neighbor_index"], () => {
-    var snn_cached = utils.initCache(step);
-    utils.freeCache(snn_cached["raw"]);
-    var nn_index = fetchNeighborIndex();
-    snn_cached.raw = wasm.find_nearest_neighbors(nn_index, args.k);
-    return {};
-  });
-}
-
 /* 
  * Special functions for launching t-SNE and UMAP.
  *
  * These steps are run in separate workers, and need some accommodation for the
  * message passing. In particular, each function is responsible for initialization
  * of the worker, which persists for the lifetime of the application. We assume 
- * that the worker will only process a RUN command when it has initialized.
+ * that the worker will wait for initialization before processing any RUN message.
+ * 
+ * Data are passed between workers using transferrable TypedArray. Initial
+ * attempts with the SharedArrayBuffers are too fragile as reallocations seem
+ * to invalidate existing references to the heap - I haven't figured out how
+ * to avoid this. So we'll just copy into a TypedArray and transfer it.
  *
  * They also need to handle the animation.
  */
@@ -412,6 +397,7 @@ function transferNeighbors(wasm, k) {
     dbuf = new WasmBuffer(wasm, results.size(), "Float64Array");
 
     results.serialize(rbuf.ptr, ibuf.ptr, dbuf.ptr);
+    output["size"] = results.size();
     output["runs"] = rbuf.array().slice();
     output["indices"] = ibuf.array().slice();
     output["distances"] = dbuf.array().slice();
@@ -435,7 +421,7 @@ function transferNeighbors(wasm, k) {
 }
 
 var tsne_worker = null;
-function launchTsne(wasm, args) {
+function launchTsne(wasm, params) {
   if (tsne_worker == null) {
     tsne_worker = new Worker("./tsneWorker.js");
     tsne_worker.postMessage({ 
@@ -446,18 +432,13 @@ function launchTsne(wasm, args) {
     tsne_worker.onmessage = function(msg) {
       var type = msg.data.type;
       if (type == "run_tsne_DATA") {
-        var buffer = msg.data.resp.buffer;
-        var contents = WasmBuffer.toArray(wasm, buffer.ptr, buffer.size, buffer.type);
-        var x = [], y = [];
-        for (var i = 0; i < contents.length; i += 2) {
-          x.push(contents[i]);
-          y.push(contents[i + 1]);
-        }
+        var x = msg.data.resp.x;
+        var y = msg.data.resp.y;
         postMessage({
             type: "tsne_DATA",
             resp: { "x": x, "y": y },
             msg: "Success: t-SNE run completed"
-        });
+        }, [x.buffer, y.buffer]);
       } else if (type == "error") {
         throw msg.data.object;
       }
@@ -466,7 +447,7 @@ function launchTsne(wasm, args) {
 
   // Finding the neighbors on the linear worker.
   var step = "tsne_neighbors";
-  var nn_out = runStep(step, { "perplexity": params.perplexity }, ["neighbor_index"], () => {
+  var nn_out = utils.runStep(step, { "perplexity": params.perplexity }, ["neighbor_index"], () => {
     var k = wasm.perplexity_to_k(params.perplexity);
     return transferNeighbors(wasm, k); 
   });

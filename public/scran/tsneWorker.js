@@ -7,7 +7,7 @@ function initializeTsne(wasm, args) {
   return utils.runStep(step, args, ["neighbor_results"], () => {
     var init_cache = utils.initCache(step);
     utils.freeCache(init_cache["raw"]);
-    init_cache.raw = wasm.initialize_tsne(cached.neighbor_results.raw, args.perplexity);
+    init_cache.raw = wasm.initialize_tsne(utils.cached.neighbor_results.raw, args.perplexity);
     return {};
   });
 }
@@ -16,10 +16,13 @@ function runTsne(wasm, args) {
   var step = "run_tsne";
   return utils.runStep(step, args, ["init_tsne"], () => {
     var run_cache = utils.initCache(step);
-    var num_obs = index.num_obs(); 
-    var buffer = utils.allocateBuffer(wasm, num_obs * 2, "Float64Array", init_cache);
+    var init = utils.cached.init_tsne.raw;
 
-    var init_tsne_copy = utils.cached.init_tsne.raw.deepcopy();
+    var num_obs = init.num_obs(); 
+    var buffer = utils.allocateBuffer(wasm, num_obs * 2, "Float64Array", run_cache);
+    wasm.randomize_tsne_start(num_obs, buffer.ptr, 42);
+
+    var init_tsne_copy = init.deepcopy();
     try {
       var delay = 15;
       for (; init_tsne_copy.iterations() < args.iterations; ) {
@@ -29,12 +32,10 @@ function runTsne(wasm, args) {
       init_tsne_copy.delete();
     }
 
+    var xy = vizutils.extractXY(buffer);
     return {
-      "buffer": {
-        "ptr": buffer.ptr,
-        "size": buffer.size,
-        "type": buffer.type
-      },
+      "x": xy.x,
+      "y": xy.y,
       "iterations": args.iterations
     };
   });
@@ -62,6 +63,7 @@ onmessage = function(msg) {
     loaded.then(wasm => {
       utils.upstream.clear();
       if (msg.data.neighbors !== null) {
+        console.log(msg.data.neighbors);
         vizutils.recreateNeighbors(wasm, msg.data.neighbors);
       }
 
@@ -81,7 +83,7 @@ onmessage = function(msg) {
             type: `${run_out["$step"]}_DATA`,
             resp: run_out,
             msg: "Success: t-SNE run completed"
-        });
+        }, [run_out.x.buffer, run_out.y.buffer]);
       }
     })
     .catch(error => {

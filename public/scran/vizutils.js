@@ -5,13 +5,18 @@ vizutils.recreateNeighbors = function(wasm, neighbors) {
   var nn_cached = utils.initCache(step);
   utils.freeCache(nn_cached["raw"]);
 
-  var rbuf = null, ibuf = null, dbuf = null;
+  var rbuf = null;
+  var ibuf = null;
+  var dbuf = null;
   try {
-    rbuf = new WasmBuffer(wasm, results.num_obs(), "Int32Array");
+    var num_obs = neighbors.num_obs;
+    var size = neighbors.size;
+
+    rbuf = new WasmBuffer(wasm, num_obs, "Int32Array");
     rbuf.array().set(neighbors.runs);
-    ibuf = new WasmBuffer(wasm, results.size(), "Int32Array");
+    ibuf = new WasmBuffer(wasm, size, "Int32Array");
     ibuf.array().set(neighbors.indices);
-    dbuf = new WasmBuffer(wasm, results.size(), "Float64Array");
+    dbuf = new WasmBuffer(wasm, size, "Float64Array");
     dbuf.array().set(neighbors.distances);
 
     nn_cached["raw"] = new wasm.NeighborResults(neighbors.num_obs, rbuf.ptr, ibuf.ptr, dbuf.ptr);
@@ -31,4 +36,16 @@ vizutils.recreateNeighbors = function(wasm, neighbors) {
   return;
 };
 
+vizutils.extractXY = function(buffer) {
+  var nobs = buffer.size / 2;
+  var x = new Float64Array(nobs);
+  var y = new Float64Array(nobs);
+  var buf = buffer.array();
 
+  for (var i = 0; i < nobs; i++) {
+    x[i] = buf[2*i];
+    y[i] = buf[2*i + 1];
+  }
+ 
+  return { "x": x, "y": y };
+}
