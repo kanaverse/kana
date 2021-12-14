@@ -313,7 +313,7 @@ function buildSNNGraph(wasm, args) {
     var snn_cached = utils.initCache(step);
     utils.freeCache(snn_cached["raw"]);
     var neighbors = utils.cached.snn_find_neighbors.raw;
-    snn_cached.raw = wasm.build_snn_graph_from_neighbors(neighbors, args.scheme);
+    snn_cached.raw = wasm.build_snn_graph(neighbors, args.scheme);
     return {};
   });
 }
@@ -325,7 +325,7 @@ function clusterSNNGraph(wasm, args) {
     utils.freeCache(snn_cached["raw"]);
  
     var graph = utils.cached.snn_build_graph.raw;
-    var clustering = wasm.cluster_snn_graph_from_graph(graph, args.resolution);
+    var clustering = wasm.cluster_snn_graph(graph, args.resolution);
     snn_cached.raw = clustering;
   
     var arr_clust = clustering.membership(clustering.best()).slice();
@@ -368,6 +368,26 @@ function scoreMarkers(wasm, args) {
   });
 }
 
+function findSNNeighbors(wasm, args) {
+  var step = "tsne_find_neighbors";
+  return utils.runStep(step, args, ["neighbor_index"], () => {
+    var snn_cached = utils.initCache(step);
+    utils.freeCache(snn_cached["raw"]);
+    return {};
+  });
+}
+
+function find_(wasm, args) {
+  var step = "tsne_find_neighbors";
+  return utils.runStep(step, args, ["neighbor_index"], () => {
+    var snn_cached = utils.initCache(step);
+    utils.freeCache(snn_cached["raw"]);
+    var nn_index = fetchNeighborIndex();
+    snn_cached.raw = wasm.find_nearest_neighbors(nn_index, args.k);
+    return {};
+  });
+}
+
 /* 
  * Special functions for launching t-SNE and UMAP.
  *
@@ -379,8 +399,43 @@ function scoreMarkers(wasm, args) {
  * They also need to handle the animation.
  */
 
+function transferNeighbors(wasm, k) {
+  var nn_index = fetchNeighborIndex();
+
+  var output = { "num_obs": nn_index.num_obs() };
+  var results = null, rbuf = null, ibuf = null, dbuf = null;
+  try {
+    results = wasm.find_nearest_neighbors(nn_index, k);
+
+    rbuf = new WasmBuffer(wasm, results.num_obs(), "Int32Array");
+    ibuf = new WasmBuffer(wasm, results.size(), "Int32Array");
+    dbuf = new WasmBuffer(wasm, results.size(), "Float64Array");
+
+    results.serialize(rbuf.ptr, ibuf.ptr, dbuf.ptr);
+    output["runs"] = rbuf.array().slice();
+    output["indices"] = ibuf.array().slice();
+    output["distances"] = dbuf.array().slice();
+
+  } finally {
+    if (results !== null) {
+      results.delete();
+    }
+    if (rbuf !== null) {
+      rbuf.free();
+    }
+    if (ibuf !== null) {
+      ibuf.free();
+    }
+    if (dbuf !== null) {
+      dbuf.free();
+    }
+  }
+
+  return output;
+}
+
 var tsne_worker = null;
-function launchTsne(wasm, params) {
+function launchTsne(wasm, args) {
   if (tsne_worker == null) {
     tsne_worker = new Worker("./tsneWorker.js");
     tsne_worker.postMessage({ 
@@ -408,13 +463,25 @@ function launchTsne(wasm, params) {
       }
     }
   } 
-  
-  tsne_worker.postMessage({
-    "cmd": "RUN",
-    "params": params,
-    "upstream": utils.upstream.has("neighbor_index"),
-    "nn_index_ptr": fetchNeighborIndex().$$.ptr
+
+  // Finding the neighbors on the linear worker.
+  var step = "tsne_neighbors";
+  var nn_out = runStep(step, { "perplexity": params.perplexity }, ["neighbor_index"], () => {
+    var k = wasm.perplexity_to_k(params.perplexity);
+    return transferNeighbors(wasm, k); 
   });
+
+  var run_msg = {
+    "cmd": "RUN",
+    "params": params
+  };
+
+  if (nn_out !== null) {
+    run_msg.neighbors = nn_out;
+    tsne_worker.postMessage(run_msg, [nn_out.runs.buffer, nn_out.indices.buffer, nn_out.distances.buffer]);
+  } else {
+    tsne_worker.postMessage(run_msg);
+  }
 }
 
 /* 
@@ -506,12 +573,8 @@ function runAllSteps(wasm, state) {
   }
 
   launchTsne(wasm, {
-    "init": {
-      "perplexity": state.params.tsne["tsne-perp"]
-    },
-    "run": {
-      "iterations": state.params.tsne["tsne-iter"]
-    }
+    "perplexity": state.params.tsne["tsne-perp"],
+    "iterations": state.params.tsne["tsne-iter"]
   });
 
   var neighbors_out = utils.processOutput(findSNNeighbors, wasm, { "k": state.params.cluster["clus-k"] });

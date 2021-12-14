@@ -1,20 +1,13 @@
 importScripts("./WasmBuffer.js");
 importScripts("./utils.js");
+importScripts("./vizutils.js");
 
 function initializeTsne(wasm, args) {
   var step = "init_tsne";
-  return utils.runStep(step, args, ["neighbor_index"], () => {
+  return utils.runStep(step, args, ["neighbor_results"], () => {
     var init_cache = utils.initCache(step);
     utils.freeCache(init_cache["raw"]);
-
-    var index = wasm.NeighborIndex.rebind(utils.cached.neighbor_index.ptr);
-    try {
-      var num_obs = index.num_obs(); 
-      var buffer = utils.allocateBuffer(wasm, num_obs * 2, "Float64Array", init_cache);
-      init_cache.raw = wasm.initialize_tsne_from_index(index, args.perplexity, buffer.ptr);
-    } finally {
-      index.delete();
-    }
+    init_cache.raw = wasm.initialize_tsne(cached.neighbor_results.raw, args.perplexity);
     return {};
   });
 }
@@ -22,7 +15,10 @@ function initializeTsne(wasm, args) {
 function runTsne(wasm, args) {
   var step = "run_tsne";
   return utils.runStep(step, args, ["init_tsne"], () => {
-    var buffer = utils.cached.init_tsne.buffer;
+    var run_cache = utils.initCache(step);
+    var num_obs = index.num_obs(); 
+    var buffer = utils.allocateBuffer(wasm, num_obs * 2, "Float64Array", init_cache);
+
     var init_tsne_copy = utils.cached.init_tsne.raw.deepcopy();
     try {
       var delay = 15;
@@ -47,12 +43,8 @@ function runTsne(wasm, args) {
 var loaded;
 onmessage = function(msg) {
   if (msg.data.cmd == "INIT") {
-    var Module = {};
-    Module["wasmMemory"] = msg.data.wasmMemory;
-    Module["buffer"] = Module["wasmMemory"].buffer;
-
     importScripts("./scran.js");
-    loaded = loadScran(Module);
+    loaded = loadScran();
     loaded.then(wasm => {
         postMessage({ 
             "type": "init_worker",
@@ -67,15 +59,14 @@ onmessage = function(msg) {
     });
 
   } else {
-    utils.upstream.clear();
-    if (msg.data.upstream) {
-      utils.upstream.add("neighbor_index");
-      utils.cached["neighbor_index"] = { "ptr": msg.data.nn_index_ptr };
-    }
-
     loaded.then(wasm => {
+      utils.upstream.clear();
+      if (msg.data.neighbors !== null) {
+        vizutils.recreateNeighbors(wasm, msg.data.neighbors);
+      }
+
       var params = msg.data.params;
-      var init_out = utils.processOutput(initializeTsne, wasm, params.init);
+      var init_out = utils.processOutput(initializeTsne, wasm, { "perplexity": params.perplexity });
       if (init_out !== null) {
         postMessage({
             type: `${init_out["$step"]}_DATA`,
@@ -84,7 +75,7 @@ onmessage = function(msg) {
         });
       }
 
-      var run_out = utils.processOutput(runTsne, wasm, params.run);
+      var run_out = utils.processOutput(runTsne, wasm, { "iterations": params.iterations });
       if (run_out !== null) {
         postMessage({
             type: `${run_out["$step"]}_DATA`,
