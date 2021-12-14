@@ -424,10 +424,7 @@ var tsne_worker = null;
 function launchTsne(wasm, params) {
   if (tsne_worker == null) {
     tsne_worker = new Worker("./tsneWorker.js");
-    tsne_worker.postMessage({ 
-        "cmd": "INIT",
-        "wasmMemory": wasm.wasmMemory
-    });
+    tsne_worker.postMessage({ "cmd": "INIT" });
   
     tsne_worker.onmessage = function(msg) {
       var type = msg.data.type;
@@ -462,6 +459,47 @@ function launchTsne(wasm, params) {
     tsne_worker.postMessage(run_msg, [nn_out.runs.buffer, nn_out.indices.buffer, nn_out.distances.buffer]);
   } else {
     tsne_worker.postMessage(run_msg);
+  }
+}
+
+var umap_worker = null;
+function launchUmap(wasm, params) {
+  if (umap_worker == null) {
+    umap_worker = new Worker("./umapWorker.js");
+    umap_worker.postMessage({ "cmd": "INIT" });
+  
+    umap_worker.onmessage = function(msg) {
+      var type = msg.data.type;
+      if (type == "run_umap_DATA") {
+        var x = msg.data.resp.x;
+        var y = msg.data.resp.y;
+        postMessage({
+            type: "umap_DATA",
+            resp: { "x": x, "y": y },
+            msg: "Success: UMAP run completed"
+        }, [x.buffer, y.buffer]);
+      } else if (type == "error") {
+        throw msg.data.object;
+      }
+    }
+  } 
+
+  // Finding the neighbors on the linear worker.
+  var step = "umap_neighbors";
+  var nn_out = utils.runStep(step, { "num_neighbors": params.num_neighbors }, ["neighbor_index"], () => {
+    return transferNeighbors(wasm, params.num_neighbors); 
+  });
+
+  var run_msg = {
+    "cmd": "RUN",
+    "params": params
+  };
+
+  if (nn_out !== null) {
+    run_msg.neighbors = nn_out;
+    umap_worker.postMessage(run_msg, [nn_out.runs.buffer, nn_out.indices.buffer, nn_out.distances.buffer]);
+  } else {
+    umap_worker.postMessage(run_msg);
   }
 }
 
@@ -556,6 +594,12 @@ function runAllSteps(wasm, state) {
   launchTsne(wasm, {
     "perplexity": state.params.tsne["tsne-perp"],
     "iterations": state.params.tsne["tsne-iter"]
+  });
+
+  launchUmap(wasm, {
+    "num_epochs": state.params.umap["umap-epochs"],
+    "num_neighbors": state.params.umap["umap-nn"],
+    "min_dist": state.params.umap["umap-min_dist"]
   });
 
   var neighbors_out = utils.processOutput(findSNNeighbors, wasm, { "k": state.params.cluster["clus-k"] });

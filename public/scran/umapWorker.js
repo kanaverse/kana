@@ -2,41 +2,42 @@ importScripts("./WasmBuffer.js");
 importScripts("./utils.js");
 importScripts("./vizutils.js");
 
-function initializeTsne(wasm, args) {
-  var step = "init_tsne";
+function initializeUmap(wasm, args) {
+  var step = "init_umap";
   return utils.runStep(step, args, ["neighbor_results"], () => {
     var init_cache = utils.initCache(step);
     utils.freeCache(init_cache["raw"]);
-    init_cache.raw = wasm.initialize_tsne(utils.cached.neighbor_results.raw, args.perplexity);
+
+    var nn_umap = utils.cached.neighbor_results.raw;
+    var umap_buffer = utils.allocateBuffer(wasm, nn_umap.num_obs() * 2, "Float64Array", init_cache);
+    init_cache.raw = wasm.initialize_umap(nn_umap, args.num_epochs, args.min_dist, umap_buffer.ptr);
+
     return {};
   });
 }
 
-function runTsne(wasm, args) {
-  var step = "run_tsne";
-  return utils.runStep(step, args, ["init_tsne"], () => {
-    var run_cache = utils.initCache(step);
-    var init = utils.cached.init_tsne.raw;
+function runUmap(wasm, args) {
+  var step = "run_umap";
+  return utils.runStep(step, args, ["init_umap"], () => {
+    var buffer = utils.cached.init_umap.buffer;
 
-    var num_obs = init.num_obs(); 
-    var buffer = utils.allocateBuffer(wasm, num_obs * 2, "Float64Array", run_cache);
-    wasm.randomize_tsne_start(num_obs, buffer.ptr, 42);
-
-    var init_tsne_copy = init.deepcopy();
+    var total;
+    var init_umap_copy = utils.cached.init_umap.raw.deepcopy();
     try {
+      total = init_umap_copy.num_epochs();
       var delay = 15;
-      for (; init_tsne_copy.iterations() < args.iterations; ) {
-          wasm.run_tsne(init_tsne_copy, delay, args.iterations, buffer.ptr);
+      for (; init_umap_copy.epoch() < total; ) {
+        wasm.run_umap(init_umap_copy, delay, buffer.ptr);
       }
     } finally {
-      init_tsne_copy.delete();
+      init_umap_copy.delete();
     }
 
     var xy = vizutils.extractXY(buffer);
     return {
       "x": xy.x,
       "y": xy.y,
-      "iterations": args.iterations
+      "iterations": total
     };
   });
 }
@@ -60,6 +61,8 @@ onmessage = function(msg) {
     });
 
   } else {
+    utils.upstream.clear();
+
     loaded.then(wasm => {
       utils.upstream.clear();
       if (msg.data.neighbors !== null) {
@@ -67,21 +70,21 @@ onmessage = function(msg) {
       }
 
       var params = msg.data.params;
-      var init_out = utils.processOutput(initializeTsne, wasm, { "perplexity": params.perplexity });
+      var init_out = utils.processOutput(initializeUmap, wasm, { "min_dist": params.min_dist, "num_epochs": params.num_epochs });
       if (init_out !== null) {
         postMessage({
             type: `${init_out["$step"]}_DATA`,
             resp: init_out,
-            msg: "Success: t-SNE initialized"
+            msg: "Success: UMAP initialized"
         });
       }
 
-      var run_out = utils.processOutput(runTsne, wasm, { "iterations": params.iterations });
+      var run_out = utils.processOutput(runUmap, wasm, {});
       if (run_out !== null) {
         postMessage({
             type: `${run_out["$step"]}_DATA`,
             resp: run_out,
-            msg: "Success: t-SNE run completed"
+            msg: "Success: UMAP run completed"
         }, [run_out.x.buffer, run_out.y.buffer]);
       }
     })
