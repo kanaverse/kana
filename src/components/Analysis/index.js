@@ -1,4 +1,5 @@
-import { Button, Classes, Dialog, Text, FileInput, NumericInput, Label, H4, Tag, Icon, Position } from "@blueprintjs/core";
+import { Button, Classes, Dialog, Text, FileInput, NumericInput, 
+    Label, H4, Tag, Icon, Position, HTMLSelect } from "@blueprintjs/core";
 import { Tooltip2, Popover2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback } from "react";
 
@@ -136,6 +137,18 @@ function AnalysisDialog({
                                         onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { "clus-k": nval } }) }} />
                                 </Label>
                                 <Label className="row-input">
+                                    <Text className="text-100">Scheme
+                                        <Tooltip2 className="row-tooltip" content="0 for approx, 1 ..., 2 for jaccard index" position={Position.RIGHT} openOnTargetFocus={false}>
+                                            <Icon icon="help"></Icon>
+                                        </Tooltip2>
+                                    </Text>
+                                    <HTMLSelect onChange={(nval, val) => setTmpInputParams({...tmpInputParams, "cluster": { "clus-scheme": parseInt(nval?.currentTarget?.value) }})}>
+                                        <option key="0">0</option>
+                                        <option key="1">1</option>
+                                        <option key="2">2</option>
+                                    </HTMLSelect>
+                                </Label>
+                                <Label className="row-input">
                                     <Text className="text-100">Resolution
                                         <Tooltip2 className="row-tooltip" content="Resolution of the multi-level clustering, used in the modularity calculation.Larger values yield more fine-grained clusters.(defaults to 0.5)" position={Position.RIGHT} openOnTargetFocus={false}>
                                             <Icon icon="help"></Icon>
@@ -168,6 +181,39 @@ function AnalysisDialog({
                             </div>
                         </div>
                     </div>
+
+                    <div className="col">
+                        <div>
+                            <H4><Tag large={true} round={true}>6</Tag> UMAP: Compute UMAP embeddings and Visualize cells</H4>
+                            <div className="row">
+                                <Label className="row-input">
+                                    <Text className="text-100">Num of Neighbors (defaults to 15)</Text>
+                                    <NumericInput
+                                        placeholder="15" value={tmpInputParams["umap"]["umap-nn"]}
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { "umap-nn": nval } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">Epochs (defaults to 500)</Text>
+                                    <NumericInput
+                                        placeholder="500" value={tmpInputParams["umap"]["umap-epoch"]}
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { "umap-epoch": nval } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">Min Distance (defaults to 0.01)</Text>
+                                    <NumericInput
+                                        placeholder="0.01" value={tmpInputParams["umap"]["umap-min_dist"]}
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { "umap-min_dist": nval } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">Use Approximate Neighbor Search ? (true for fast UMAP calculation))</Text>
+                                    <NumericInput
+                                        placeholder="0.01" value={tmpInputParams["umap"]["umap-approx_nn"]}
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { "umap-approx_nn": nval } }) }} />
+                                </Label>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 {includeFooter ? (

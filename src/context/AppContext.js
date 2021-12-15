@@ -23,10 +23,17 @@ const AppContextProvider = ({ children }) => {
     cluster: {
       "clus-k": 10,
       "clus-res": 0.5,
+      "clus-scheme": 0,
     },
     tsne: {
       "tsne-iter": 500,
       "tsne-perp": 30,
+    },
+    umap: {
+      "umap-nn": 15,
+      "umap-epochs": 500,
+      "umap-min_dist": 0.01,
+      "umap-approx_nn": true,
     },
     markerGene: {}
   });
