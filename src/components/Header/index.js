@@ -5,15 +5,18 @@ import {
   NavbarGroup,
   NavbarHeading,
 } from "@blueprintjs/core";
-import React from "react";
+
+import { useState, useContext } from 'react';
 
 // import ImportFilesDialog from '../ImportFiles';
 // import InputParamsDialog from '../InputParams';
 import AnalysisDialog from '../Analysis';
 import Stats from '../Stats';
+import Logs from '../Logs';
+
 
 const Header = (props) => {
-  const [state] = React.useState({
+  const [state] = useState({
     autoFocus: true,
     canEscapeKeyClose: true,
     canOutsideClickClose: true,
@@ -24,7 +27,7 @@ const Header = (props) => {
 
   return (
     <>
-      <Navbar>
+      <Navbar className="bp3-dark">
         <NavbarGroup align={Alignment.LEFT}>
           <NavbarHeading>SCRAN.JS</NavbarHeading>
           <NavbarDivider />
@@ -39,6 +42,7 @@ const Header = (props) => {
             {...state} />
           <NavbarDivider />
           <Stats />
+          <Logs />
         </NavbarGroup>
       </Navbar>
     </>

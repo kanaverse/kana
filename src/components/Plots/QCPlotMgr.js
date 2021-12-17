@@ -18,7 +18,7 @@ const QCPlotMgr = (props) => {
             {
                 ["sums", "detected"].map(x => {
                     const props = {
-                        "threshold": qcData["thresholds"][x],
+                        "threshold": qcData?.["thresholds"]?.[x],
                         "range": qcData["ranges"][x],
                         "data": qcData[x],
                         "label": x

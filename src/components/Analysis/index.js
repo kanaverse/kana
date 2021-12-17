@@ -46,7 +46,7 @@ function AnalysisDialog({
 
     return (
         <>
-            <Button onClick={handleButtonClick} text={buttonText} />
+            <Button onClick={handleButtonClick} icon="social-media" intent="primary" text={buttonText} />
             <Dialog className="analysis-dialog" {...props} isOpen={isOpen} onClose={handleClose}>
                 <div className={Classes.DIALOG_BODY}>
                     <div className="col">

@@ -46,7 +46,7 @@ const AppContextProvider = ({ children }) => {
   // dim sizes
   const [initDims, setInitDims] = useState(null);
   const [qcDims, setQcDims] = useState(null);
-  const [fSelDims, setFSelDims] = useState (null);
+  const [fSelDims, setFSelDims] = useState(null);
 
   // QC Data
   const [qcData, setQcData] = useState(null);
@@ -70,6 +70,12 @@ const AppContextProvider = ({ children }) => {
   // TSNE
   const [tsneData, setTsneData] = useState(null);
 
+    // UMAP
+    const [umapData, setUmapData] = useState(null);
+
+  // Logs
+  const [logs, setLogs] = useState([]);
+
   useEffect(() => {
     // console.log("something changed");
 
@@ -78,9 +84,9 @@ const AppContextProvider = ({ children }) => {
       window.Worker.postMessage({
         "type": "RUN",
         "payload": {
-          "files": [inputFiles.mtx, 
-            inputFiles.barcode ? inputFiles.barcode[0] : [], 
-            inputFiles.gene ? inputFiles.gene[0]: []], //mtx, barcode, gene
+          "files": [inputFiles.mtx,
+          inputFiles.barcode ? inputFiles.barcode[0] : [],
+          inputFiles.gene ? inputFiles.gene[0] : []], //mtx, barcode, gene
           "params": params
         },
         "msg": "not much to pass"
@@ -98,6 +104,7 @@ const AppContextProvider = ({ children }) => {
         pcaData, setPcaData,
         pcaVarExp, setPcaVarExp,
         tsneData, setTsneData,
+        umapData, setUmapData,
         initDims, setInitDims,
         qcDims, setQcDims,
         qcData, setQcData,
@@ -107,7 +114,8 @@ const AppContextProvider = ({ children }) => {
         defaultRedDims, setDefaultRedDims,
         plotRedDims, setPlotRedDims,
         clusterData, setClusterData,
-        fSelectionData, setFSelectionData
+        fSelectionData, setFSelectionData,
+        logs, setLogs
       }}
     >
       {children}

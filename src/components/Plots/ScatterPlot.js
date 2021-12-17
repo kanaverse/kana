@@ -1,6 +1,6 @@
 import { ScatterGL } from 'scatter-gl';
 import { useEffect, useRef, useContext, useState } from 'react';
-import { ControlGroup, Button, HTMLSelect, InputGroup, Icon } from "@blueprintjs/core";
+import { ControlGroup, Button, HTMLSelect, InputGroup, Icon, ButtonGroup } from "@blueprintjs/core";
 import { Classes, Popover2 } from "@blueprintjs/popover2";
 
 import { AppContext } from '../../context/AppContext';
@@ -12,7 +12,8 @@ const DimPlot = () => {
     const container = useRef();
     const [scatterplot, setScatterplot] = useState(null);
 
-    const { plotRedDims, redDims, defaultRedDims } = useContext(AppContext);
+    const { plotRedDims, redDims, defaultRedDims, setDefaultRedDims, clusterData,
+        tsneData, umapData, setPlotRedDims } = useContext(AppContext);
 
     useEffect(() => {
         console.log("tsne data changed");
@@ -51,6 +52,9 @@ const DimPlot = () => {
                         }
                         console.log(message);
                     },
+                    orbitControls: {
+                        zoomSpeed: 1.25,
+                    },
                 });
 
                 tmp_scatterplot.setPanMode();
@@ -60,13 +64,17 @@ const DimPlot = () => {
             if (plotRedDims?.plot) {
 
                 // if (!self.cluster_mappings) {
-                let cluster_mappings = Object.values(plotRedDims?.clusters);
+                let cluster_mappings = plotRedDims?.clusters;
                 let cluster_count = Math.max(...cluster_mappings);
                 const cluster_colors = randomColor({ luminosity: 'dark', count: cluster_count + 1 });
 
-                let points = plotRedDims?.plot.x.map((x, i) => [plotRedDims?.plot.x[i], plotRedDims?.plot.y[i]]);
+                let points = []
+                plotRedDims?.plot.x.forEach((x, i) => {
+                    points.push([x, plotRedDims?.plot.y[i]]);
+                });
+
                 let metadata = {
-                    clusters: Object.values(plotRedDims?.clusters)
+                    clusters: cluster_mappings
                 };
                 const dataset = new ScatterGL.Dataset(points, metadata);
 
@@ -83,10 +91,62 @@ const DimPlot = () => {
         }
     }, [plotRedDims]);
 
+    useEffect(() => {
+        changeRedDim(defaultRedDims);
+    }, [defaultRedDims])
+
+    const changeRedDim = (x) => {
+        if (defaultRedDims === "TSNE") {
+            setPlotRedDims({
+                "plot": tsneData,
+                "clusters": clusterData?.clusters
+            });
+        } else if (defaultRedDims === "UMAP") {
+            setPlotRedDims({
+                "plot": umapData,
+                "clusters": clusterData?.clusters
+            });
+        }
+    };
+
+    const setInteraction = (x) => {
+        if (x === "PAN") {
+            scatterplot.setPanMode();
+        } else if (x === "SELECT") {
+            scatterplot.setSelectMode();
+        }
+    }
+
     return (
         <div className="scatter-plot">
-            <ControlGroup className="scatter-plot-control" fill={false} vertical={false}>
-                <div className="bp3-html-select .modifier">
+            <ButtonGroup style={{ minWidth: 75, minHeight: 150 }}
+                fill={false}
+                iconOnly={false}
+                large={false}
+                minimal={false}
+                vertical={true}
+                className='left-sidebar'
+            >
+                <Button className='dim-button'
+                    disabled={redDims.indexOf("TSNE") == -1}
+                    onClick={() => setDefaultRedDims("TSNE")}
+                    intent={defaultRedDims == "TSNE" ? "primary" : ""}
+                >
+                    <Icon icon="database"></Icon>
+                    <br />
+                    <span>TSNE</span>
+                </Button>
+                <Button className='dim-button'
+                    disabled={redDims.indexOf("UMAP") == -1}
+                    onClick={() => setDefaultRedDims("UMAP")}
+                    intent={defaultRedDims == "UMAP" ? "primary" : ""}
+                >
+                    <Icon icon="database"></Icon><br />
+                    <span>UMAP</span>
+                </Button>
+            </ButtonGroup>
+            <ControlGroup className="top-header" fill={false} vertical={false}>
+                {/* <div className="bp3-html-select .modifier">
                     <select>
                         {redDims.length == 0 ?
                             <option selected>Change reduced dimension...</option> :
@@ -96,16 +156,20 @@ const DimPlot = () => {
                                 key={x} value={x}>Dimension: {x}</option>
                         })}
                     </select>
-                </div>
+                </div> */}
                 <Button>Play t-SNE Interactively</Button>
                 <Button>Color Plot by Metadata</Button>
                 <Button>What else ?</Button>
+                <Button icon="hand-up" onClick={x => setInteraction("PAN")}>Pan</Button>
+                <Button icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
             </ControlGroup>
-            {
-                plotRedDims?.plot ?
-                    <div ref={container} ></div> :
-                    <span>Running Analysis, please wait...</span>
-            }
+            <div className='dim-plot'>
+                {
+                    plotRedDims?.plot ?
+                        <div ref={container} ></div> :
+                        "Choose an Embedding... or Embeddings are being computed..."
+                }
+            </div>
         </div>
     );
 };

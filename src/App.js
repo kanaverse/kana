@@ -19,10 +19,20 @@ import MarkerPlot from './components/Markers';
 function App() {
 
   const [loading, setLoading] = useState(true);
+  const loadingProps = {
+    autoFocus: true,
+    canEscapeKeyClose: false,
+    canOutsideClickClose: false,
+    enforceFocus: true,
+    hasBackdrop: true,
+    usePortal: true,
+    useTallContent: false,
+  };
+
   const { setWasmInitialized, setTsneData, setRedDims, redDims,
     setInitDims, setQcDims, setFSelDims, defaultRedDims, setDefaultRedDims,
-    tsneData, plotRedDims, setQcData, setClusterData, setFSelectionData,
-    setPlotRedDims, setPcaVarExp } = useContext(AppContext);
+    setQcData, qcData, setClusterData, setFSelectionData,
+    setUmapData, setPcaVarExp, logs, setLogs } = useContext(AppContext);
 
   useEffect(() => {
     console.log("calling init");
@@ -32,43 +42,46 @@ function App() {
     });
   }, [])
 
-  useEffect(() => {
-    console.log("calling defaultreddims");
-    if (defaultRedDims === "TSNE") {
-      setPlotRedDims({
-        "plot": tsneData?.tsne,
-        "clusters": tsneData?.clusters
-      });
-    } else if (defaultRedDims === "PCA") {
-      // need PCA dims
-    }
-  }, [defaultRedDims])
-
   // let worker = new Worker("./scran/scranWorker.js");
+  var QCData = {};
 
   window.Worker.onmessage = (msg) => {
-    console.log(msg);
-
     const payload = msg.data;
+
+    // console.log(msg);
     console.log(payload);
 
+    if (payload?.msg) {
+      let tmp = [...logs];
+      let d = new Date();
+      tmp.push(`${d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds()} - ${payload?.type} - ${payload?.msg}`);
+
+      setLogs(tmp);
+    }
+
     if (payload.type === "INIT") {
+      // TODO: need a timeout here so the screen doesn't flicker
       setLoading(false);
       setWasmInitialized(true);
-    } else if (payload.type === "load_DIMS") {
+    } else if (payload.type === "input_DIMS") {
       setInitDims(payload.resp);
-    } else if (payload.type === "qc_DIMS") {
+    } else if (payload.type === "quality_control_filtered_DIMS") {
       setQcDims(payload.resp);
-    } else if (payload.type === "qc_DATA") {
+    } else if (payload.type === "quality_control_metrics_DATA") {
       const { type, resp } = payload;
+      QCData = resp;
       setQcData(resp);
-    } else if (payload.type === "fSelection_DIMS") {
-      setFSelDims(payload.resp);
-    } else if (payload.type === "fSelection_DATA") {
+    } else if (payload.type === "quality_control_thresholds_DATA") {
+      const { type, resp } = payload;
+      qcData["thresholds"] = resp;
+      setQcData(qcData);
+    } else if (payload.type === "feature_selection_DIMS") {
+      // setFSelDims(payload.resp);
+    } else if (payload.type === "feature_selection_DATA") {
       const { type, resp } = payload;
       console.log(type, resp);
       setFSelectionData(resp);
-    }else if (payload.type === "pca_DATA") {
+    } else if (payload.type === "pca_DATA") {
       const { type, resp } = payload;
       console.log(type, resp);
       let tmp = [...redDims];
@@ -76,7 +89,7 @@ function App() {
       setRedDims(tmp);
       setPcaVarExp(resp);
       // setTsneData(resp);
-    } else if (payload.type === "cluster_DATA") {
+    } else if (payload.type === "snn_cluster_graph_DATA") {
       const { type, resp } = payload;
       console.log(type, resp);
       setClusterData(resp);
@@ -89,6 +102,13 @@ function App() {
       if (!defaultRedDims) {
         setDefaultRedDims("TSNE");
       }
+      setRedDims(tmp);
+    } else if (payload.type === "umap_DATA") {
+      const { type, resp } = payload;
+      console.log(type, resp);
+      setUmapData(resp);
+      let tmp = [...redDims];
+      tmp.push("UMAP");
       setRedDims(tmp);
     } else if (payload.type === "markerGene_DATA") {
       const { type, resp } = payload;
@@ -113,12 +133,16 @@ function App() {
           <Gallery />
         </div>
       </div>
-      <Overlay isOpen={loading}>
-        <div>
+      <Overlay
+        isOpen={loading}
+        {...loadingProps}
+      >
+        <div className="spinner">
           <Spinner size={100} />
           <p>Initializing SCRAN.JS</p>
         </div>
       </Overlay>
+
     </div>
   );
 }
