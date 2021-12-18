@@ -7,9 +7,8 @@ const ClusterBarPlot = (props) => {
     if (!data) return "";
 
     let x = {};
-    const data_vals =  Object.values(data);
-    for (var i = 0; i < data_vals?.length; i++) {
-        var clus = data_vals[i];
+    for (var i = 0; i < data?.length; i++) {
+        var clus = data[i];
         if ("CLUS_" + clus in x) {
             x["CLUS_" + clus]++;
         } else {

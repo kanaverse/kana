@@ -52,13 +52,13 @@ function loadFiles(wasm, args) {
     var mtx_files = input[0];
     var input_cache = utils.initCache(step);
     utils.freeCache(input_cache["matrix"]);
-  
+
     // TODO: use ReadableStream to read directly into 'buffer'.
     var reader = new FileReaderSync();
     var file_size = mtx_files[0].size;
     var contents = reader.readAsArrayBuffer(mtx_files[0]);
     var contents = new Uint8Array(contents);
-    
+
     var buffer = new WasmBuffer(wasm, file_size, "Uint8Array");
     try {
       buffer.array().set(contents);
@@ -68,9 +68,9 @@ function loadFiles(wasm, args) {
     } finally {
       buffer.free();
     }
-  
+
     const tsv = d3.dsvFormat("\t");
-  
+
     var barcode_file = input[1];
     if (barcode_file.length > 0) {
       var reader = new FileReaderSync();
@@ -78,7 +78,7 @@ function loadFiles(wasm, args) {
       var buffer = reader.readAsText(barcode_file[0]);
       utils.cached.inputs.barcodes = tsv.parse(buffer);
     }
-  
+
     var genes_file = input[2];
     if (genes_file.length > 0) {
       var reader = new FileReaderSync();
@@ -86,7 +86,7 @@ function loadFiles(wasm, args) {
       var buffer = reader.readAsText(genes_file[0]);
       utils.cached.inputs.genes = tsv.parse(buffer);
     }
-    
+
     return {};
   });
 }
@@ -102,7 +102,7 @@ function computeQualityControlMetrics(wasm, args) {
     utils.freeCache(qcm_cache["raw"]);
 
     var mat = fetchCountMatrix();
-  
+
     // Testing:
     var nsubsets = 1;
     var subsets = new WasmBuffer(wasm, mat.nrow() * nsubsets, "Uint8Array");
@@ -119,10 +119,10 @@ function computeQualityControlMetrics(wasm, args) {
     var distributions = {};
     var ranges = {};
     var qc_output = qcm_cache["raw"];
-  
+
     ["sums", "detected", "proportion"].forEach(function (x, i) {
       var current;
-      switch(x) {
+      switch (x) {
         case "sums":
           current = qc_output.sums();
           break;
@@ -132,19 +132,19 @@ function computeQualityControlMetrics(wasm, args) {
         case "proportion":
           current = qc_output.subset_proportions(0);
       };
-  
+
       // if (x != "proportion") {
       //   self.qc_metrics[x] = self.qc_metrics[x].map(x => Math.log2(x + 1));
       // }
-  
+
       var tmin = Math.min(...current);
       var tmax = Math.max(...current);
       ranges[x] = [tmin, tmax];
-  
+
       // var tscale = d3.scaleLinear()
       //   .domain([tmin, tmax])
       //   .range([0, 100]);
-  
+
       var m = (100) / (tmax - tmin);
       var b = -m * tmin;
 
@@ -154,7 +154,7 @@ function computeQualityControlMetrics(wasm, args) {
         distributions[x][idx]++;
       });
     });
-  
+
     return {
       "sums": distributions.sums,
       "detected": distributions.detected,
@@ -187,13 +187,13 @@ function filterCells(wasm, args) {
   return utils.runStep(step, args, ["quality_control_thresholds"], () => {
     var qcf_cache = utils.initCache(step);
     utils.freeCache(qcf_cache["raw"]);
-  
+
     var mat = fetchCountMatrix();
     var thresholds = utils.cached["quality_control_thresholds"]["raw"];
     var discard_ptr = thresholds.discard_overall().byteOffset;
 
     qcf_cache["raw"] = wasm.filter_cells(mat, discard_ptr, false);
-  
+
     return {};
   });
 }
@@ -245,10 +245,10 @@ function runPCA(wasm, args) {
   return utils.runStep(step, args, ["feature_selection"], () => {
     var pca_cached = utils.initCache(step);
     utils.freeCache(pca_cached["raw"]);
-  
+
     var feat_cached = utils.cached.feature_selection;
     var threshold_at = feat_cached.sorted_residuals[feat_cached.sorted_residuals.length - args.num_hvgs];
-  
+
     var mat = fetchNormalizedMatrix();
     var sub = new WasmBuffer(wasm, mat.nrow(), "Uint8Array");
     try {
@@ -259,7 +259,7 @@ function runPCA(wasm, args) {
     } finally {
       sub.free();
     }
-  
+
     var pca_output = pca_cached.raw;
     var var_exp = pca_output.variance_explained().slice();
     var total_var = pca_output.total_variance();
@@ -273,9 +273,9 @@ function runPCA(wasm, args) {
   });
 }
 
-function fetchPCs () {
+function fetchPCs() {
   return {
-    "matrix" : utils.cached.pca.raw.pcs(),
+    "matrix": utils.cached.pca.raw.pcs(),
     "num_pcs": utils.parameters.pca.num_pcs,
     "num_obs": fetchNormalizedMatrix().ncol()
   }
@@ -323,11 +323,11 @@ function clusterSNNGraph(wasm, args) {
   return utils.runStep(step, args, ["snn_build_graph"], () => {
     var snn_cached = utils.initCache(step);
     utils.freeCache(snn_cached["raw"]);
- 
+
     var graph = utils.cached.snn_build_graph.raw;
     var clustering = wasm.cluster_snn_graph(graph, args.resolution);
     snn_cached.raw = clustering;
-  
+
     var arr_clust = clustering.membership(clustering.best()).slice();
     return {
       "clusters": arr_clust
@@ -425,28 +425,28 @@ function launchTsne(wasm, params) {
   if (tsne_worker == null) {
     tsne_worker = new Worker("./tsneWorker.js");
     tsne_worker.postMessage({ "cmd": "INIT" });
-  
-    tsne_worker.onmessage = function(msg) {
+
+    tsne_worker.onmessage = function (msg) {
       var type = msg.data.type;
       if (type == "run_tsne_DATA") {
         var x = msg.data.resp.x;
         var y = msg.data.resp.y;
         postMessage({
-            type: "tsne_DATA",
-            resp: { "x": x, "y": y },
-            msg: "Success: t-SNE run completed"
+          type: "tsne_DATA",
+          resp: { "x": x, "y": y },
+          msg: "Success: t-SNE run completed"
         }, [x.buffer, y.buffer]);
       } else if (type == "error") {
         throw msg.data.object;
       }
     }
-  } 
+  }
 
   // Finding the neighbors on the linear worker.
   var step = "tsne_neighbors";
   var nn_out = utils.runStep(step, { "perplexity": params.perplexity }, ["neighbor_index"], () => {
     var k = wasm.perplexity_to_k(params.perplexity);
-    return transferNeighbors(wasm, k); 
+    return transferNeighbors(wasm, k);
   });
 
   var run_msg = {
@@ -467,27 +467,27 @@ function launchUmap(wasm, params) {
   if (umap_worker == null) {
     umap_worker = new Worker("./umapWorker.js");
     umap_worker.postMessage({ "cmd": "INIT" });
-  
-    umap_worker.onmessage = function(msg) {
+
+    umap_worker.onmessage = function (msg) {
       var type = msg.data.type;
       if (type == "run_umap_DATA") {
         var x = msg.data.resp.x;
         var y = msg.data.resp.y;
         postMessage({
-            type: "umap_DATA",
-            resp: { "x": x, "y": y },
-            msg: "Success: UMAP run completed"
+          type: "umap_DATA",
+          resp: { "x": x, "y": y },
+          msg: "Success: UMAP run completed"
         }, [x.buffer, y.buffer]);
       } else if (type == "error") {
         throw msg.data.object;
       }
     }
-  } 
+  }
 
   // Finding the neighbors on the linear worker.
   var step = "umap_neighbors";
   var nn_out = utils.runStep(step, { "num_neighbors": params.num_neighbors }, ["neighbor_index"], () => {
-    return transferNeighbors(wasm, params.num_neighbors); 
+    return transferNeighbors(wasm, params.num_neighbors);
   });
 
   var run_msg = {
@@ -515,79 +515,79 @@ function runAllSteps(wasm, state) {
   if (load_out !== null) {
     var mat = utils.cached.inputs.matrix;
     postMessage({
-        type: `${load_out["$step"]}_DIMS`,
-        resp: `${mat.nrow()} X ${mat.ncol()}`,
-        msg: `Success: Data loaded, dimensions: ${mat.nrow()}, ${mat.ncol()}`
+      type: `${load_out["$step"]}_DIMS`,
+      resp: `${mat.nrow()} X ${mat.ncol()}`,
+      msg: `Success: Data loaded, dimensions: ${mat.nrow()}, ${mat.ncol()}`
     });
   }
 
   var metrics_out = utils.processOutput(computeQualityControlMetrics, wasm, {});
-  if (metrics_out !== null) { 
+  if (metrics_out !== null) {
     postMessage({
-        type: `${metrics_out["$step"]}_DATA`,
-        resp: metrics_out,
-        msg: "Success: QC metrics computed"
+      type: `${metrics_out["$step"]}_DATA`,
+      resp: metrics_out,
+      msg: "Success: QC metrics computed"
     });
   }
 
   var thresholds_out = utils.processOutput(computeQualityControlThresholds, wasm, { "nmads": state.params.qc["qc-nmads"] });
-  if (thresholds_out !== null) { 
+  if (thresholds_out !== null) {
     postMessage({
-        type: `${thresholds_out["$step"]}_DATA`,
-        resp: thresholds_out,
-        msg: "Success: QC thresholds computed"
+      type: `${thresholds_out["$step"]}_DATA`,
+      resp: thresholds_out,
+      msg: "Success: QC thresholds computed"
     });
   }
 
   var filtered_out = utils.processOutput(filterCells, wasm, {});
-  if (filtered_out !== null) { 
+  if (filtered_out !== null) {
     var mat = fetchFilteredMatrix();
     postMessage({
-        type: `${filtered_out["$step"]}_DIMS`,
-        resp: `${mat.nrow()} X ${mat.ncol()}`,
-        msg: `Success: Data filtered, dimensions: ${mat.nrow()}, ${mat.ncol()}`
+      type: `${filtered_out["$step"]}_DIMS`,
+      resp: `${mat.nrow()} X ${mat.ncol()}`,
+      msg: `Success: Data filtered, dimensions: ${mat.nrow()}, ${mat.ncol()}`
     });
 
     postMessage({
-        type: `${filtered_out["$step"]}_DATA`,
-        resp: filtered_out,
-        msg: "Success: QC filtering completed"
+      type: `${filtered_out["$step"]}_DATA`,
+      resp: filtered_out,
+      msg: "Success: QC filtering completed"
     });
   }
 
   var norm_out = utils.processOutput(logNormCounts, wasm, {});
-  if (norm_out !== null) { 
+  if (norm_out !== null) {
     postMessage({
-        type: `${norm_out["$step"]}_DATA`,
-        resp: norm_out,
-        msg: "Success: Log-normalization complete"
+      type: `${norm_out["$step"]}_DATA`,
+      resp: norm_out,
+      msg: "Success: Log-normalization complete"
     });
   }
 
   var feat_out = utils.processOutput(modelGeneVar, wasm, { "span": state.params.fSelection["fsel-span"] });
-  if (feat_out !== null) { 
+  if (feat_out !== null) {
     postMessage({
-        type: `${feat_out["$step"]}_DATA`,
-        resp: feat_out,
-        msg: "Success: Mean-variance relationship modelled"
+      type: `${feat_out["$step"]}_DATA`,
+      resp: feat_out,
+      msg: "Success: Mean-variance relationship modelled"
     });
   }
 
   var pca_out = utils.processOutput(runPCA, wasm, { "num_hvgs": 4000, "num_pcs": state.params.pca["pca-npc"] });
-  if (norm_out !== null) { 
+  if (norm_out !== null) {
     postMessage({
-        type: `${pca_out["$step"]}_DATA`,
-        resp: pca_out,
-        msg: "Success: PCA complete"
+      type: `${pca_out["$step"]}_DATA`,
+      resp: pca_out,
+      msg: "Success: PCA complete"
     });
   }
 
   var index_out = utils.processOutput(buildNeighborIndex, wasm, { "approximate": state.params.cluster["clus-approx"] });
   if (index_out !== null) {
     postMessage({
-        type: `${index_out["$step"]}_DATA`,
-        resp: index_out,
-        msg: "Success: Index construction complete"
+      type: `${index_out["$step"]}_DATA`,
+      resp: index_out,
+      msg: "Success: Index construction complete"
     });
   }
 
@@ -605,50 +605,50 @@ function runAllSteps(wasm, state) {
   var neighbors_out = utils.processOutput(findSNNeighbors, wasm, { "k": state.params.cluster["clus-k"] });
   if (neighbors_out !== null) {
     postMessage({
-        type: `${neighbors_out["$step"]}_DATA`,
-        resp: neighbors_out,
-        msg: "Success: Neighbor search complete"
+      type: `${neighbors_out["$step"]}_DATA`,
+      resp: neighbors_out,
+      msg: "Success: Neighbor search complete"
     });
   }
 
   var graph_out = utils.processOutput(buildSNNGraph, wasm, { "scheme": state.params.cluster["clus-scheme"] });
   if (graph_out !== null) {
     postMessage({
-        type: `${graph_out["$step"]}_DATA`,
-        resp: graph_out,
-        msg: "Success: Neighbor search complete"
+      type: `${graph_out["$step"]}_DATA`,
+      resp: graph_out,
+      msg: "Success: Neighbor search complete"
     });
   }
 
   var cluster_out = utils.processOutput(clusterSNNGraph, wasm, { "resolution": state.params.cluster["clus-res"] });
   if (cluster_out !== null) {
     postMessage({
-        type: `${cluster_out["$step"]}_DATA`,
-        resp: cluster_out,
-        msg: "Success: Graph clustering complete"
+      type: `${cluster_out["$step"]}_DATA`,
+      resp: cluster_out,
+      msg: "Success: Graph clustering complete"
     });
   }
 
   var choose_out = utils.processOutput(chooseClustering, wasm, { "method": "snn_graph" });
   if (choose_out !== null) {
     postMessage({
-        type: `${choose_out["$step"]}_DATA`,
-        resp: choose_out,
-        msg: "Success: Clustering chosen"
+      type: `${choose_out["$step"]}_DATA`,
+      resp: choose_out,
+      msg: "Success: Clustering chosen"
     });
   }
 
   var marker_out = utils.processOutput(scoreMarkers, wasm, {});
   if (marker_out !== null) {
     postMessage({
-        type: `${marker_out["$step"]}_DATA`,
-        resp: marker_out,
-        msg: "Success: Marker detection complete"
+      type: `${marker_out["$step"]}_DATA`,
+      resp: marker_out,
+      msg: "Success: Marker detection complete"
     });
   }
 }
 
-var loaded; 
+var loaded;
 onmessage = function (msg) {
   var self = this;
   console.log("in worker");
@@ -656,40 +656,47 @@ onmessage = function (msg) {
 
   const payload = msg.data;
   if (payload.type == "INIT") {
-      // TODO: parcel2 doesn't load inline importScripts
-      importScripts("./scran.js");
-      loaded = loadScran();
-      loaded.then(wasm => {
-         postMessage({
-             type: payload.type,
-             msg: `Success: ScranJS/WASM initialized`
-         });
-      })
-  } else if (payload.type == "RUN") {
-      loaded.then(wasm => {
-          runAllSteps(wasm, payload.payload);
+    // TODO: parcel2 doesn't load inline importScripts
+    importScripts("./scran.js");
+    loaded = loadScran();
+    loaded.then(wasm => {
+      postMessage({
+        type: payload.type,
+        msg: `Success: ScranJS/WASM initialized`
       });
+    })
+  } else if (payload.type == "RUN") {
+    loaded.then(wasm => {
+      runAllSteps(wasm, payload.payload);
+    });
   }
   // custom events from UI
   else if (payload.type == "setQCThresholds") {
-      data.thresholds = payload.input;
+    data.thresholds = payload.input;
 
-      postMessage({
-          type: "qc_DIMS",
-          resp: `${data.filteredMatrix.nrow()} X ${data.filteredMatrix.ncol()}`,
-          msg: `Success: QC - Thresholds Sync Complete, ${data.filteredMatrix.nrow()}, ${data.filteredMatrix.ncol()}`
-      })
+    postMessage({
+      type: "qc_DIMS",
+      resp: `${data.filteredMatrix.nrow()} X ${data.filteredMatrix.ncol()}`,
+      msg: `Success: QC - Thresholds Sync Complete, ${data.filteredMatrix.nrow()}, ${data.filteredMatrix.ncol()}`
+    })
   } else if (payload.type == "getMarkersForCluster") {
-      var t0 = performance.now();
-      var resp = data.getClusterMarkers(payload.input[0]);
-      var t1 = performance.now();
+    let cluster = payload.payload.cluster;
+    var t0 = performance.now();
+    var resp = {
+      // "auc": utils.cached.marker_detection.raw.auc(cluster).slice(),
+      "cohen": utils.cached.marker_detection.raw.cohen(cluster, 0).slice(),
+      "detected": utils.cached.marker_detection.raw.detected(cluster, 0).slice(),
+      "means": utils.cached.marker_detection.raw.means(cluster, 0).slice(),
+      "genes": utils.cached.inputs.genes,
+    }
+    var t1 = performance.now();
 
-      postMessage({
-          type: "setMarkersForCluster",
-          resp: JSON.parse(JSON.stringify(resp)),
-          msg: `Success: GET_MARKER_GENE done, ${data.filteredMatrix.nrow()}, ${data.filteredMatrix.ncol()}` + " took " + (t1 - t0) + " milliseconds."
-      });
+    postMessage({
+      type: "setMarkersForCluster",
+      resp: resp,
+      msg: "Success: GET_MARKER_GENE done"
+    });
   } else {
-      console.log("MIM:::msg type incorrect")
+    console.log("MIM:::msg type incorrect")
   }
 }

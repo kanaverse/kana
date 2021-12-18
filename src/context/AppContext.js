@@ -62,6 +62,8 @@ const AppContextProvider = ({ children }) => {
 
   // Cluster Analysis
   const [clusterData, setClusterData] = useState(null);
+  const [selectedCluster, setSelectedCluster] = useState(null);
+  const [selectedClusterSummary, setSelectedClusterSummary] = useState(null);
 
   // PCA
   const [pcaData, setPcaData] = useState(null);
@@ -70,8 +72,8 @@ const AppContextProvider = ({ children }) => {
   // TSNE
   const [tsneData, setTsneData] = useState(null);
 
-    // UMAP
-    const [umapData, setUmapData] = useState(null);
+  // UMAP
+  const [umapData, setUmapData] = useState(null);
 
   // Logs
   const [logs, setLogs] = useState([]);
@@ -115,7 +117,9 @@ const AppContextProvider = ({ children }) => {
         plotRedDims, setPlotRedDims,
         clusterData, setClusterData,
         fSelectionData, setFSelectionData,
-        logs, setLogs
+        logs, setLogs,
+        selectedCluster, setSelectedCluster,
+        selectedClusterSummary, setSelectedClusterSummary
       }}
     >
       {children}

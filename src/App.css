@@ -49,7 +49,7 @@
 .App-content {
   display: grid;
   grid-gap: 5px;
-  grid-template-columns: auto 350px;
+  grid-template-columns: auto 500px;
   grid-template-rows: 60% 40%;
   background-color: #fff;
   /* color: #444; */

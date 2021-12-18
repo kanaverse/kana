@@ -32,7 +32,9 @@ function App() {
   const { setWasmInitialized, setTsneData, setRedDims, redDims,
     setInitDims, setQcDims, setFSelDims, defaultRedDims, setDefaultRedDims,
     setQcData, qcData, setClusterData, setFSelectionData,
-    setUmapData, setPcaVarExp, logs, setLogs } = useContext(AppContext);
+    setUmapData, setPcaVarExp, logs, setLogs, 
+    selectedCluster, setSelectedCluster,
+    selectedClusterSummary, setSelectedClusterSummary } = useContext(AppContext);
 
   useEffect(() => {
     console.log("calling init");
@@ -41,6 +43,16 @@ function App() {
       "msg": "Initial Load"
     });
   }, [])
+
+  useEffect(() => {
+    
+    selectedCluster !== null && window.Worker.postMessage({
+      "type": "getMarkersForCluster",
+      "payload": {
+        "cluster": selectedCluster
+      }
+    });
+  }, [selectedCluster])
 
   // let worker = new Worker("./scran/scranWorker.js");
   var QCData = {};
@@ -113,6 +125,10 @@ function App() {
     } else if (payload.type === "markerGene_DATA") {
       const { type, resp } = payload;
       console.log(type, resp);
+    } else if (payload.type === "setMarkersForCluster") {
+      const { type, resp } = payload;
+      console.log(type, resp);
+      setSelectedClusterSummary(resp);
     }
     // else {
     //   var {type, result} = workerComs(msg);
