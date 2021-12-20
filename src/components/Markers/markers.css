@@ -3,3 +3,26 @@
     padding: 10px;
     flex-direction: column;
 }
+
+.marker-table {
+    display: grid;
+    grid-template-rows: 50px auto;
+    grid-template-columns: auto 50px;
+    padding: 10px;
+}
+
+.marker-header {
+    grid-row: 1;
+    grid-column: 2;
+}
+
+.marker-list {
+    grid-row: 2;
+    grid-column: 1 / -1;
+}
+
+.row-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}

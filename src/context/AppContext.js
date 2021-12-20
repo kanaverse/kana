@@ -57,12 +57,17 @@ const AppContextProvider = ({ children }) => {
 
   // UI dimensions reduction dropdown
   const [redDims, setRedDims] = useState([]);
+  // which dimension is selected
   const [defaultRedDims, setDefaultRedDims] = useState(null);
+  // the actual dimensions
   const [plotRedDims, setPlotRedDims] = useState(null);
 
   // Cluster Analysis
+  // cluster assignments
   const [clusterData, setClusterData] = useState(null);
+  // which cluster is selected
   const [selectedCluster, setSelectedCluster] = useState(null);
+  // cohen, mean scores per gene
   const [selectedClusterSummary, setSelectedClusterSummary] = useState(null);
 
   // PCA
@@ -74,6 +79,12 @@ const AppContextProvider = ({ children }) => {
 
   // UMAP
   const [umapData, setUmapData] = useState(null);
+
+  // geneExpression
+  // what gene is selected
+  const [gene, setGene] = useState(null);
+  // expr values
+  const [geneExprData, setGeneExprData] = useState(null);
 
   // Logs
   const [logs, setLogs] = useState([]);
@@ -119,7 +130,9 @@ const AppContextProvider = ({ children }) => {
         fSelectionData, setFSelectionData,
         logs, setLogs,
         selectedCluster, setSelectedCluster,
-        selectedClusterSummary, setSelectedClusterSummary
+        selectedClusterSummary, setSelectedClusterSummary,
+        gene, setGene,
+        geneExprData, setGeneExprData
       }}
     >
       {children}

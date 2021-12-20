@@ -34,7 +34,8 @@ function App() {
     setQcData, qcData, setClusterData, setFSelectionData,
     setUmapData, setPcaVarExp, logs, setLogs, 
     selectedCluster, setSelectedCluster,
-    selectedClusterSummary, setSelectedClusterSummary } = useContext(AppContext);
+    selectedClusterSummary, setSelectedClusterSummary,
+    gene, setGeneExprData } = useContext(AppContext);
 
   useEffect(() => {
     console.log("calling init");
@@ -53,6 +54,16 @@ function App() {
       }
     });
   }, [selectedCluster])
+
+  useEffect(() => {
+    
+    gene !== null && window.Worker.postMessage({
+      "type": "getGeneExpression",
+      "payload": {
+        "gene": gene
+      }
+    });
+  }, [gene])
 
   // let worker = new Worker("./scran/scranWorker.js");
   var QCData = {};
@@ -129,6 +140,10 @@ function App() {
       const { type, resp } = payload;
       console.log(type, resp);
       setSelectedClusterSummary(resp);
+    } else if (payload.type === "setGeneExpression") {
+      const { type, resp } = payload;
+      console.log(type, resp);
+      setGeneExprData(resp);
     }
     // else {
     //   var {type, result} = workerComs(msg);

@@ -696,6 +696,22 @@ onmessage = function (msg) {
       resp: resp,
       msg: "Success: GET_MARKER_GENE done"
     });
+  } else if (payload.type == "getGeneExpression") {
+    loaded.then(wasm => {
+      let row = payload.payload.gene;
+      var t0 = performance.now();
+      var mat = fetchNormalizedMatrix();
+      var t1 = performance.now();
+      var gExp_cached = utils.initCache("fetchGeneExpr");
+      var buffer = utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", gExp_cached);
+
+      var vec = buffer.array();
+      postMessage({
+        type: "setGeneExpression",
+        resp: mat.row(row, vec),
+        msg: "Success: GET_GENE_EXPRESSION done"
+      });
+    });
   } else {
     console.log("MIM:::msg type incorrect")
   }
