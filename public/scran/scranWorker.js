@@ -85,6 +85,12 @@ function loadFiles(wasm, args) {
       var file_size = genes_file[0].size;
       var buffer = reader.readAsText(genes_file[0]);
       utils.cached.inputs.genes = tsv.parse(buffer);
+    } else {
+      let genes = []
+      for (let i = 0; i < utils.cached.inputs.matrix.nrow(); i++) {
+        genes.push(`Gene ${i + 1}`);
+      }
+      utils.cached.inputs.genes = genes;
     }
 
     return {};
@@ -680,21 +686,40 @@ onmessage = function (msg) {
       msg: `Success: QC - Thresholds Sync Complete, ${data.filteredMatrix.nrow()}, ${data.filteredMatrix.ncol()}`
     })
   } else if (payload.type == "getMarkersForCluster") {
-    let cluster = payload.payload.cluster;
-    var t0 = performance.now();
-    var resp = {
-      // "auc": utils.cached.marker_detection.raw.auc(cluster).slice(),
-      "cohen": utils.cached.marker_detection.raw.cohen(cluster, 0).slice(),
-      "detected": utils.cached.marker_detection.raw.detected(cluster, 0).slice(),
-      "means": utils.cached.marker_detection.raw.means(cluster, 0).slice(),
-      "genes": utils.cached.inputs.genes,
-    }
-    var t1 = performance.now();
+    loaded.then(wasm => {
+      let cluster = payload.payload.cluster;
+      var t0 = performance.now();
+      if (!utils.cached.normalization.genes) {
+        var mat = fetchNormalizedMatrix();
+        var perm = new WasmBuffer(wasm, mat.nrow(), "Int32Array");
+        mat.permutation(perm.ptr);
+        console.log(perm.array());
 
-    postMessage({
-      type: "setMarkersForCluster",
-      resp: resp,
-      msg: "Success: GET_MARKER_GENE done"
+        let gene_indices = perm.array();
+        let genes = [];
+        for (let i = 0; i < mat.nrow(); i++) {
+          genes.push(utils.cached.inputs.genes[gene_indices[i]]);
+        }
+
+        utils.cached.normalization.genes = genes;
+
+        perm.free();
+      }
+
+      var resp = {
+        // "auc": utils.cached.marker_detection.raw.auc(cluster).slice(),
+        "cohen": utils.cached.marker_detection.raw.cohen(cluster, 0).slice(),
+        "detected": utils.cached.marker_detection.raw.detected(cluster, 0).slice(),
+        "means": utils.cached.marker_detection.raw.means(cluster, 0).slice(),
+        "genes": utils.cached.normalization.genes,
+      }
+      var t1 = performance.now();
+
+      postMessage({
+        type: "setMarkersForCluster",
+        resp: resp,
+        msg: "Success: GET_MARKER_GENE done"
+      });
     });
   } else if (payload.type == "getGeneExpression") {
     loaded.then(wasm => {
@@ -703,14 +728,27 @@ onmessage = function (msg) {
       var mat = fetchNormalizedMatrix();
       var t1 = performance.now();
       var gExp_cached = utils.initCache("fetchGeneExpr");
+      // try {
       var buffer = utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", gExp_cached);
 
-      var vec = buffer.array();
+      let row_idx = utils.cached.normalization.genes.indexOf(row);
+      var vec = null;
+      if (row_idx != -1) {
+        mat.row(row_idx, buffer.ptr)
+        vec = JSON.parse(JSON.stringify(buffer.array()));
+      }
+
       postMessage({
         type: "setGeneExpression",
-        resp: mat.row(row, vec),
+        resp: {
+          gene: row,
+          expr: vec
+        },
         msg: "Success: GET_GENE_EXPRESSION done"
       });
+      // } finally {
+      // buffer.free();
+      // }
     });
   } else {
     console.log("MIM:::msg type incorrect")

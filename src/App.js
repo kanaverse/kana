@@ -32,10 +32,10 @@ function App() {
   const { setWasmInitialized, setTsneData, setRedDims, redDims,
     setInitDims, setQcDims, setFSelDims, defaultRedDims, setDefaultRedDims,
     setQcData, qcData, setClusterData, setFSelectionData,
-    setUmapData, setPcaVarExp, logs, setLogs, 
+    setUmapData, setPcaVarExp, logs, setLogs,
     selectedCluster, setSelectedCluster,
     selectedClusterSummary, setSelectedClusterSummary,
-    gene, setGeneExprData } = useContext(AppContext);
+    gene, geneExprData, setGeneExprData, reqGene } = useContext(AppContext);
 
   useEffect(() => {
     console.log("calling init");
@@ -46,7 +46,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    
+
     selectedCluster !== null && window.Worker.postMessage({
       "type": "getMarkersForCluster",
       "payload": {
@@ -56,14 +56,14 @@ function App() {
   }, [selectedCluster])
 
   useEffect(() => {
-    
-    gene !== null && window.Worker.postMessage({
+
+    reqGene !== null && window.Worker.postMessage({
       "type": "getGeneExpression",
       "payload": {
-        "gene": gene
+        "gene": reqGene
       }
     });
-  }, [gene])
+  }, [reqGene])
 
   // let worker = new Worker("./scran/scranWorker.js");
   var QCData = {};
@@ -139,11 +139,30 @@ function App() {
     } else if (payload.type === "setMarkersForCluster") {
       const { type, resp } = payload;
       console.log(type, resp);
-      setSelectedClusterSummary(resp);
+      let records = {};
+      resp.means.forEach((x, i) => {
+        // let tgene = Array.isArray(resp?.genes) ? resp?.genes?.[i] : `Gene ${i + 1}`;
+        records[resp?.genes?.[i]] = {
+          "gene": resp?.genes?.[i],
+          "mean": x,
+          // "auc": resp?.auc?.[i],
+          "cohen": resp?.cohen?.[i],
+          "detected": resp?.detected?.[i],
+          "expanded": false,
+          "expr": null,
+        }
+      });
+      setSelectedClusterSummary(records);
     } else if (payload.type === "setGeneExpression") {
       const { type, resp } = payload;
       console.log(type, resp);
-      setGeneExprData(resp);
+      // let tmp = { ...geneExprData };
+      // tmp[resp.gene] = resp.expr;
+      // setGeneExprData(tmp);
+
+      let gtmp = { ...selectedClusterSummary };
+      gtmp[resp.gene].expr = Object.values(resp.expr);
+      setSelectedClusterSummary(gtmp);
     }
     // else {
     //   var {type, result} = workerComs(msg);

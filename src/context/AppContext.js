@@ -68,7 +68,9 @@ const AppContextProvider = ({ children }) => {
   // which cluster is selected
   const [selectedCluster, setSelectedCluster] = useState(null);
   // cohen, mean scores per gene
-  const [selectedClusterSummary, setSelectedClusterSummary] = useState(null);
+  const [selectedClusterSummary, setSelectedClusterSummary] = useState({});
+  // set cluster colors
+  const [clusterColors, setClusterColors] = useState(null);
 
   // PCA
   const [pcaData, setPcaData] = useState(null);
@@ -81,10 +83,12 @@ const AppContextProvider = ({ children }) => {
   const [umapData, setUmapData] = useState(null);
 
   // geneExpression
-  // what gene is selected
+  // what gene is selected for scatterplot
   const [gene, setGene] = useState(null);
-  // expr values
-  const [geneExprData, setGeneExprData] = useState(null);
+  // request gene expression
+  const [reqGene, setReqGene] = useState(null);
+  // expr values per gene
+  // const [geneExprData, setGeneExprData] = useState({});
 
   // Logs
   const [logs, setLogs] = useState([]);
@@ -132,7 +136,9 @@ const AppContextProvider = ({ children }) => {
         selectedCluster, setSelectedCluster,
         selectedClusterSummary, setSelectedClusterSummary,
         gene, setGene,
-        geneExprData, setGeneExprData
+        // geneExprData, setGeneExprData,
+        clusterColors, setClusterColors,
+        reqGene, setReqGene
       }}
     >
       {children}

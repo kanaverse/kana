@@ -4,19 +4,22 @@ import { ControlGroup, Button, HTMLSelect, InputGroup, Icon, ButtonGroup } from 
 import { Classes, Popover2 } from "@blueprintjs/popover2";
 
 import { AppContext } from '../../context/AppContext';
+import getMinMax from './utils';
 
 import { randomColor } from 'randomcolor';
+import Rainbow from './rainbowvis';
+
 import "./ScatterPlot.css";
 
 const DimPlot = () => {
     const container = useRef();
     const [scatterplot, setScatterplot] = useState(null);
-
+    const scoreColors = ["#F6F6F6", "#3399FF"];
     const { plotRedDims, redDims, defaultRedDims, setDefaultRedDims, clusterData,
-        tsneData, umapData, setPlotRedDims } = useContext(AppContext);
+        tsneData, umapData, setPlotRedDims, clusterColors,
+        gene, selectedClusterSummary } = useContext(AppContext);
 
     useEffect(() => {
-        console.log("tsne data changed");
 
         const containerEl = container.current;
 
@@ -27,8 +30,8 @@ const DimPlot = () => {
             if (!tmp_scatterplot) {
                 const containerEl = container.current;
 
-                containerEl.style.width = "90%";
-                containerEl.style.height = "90%";
+                containerEl.style.width = "95%";
+                containerEl.style.height = "95%";
 
                 let lastSelectedPoints = [];
 
@@ -65,8 +68,8 @@ const DimPlot = () => {
 
                 // if (!self.cluster_mappings) {
                 let cluster_mappings = plotRedDims?.clusters;
-                let cluster_count = Math.max(...cluster_mappings);
-                const cluster_colors = randomColor({ luminosity: 'dark', count: cluster_count + 1 });
+                // let cluster_count = Math.max(...cluster_mappings);
+                const cluster_colors = clusterColors
 
                 let points = []
                 plotRedDims?.plot.x.forEach((x, i) => {
@@ -85,11 +88,25 @@ const DimPlot = () => {
                         return 'red';
                     }
 
-                    return cluster_colors[dataset.metadata.clusters[i]];
+                    if (gene && Array.isArray(selectedClusterSummary?.[gene]?.expr)) {
+                        let exprMinMax = getMinMax(selectedClusterSummary[gene].expr);
+
+                        let colorGradients = cluster_colors.map(x => {
+                            var gradient = new Rainbow();
+                            gradient.setSpectrum('#D3D3D3', x);
+                            let val = exprMinMax[1] == 0 ? 0.01 : exprMinMax[1];
+                            gradient.setNumberRange(0, val);
+                            return gradient;
+                        });
+
+                        return "#" + colorGradients[cluster_mappings[i]].colorAt(selectedClusterSummary?.[gene]?.expr?.[i])
+                    }
+
+                    return cluster_colors[cluster_mappings[i]];
                 });
             }
         }
-    }, [plotRedDims]);
+    }, [plotRedDims, selectedClusterSummary, gene]);
 
     useEffect(() => {
         changeRedDim(defaultRedDims);

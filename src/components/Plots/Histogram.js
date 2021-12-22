@@ -8,23 +8,25 @@ const Histogram = (props) => {
     useEffect(() => {
 
         let data = props?.data;
-
         let title = props?.title;
+        let propwidth = props?.width;
+        let color = props?.color;
+
+        if (!propwidth) {
+            propwidth = 325;
+        }
+
+        if (!color) {
+            color = "#69b3a2";
+        }
     
         if (!data) return "";
 
         let containerEl = container.current;
-
-        // if (!containerEl) return "";
-
         containerEl.innerHTML = "";
 
-        // var telem = document.createElement("h4");
-        // telem.text = title;
-        // containerEl.appendChild(telem);
-
         const margin = { top: 10, right: 30, bottom: 30, left: 40 },
-            width = 275 - margin.left - margin.right,
+            width = propwidth - margin.left - margin.right,
             height = 150 - margin.top - margin.bottom;
 
         const svg = d3.select(containerEl)
@@ -56,8 +58,8 @@ const Histogram = (props) => {
 
         y.domain([0, d3.max(bins, function (d) { return d.length; })]);
 
-        svg.append("g")
-            .call(d3.axisLeft(y));
+        // svg.append("g")
+        //     .call(d3.axisLeft(y));
 
         svg.selectAll("rect")
             .data(bins)
@@ -66,7 +68,7 @@ const Histogram = (props) => {
             .attr("transform", function (d) { return `translate(${x(d.x0)} , ${y(d.length)})` })
             .attr("width", function (d) { return x(d.x1) - x(d.x0) - 1 })
             .attr("height", function (d) { return height - y(d.length); })
-            .style("fill", "#69b3a2")
+            .style("fill", color)
     }, []);
 
     return (

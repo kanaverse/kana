@@ -16,14 +16,15 @@ const Row = (props) => {
             <div className='row-container'>
                 <div>
                     <span>{props.row.gene}::</span>
-                    <span>Mean: {props.row.mean} </span>
-                    <span>Cohen: {props.row.cohen} </span>
+                    <span>Mean: {props.row.mean.toFixed(4)} </span>
+                    <span>Cohen: {props.row.cohen.toFixed(4)} </span>
                     <span>Detected: {props.row.detected} </span>
                 </div>
                 <div>
                     <Button
                         onClick={(x) => {
                             setIsOpen(!isOpen);
+                            // props.row.expanded = !props.row.expanded;
                             let gene = parseInt(props.row.gene.replace("Gene ", ''));
                             setGene(gene - 1);
                         }}
@@ -31,7 +32,7 @@ const Row = (props) => {
                         outlined={true}
                         minimal={true}
                     >
-                        Set Color</Button>
+                        Expand</Button>
                 </div>
             </div>
             <Collapse isOpen={isOpen}>

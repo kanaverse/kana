@@ -37,19 +37,10 @@
   }
 }
 
-/* .App-content {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 50px);
-  justify-content: space-between;
-  align-items: stretch;
-  margin: 5px;
-} */
-
 .App-content {
   display: grid;
   grid-gap: 5px;
-  grid-template-columns: auto 500px;
+  grid-template-columns: auto 400px;
   grid-template-rows: 60% 40%;
   background-color: #fff;
   /* color: #444; */

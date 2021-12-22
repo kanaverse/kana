@@ -1,5 +1,5 @@
-import { useEffect, useContext, useState, useMemo } from 'react';
-import { Button, H4, Select, SelectProps, Collapse, Pre, Label } from "@blueprintjs/core";
+import React, { useEffect, useContext, useState, useMemo } from 'react';
+import { Button, H4, Icon, Select, SelectProps, Collapse, Pre, Label, InputGroup, Card, Elevation } from "@blueprintjs/core";
 import DataGrid, { RowRendererProps } from 'react-data-grid';
 import { Virtuoso } from 'react-virtuoso';
 
@@ -11,31 +11,37 @@ import Row from './Row';
 
 const MarkerPlot = () => {
 
-    const { clusterData, selectedClusterSummary,
-        selectedCluster, setSelectedCluster } = useContext(AppContext);
+    const { clusterData, selectedClusterSummary, setSelectedClusterSummary,
+        selectedCluster, setSelectedCluster, geneExprData,
+        setGeneExprData, setReqGene, clusterColors, gene, setGene } = useContext(AppContext);
     const [clusSel, setClusSel] = useState(null);
-    const [recs, setRecs] = useState(null);
+    // const [recs, setRecs] = useState(null);
     const [sortColumns, setSortColumns] = useState([{
-        columnKey: 'mean',
+        columnKey: 'cohen',
         direction: 'DSC'
     }]);
+    const [searchInput, setSearchInput] = useState(null);
+    // const [recExp, setRecExp] = useState({});
 
-    useEffect(() => {
-        let records = [];
-        if (selectedClusterSummary) {
-            selectedClusterSummary.means.forEach((x, i) => {
-                records.push({
-                    "gene": Array.isArray(selectedClusterSummary?.genes) ? selectedClusterSummary?.genes?.[i] : `Gene ${i + 1}`,
-                    "mean": x,
-                    // "auc": selectedClusterSummary?.auc?.[i],
-                    "cohen": selectedClusterSummary?.cohen?.[i],
-                    "detected": selectedClusterSummary?.detected?.[i],
-                })
-            });
+    // useEffect(() => {
+    //     // let records = {};
+    //     if (selectedClusterSummary) {
+    //         // selectedClusterSummary.means.forEach((x, i) => {
+    //         //     let tgene = Array.isArray(selectedClusterSummary?.genes) ? selectedClusterSummary?.genes?.[i] : `Gene ${i + 1}`;
+    //         //     records[tgene] = {
+    //         //         "gene": tgene,
+    //         //         "mean": x,
+    //         //         // "auc": selectedClusterSummary?.auc?.[i],
+    //         //         "cohen": selectedClusterSummary?.cohen?.[i],
+    //         //         "detected": selectedClusterSummary?.detected?.[i],
+    //         //         "expanded": false,
+    //         //         "expr": null,
+    //         //     }
+    //         // });
 
-            setRecs(records);
-        }
-    }, [selectedClusterSummary]);
+    //         setRecs(selectedClusterSummary);
+    //     }
+    // }, [selectedClusterSummary]);
 
     const columns = [
         { key: 'gene', name: 'Gene', sortable: true },
@@ -43,23 +49,6 @@ const MarkerPlot = () => {
         // { key: 'auc', name: 'AUC' },
         { key: 'cohen', name: 'Cohen', sortable: true },
         { key: 'detected', name: 'Detected', sortable: true },
-        // {
-        //     key: 'action',
-        //     name: 'Actions',
-        //     width: 40,
-        //     formatter({ row, onRowChange, isCellSelected }) {
-        //         return (
-        //             <SelectCellFormatter
-        //                 value={row.available}
-        //                 onChange={() => {
-        //                     onRowChange({ ...row, available: !row.available });
-        //                 }}
-        //                 onClick={stopPropagation}
-        //                 isCellSelected={isCellSelected}
-        //             />
-        //         );
-        //     },
-        // }
     ];
 
     const getComparator = (sortColumn) => {
@@ -81,11 +70,17 @@ const MarkerPlot = () => {
     }
 
     const sortedRows = useMemo(() => {
-        if (sortColumns.length === 0) return recs;
+        console.log("sortedRows");
 
-        if (!Array.isArray(recs)) return recs;
+        if (!selectedClusterSummary) return selectedClusterSummary;
 
-        const sortedRows = [...recs];
+        let trecs = Object.values(selectedClusterSummary);
+        if (sortColumns.length === 0) return trecs;
+
+        if (trecs.length == 0) return trecs;
+        // if (!Array.isArray(recs)) return recs;
+
+        let sortedRows = [...trecs];
         sortedRows.sort((a, b) => {
             for (const sort of sortColumns) {
                 const comparator = getComparator(sort.columnKey);
@@ -96,8 +91,12 @@ const MarkerPlot = () => {
             }
             return 0;
         });
+
+        if (!searchInput || searchInput == "") return sortedRows;
+
+        sortedRows = sortedRows.filter((x) => x["gene"].indexOf(searchInput) != -1);
         return sortedRows;
-    }, [recs, sortColumns]);
+    }, [selectedClusterSummary, sortColumns, searchInput]);
 
     useEffect(() => {
         if (clusterData?.clusters) {
@@ -142,35 +141,114 @@ const MarkerPlot = () => {
                 <Histogram data={selectedClusterSummary.detected} />
             } */}
             {
-                recs ?
+                selectedClusterSummary ?
                     <div className='marker-table'>
                         <div className='marker-header'>
+                            <InputGroup
+                                leftIcon="search"
+                                small={true}
+                                placeholder="Search gene..."
+                                type={"text"}
+                                onChange={(e) => setSearchInput(e.target.value)}
+                            />
                             <Label>sort by
                                 <select
-                                onChange={(x) => {
-                                    setSortColumns([{
-                                        columnKey: x.currentTarget.value,
-                                        direction: 'DSC'
-                                    }])
-                                }}>
+                                    onChange={(x) => {
+                                        setSortColumns([{
+                                            columnKey: x.currentTarget.value,
+                                            direction: 'DSC'
+                                        }])
+                                    }}>
                                     <option>mean</option>
-                                    <option>cohen</option>
+                                    <option selected>cohen</option>
                                 </select>
                             </Label>
                         </div>
                         <Virtuoso
+                            components={{
+                                Item: ({ children, ...props }) => {
+                                    return (
+                                        // <Card className='row-card' interactive={false} {...props} elevation={0}>
+                                        //     {children}
+                                        // </Card>
+                                        <div className='row-card' {...props}>
+                                            {children}
+                                        </div>
+                                    );
+                                },
+                                // Header: (() => {
+                                //     return (
+                                //         <div className='row-container'
+                                //             style={{ paddingLeft: '10px', paddingRight: '10px' }}>
+                                //             <H5>Gene </H5>
+                                //             {/* <H5>Scores</H5> */}
+                                //             <H5>Actions</H5>
+                                //         </div>
+                                //     )
+                                // })
+                            }}
                             className='marker-list'
-                            style={{ height: '500px' }}
+                            style={{ minHeight: '800px' }}
                             totalCount={sortedRows.length}
-                            itemContent={index => <Row index={index} row={sortedRows[index]} />}
+                            // data={sortedRows}
+                            itemContent={index => {
+                                const row = sortedRows[index];
+                                const rowexp = row.expanded;
+                                const rowExpr = row.expr; //geneExprData[row.gene];
+
+                                return (
+                                    <div>
+                                        <div className='row-container'>
+                                            {/* <div> */}
+                                            <span>{row.gene}</span>
+                                            <span>Cohen: {row.cohen.toFixed(4)}, AUC</span>
+                                            <span>Mean: {row.mean.toFixed(4)}, Detected: {row.detected}</span>
+                                            {/* </div> */}
+                                            <div className='row-action'>
+                                                <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
+                                                    className='row-action' fill={false}
+                                                    onClick={() => {
+                                                        let tmp = { ...selectedClusterSummary };
+                                                        tmp[row.gene].expanded = !tmp[row.gene].expanded;
+                                                        setSelectedClusterSummary(tmp);
+
+                                                        if (!rowExpr) {
+                                                            setReqGene(row.gene);
+                                                        }
+                                                    }}
+                                                >
+                                                </Button>
+                                                <Button small={true} fill={false}
+                                                    className='row-action' fill={false}
+                                                    onClick={() => {
+                                                        if (row.gene === gene) {
+                                                            setGene(null);
+                                                        } else {
+                                                            setGene(row.gene);
+                                                            if (!rowExpr) {
+                                                                setReqGene(row.gene);
+                                                            }
+                                                        }
+                                                    }}
+                                                >
+                                                    <Icon icon={'tint'} small={true} fill={false}
+                                                        fill={false}
+                                                        color={row.gene === gene ? clusterColors[selectedCluster] : ''}
+                                                    ></Icon>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <Collapse isOpen={rowexp}>
+                                            This will show a histogram
+                                            <Histogram data={rowExpr} color={clusterColors[selectedCluster]} />
+                                        </Collapse>
+                                    </div>
+                                )
+                            }}
+                        // itemContent={index => <Row index={index} row={sortedRows[index]} />}
                         />
                     </div>
                     : ""
-                // <DataGrid columns={columns} rows={sortedRows}
-                //     sortColumns={sortColumns}
-                //     onSortColumnsChange={setSortColumns}
-                //     rowRenderer={MyRowRenderer}
-                // />
             }
         </div>
     );
