@@ -1,55 +1,33 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
-import { Button, H4, Icon, Select, SelectProps, Collapse, Pre, Label, InputGroup, Card, Elevation } from "@blueprintjs/core";
-import DataGrid, { RowRendererProps } from 'react-data-grid';
+import { Button, H4, Icon, Collapse, Label, InputGroup } from "@blueprintjs/core";
 import { Virtuoso } from 'react-virtuoso';
 
 import { AppContext } from '../../context/AppContext';
 import Histogram from '../Plots/Histogram';
-import './markers.css';
+import StackedHistogram from '../Plots/StackedHistogram';
 
-import Row from './Row';
+import './markers.css';
 
 const MarkerPlot = () => {
 
     const { clusterData, selectedClusterSummary, setSelectedClusterSummary,
-        selectedCluster, setSelectedCluster, geneExprData,
-        setGeneExprData, setReqGene, clusterColors, gene, setGene } = useContext(AppContext);
+        selectedCluster, setSelectedCluster, 
+         setReqGene, clusterColors, gene, setGene } = useContext(AppContext);
     const [clusSel, setClusSel] = useState(null);
-    // const [recs, setRecs] = useState(null);
+    const [clusArrayStacked, setClusArrayStacked] = useState(null);
     const [sortColumns, setSortColumns] = useState([{
         columnKey: 'cohen',
         direction: 'DSC'
     }]);
     const [searchInput, setSearchInput] = useState(null);
-    // const [recExp, setRecExp] = useState({});
 
-    // useEffect(() => {
-    //     // let records = {};
-    //     if (selectedClusterSummary) {
-    //         // selectedClusterSummary.means.forEach((x, i) => {
-    //         //     let tgene = Array.isArray(selectedClusterSummary?.genes) ? selectedClusterSummary?.genes?.[i] : `Gene ${i + 1}`;
-    //         //     records[tgene] = {
-    //         //         "gene": tgene,
-    //         //         "mean": x,
-    //         //         // "auc": selectedClusterSummary?.auc?.[i],
-    //         //         "cohen": selectedClusterSummary?.cohen?.[i],
-    //         //         "detected": selectedClusterSummary?.detected?.[i],
-    //         //         "expanded": false,
-    //         //         "expr": null,
-    //         //     }
-    //         // });
-
-    //         setRecs(selectedClusterSummary);
-    //     }
-    // }, [selectedClusterSummary]);
-
-    const columns = [
-        { key: 'gene', name: 'Gene', sortable: true },
-        { key: 'mean', name: 'Mean', sortable: true },
-        // { key: 'auc', name: 'AUC' },
-        { key: 'cohen', name: 'Cohen', sortable: true },
-        { key: 'detected', name: 'Detected', sortable: true },
-    ];
+    // const columns = [
+    //     { key: 'gene', name: 'Gene', sortable: true },
+    //     { key: 'mean', name: 'Mean', sortable: true },
+    //     // { key: 'auc', name: 'AUC' },
+    //     { key: 'cohen', name: 'Cohen', sortable: true },
+    //     { key: 'detected', name: 'Detected', sortable: true },
+    // ];
 
     const getComparator = (sortColumn) => {
         switch (sortColumn) {
@@ -60,7 +38,6 @@ const MarkerPlot = () => {
             case 'mean':
             case 'cohen':
             case 'detected':
-            case 'gene':
                 return (a, b) => {
                     return a[sortColumn] - b[sortColumn];
                 };
@@ -70,15 +47,12 @@ const MarkerPlot = () => {
     }
 
     const sortedRows = useMemo(() => {
-        console.log("sortedRows");
-
         if (!selectedClusterSummary) return selectedClusterSummary;
 
         let trecs = Object.values(selectedClusterSummary);
         if (sortColumns.length === 0) return trecs;
 
-        if (trecs.length == 0) return trecs;
-        // if (!Array.isArray(recs)) return recs;
+        if (trecs.length === 0) return trecs;
 
         let sortedRows = [...trecs];
         sortedRows.sort((a, b) => {
@@ -92,9 +66,9 @@ const MarkerPlot = () => {
             return 0;
         });
 
-        if (!searchInput || searchInput == "") return sortedRows;
+        if (!searchInput || searchInput === "") return sortedRows;
 
-        sortedRows = sortedRows.filter((x) => x["gene"].indexOf(searchInput) != -1);
+        sortedRows = sortedRows.filter((x) => x["gene"].indexOf(searchInput) !== -1);
         return sortedRows;
     }, [selectedClusterSummary, sortColumns, searchInput]);
 
@@ -109,8 +83,18 @@ const MarkerPlot = () => {
 
             setClusSel(clus);
             setSelectedCluster(0);
+
+            let clusArray = []
+            clusterData?.clusters?.forEach(x => x === 0 ? clusArray.push(1) : clusArray.push(0));
+            setClusArrayStacked(clusArray);
         }
     }, [clusterData]);
+
+    useEffect(() => {
+        let clusArray = []
+        clusterData?.clusters?.forEach(x => x === selectedCluster ? clusArray.push(1) : clusArray.push(0));
+        setClusArrayStacked(clusArray);
+    }, [selectedCluster])
 
     return (
         <div className='marker-container'>
@@ -128,18 +112,6 @@ const MarkerPlot = () => {
                     </select>
                     : ""
             }
-            {/* {
-                recs &&
-                <Histogram data={selectedClusterSummary.means} />
-            }
-            {
-                recs &&
-                <Histogram data={selectedClusterSummary.cohen} />
-            }
-            {
-                recs &&
-                <Histogram data={selectedClusterSummary.detected} />
-            } */}
             {
                 selectedClusterSummary ?
                     <div className='marker-table'>
@@ -158,9 +130,9 @@ const MarkerPlot = () => {
                                             columnKey: x.currentTarget.value,
                                             direction: 'DSC'
                                         }])
-                                    }}>
+                                    }} value="cohen">
                                     <option>mean</option>
-                                    <option selected>cohen</option>
+                                    <option>cohen</option>
                                 </select>
                             </Label>
                         </div>
@@ -168,29 +140,15 @@ const MarkerPlot = () => {
                             components={{
                                 Item: ({ children, ...props }) => {
                                     return (
-                                        // <Card className='row-card' interactive={false} {...props} elevation={0}>
-                                        //     {children}
-                                        // </Card>
                                         <div className='row-card' {...props}>
                                             {children}
                                         </div>
                                     );
                                 },
-                                // Header: (() => {
-                                //     return (
-                                //         <div className='row-container'
-                                //             style={{ paddingLeft: '10px', paddingRight: '10px' }}>
-                                //             <H5>Gene </H5>
-                                //             {/* <H5>Scores</H5> */}
-                                //             <H5>Actions</H5>
-                                //         </div>
-                                //     )
-                                // })
                             }}
                             className='marker-list'
                             style={{ minHeight: '800px' }}
                             totalCount={sortedRows.length}
-                            // data={sortedRows}
                             itemContent={index => {
                                 const row = sortedRows[index];
                                 const rowexp = row.expanded;
@@ -199,14 +157,12 @@ const MarkerPlot = () => {
                                 return (
                                     <div>
                                         <div className='row-container'>
-                                            {/* <div> */}
                                             <span>{row.gene}</span>
                                             <span>Cohen: {row.cohen.toFixed(4)}, AUC</span>
                                             <span>Mean: {row.mean.toFixed(4)}, Detected: {row.detected}</span>
-                                            {/* </div> */}
                                             <div className='row-action'>
                                                 <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
-                                                    className='row-action' fill={false}
+                                                    className='row-action'
                                                     onClick={() => {
                                                         let tmp = { ...selectedClusterSummary };
                                                         tmp[row.gene].expanded = !tmp[row.gene].expanded;
@@ -219,7 +175,7 @@ const MarkerPlot = () => {
                                                 >
                                                 </Button>
                                                 <Button small={true} fill={false}
-                                                    className='row-action' fill={false}
+                                                    className='row-action'
                                                     onClick={() => {
                                                         if (row.gene === gene) {
                                                             setGene(null);
@@ -232,7 +188,6 @@ const MarkerPlot = () => {
                                                     }}
                                                 >
                                                     <Icon icon={'tint'} small={true} fill={false}
-                                                        fill={false}
                                                         color={row.gene === gene ? clusterColors[selectedCluster] : ''}
                                                     ></Icon>
                                                 </Button>
@@ -241,11 +196,13 @@ const MarkerPlot = () => {
                                         <Collapse isOpen={rowexp}>
                                             This will show a histogram
                                             <Histogram data={rowExpr} color={clusterColors[selectedCluster]} />
+                                            {clusArrayStacked && <StackedHistogram data={rowExpr} 
+                                                color={clusterColors[selectedCluster]} 
+                                                clusters={clusArrayStacked}/> }
                                         </Collapse>
                                     </div>
                                 )
                             }}
-                        // itemContent={index => <Row index={index} row={sortedRows[index]} />}
                         />
                     </div>
                     : ""

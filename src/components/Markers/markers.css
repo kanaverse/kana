@@ -27,9 +27,7 @@
 }
 
 .row-card {
-    /* margin: 2px; */
     padding: 2px;
-    /* height: 30px; */
     font-size: 12px;
     border-bottom: solid gainsboro 1px;
 }
@@ -44,10 +42,7 @@
     display: grid;
     grid-template-columns: 25% 25% 25% 25%;
     gap: 2px;
-    /* flex-direction: row; */
-    /* justify-content: space-between; */
     align-items: center;
-    /* justify-content: center; */
 }
 
 

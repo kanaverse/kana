@@ -6,11 +6,9 @@ import {
 } from "@blueprintjs/core";
 import React, { useState, useContext } from 'react';
 
-
 import { AppContext } from '../../context/AppContext';
 
-
-const Logs = (props) => {
+const Logs = () => {
     const { logs } = useContext(AppContext);
 
     const [state, setState] = useState({
@@ -43,14 +41,13 @@ const Logs = (props) => {
                     <div className={Classes.DIALOG_BODY}>
                         <ul className="list">
                             {
-                                logs.map((x,i) => (
+                                logs.map((x, i) => (
                                     <li key={i}>{x}</li>
                                 ))
                             }
                         </ul>
                     </div>
                 </div>
-                {/* <div className={Classes.DRAWER_FOOTER}>Footer</div> */}
             </Drawer>
         </>
     )

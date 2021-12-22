@@ -151,20 +151,25 @@ function computeQualityControlMetrics(wasm, args) {
       //   .domain([tmin, tmax])
       //   .range([0, 100]);
 
-      var m = (100) / (tmax - tmin);
-      var b = -m * tmin;
+      // var m = (100) / (tmax - tmin);
+      // var b = -m * tmin;
 
-      distributions[x] = new Array(maxDist).fill(0);
-      current.forEach(function (y, j) {
-        var idx = Math.ceil((m * y) + b);
-        distributions[x][idx]++;
-      });
+      // distributions[x] = new Array(maxDist).fill(0);
+      // current.forEach(function (y, j) {
+      //   var idx = Math.ceil((m * y) + b);
+      //   distributions[x][idx]++;
+      // });
     });
 
     return {
-      "sums": distributions.sums,
-      "detected": distributions.detected,
-      "proportion": distributions.proportion,
+      "data": {
+        "sums": qc_output.sums(),
+        "detected": qc_output.detected(),
+        "proportion": qc_output.subset_proportions(0)
+      },
+      // "sums": distributions.sums,
+      // "detected": distributions.detected,
+      // "proportion": distributions.proportion,
       "ranges": ranges,
     };
   });

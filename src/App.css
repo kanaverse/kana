@@ -71,28 +71,6 @@
   padding: 10px;
 }
 
-/* old style */
-/* .App-cotent-plot {
-  display: flex;
-  margin: 5px;
-  justify-content: space-between;
-  align-items: stretch;
-}
-
-.plot {
-  width: calc(100% - 600px);
-  height: 100%;
-  border-left: 2px solid gainsboro;
-  border-right: 2px solid gainsboro;
-  padding: 5px
-}
-
-.sidebar {
-  min-width: 300px;
-  padding: 5px;
-  height: 100%;
-} */
-
 .spinner {
   display: relative;
   left: 50%;

@@ -1,13 +1,14 @@
-import { XYPlot, VerticalBarSeries, XAxis, YAxis } from 'react-vis';
 import { randomColor } from 'randomcolor';
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
+import BarPlot from './BarPlot';
 
 const ClusterBarPlot = (props) => {
 
     let data = props?.data?.clusters;
 
-    const {setClusterColors} = useContext(AppContext);
+    const { setClusterColors } = useContext(AppContext);
+    const [tmpColors, setTmpColors] = useState(null);
 
     useEffect(() => {
         let cluster_count = Object.keys(x).length;
@@ -17,10 +18,15 @@ const ClusterBarPlot = (props) => {
         } else {
             cluster_colors = palette[cluster_count.toString()];
         }
-        setClusterColors(cluster_colors);
+        setTmpColors(cluster_colors);
     }, []);
 
+    useEffect(() => {
+        setClusterColors(tmpColors);
+    }, [tmpColors]);
+
     if (!data) return "";
+
 
     const palette = {
         1: ['#1b9e77'],
@@ -110,28 +116,16 @@ const ClusterBarPlot = (props) => {
         }
     }
 
-
     let chart_data = [];
     Object.values(x)?.forEach((z, i) => {
         chart_data.push({
-            x: i,
-            y: z
+            key: i,
+            value: z
         });
     });
 
-    console.log("clusters", chart_data)
-
     return (
-        <XYPlot
-            width={275}
-            height={250}>
-            <VerticalBarSeries
-                data={chart_data}
-                style={{}}
-            />
-            <XAxis />
-            <YAxis />
-        </XYPlot>
+        tmpColors && <BarPlot data={chart_data} color={tmpColors} />
     );
 };
 

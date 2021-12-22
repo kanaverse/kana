@@ -1,29 +1,24 @@
-import { useEffect, useRef, useContext, useState } from 'react';
-import { ControlGroup, Button, HTMLSelect, InputGroup, Icon } from "@blueprintjs/core";
-import { Classes, Popover2 } from "@blueprintjs/popover2";
-import BoxPlot from './BoxPlot';
-
-import { AppContext } from '../../context/AppContext';
-
+import ViolinPlot from './ViolinPlot';
 import './QCPlots.css';
 
 const QCPlotMgr = (props) => {
-    console.log("props", props);
 
-    const { qcData } = useContext(AppContext);
-    console.log("qcData", qcData);
+    let qcData = props.data;
 
     return (
         <div className="qc-plots">
             {
-                ["sums", "detected"].map(x => {
-                    const props = {
+                ["sums", "detected", "proportion"].map(x => {
+                    const props2 = {
                         "threshold": qcData?.["thresholds"]?.[x],
-                        "range": qcData["ranges"][x],
-                        "data": qcData[x],
-                        "label": x
+                        "range": qcData?.["ranges"]?.[x],
+                        "label": x,
+                        "rdata": qcData?.["data"]?.[x]
                     }
-                    return <div><BoxPlot {...props}/></div>
+                    return (
+                        <div key={x}>
+                            <ViolinPlot {...props2} />
+                        </div>)
                 })
             }
         </div>

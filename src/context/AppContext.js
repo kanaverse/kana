@@ -88,15 +88,12 @@ const AppContextProvider = ({ children }) => {
   // request gene expression
   const [reqGene, setReqGene] = useState(null);
   // expr values per gene
-  // const [geneExprData, setGeneExprData] = useState({});
 
   // Logs
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
-    // console.log("something changed");
 
-    console.log("in Context", inputFiles, params, wasmInitialized);
     if (wasmInitialized && inputFiles.mtx != null) {
       window.Worker.postMessage({
         "type": "RUN",
@@ -136,7 +133,6 @@ const AppContextProvider = ({ children }) => {
         selectedCluster, setSelectedCluster,
         selectedClusterSummary, setSelectedClusterSummary,
         gene, setGene,
-        // geneExprData, setGeneExprData,
         clusterColors, setClusterColors,
         reqGene, setReqGene
       }}

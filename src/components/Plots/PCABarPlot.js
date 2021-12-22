@@ -1,6 +1,6 @@
-import { XYPlot, VerticalBarSeries, XAxis, YAxis } from 'react-vis';
+import BarPlot from './BarPlot';
 
-const BarPlot = (props) => {
+const PCABarPlot = (props) => {
 
     let data = props?.pca?.var_exp;
 
@@ -9,23 +9,14 @@ const BarPlot = (props) => {
     let chart_data = [];
     Object.values(data)?.forEach((x, i) => {
         chart_data.push({
-            x: i,
-            y: x * 100
+            key: i,
+            value: x * 100
         });
     });
 
     return (
-        <XYPlot
-            width={275}
-            height={250}>
-            <VerticalBarSeries
-                data={chart_data}
-                style={{}}
-            />
-            <XAxis />
-            <YAxis />
-        </XYPlot>
+        <BarPlot data={chart_data} />
     );
 };
 
-export default BarPlot;
+export default PCABarPlot;

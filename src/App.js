@@ -1,20 +1,14 @@
-// import logo from './logo.svg';
 import './App.css';
 import Header from "./components/Header";
 import Gallery from './components/Gallery';
 
 import { Overlay, Spinner } from "@blueprintjs/core";
 
-// import { workerComs } from './coms/WorkerComs.js';
 import { useState, useEffect, useContext } from 'react';
 import { AppContext } from './context/AppContext';
 
 import DimPlot from './components/Plots/ScatterPlot.js';
-// import Stats from './components/Stats';
 import MarkerPlot from './components/Markers';
-// import * as Comlink from 'comlink';
-// import worker from "./scran/scranWorker";
-// import WebWorker from "./scran/workerSetup";
 
 function App() {
 
@@ -30,15 +24,14 @@ function App() {
   };
 
   const { setWasmInitialized, setTsneData, setRedDims, redDims,
-    setInitDims, setQcDims, setFSelDims, defaultRedDims, setDefaultRedDims,
+    setInitDims, setQcDims, defaultRedDims, setDefaultRedDims,
     setQcData, qcData, setClusterData, setFSelectionData,
     setUmapData, setPcaVarExp, logs, setLogs,
-    selectedCluster, setSelectedCluster,
+    selectedCluster,
     selectedClusterSummary, setSelectedClusterSummary,
-    gene, geneExprData, setGeneExprData, reqGene } = useContext(AppContext);
+    reqGene } = useContext(AppContext);
 
   useEffect(() => {
-    console.log("calling init");
     window.Worker.postMessage({
       "type": "INIT",
       "msg": "Initial Load"
@@ -65,14 +58,8 @@ function App() {
     });
   }, [reqGene])
 
-  // let worker = new Worker("./scran/scranWorker.js");
-  var QCData = {};
-
   window.Worker.onmessage = (msg) => {
     const payload = msg.data;
-
-    // console.log(msg);
-    console.log(payload);
 
     if (payload?.msg) {
       let tmp = [...logs];
@@ -91,34 +78,28 @@ function App() {
     } else if (payload.type === "quality_control_filtered_DIMS") {
       setQcDims(payload.resp);
     } else if (payload.type === "quality_control_metrics_DATA") {
-      const { type, resp } = payload;
-      QCData = resp;
+      const { resp } = payload;
       setQcData(resp);
     } else if (payload.type === "quality_control_thresholds_DATA") {
-      const { type, resp } = payload;
-      qcData["thresholds"] = resp;
-      setQcData(qcData);
+      const { resp } = payload;
+      let tmp = { ...qcData };
+      tmp["thresholds"] = resp;
+      setQcData(tmp);
     } else if (payload.type === "feature_selection_DIMS") {
-      // setFSelDims(payload.resp);
     } else if (payload.type === "feature_selection_DATA") {
-      const { type, resp } = payload;
-      console.log(type, resp);
+      const { resp } = payload;
       setFSelectionData(resp);
     } else if (payload.type === "pca_DATA") {
-      const { type, resp } = payload;
-      console.log(type, resp);
+      const { resp } = payload;
       let tmp = [...redDims];
       tmp.push("PCA");
       setRedDims(tmp);
       setPcaVarExp(resp);
-      // setTsneData(resp);
     } else if (payload.type === "snn_cluster_graph_DATA") {
-      const { type, resp } = payload;
-      console.log(type, resp);
+      const { resp } = payload;
       setClusterData(resp);
     } else if (payload.type === "tsne_DATA" || payload.type === "tsne_iter") {
-      const { type, resp } = payload;
-      console.log(type, resp);
+      const { resp } = payload;
       setTsneData(resp);
       let tmp = [...redDims];
       tmp.push("TSNE");
@@ -127,21 +108,17 @@ function App() {
       }
       setRedDims(tmp);
     } else if (payload.type === "umap_DATA") {
-      const { type, resp } = payload;
-      console.log(type, resp);
+      const { resp } = payload;
       setUmapData(resp);
       let tmp = [...redDims];
       tmp.push("UMAP");
       setRedDims(tmp);
     } else if (payload.type === "markerGene_DATA") {
-      const { type, resp } = payload;
-      console.log(type, resp);
+      // const { type, resp } = payload;
     } else if (payload.type === "setMarkersForCluster") {
-      const { type, resp } = payload;
-      console.log(type, resp);
+      const { resp } = payload;
       let records = {};
       resp.means.forEach((x, i) => {
-        // let tgene = Array.isArray(resp?.genes) ? resp?.genes?.[i] : `Gene ${i + 1}`;
         records[resp?.genes?.[i]] = {
           "gene": resp?.genes?.[i],
           "mean": x,
@@ -154,19 +131,12 @@ function App() {
       });
       setSelectedClusterSummary(records);
     } else if (payload.type === "setGeneExpression") {
-      const { type, resp } = payload;
-      console.log(type, resp);
-      // let tmp = { ...geneExprData };
-      // tmp[resp.gene] = resp.expr;
-      // setGeneExprData(tmp);
+      const { resp } = payload;
 
       let gtmp = { ...selectedClusterSummary };
       gtmp[resp.gene].expr = Object.values(resp.expr);
       setSelectedClusterSummary(gtmp);
     }
-    // else {
-    //   var {type, result} = workerComs(msg);
-    // }
   }
 
   return (
