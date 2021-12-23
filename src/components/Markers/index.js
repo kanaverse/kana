@@ -212,7 +212,7 @@ const MarkerPlot = () => {
                                                         }
                                                     }}
                                                 >
-                                                    <Icon icon={'tint'} small={true} fill={false}
+                                                    <Icon icon={'tint'}
                                                         color={row.gene === gene ? clusterColors[selectedCluster] : ''}
                                                     ></Icon>
                                                 </Button>
