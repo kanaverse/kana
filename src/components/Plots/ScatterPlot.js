@@ -13,6 +13,8 @@ const DimPlot = () => {
     const container = useRef();
     const [scatterplot, setScatterplot] = useState(null);
     const [clusHighlight, setClusHighlight] = useState(null);
+    const [showGradient, setShowGradient] = useState(false);
+    const [exprMinMax, setExprMinMax] = useState(null);
     // const scoreColors = ["#F6F6F6", "#3399FF"];
     const { plotRedDims, redDims, defaultRedDims, setDefaultRedDims, clusterData,
         tsneData, umapData, setPlotRedDims, clusterColors,
@@ -88,28 +90,38 @@ const DimPlot = () => {
                 tmp_scatterplot.render(dataset);
 
                 tmp_scatterplot.setPointColorer((i, selectedIndices, hoverIndex) => {
-                    if (hoverIndex === i) {
-                        return 'red';
-                    }
+                    // if (hoverIndex === i) {
+                    //     return 'red';
+                    // }
 
-                    if(clusHighlight != null && clusHighlight !== cluster_mappings[i]) {
+                    if (clusHighlight != null && clusHighlight !== cluster_mappings[i]) {
                         return '#D3D3D3';
                     }
 
                     if (gene && Array.isArray(selectedClusterSummary?.[gene]?.expr)) {
                         let exprMinMax = getMinMax(selectedClusterSummary[gene].expr);
 
-                        let colorGradients = cluster_colors.map(x => {
-                            var gradient = new Rainbow();
-                            gradient.setSpectrum('#D3D3D3', x);
-                            let val = exprMinMax[1] === 0 ? 0.01 : exprMinMax[1];
-                            gradient.setNumberRange(0, val);
-                            return gradient;
-                        });
 
-                        return "#" + colorGradients[cluster_mappings[i]].colorAt(selectedClusterSummary?.[gene]?.expr?.[i])
+                        var gradient = new Rainbow();
+                        gradient.setSpectrum('#F5F8FA', "#2965CC");
+                        let val = exprMinMax[1] === 0 ? 0.01 : exprMinMax[1];
+                        gradient.setNumberRange(0, val);
+                        setExprMinMax([0, val]);
+                        setShowGradient(true);
+
+                        return "#" + gradient.colorAt(selectedClusterSummary?.[gene]?.expr?.[i]);
+                        // let colorGradients = cluster_colors.map(x => {
+                        //     var gradient = new Rainbow();
+                        //     gradient.setSpectrum('#D3D3D3', x);
+                        //     let val = exprMinMax[1] === 0 ? 0.01 : exprMinMax[1];
+                        //     gradient.setNumberRange(0, val);
+                        //     return gradient;
+                        // });
+
+                        // return "#" + colorGradients[cluster_mappings[i]].colorAt(selectedClusterSummary?.[gene]?.expr?.[i])
                     }
 
+                    setShowGradient(false);
                     return cluster_colors[cluster_mappings[i]];
                 });
             }
@@ -184,24 +196,42 @@ const DimPlot = () => {
                 }
             </div>
             <div className='right-sidebar'>
-                <Callout title="CLUSTERS" icon="circle-arrow-left">
-                    <ul>
-                        {clusterColors?.map((x, i) => {
-                            return (<li key={i} 
-                                className={clusHighlight == i ? 'legend-highlight': ''}
-                                style={{ color: x }}
-                                onClick={() => {
-                                    if (i === clusHighlight) {
-                                        setClusHighlight(null);
+                {showGradient ?
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="geneGradient" gradientTransform="rotate(90)">
+                                    <stop offset="5%" stop-color="#F5F8FA" />
+                                    <stop offset="95%" stop-color="#2965CC" />
+                                </linearGradient>
+                            </defs>
+                            <rect x="25%" y="25%" width="13" height="150" fill="url('#geneGradient')" />
+                            <text x="25%" y="15%" style={{font: '8px sans-serif;'}}>{gene}</text>
+                            <text x="30%" y="25%" style={{font: '8px sans-serif;'}}>{exprMinMax[0]}</text>
+                            <text x="30%" y="100%" style={{font: '8px sans-serif;'}}>{exprMinMax[1].toFixed(2)}</text>
+                        </svg>
+                    </div>
+                    :
+                    <Callout title="CLUSTERS" icon="circle-arrow-left">
+                        <ul>
+                            {clusterColors?.map((x, i) => {
+                                return (<li key={i}
+                                    className={clusHighlight == i ? 'legend-highlight' : ''}
+                                    style={{ color: x }}
+                                    onClick={() => {
+                                        if (i === clusHighlight) {
+                                            setClusHighlight(null);
 
-                                    } else {
-                                        setClusHighlight(i);
-                                    }
-                                }}
+                                        } else {
+                                            setClusHighlight(i);
+                                        }
+                                    }}
                                 > Cluster {i + 1} </li>)
-                        })}
-                    </ul>
-                </Callout>
+                            })}
+                        </ul>
+                    </Callout>
+                }
+
             </div>
         </div>
     );
