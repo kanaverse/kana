@@ -2,8 +2,8 @@ import {
     Button, Classes, Dialog, Text, FileInput, NumericInput,
     Label, H5, Tag, Position, HTMLSelect, Switch
 } from "@blueprintjs/core";
-import { Tooltip2, Popover2 } from "@blueprintjs/popover2";
-import React, { useContext, useState, useCallback } from "react";
+import { Tooltip2 } from "@blueprintjs/popover2";
+import React, { useContext, useState, useCallback, useEffect } from "react";
 
 import { AppContext } from "../../context/AppContext";
 import "./Analysis.css";
@@ -17,7 +17,7 @@ function AnalysisDialog({
     const handleButtonClick = useCallback(() => setIsOpen(!isOpen), [isOpen]);
     const handleClose = useCallback(() => setIsOpen(false), []);
     const { inputFiles, setInputFiles,
-        params, setParams } = useContext(AppContext);
+        params, setParams, openInput } = useContext(AppContext);
 
     let [tmpInputFiles, setTmpInputFiles] = useState(inputFiles);
     let [tmpInputParams, setTmpInputParams] = useState(params);
@@ -33,6 +33,10 @@ function AnalysisDialog({
         gene: "Choose gene file...",
         barcode: "Choose barcode file...",
     });
+
+    useEffect(() => {
+        openInput && setIsOpen(true);
+    }, [openInput])
 
     return (
         <>

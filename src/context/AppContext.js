@@ -40,6 +40,9 @@ const AppContextProvider = ({ children }) => {
     markerGene: {}
   });
 
+  // app open inputs
+  const [openInput, setOpenInput] = useState(false);
+
   // wasm state and error 
   const [wasmInitialized, setWasmInitialized] = useState(false);
   const [error, setError] = useState(null);
@@ -136,7 +139,8 @@ const AppContextProvider = ({ children }) => {
         selectedClusterSummary, setSelectedClusterSummary,
         gene, setGene,
         clusterColors, setClusterColors,
-        reqGene, setReqGene
+        reqGene, setReqGene,
+        openInput, setOpenInput
       }}
     >
       {children}

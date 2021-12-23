@@ -162,7 +162,6 @@ function App() {
           <p>Initializing SCRAN.JS</p>
         </div>
       </Overlay>
-
     </div>
   );
 }
