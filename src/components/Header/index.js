@@ -31,7 +31,7 @@ const Header = () => {
           <NavbarDivider />
           <AnalysisDialog
             icon="document"
-            title="Import dataset and update parameters"
+            title="Import dataset & update parameters (mouseover for more info)"
             buttonText="Start Analysis"
             includeFooter={true}
             {...state} />

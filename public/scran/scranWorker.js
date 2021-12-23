@@ -584,7 +584,7 @@ function runAllSteps(wasm, state) {
     });
   }
 
-  var pca_out = utils.processOutput(runPCA, wasm, { "num_hvgs": 4000, "num_pcs": state.params.pca["pca-npc"] });
+  var pca_out = utils.processOutput(runPCA, wasm, { "num_hvgs": state.params.pca["pca-hvg"], "num_pcs": state.params.pca["pca-npc"] });
   if (norm_out !== null) {
     postMessage({
       type: `${pca_out["$step"]}_DATA`,
@@ -640,7 +640,7 @@ function runAllSteps(wasm, state) {
     });
   }
 
-  var choose_out = utils.processOutput(chooseClustering, wasm, { "method": "snn_graph" });
+  var choose_out = utils.processOutput(chooseClustering, wasm, { "method": state.params.cluster["clus-method"] });
   if (choose_out !== null) {
     postMessage({
       type: `${choose_out["$step"]}_DATA`,

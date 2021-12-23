@@ -18,12 +18,15 @@ const AppContextProvider = ({ children }) => {
       "fsel-span": 0.3
     },
     pca: {
-      "pca-npc": 5
+      "pca-npc": 5,
+      "pca-hvg": 4000,
     },
     cluster: {
       "clus-k": 10,
       "clus-res": 0.5,
       "clus-scheme": 0,
+      "clus-approx": true,
+      "clus-method": "snn_graph",
     },
     tsne: {
       "tsne-iter": 500,
@@ -33,7 +36,6 @@ const AppContextProvider = ({ children }) => {
       "umap-nn": 15,
       "umap-epochs": 500,
       "umap-min_dist": 0.01,
-      "umap-approx_nn": true,
     },
     markerGene: {}
   });

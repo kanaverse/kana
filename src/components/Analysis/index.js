@@ -1,6 +1,8 @@
-import { Button, Classes, Dialog, Text, FileInput, NumericInput, 
-    Label, H4, Tag, Icon, Position, HTMLSelect } from "@blueprintjs/core";
-import { Tooltip2 } from "@blueprintjs/popover2";
+import {
+    Button, Classes, Dialog, Text, FileInput, NumericInput,
+    Label, H5, Tag, Position, HTMLSelect, Switch
+} from "@blueprintjs/core";
+import { Tooltip2, Popover2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback } from "react";
 
 import { AppContext } from "../../context/AppContext";
@@ -32,26 +34,20 @@ function AnalysisDialog({
         barcode: "Choose barcode file...",
     });
 
-    // const [popover2State] = React.useState({
-    //     inheritDarkTheme: true,
-    //     interactionKind: "hover",
-    //     modifiers: {
-    //         arrow: { enabled: true },
-    //         flip: { enabled: true },
-    //         preventOverflow: { enabled: true },
-    //     },
-    //     placement: "auto",
-    //     usePortal: true,
-    //   });
-
     return (
         <>
             <Button onClick={handleButtonClick} icon="social-media" intent="primary" text={buttonText} />
             <Dialog className="analysis-dialog" {...props} isOpen={isOpen} onClose={handleClose}>
-                <div className={Classes.DIALOG_BODY}>
-                    <div className="col">
+                <div className={Classes.DIALOG_BODY + " inputs-container"}>
+                    <div className="col row-input">
                         <div>
-                            <H4><Tag large={true} round={true}>1</Tag> Import Single cell dataset</H4>
+                            <H5><Tag round={true}>1</Tag> Import Single-cell
+                                <Tooltip2
+                                    className="row-tooltip"
+                                    content="We currently support cellRanger outputs"
+                                    position={Position.RIGHT}>
+                                    RNA-seq dataset
+                                </Tooltip2></H5>
                             <div className="row">
                                 <Label className="row-input">
                                     <Text className="text-100">Choose mtx file</Text>
@@ -74,12 +70,21 @@ function AnalysisDialog({
 
                     <div className="col">
                         <div>
-                            <H4><Tag large={true} round={true}>2</Tag> QC: Generate per cell QC metrics and filter cells</H4>
+                            <H5><Tag round={true}>2</Tag>
+                                <Tooltip2
+                                    className="row-tooltip"
+                                    content="Generate per cell QC metrics and filter cells"
+                                    position={Position.RIGHT}>
+                                    QC
+                                </Tooltip2></H5>
                             <div className="row">
                                 <Label className="row-input">
-                                    <Text className="text-100">NMADS
-                                        <Tooltip2 className="row-tooltip" content="Number of MADs from the median, to use for defining outliers.(defaults to 3)" position={Position.RIGHT} openOnTargetFocus={false}>
-                                            <Icon icon="help"></Icon>
+                                    <Text className="text-100">
+                                        <Tooltip2
+                                            className="row-tooltip"
+                                            content="Number of MADs from the median, to use for defining outliers.(defaults to 3)"
+                                            position={Position.RIGHT}>
+                                            NMADS
                                         </Tooltip2>
                                     </Text>
                                     <NumericInput
@@ -92,12 +97,19 @@ function AnalysisDialog({
 
                     <div className="col">
                         <div>
-                            <H4><Tag large={true} round={true}>3</Tag> Feature Selection: Model the variance of the log-expression values for each gene, accounting for the mean-variance trend</H4>
+                            <H5><Tag round={true}>3</Tag>
+                                <Tooltip2
+                                    className="row-tooltip"
+                                    content="Model the variance of the log-expression values for each gene, accounting for the mean-variance trend"
+                                    position={Position.RIGHT}>
+                                    Feature Selection
+                                </Tooltip2>
+                            </H5>
                             <div className="row">
                                 <Label className="row-input">
-                                    <Text className="text-100">Span factor
+                                    <Text className="text-100">
                                         <Tooltip2 className="row-tooltip" content="The span of the LOWESS smoother for fitting the mean-variance trend.(defaults to 0.3)" position={Position.RIGHT} openOnTargetFocus={false}>
-                                            <Icon icon="help"></Icon>
+                                            Span factor
                                         </Tooltip2>
                                     </Text>
                                     <NumericInput
@@ -110,13 +122,28 @@ function AnalysisDialog({
 
                     <div className="col">
                         <div>
-                            <H4><Tag large={true} round={true}>4</Tag> PCA: Perform a principal components analysis to obtain per-cell coordinates in low-dimensional space</H4>
+                            <H5><Tag round={true}>4</Tag>
+                                <Tooltip2 className="row-tooltip" content="Perform a principal components analysis to obtain per-cell coordinates in low-dimensional space" position={Position.RIGHT} openOnTargetFocus={false}>
+                                    PCA
+                                </Tooltip2>
+                            </H5>
                             <div className="row">
                                 <Label className="row-input">
-                                    <Text className="text-100"># of PCs (defaults to 5)</Text>
+                                    <Text className="text-100"># of PC's (defaults to 5)</Text>
                                     <NumericInput
                                         placeholder="5" value={tmpInputParams["pca"]["pca-npc"]}
                                         onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { "pca-npc": nval } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">
+                                        <Tooltip2 className="row-tooltip" content="Highly Variable Genes (defaults to 4000)" position={Position.RIGHT} openOnTargetFocus={false}>
+                                            # of HVG's
+                                        </Tooltip2>
+
+                                    </Text>
+                                    <NumericInput
+                                        placeholder="4000" value={tmpInputParams["pca"]["pca-hvg"]}
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { "pca-hvg": nval } }) }} />
                                 </Label>
                             </div>
                         </div>
@@ -124,12 +151,16 @@ function AnalysisDialog({
 
                     <div className="col">
                         <div>
-                            <H4><Tag large={true} round={true}>5</Tag> Cluster Analysis: Generate SNN graph and cluster cells</H4>
+                            <H5><Tag round={true}>5</Tag>
+                                <Tooltip2 className="row-tooltip" content="Generate SNN graph and cluster cells" position={Position.RIGHT} openOnTargetFocus={false}>
+                                    Graph Clustering
+                                </Tooltip2>
+                            </H5>
                             <div className="row">
                                 <Label className="row-input">
-                                    <Text className="text-100"># of neighbors
+                                    <Text className="text-100">
                                         <Tooltip2 className="row-tooltip" content="Number of neighbors to use to construct the nearest neighbor graph.(defaults to 10)" position={Position.RIGHT} openOnTargetFocus={false}>
-                                            <Icon icon="help"></Icon>
+                                            # of neighbors
                                         </Tooltip2>
                                     </Text>
                                     <NumericInput
@@ -137,26 +168,45 @@ function AnalysisDialog({
                                         onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { "clus-k": nval } }) }} />
                                 </Label>
                                 <Label className="row-input">
-                                    <Text className="text-100">Scheme
+                                    <Text className="text-100">
                                         <Tooltip2 className="row-tooltip" content="0 for approx, 1 ..., 2 for jaccard index" position={Position.RIGHT} openOnTargetFocus={false}>
-                                            <Icon icon="help"></Icon>
+                                            Scheme
                                         </Tooltip2>
                                     </Text>
-                                    <HTMLSelect onChange={(nval, val) => setTmpInputParams({...tmpInputParams, "cluster": { "clus-scheme": parseInt(nval?.currentTarget?.value) }})}>
+                                    <HTMLSelect onChange={(nval, val) => setTmpInputParams({ ...tmpInputParams, "cluster": { "clus-scheme": parseInt(nval?.currentTarget?.value) } })}>
                                         <option key="0">0</option>
                                         <option key="1">1</option>
                                         <option key="2">2</option>
                                     </HTMLSelect>
                                 </Label>
                                 <Label className="row-input">
-                                    <Text className="text-100">Resolution
+                                    <Text className="text-100">
                                         <Tooltip2 className="row-tooltip" content="Resolution of the multi-level clustering, used in the modularity calculation.Larger values yield more fine-grained clusters.(defaults to 0.5)" position={Position.RIGHT} openOnTargetFocus={false}>
-                                            <Icon icon="help"></Icon>
+                                            Resolution
                                         </Tooltip2>
                                     </Text>
                                     <NumericInput
                                         placeholder="0.5" value={tmpInputParams["cluster"]["clus-res"]}
                                         onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { "clus-res": nval } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">
+                                        <Tooltip2 className="row-tooltip" content="Approximate Nearest Neighbor ?" position={Position.RIGHT} openOnTargetFocus={false}>
+                                            Use ANN ?
+                                        </Tooltip2>
+                                    </Text>
+                                    <Switch style={{marginTop:"4px"}}  checked={tmpInputParams["cluster"]["clus-approx"]} label="(toggle true/false)" onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { "clus-approx": e.target.checked } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">
+                                        <Tooltip2 className="row-tooltip" content="Graph Clustering Algorithm to use (currently only supports snn_graph)" position={Position.RIGHT} openOnTargetFocus={false}>
+                                            Method
+                                        </Tooltip2>
+                                    </Text>
+                                    <select style={{marginTop:"4px"}} defaultValue={tmpInputParams["cluster"]["clus-method"]}>
+                                        <option>{tmpInputParams["cluster"]["clus-method"]}</option>
+                                    </select>
+                                    
                                 </Label>
                             </div>
                         </div>
@@ -164,7 +214,11 @@ function AnalysisDialog({
 
                     <div className="col">
                         <div>
-                            <H4><Tag large={true} round={true}>6</Tag> t-SNE: Compute t-SNE embeddings and Visualize cells</H4>
+                            <H5><Tag round={true}>6</Tag>
+                                <Tooltip2 className="row-tooltip" content="Compute t-SNE embeddings and Visualize cells" position={Position.RIGHT} openOnTargetFocus={false}>
+                                    t-SNE
+                                </Tooltip2>
+                            </H5>
                             <div className="row">
                                 <Label className="row-input">
                                     <Text className="text-100">Iterations (defaults to 500)</Text>
@@ -184,7 +238,11 @@ function AnalysisDialog({
 
                     <div className="col">
                         <div>
-                            <H4><Tag large={true} round={true}>6</Tag> UMAP: Compute UMAP embeddings and Visualize cells</H4>
+                            <H5><Tag round={true}>6</Tag>
+                                <Tooltip2 className="row-tooltip" content="Compute UMAP embeddings and Visualize cells" position={Position.RIGHT} openOnTargetFocus={false}>
+                                    UMAP
+                                </Tooltip2>
+                            </H5>
                             <div className="row">
                                 <Label className="row-input">
                                     <Text className="text-100">Num of Neighbors (defaults to 15)</Text>
@@ -203,12 +261,6 @@ function AnalysisDialog({
                                     <NumericInput
                                         placeholder="0.01" value={tmpInputParams["umap"]["umap-min_dist"]}
                                         onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { "umap-min_dist": nval } }) }} />
-                                </Label>
-                                <Label className="row-input">
-                                    <Text className="text-100">Use Approximate Neighbor Search ? (true for fast UMAP calculation))</Text>
-                                    <NumericInput
-                                        placeholder="0.01" value={tmpInputParams["umap"]["umap-approx_nn"]}
-                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { "umap-approx_nn": nval } }) }} />
                                 </Label>
                             </div>
                         </div>
