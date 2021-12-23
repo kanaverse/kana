@@ -372,7 +372,6 @@ function scoreMarkers(wasm, args) {
 
     var mat = fetchNormalizedMatrix();
     var clusters = utils.cached["choose_clustering"].buffer;
-    console.log(clusters);
     marker_cached.raw = wasm.score_markers(mat, clusters.ptr, false, 0);
 
     return {};
@@ -662,8 +661,6 @@ function runAllSteps(wasm, state) {
 var loaded;
 onmessage = function (msg) {
   var self = this;
-  console.log("in worker");
-  console.log(msg.data);
 
   const payload = msg.data;
   if (payload.type == "INIT") {
@@ -698,7 +695,6 @@ onmessage = function (msg) {
         var mat = fetchNormalizedMatrix();
         var perm = new WasmBuffer(wasm, mat.nrow(), "Int32Array");
         mat.permutation(perm.ptr);
-        console.log(perm.array());
 
         let gene_indices = perm.array();
         let genes = [];
