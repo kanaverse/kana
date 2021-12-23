@@ -6,7 +6,7 @@ SCRAN.js is built on top of react and allows users to interactively analyze and 
 
 ***Note: Checkout [scran.js](https://github.com/jkanche/scran.js) for details on the implementation and the underlying WASM/C++ libraries that make this possible.***
 
-***Note 2: This is a pure JS application with client side computation, neither the raw data not the results step of the analysis are uploaded or transfered to any servers. Everything automagically runs in your own browser!!!***
+***Note 2: This is a pure JS application with client side computation, neither the raw data not the results at any step of the analysis are uploaded or transfered to any servers. All computations automagically runs in your own browser!!!***
 
 <img src="assets/scran.js.app.gif" align="center" width="75%" height="75%"/>
 
