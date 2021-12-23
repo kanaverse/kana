@@ -27,13 +27,13 @@ SCRAN.js is built on top of react and allows users to interactively analyze and 
 
 ## Architecture
 
- (**scenario**) Traditionally we are more used to ***function shipping***, where a client (or an application in the browser) wants to perform an operation on a dataset. Since the server holds both the data and has better resources (historically), we make an API call to the server aksing the server to compute a function. The server now responds with the results of the operation and the client/application displays them. 
+ (**scenario**) Traditionally we are more used to ***function shipping***, where a client (or an application in the browser) wants to perform an operation on a dataset. Since the server holds both the data and has better resources (historically), we make an API call to the server asking it to compute a function. The server responds with the results of the operation and the client/app displays them. 
 
-Compared to the scenario described above the application replaces the server with the users's own laptop/machine. All computations performed by the app run in a web worker in the browser. This allows the main thread of the app to be less occupied and makes the app more responsive. 
+Compared to the scenario described above the application replaces the server with the users's own laptop/machine. All computations performed by the app run in a web worker in the browser. This allows the main thread of the app to be less occupied and also makes the app more responsive. 
 
 ![Worker Model](assets/scran.js.app.workers.png)
 
-Single-cell datasets can be huge and we also want to make sure we are not constantly serializing and sending large amounts of data back and forth between the main thread and the workers. This is also a problem with the current limitation of [WASM (4gig memory limit)](https://v8.dev/blog/4gb-wasm-memory). To effeciently use memory we ghave to enable cross Original Isolation, so that workers have access to shared memory. A caveat of this approach is described in the [Gotchas](#Gotchas) section below. A worksround for this is achieved using Service Workers
+Single-cell datasets can be huge, so we also want to make sure we are not constantly serializing and transferring large chunks of data back and forth between the main thread and the workers. For various steps like t-SNE nd UMAP having access to shared memory that contains the nearest neighbor graph embeddings computes these operations faster. This is also a problem with the current limitation of [WASM (4gig memory limit)](https://v8.dev/blog/4gb-wasm-memory). To efficiently use memory we have to enable [Cross Original Isolation](https://web.dev/why-coop-coep/), so that workers have access to shared array buffers. A caveat of this approach is described in the [Gotchas](#Gotchas) section below. A workaround for this is by using Service Workers.
 ## Developer notes
 
 Install dependencies
