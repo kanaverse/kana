@@ -89,7 +89,7 @@ function AnalysisDialog({
                                     </Text>
                                     <NumericInput
                                         placeholder="3" value={tmpInputParams["qc"]["qc-nmads"]}
-                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { "qc-nmads": nval } }) }} />
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-nmads": nval } }) }} />
                                 </Label>
                             </div>
                         </div>
@@ -114,7 +114,7 @@ function AnalysisDialog({
                                     </Text>
                                     <NumericInput
                                         placeholder="0.3" value={tmpInputParams["fSelection"]["fsel-span"]}
-                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "fSelection": { "fsel-span": nval } }) }} />
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "fSelection": { ...tmpInputParams["fSelection"], "fsel-span": nval } }) }} />
                                 </Label>
                             </div>
                         </div>
@@ -132,7 +132,7 @@ function AnalysisDialog({
                                     <Text className="text-100"># of PC's (defaults to 5)</Text>
                                     <NumericInput
                                         placeholder="5" value={tmpInputParams["pca"]["pca-npc"]}
-                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { "pca-npc": nval } }) }} />
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-npc": nval } }) }} />
                                 </Label>
                                 <Label className="row-input">
                                     <Text className="text-100">
@@ -143,7 +143,7 @@ function AnalysisDialog({
                                     </Text>
                                     <NumericInput
                                         placeholder="4000" value={tmpInputParams["pca"]["pca-hvg"]}
-                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { "pca-hvg": nval } }) }} />
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-hvg": nval } }) }} />
                                 </Label>
                             </div>
                         </div>
@@ -165,7 +165,7 @@ function AnalysisDialog({
                                     </Text>
                                     <NumericInput
                                         placeholder="10" value={tmpInputParams["cluster"]["clus-k"]}
-                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { "clus-k": nval } }) }} />
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-k": nval } }) }} />
                                 </Label>
                                 <Label className="row-input">
                                     <Text className="text-100">
@@ -173,7 +173,7 @@ function AnalysisDialog({
                                             Scheme
                                         </Tooltip2>
                                     </Text>
-                                    <HTMLSelect onChange={(nval, val) => setTmpInputParams({ ...tmpInputParams, "cluster": { "clus-scheme": parseInt(nval?.currentTarget?.value) } })}>
+                                    <HTMLSelect onChange={(nval, val) => setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-scheme": parseInt(nval?.currentTarget?.value) } })}>
                                         <option key="0">0</option>
                                         <option key="1">1</option>
                                         <option key="2">2</option>
@@ -187,7 +187,7 @@ function AnalysisDialog({
                                     </Text>
                                     <NumericInput
                                         placeholder="0.5" value={tmpInputParams["cluster"]["clus-res"]}
-                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { "clus-res": nval } }) }} />
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-res": nval } }) }} />
                                 </Label>
                                 <Label className="row-input">
                                     <Text className="text-100">
@@ -195,7 +195,7 @@ function AnalysisDialog({
                                             Use ANN ?
                                         </Tooltip2>
                                     </Text>
-                                    <Switch style={{marginTop:"4px"}}  checked={tmpInputParams["cluster"]["clus-approx"]} label="(toggle true/false)" onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { "clus-approx": e.target.checked } }) }} />
+                                    <Switch style={{marginTop:"4px"}}  checked={tmpInputParams["cluster"]["clus-approx"]} label="(toggle true/false)" onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-approx": e.target.checked } }) }} />
                                 </Label>
                                 <Label className="row-input">
                                     <Text className="text-100">
@@ -224,13 +224,13 @@ function AnalysisDialog({
                                     <Text className="text-100">Iterations (defaults to 500)</Text>
                                     <NumericInput
                                         placeholder="500" value={tmpInputParams["tsne"]["tsne-iter"]}
-                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "tsne": { "tsne-iter": nval } }) }} />
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "tsne": { ...tmpInputParams["tsne"], "tsne-iter": nval } }) }} />
                                 </Label>
                                 <Label className="row-input">
                                     <Text className="text-100">Perplexity (defaults to 30)</Text>
                                     <NumericInput
                                         placeholder="30" value={tmpInputParams["tsne"]["tsne-perp"]}
-                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "tsne": { "tsne-perp": nval } }) }} />
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "tsne": { ...tmpInputParams["tsne"], "tsne-perp": nval } }) }} />
                                 </Label>
                             </div>
                         </div>
@@ -248,19 +248,19 @@ function AnalysisDialog({
                                     <Text className="text-100">Num of Neighbors (defaults to 15)</Text>
                                     <NumericInput
                                         placeholder="15" value={tmpInputParams["umap"]["umap-nn"]}
-                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { "umap-nn": nval } }) }} />
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-nn": nval } }) }} />
                                 </Label>
                                 <Label className="row-input">
                                     <Text className="text-100">Epochs (defaults to 500)</Text>
                                     <NumericInput
                                         placeholder="500" value={tmpInputParams["umap"]["umap-epoch"]}
-                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { "umap-epoch": nval } }) }} />
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-epoch": nval } }) }} />
                                 </Label>
                                 <Label className="row-input">
                                     <Text className="text-100">Min Distance (defaults to 0.01)</Text>
                                     <NumericInput
                                         placeholder="0.01" value={tmpInputParams["umap"]["umap-min_dist"]}
-                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { "umap-min_dist": nval } }) }} />
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-min_dist": nval } }) }} />
                                 </Label>
                             </div>
                         </div>
