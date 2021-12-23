@@ -712,8 +712,8 @@ onmessage = function (msg) {
       }
 
       var resp = {
-        // "auc": utils.cached.marker_detection.raw.auc(cluster).slice(),
-        "cohen": utils.cached.marker_detection.raw.cohen(cluster, 0).slice(),
+        "auc": utils.cached.marker_detection.raw.auc(cluster, 1).slice(),
+        "cohen": utils.cached.marker_detection.raw.cohen(cluster, 1).slice(),
         "detected": utils.cached.marker_detection.raw.detected(cluster, 0).slice(),
         "means": utils.cached.marker_detection.raw.means(cluster, 0).slice(),
         "genes": utils.cached.normalization.genes,

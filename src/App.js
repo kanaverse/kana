@@ -122,7 +122,7 @@ function App() {
         records[resp?.genes?.[i]] = {
           "gene": resp?.genes?.[i],
           "mean": x,
-          // "auc": resp?.auc?.[i],
+          "auc": resp?.auc?.[i],
           "cohen": resp?.cohen?.[i],
           "detected": resp?.detected?.[i],
           "expanded": false,

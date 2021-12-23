@@ -1,18 +1,20 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
 import { Button, H4, Icon, Collapse, Label, InputGroup } from "@blueprintjs/core";
 import { Virtuoso } from 'react-virtuoso';
+import * as d3 from 'd3';
 
 import { AppContext } from '../../context/AppContext';
-import Histogram from '../Plots/Histogram';
 import StackedHistogram from '../Plots/StackedHistogram';
+import getMinMax from '../Plots/utils';
 
 import './markers.css';
+import Cell from '../Plots/Cell.js';
 
 const MarkerPlot = () => {
 
     const { clusterData, selectedClusterSummary, setSelectedClusterSummary,
-        selectedCluster, setSelectedCluster, 
-         setReqGene, clusterColors, gene, setGene } = useContext(AppContext);
+        selectedCluster, setSelectedCluster,
+        setReqGene, clusterColors, gene, setGene } = useContext(AppContext);
     const [clusSel, setClusSel] = useState(null);
     const [clusArrayStacked, setClusArrayStacked] = useState(null);
     const [sortColumns, setSortColumns] = useState([{
@@ -20,6 +22,14 @@ const MarkerPlot = () => {
         direction: 'DSC'
     }]);
     const [searchInput, setSearchInput] = useState(null);
+    const [meanMinMax, setMeanMinMax] = useState(null);
+    const [cohenMinMax, setCohenMinMax] = useState(null);
+
+    const detectedScale = d3.interpolateRdYlBu; //d3.interpolateRdBu;
+        // d3.scaleSequential()
+        // .domain([0, 1])
+        // .range(["red", "blue"])
+        // .interpolate(d3.interpolateHcl);
 
     // const columns = [
     //     { key: 'gene', name: 'Gene', sortable: true },
@@ -50,6 +60,13 @@ const MarkerPlot = () => {
         if (!selectedClusterSummary) return selectedClusterSummary;
 
         let trecs = Object.values(selectedClusterSummary);
+
+        let means = trecs.map(x => x?.mean);
+        setMeanMinMax(getMinMax(means));
+
+        let cohens = trecs.map(x => x?.cohen);
+        setCohenMinMax(getMinMax(cohens));
+
         if (sortColumns.length === 0) return trecs;
 
         if (trecs.length === 0) return trecs;
@@ -68,7 +85,7 @@ const MarkerPlot = () => {
 
         if (!searchInput || searchInput === "") return sortedRows;
 
-        sortedRows = sortedRows.filter((x) => x["gene"].indexOf(searchInput) !== -1);
+        sortedRows = sortedRows.filter((x) => x["gene"].toLowerCase().indexOf(searchInput.toLowerCase()) !== -1);
         return sortedRows;
     }, [selectedClusterSummary, sortColumns, searchInput]);
 
@@ -77,8 +94,8 @@ const MarkerPlot = () => {
             let max_clusters = Math.max(...clusterData.clusters);
 
             let clus = [];
-            for (let i = 0; i < max_clusters; i++) {
-                clus.push(i);
+            for (let i = 0; i < max_clusters + 1; i++) {
+                clus.push(i + 1);
             }
 
             setClusSel(clus);
@@ -106,7 +123,7 @@ const MarkerPlot = () => {
                     >
                         {
                             clusSel.map((x, i) => (
-                                <option key={i}>Cluster {x + 1}</option>
+                                <option key={i}>Cluster {x}</option>
                             ))
                         }
                     </select>
@@ -130,7 +147,7 @@ const MarkerPlot = () => {
                                             columnKey: x.currentTarget.value,
                                             direction: 'DSC'
                                         }])
-                                    }} value="cohen">
+                                    }} defaultValue={"cohen"}>
                                     <option>mean</option>
                                     <option>cohen</option>
                                 </select>
@@ -158,8 +175,16 @@ const MarkerPlot = () => {
                                     <div>
                                         <div className='row-container'>
                                             <span>{row.gene}</span>
-                                            <span>Cohen: {row.cohen.toFixed(4)}, AUC</span>
-                                            <span>Mean: {row.mean.toFixed(4)}, Detected: {row.detected}</span>
+                                            {/* <span>Cohen: {row.cohen.toFixed(4)}, AUC</span> */}
+                                            {<Cell minmax={cohenMinMax} colorscale={detectedScale}
+                                                score={row.cohen} colorscore={row.auc}
+                                            />}
+                                            {<Cell minmax={meanMinMax} colorscale={detectedScale}
+                                                score={row.mean} colorscore={row.detected}
+                                            />}
+                                            {/* <span>Mean: {row.mean.toFixed(4)}, Detected: {row.detected}
+                                            Scale {detectedScale(row.detected)}
+                                            minMax: {meanMinMax}</span> */}
                                             <div className='row-action'>
                                                 <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
                                                     className='row-action'
@@ -194,11 +219,10 @@ const MarkerPlot = () => {
                                             </div>
                                         </div>
                                         <Collapse isOpen={rowexp}>
-                                            This will show a histogram
-                                            <Histogram data={rowExpr} color={clusterColors[selectedCluster]} />
-                                            {clusArrayStacked && <StackedHistogram data={rowExpr} 
-                                                color={clusterColors[selectedCluster]} 
-                                                clusters={clusArrayStacked}/> }
+                                            {/* <Histogram data={rowExpr} color={clusterColors[selectedCluster]} /> */}
+                                            {clusArrayStacked && <StackedHistogram data={rowExpr}
+                                                color={clusterColors[selectedCluster]}
+                                                clusters={clusArrayStacked} />}
                                         </Collapse>
                                     </div>
                                 )

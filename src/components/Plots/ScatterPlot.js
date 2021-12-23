@@ -1,6 +1,6 @@
 import { ScatterGL } from 'scatter-gl';
 import { useEffect, useRef, useContext, useState } from 'react';
-import { ControlGroup, Button, Icon, ButtonGroup } from "@blueprintjs/core";
+import { ControlGroup, Button, Icon, ButtonGroup, Callout } from "@blueprintjs/core";
 
 import { AppContext } from '../../context/AppContext';
 import getMinMax from './utils';
@@ -12,6 +12,7 @@ import "./ScatterPlot.css";
 const DimPlot = () => {
     const container = useRef();
     const [scatterplot, setScatterplot] = useState(null);
+    const [clusHighlight, setClusHighlight] = useState(null);
     // const scoreColors = ["#F6F6F6", "#3399FF"];
     const { plotRedDims, redDims, defaultRedDims, setDefaultRedDims, clusterData,
         tsneData, umapData, setPlotRedDims, clusterColors,
@@ -34,28 +35,35 @@ const DimPlot = () => {
                 let lastSelectedPoints = [];
 
                 tmp_scatterplot = new ScatterGL(containerEl, {
-                    onClick: (point) => {
-                        console.log(`click ${point}`);
-                    },
-                    onHover: (point) => {
-                        console.log(`hover ${point}`);
-                    },
-                    onSelect: (points) => {
-                        let message = '';
-                        if (points.length === 0 && lastSelectedPoints.length === 0) {
-                            message = 'no selection';
-                        } else if (points.length === 0 && lastSelectedPoints.length > 0) {
-                            message = 'deselected';
-                        } else if (points.length === 1) {
-                            message = `selected ${points}`;
-                        } else {
-                            message = `selected ${points.length} points`;
-                        }
-                        console.log(message);
-                    },
+                    // onClick: (point) => {
+                    //     console.log(`click ${point}`);
+                    // },
+                    // onHover: (point) => {
+                    //     console.log(`hover ${point}`);
+                    // },
+                    // onSelect: (points) => {
+                    //     let message = '';
+                    //     if (points.length === 0 && lastSelectedPoints.length === 0) {
+                    //         message = 'no selection';
+                    //     } else if (points.length === 0 && lastSelectedPoints.length > 0) {
+                    //         message = 'deselected';
+                    //     } else if (points.length === 1) {
+                    //         message = `selected ${points}`;
+                    //     } else {
+                    //         message = `selected ${points.length} points`;
+                    //     }
+                    //     console.log(message);
+                    // },
                     orbitControls: {
                         zoomSpeed: 1.25,
                     },
+                    styles: {
+                        point: {
+                            scaleDefault: 2.5,
+                            scaleSelected: 2.5,
+                            scaleHover: 2.5,
+                        }
+                    }
                 });
 
                 tmp_scatterplot.setPanMode();
@@ -84,6 +92,10 @@ const DimPlot = () => {
                         return 'red';
                     }
 
+                    if(clusHighlight != null && clusHighlight !== cluster_mappings[i]) {
+                        return '#D3D3D3';
+                    }
+
                     if (gene && Array.isArray(selectedClusterSummary?.[gene]?.expr)) {
                         let exprMinMax = getMinMax(selectedClusterSummary[gene].expr);
 
@@ -102,7 +114,7 @@ const DimPlot = () => {
                 });
             }
         }
-    }, [plotRedDims, selectedClusterSummary, gene]);
+    }, [plotRedDims, selectedClusterSummary, gene, clusHighlight]);
 
     useEffect(() => {
         changeRedDim(defaultRedDims);
@@ -158,9 +170,9 @@ const DimPlot = () => {
                 </Button>
             </ButtonGroup>
             <ControlGroup className="top-header" fill={false} vertical={false}>
-                <Button>Play t-SNE Interactively</Button>
+                {/* <Button>Play t-SNE Interactively</Button>
                 <Button>Color Plot by Metadata</Button>
-                <Button>What else ?</Button>
+                <Button>What else ?</Button> */}
                 <Button icon="hand-up" onClick={x => setInteraction("PAN")}>Pan</Button>
                 <Button icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
             </ControlGroup>
@@ -172,11 +184,24 @@ const DimPlot = () => {
                 }
             </div>
             <div className='right-sidebar'>
-                <ul>
-                    {clusterColors?.map((x,i) => {
-                        return (<li key={i} style={{color: x}}> Cluster {i+1} </li>)
-                    })}
-                </ul>
+                <Callout title="CLUSTERS" icon="circle-arrow-left">
+                    <ul>
+                        {clusterColors?.map((x, i) => {
+                            return (<li key={i} 
+                                className={clusHighlight == i ? 'legend-highlight': ''}
+                                style={{ color: x }}
+                                onClick={() => {
+                                    if (i === clusHighlight) {
+                                        setClusHighlight(null);
+
+                                    } else {
+                                        setClusHighlight(i);
+                                    }
+                                }}
+                                > Cluster {i + 1} </li>)
+                        })}
+                    </ul>
+                </Callout>
             </div>
         </div>
     );

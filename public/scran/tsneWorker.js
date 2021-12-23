@@ -62,7 +62,7 @@ onmessage = function(msg) {
   } else {
     loaded.then(wasm => {
       utils.upstream.clear();
-      if (msg.data.neighbors !== null) {
+      if (msg.data.neighbors !== undefined) {
         vizutils.recreateNeighbors(wasm, msg.data.neighbors);
       }
 

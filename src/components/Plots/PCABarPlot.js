@@ -9,7 +9,7 @@ const PCABarPlot = (props) => {
     let chart_data = [];
     Object.values(data)?.forEach((x, i) => {
         chart_data.push({
-            key: i,
+            key: i+1,
             value: x * 100
         });
     });

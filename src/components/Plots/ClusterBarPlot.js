@@ -119,7 +119,7 @@ const ClusterBarPlot = (props) => {
     let chart_data = [];
     Object.values(x)?.forEach((z, i) => {
         chart_data.push({
-            key: i,
+            key: i + 1,
             value: z
         });
     });
