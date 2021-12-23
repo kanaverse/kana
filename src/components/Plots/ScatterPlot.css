@@ -66,3 +66,7 @@
     font-style: italic;
     font-size: 14px;
 }
+
+text {
+    font: '8px sans-serif;'
+}
