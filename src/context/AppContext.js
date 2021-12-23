@@ -57,13 +57,20 @@ const AppContextProvider = ({ children }) => {
 
   // UI dimensions reduction dropdown
   const [redDims, setRedDims] = useState([]);
+  // which dimension is selected
   const [defaultRedDims, setDefaultRedDims] = useState(null);
+  // the actual dimensions
   const [plotRedDims, setPlotRedDims] = useState(null);
 
   // Cluster Analysis
+  // cluster assignments
   const [clusterData, setClusterData] = useState(null);
+  // which cluster is selected
   const [selectedCluster, setSelectedCluster] = useState(null);
-  const [selectedClusterSummary, setSelectedClusterSummary] = useState(null);
+  // cohen, mean scores per gene
+  const [selectedClusterSummary, setSelectedClusterSummary] = useState({});
+  // set cluster colors
+  const [clusterColors, setClusterColors] = useState(null);
 
   // PCA
   const [pcaData, setPcaData] = useState(null);
@@ -75,13 +82,18 @@ const AppContextProvider = ({ children }) => {
   // UMAP
   const [umapData, setUmapData] = useState(null);
 
+  // geneExpression
+  // what gene is selected for scatterplot
+  const [gene, setGene] = useState(null);
+  // request gene expression
+  const [reqGene, setReqGene] = useState(null);
+  // expr values per gene
+
   // Logs
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
-    // console.log("something changed");
 
-    console.log("in Context", inputFiles, params, wasmInitialized);
     if (wasmInitialized && inputFiles.mtx != null) {
       window.Worker.postMessage({
         "type": "RUN",
@@ -119,7 +131,10 @@ const AppContextProvider = ({ children }) => {
         fSelectionData, setFSelectionData,
         logs, setLogs,
         selectedCluster, setSelectedCluster,
-        selectedClusterSummary, setSelectedClusterSummary
+        selectedClusterSummary, setSelectedClusterSummary,
+        gene, setGene,
+        clusterColors, setClusterColors,
+        reqGene, setReqGene
       }}
     >
       {children}

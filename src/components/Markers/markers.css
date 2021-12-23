@@ -3,3 +3,51 @@
     padding: 10px;
     flex-direction: column;
 }
+
+.marker-table {
+    display: grid;
+    grid-template-rows: 35px auto;
+    grid-template-columns: auto;
+    padding: 10px;
+}
+
+.marker-header {
+    grid-row: 1;
+    grid-column: 1/ -1;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.marker-list {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    text-align: start;
+    overflow-x: hidden;
+}
+
+.row-card {
+    padding: 2px;
+    font-size: 12px;
+    border-bottom: solid gainsboro 1px;
+}
+
+.row-cont-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: left;
+}
+
+.row-container {
+    display: grid;
+    grid-template-columns: 25% 25% 25% 25%;
+    gap: 2px;
+    align-items: center;
+}
+
+
+.row-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+}

@@ -1,6 +1,6 @@
 import { Button, Classes, Dialog, Text, FileInput, NumericInput, 
     Label, H4, Tag, Icon, Position, HTMLSelect } from "@blueprintjs/core";
-import { Tooltip2, Popover2 } from "@blueprintjs/popover2";
+import { Tooltip2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback } from "react";
 
 import { AppContext } from "../../context/AppContext";
@@ -12,7 +12,7 @@ function AnalysisDialog({
     ...props
 }) {
     const [isOpen, setIsOpen] = useState(false);
-    const handleButtonClick = useCallback(() => setIsOpen(!isOpen), []);
+    const handleButtonClick = useCallback(() => setIsOpen(!isOpen), [isOpen]);
     const handleClose = useCallback(() => setIsOpen(false), []);
     const { inputFiles, setInputFiles,
         params, setParams } = useContext(AppContext);
@@ -32,17 +32,17 @@ function AnalysisDialog({
         barcode: "Choose barcode file...",
     });
 
-    const [popover2State] = React.useState({
-        inheritDarkTheme: true,
-        interactionKind: "hover",
-        modifiers: {
-            arrow: { enabled: true },
-            flip: { enabled: true },
-            preventOverflow: { enabled: true },
-        },
-        placement: "auto",
-        usePortal: true,
-      });
+    // const [popover2State] = React.useState({
+    //     inheritDarkTheme: true,
+    //     interactionKind: "hover",
+    //     modifiers: {
+    //         arrow: { enabled: true },
+    //         flip: { enabled: true },
+    //         preventOverflow: { enabled: true },
+    //     },
+    //     placement: "auto",
+    //     usePortal: true,
+    //   });
 
     return (
         <>

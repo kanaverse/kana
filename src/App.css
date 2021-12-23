@@ -37,19 +37,10 @@
   }
 }
 
-/* .App-content {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 50px);
-  justify-content: space-between;
-  align-items: stretch;
-  margin: 5px;
-} */
-
 .App-content {
   display: grid;
   grid-gap: 5px;
-  grid-template-columns: auto 500px;
+  grid-template-columns: auto 400px;
   grid-template-rows: 60% 40%;
   background-color: #fff;
   /* color: #444; */
@@ -79,28 +70,6 @@
   flex-wrap: wrap;
   padding: 10px;
 }
-
-/* old style */
-/* .App-cotent-plot {
-  display: flex;
-  margin: 5px;
-  justify-content: space-between;
-  align-items: stretch;
-}
-
-.plot {
-  width: calc(100% - 600px);
-  height: 100%;
-  border-left: 2px solid gainsboro;
-  border-right: 2px solid gainsboro;
-  padding: 5px
-}
-
-.sidebar {
-  min-width: 300px;
-  padding: 5px;
-  height: 100%;
-} */
 
 .spinner {
   display: relative;
