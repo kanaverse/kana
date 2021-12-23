@@ -15,15 +15,15 @@ const Gallery = () => {
   return (
     <>
       <div className="gallery-cont">
-        <Callout className="gallery-text" title="Analysis results">
+        {/* <Callout className="gallery-text" title="Analysis results">
           This sections shows visualizations to explore the performance
           or metrics at each step of the analysis. <br />
           <Stats />
-        </Callout>
+        </Callout> */}
         {
           clusterData ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
-              <h5>Cells per Cluster</h5>
+              <h5># of cells per cluster</h5>
               <ClusterBarPlot data={clusterData} />
             </Card>
             : ""
@@ -31,7 +31,7 @@ const Gallery = () => {
         {
           pcaVarExp ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
-              <h5>PCA (Variance explained by cluster)</h5>
+              <h5>PCA (% variance explained)</h5>
               <PCABarPlot pca={pcaVarExp} />
             </Card>
             : ""

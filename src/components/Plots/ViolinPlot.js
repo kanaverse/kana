@@ -12,11 +12,11 @@ const ViolinPlot = (props) => {
         let color = props?.color;
 
         if (!propwidth) {
-            propwidth = 325;
+            propwidth = 275;
         }
 
         if (!color) {
-            color = "#69b3a2";
+            color = "#00B3A4";
         }
 
         if (!data) return "";
@@ -26,7 +26,7 @@ const ViolinPlot = (props) => {
 
         const margin = { top: 10, right: 30, bottom: 30, left: 40 },
             width = propwidth - margin.left - margin.right,
-            height = 350 - margin.top - margin.bottom;
+            height = 200 - margin.top - margin.bottom;
 
         const svg = d3.select(containerEl)
             .append("svg")
@@ -76,7 +76,7 @@ const ViolinPlot = (props) => {
             .append("path")
             .datum(() => { return bins })
             .style("stroke", "none")
-            .style("fill", "grey")
+            .style("fill", "#A7B6C2")
             .attr("d", d3.area()
                 .x0(xNum(0))
                 .x1((d) => { return (xNum(d.length)) })
@@ -84,7 +84,7 @@ const ViolinPlot = (props) => {
                 .curve(d3.curveCatmullRom)
             );
 
-        var jitterWidth = 100;
+        var jitterWidth = 70;
         svg
             .selectAll("jitter")
             .data(data)

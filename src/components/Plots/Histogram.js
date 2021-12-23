@@ -15,7 +15,7 @@ const Histogram = (props) => {
         }
 
         if (!color) {
-            color = "#69b3a2";
+            color = "#00B3A4";
         }
     
         if (!data) return "";

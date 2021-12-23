@@ -19,7 +19,7 @@ const BarPlot = (props) => {
         }
 
         if (!color) {
-            color = "#69b3a2";
+            color = "#00B3A4";
         }
 
         if (!data) return "";
@@ -29,7 +29,7 @@ const BarPlot = (props) => {
 
         const margin = { top: 10, right: 30, bottom: 30, left: 40 },
             width = propwidth - margin.left - margin.right,
-            height = 150 - margin.top - margin.bottom;
+            height = 200 - margin.top - margin.bottom;
 
         const svg = d3.select(containerEl)
             .append("svg")
