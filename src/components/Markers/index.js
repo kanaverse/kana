@@ -1,5 +1,6 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
-import { Button, H4, Icon, Collapse, Label, InputGroup } from "@blueprintjs/core";
+import { Button, H4, H5, Icon, Collapse, Label, InputGroup, Position, Classes, Card, Elevation } from "@blueprintjs/core";
+import { Tooltip2, Popover2 } from '@blueprintjs/popover2';
 import { Virtuoso } from 'react-virtuoso';
 import * as d3 from 'd3';
 
@@ -26,10 +27,10 @@ const MarkerPlot = () => {
     const [cohenMinMax, setCohenMinMax] = useState(null);
 
     const detectedScale = d3.interpolateRdYlBu; //d3.interpolateRdBu;
-        // d3.scaleSequential()
-        // .domain([0, 1])
-        // .range(["red", "blue"])
-        // .interpolate(d3.interpolateHcl);
+    // d3.scaleSequential()
+    // .domain([0, 1])
+    // .range(["red", "blue"])
+    // .interpolate(d3.interpolateHcl);
 
     // const columns = [
     //     { key: 'gene', name: 'Gene', sortable: true },
@@ -176,46 +177,114 @@ const MarkerPlot = () => {
                                         <div className='row-container'>
                                             <span>{row.gene}</span>
                                             {/* <span>Cohen: {row.cohen.toFixed(4)}, AUC</span> */}
-                                            {<Cell minmax={cohenMinMax} colorscale={detectedScale}
-                                                score={row.cohen} colorscore={row.auc}
-                                            />}
-                                            {<Cell minmax={meanMinMax} colorscale={detectedScale}
-                                                score={row.mean} colorscore={row.detected}
-                                            />}
+                                            {
+                                                <Popover2
+                                                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                                    hasBackdrop={false}
+                                                    interactionKind="hover"
+                                                    placement='auto'
+                                                    hoverOpenDelay={500}
+                                                    modifiers={{
+                                                        arrow: { enabled: true },
+                                                        flip: { enabled: true },
+                                                        preventOverflow: { enabled: true },
+                                                    }}
+                                                    content={
+                                                        <div key="text">
+                                                            <Card elevation={Elevation.ZERO}>
+                                                                <H5>{row.gene}</H5>
+                                                                <p>Cohen Score : {row.cohen.toFixed(2)}</p>
+                                                                <p>AUC : {row.auc.toFixed(2)}</p>
+                                                                <p>Detected : {row.detected.toFixed(2)}</p>
+                                                                <p>Mean Expression: {row.mean.toFixed(2)}</p>
+                                                                <H5>Summary stats</H5>
+                                                                <p>Cohen Range : {cohenMinMax[0].toFixed(2)}, {cohenMinMax[1].toFixed(2)}</p>
+                                                                <p>Mean Range: {meanMinMax[0].toFixed(2)}, {meanMinMax[1].toFixed(2)}</p>
+                                                            </Card>
+                                                        </div>
+                                                    }
+                                                >
+                                                    <Cell minmax={cohenMinMax} colorscale={detectedScale}
+                                                        score={row.cohen} colorscore={row.auc} />
+                                                </Popover2>
+                                            }
+                                            {
+                                                <Popover2
+                                                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                                    hasBackdrop={false}
+                                                    interactionKind="hover"
+                                                    placement='auto'
+                                                    hoverOpenDelay={500}
+                                                    modifiers={{
+                                                        arrow: { enabled: true },
+                                                        flip: { enabled: true },
+                                                        preventOverflow: { enabled: true },
+                                                    }}
+                                                    content={
+                                                        <div key="text">
+                                                            <Card elevation={Elevation.ZERO}>
+                                                                <H5>{row.gene} :: Info Card</H5>
+                                                                <p>Cohen Score : {row.cohen.toFixed(2)}</p>
+                                                                <p>AUC : {row.auc.toFixed(2)}</p>
+                                                                <p>Detected : {row.detected.toFixed(2)}</p>
+                                                                <p>Mean Expression: {row.mean.toFixed(2)}</p>
+                                                                <H5>Summary stats</H5>
+                                                                <p>Cohen Range : {cohenMinMax[0].toFixed(2)}, {cohenMinMax[1].toFixed(2)}</p>
+                                                                <p>Mean Range: {meanMinMax[0].toFixed(2)}, {meanMinMax[1].toFixed(2)}</p>
+                                                            </Card>
+                                                        </div>
+                                                    }
+                                                >
+                                                    <Cell minmax={meanMinMax} colorscale={detectedScale}
+                                                        score={row.mean} colorscore={row.detected}
+                                                    />
+                                                </Popover2>}
                                             {/* <span>Mean: {row.mean.toFixed(4)}, Detected: {row.detected}
                                             Scale {detectedScale(row.detected)}
                                             minMax: {meanMinMax}</span> */}
                                             <div className='row-action'>
-                                                <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
-                                                    className='row-action'
-                                                    onClick={() => {
-                                                        let tmp = { ...selectedClusterSummary };
-                                                        tmp[row.gene].expanded = !tmp[row.gene].expanded;
-                                                        setSelectedClusterSummary(tmp);
+                                                <Tooltip2 className="row-tooltip"
+                                                    content="Visualize histogram of this gene"
+                                                    position={Position.LEFT}
+                                                    openOnTargetFocus={false}
+                                                    hoverOpenDelay={500}>
+                                                    <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
+                                                        className='row-action'
+                                                        onClick={() => {
+                                                            let tmp = { ...selectedClusterSummary };
+                                                            tmp[row.gene].expanded = !tmp[row.gene].expanded;
+                                                            setSelectedClusterSummary(tmp);
 
-                                                        if (!rowExpr) {
-                                                            setReqGene(row.gene);
-                                                        }
-                                                    }}
-                                                >
-                                                </Button>
-                                                <Button small={true} fill={false}
-                                                    className='row-action'
-                                                    onClick={() => {
-                                                        if (row.gene === gene) {
-                                                            setGene(null);
-                                                        } else {
-                                                            setGene(row.gene);
                                                             if (!rowExpr) {
                                                                 setReqGene(row.gene);
                                                             }
-                                                        }
-                                                    }}
-                                                >
-                                                    <Icon icon={'tint'} small={true} fill={false}
-                                                        color={row.gene === gene ? clusterColors[selectedCluster] : ''}
-                                                    ></Icon>
-                                                </Button>
+                                                        }}
+                                                    >
+                                                    </Button>
+                                                </Tooltip2>
+                                                <Tooltip2 className="row-tooltip"
+                                                    content="Color embedding plot by expression of this gene"
+                                                    position={Position.LEFT}
+                                                    openOnTargetFocus={false}
+                                                    hoverOpenDelay={500}>
+                                                    <Button small={true} fill={false}
+                                                        className='row-action'
+                                                        onClick={() => {
+                                                            if (row.gene === gene) {
+                                                                setGene(null);
+                                                            } else {
+                                                                setGene(row.gene);
+                                                                if (!rowExpr) {
+                                                                    setReqGene(row.gene);
+                                                                }
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Icon icon={'tint'}
+                                                            color={row.gene === gene ? clusterColors[selectedCluster] : ''}
+                                                        ></Icon>
+                                                    </Button>
+                                                </Tooltip2>
                                             </div>
                                         </div>
                                         <Collapse isOpen={rowexp}>

@@ -16,13 +16,17 @@ const Cell = (props) => {
     }
 
     return (
-        <div ref={container} 
-            style={{ width: propwidth, height:'66%', 
-                    margin:'5px', border: '1px solid gainsboro',
-                    alignItems: 'center' }}>
-            <div style={{ width: `${colorscore * 100}%`, 
-                backgroundColor: colorscale(percWidth), 
-                height: '100%', opacity: percWidth }}></div>
+        <div ref={container}
+            style={{
+                width: propwidth, height: '15px',
+                margin: '5px', border: '1px solid gainsboro',
+                alignItems: 'center'
+            }}>
+            <div style={{
+                width: `${colorscore * 100}%`,
+                backgroundColor: colorscale(percWidth),
+                height: '100%', opacity: percWidth
+            }}></div>
         </div>
     );
 };
