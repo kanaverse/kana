@@ -691,7 +691,7 @@ onmessage = function (msg) {
     loaded.then(wasm => {
       let cluster = payload.payload.cluster;
       let rank_type = payload.payload.rank_type;
-      if (rank_type === null) {
+      if (rank_type === undefined) {
           rank_type = "cohen-min-rank";
       }
 
@@ -708,22 +708,15 @@ onmessage = function (msg) {
           index = 4;
       }
 
+      var ranking = null;
       if (rank_type.match(/^cohen-/)) {
           ranking = marker_results.cohen(cluster, index);
       } else if (rank_type.match(/^auc-/)) {
           ranking = marker_results.auc(cluster, index);
       } else if (rank_type.match(/^lfc-/)) {
-          if (index == 1) {
-              ranking = stat_lfc;
-          } else {
-              ranking = marker_results.lfc(cluster, index);
-          }
+          ranking = marker_results.lfc(cluster, index);
       } else if (rank_type.match(/^delta-d-/)) {
-          if (index == 1) {
-              ranking = stat_delta_d;
-          } else {
-              ranking = marker_results.delta_detected(cluster, index);
-          }
+          ranking = marker_results.delta_detected(cluster, index);
       }
 
       // Computing the ordering based on the ranking statistic.
@@ -770,7 +763,7 @@ onmessage = function (msg) {
       }
 
       var resp = {
-        "mean": stat_mean,
+        "means": stat_mean,
         "detected": stat_detected,
         "lfc": stat_lfc,
         "delta_d": stat_delta_d,
