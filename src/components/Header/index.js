@@ -49,7 +49,7 @@ const Header = () => {
           
           <IntroDialog
             icon="document"
-            title="Welcome to SCRAN.JS Application"
+            title="Single-cell RNA-seq analysis in the browser"
             isOpen={true}
           />
         </NavbarGroup>
