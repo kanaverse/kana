@@ -261,7 +261,7 @@ const DimPlot = () => {
                                 <RangeSlider
                                     min={Math.round(exprMinMax[0])}
                                     max={Math.round(exprMinMax[1])}
-                                    stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 20}
+                                    stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 50}
                                     onChange={(range) => { setSliderMinMax(range) }}
                                     value={[Math.round(sliderMinMax[0]), Math.round(sliderMinMax[1])]}
                                     vertical={true}
