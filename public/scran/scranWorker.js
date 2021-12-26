@@ -691,7 +691,7 @@ onmessage = function (msg) {
     loaded.then(wasm => {
       let cluster = payload.payload.cluster;
       let rank_type = payload.payload.rank_type;
-      if (rank_type === undefined) {
+      if (!rank_type || rank_type === undefined) {
           rank_type = "cohen-min-rank";
       }
 
@@ -767,8 +767,8 @@ onmessage = function (msg) {
         "detected": stat_detected,
         "lfc": stat_lfc,
         "delta_d": stat_delta_d,
-        "auc": utils.cached.marker_detection.raw.auc(cluster, 1).slice(),
-        "cohen": utils.cached.marker_detection.raw.cohen(cluster, 1).slice(),
+        // "auc": utils.cached.marker_detection.raw.auc(cluster, 1).slice(),
+        // "cohen": utils.cached.marker_detection.raw.cohen(cluster, 1).slice(),
         "genes": utils.cached.normalization.genes,
       }
 

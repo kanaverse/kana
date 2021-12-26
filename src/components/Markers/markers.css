@@ -6,9 +6,10 @@
 
 .marker-table {
     display: grid;
-    grid-template-rows: 35px auto;
+    grid-template-rows: 35px calc(100vh - 450px) 275px;
     grid-template-columns: auto;
-    padding: 10px;
+    padding: 5px 0 0 0;
+    /* gap: 5px; */
 }
 
 .marker-header {
@@ -24,6 +25,12 @@
     grid-column: 1 / -1;
     text-align: start;
     overflow-x: hidden;
+    height: 100% !important;
+}
+
+.marker-footer {
+    background-color: coral;
+    margin-top: 10px;
 }
 
 .row-card {
@@ -40,7 +47,7 @@
 
 .row-container {
     display: grid;
-    grid-template-columns: 25% 25% 25% 25%;
+    grid-template-columns: 20% 15% 15% 15% 15% 20%;
     gap: 2px;
     align-items: center;
 }

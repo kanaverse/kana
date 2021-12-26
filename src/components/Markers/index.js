@@ -13,48 +13,20 @@ import Cell from '../Plots/Cell.js';
 const MarkerPlot = () => {
 
     const { clusterData, selectedClusterSummary, setSelectedClusterSummary,
-        selectedCluster, setSelectedCluster,
+        selectedCluster, setSelectedCluster, setClusterRank,
         setReqGene, clusterColors, gene, setGene } = useContext(AppContext);
     const [clusSel, setClusSel] = useState(null);
     const [clusArrayStacked, setClusArrayStacked] = useState(null);
-    const [sortColumns, setSortColumns] = useState([{
-        columnKey: 'cohen',
-        direction: 'DSC'
-    }]);
     const [searchInput, setSearchInput] = useState(null);
     const [meanMinMax, setMeanMinMax] = useState(null);
-    const [cohenMinMax, setCohenMinMax] = useState(null);
+    const [deltaMinMax, setDeltaMinMax] = useState(null);
+    const [lfcMinMax, setLfcMinMax] = useState(null);
 
     const detectedScale = d3.interpolateRdYlBu; //d3.interpolateRdBu;
-        // d3.scaleSequential()
-        // .domain([0, 1])
-        // .range(["red", "blue"])
-        // .interpolate(d3.interpolateHcl);
-
-    // const columns = [
-    //     { key: 'gene', name: 'Gene', sortable: true },
-    //     { key: 'mean', name: 'Mean', sortable: true },
-    //     // { key: 'auc', name: 'AUC' },
-    //     { key: 'cohen', name: 'Cohen', sortable: true },
-    //     { key: 'detected', name: 'Detected', sortable: true },
-    // ];
-
-    const getComparator = (sortColumn) => {
-        switch (sortColumn) {
-            case 'gene':
-                return (a, b) => {
-                    return a[sortColumn].localeCompare(b[sortColumn]);
-                };
-            case 'mean':
-            case 'cohen':
-            case 'detected':
-                return (a, b) => {
-                    return a[sortColumn] - b[sortColumn];
-                };
-            default:
-                throw new Error(`unsupported sortColumn: "${sortColumn}"`);
-        }
-    }
+    // d3.scaleSequential()
+    // .domain([0, 1])
+    // .range(["red", "blue"])
+    // .interpolate(d3.interpolateHcl);
 
     const sortedRows = useMemo(() => {
         if (!selectedClusterSummary) return selectedClusterSummary;
@@ -64,30 +36,21 @@ const MarkerPlot = () => {
         let means = trecs.map(x => x?.mean);
         setMeanMinMax(getMinMax(means));
 
-        let cohens = trecs.map(x => x?.cohen);
-        setCohenMinMax(getMinMax(cohens));
+        let deltas = trecs.map(x => x?.delta);
+        setDeltaMinMax(getMinMax(deltas));
 
-        if (sortColumns.length === 0) return trecs;
+        let lfcs = trecs.map(x => x?.lfc);
+        setLfcMinMax(getMinMax(lfcs));
 
         if (trecs.length === 0) return trecs;
 
         let sortedRows = [...trecs];
-        sortedRows.sort((a, b) => {
-            for (const sort of sortColumns) {
-                const comparator = getComparator(sort.columnKey);
-                const compResult = comparator(a, b);
-                if (compResult !== 0) {
-                    return sort.direction === 'ASC' ? compResult : -compResult;
-                }
-            }
-            return 0;
-        });
 
         if (!searchInput || searchInput === "") return sortedRows;
 
         sortedRows = sortedRows.filter((x) => x["gene"].toLowerCase().indexOf(searchInput.toLowerCase()) !== -1);
         return sortedRows;
-    }, [selectedClusterSummary, sortColumns, searchInput]);
+    }, [selectedClusterSummary, searchInput]);
 
     useEffect(() => {
         if (clusterData?.clusters) {
@@ -143,13 +106,20 @@ const MarkerPlot = () => {
                             <Label>sort by
                                 <select
                                     onChange={(x) => {
-                                        setSortColumns([{
-                                            columnKey: x.currentTarget.value,
-                                            direction: 'DSC'
-                                        }])
-                                    }} defaultValue={"cohen"}>
-                                    <option>mean</option>
-                                    <option>cohen</option>
+                                        setClusterRank(x.currentTarget.value);
+                                    }} defaultValue={"cohen-min-rank"}>
+                                    <option>cohen-min</option>
+                                    <option>cohen-mean</option>
+                                    <option>cohen-min-rank</option>
+                                    <option>auc-min</option>
+                                    <option>auc-mean</option>
+                                    <option>auc-min-rank</option>
+                                    <option>lfc-min</option>
+                                    <option>lfc-mean</option>
+                                    <option>lfc-min-rank</option>
+                                    <option>delta-d-min</option>
+                                    <option>delta-d-mean</option>
+                                    <option>delta-d-min-rank</option>
                                 </select>
                             </Label>
                         </div>
@@ -164,7 +134,6 @@ const MarkerPlot = () => {
                                 },
                             }}
                             className='marker-list'
-                            style={{ minHeight: '800px' }}
                             totalCount={sortedRows.length}
                             itemContent={index => {
                                 const row = sortedRows[index];
@@ -176,15 +145,18 @@ const MarkerPlot = () => {
                                         <div className='row-container'>
                                             <span>{row.gene}</span>
                                             {/* <span>Cohen: {row.cohen.toFixed(4)}, AUC</span> */}
-                                            {<Cell minmax={cohenMinMax} colorscale={detectedScale}
-                                                score={row.cohen} colorscore={row.auc}
+                                            {<Cell minmax={lfcMinMax}
+                                                score={row.lfc} color="#F5498B"
                                             />}
-                                            {<Cell minmax={meanMinMax} colorscale={detectedScale}
-                                                score={row.mean} colorscore={row.detected}
+                                            {<Cell minmax={deltaMinMax}
+                                                score={row.delta} color="#4580E6"
                                             />}
-                                            {/* <span>Mean: {row.mean.toFixed(4)}, Detected: {row.detected}
-                                            Scale {detectedScale(row.detected)}
-                                            minMax: {meanMinMax}</span> */}
+                                            {<Cell minmax={meanMinMax} 
+                                                score={row.mean} color="#43BF4D"
+                                            />}
+                                            {<Cell minmax={[0,1]}
+                                                score={row.detected} color={detectedScale(row.detected)}
+                                            />}
                                             <div className='row-action'>
                                                 <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
                                                     className='row-action'
@@ -228,6 +200,9 @@ const MarkerPlot = () => {
                                 )
                             }}
                         />
+                        <div className='marker-footer'>
+                            <p>Legend for bars</p>
+                        </div>
                     </div>
                     : ""
             }
