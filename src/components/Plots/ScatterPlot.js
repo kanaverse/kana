@@ -230,9 +230,12 @@ const DimPlot = () => {
             <div className='right-sidebar'>
                 {showGradient ?
                     <div>
-                        <span>Use the slider to adjust the color gradient of the plot. Useful when data is skewed
+                        <Callout intent='primary' style={{
+                            textAlign: 'left'
+                        }
+                        }>Use the slider to adjust the color gradient of the plot. Useful when data is skewed
                             by either a few lowly or highly expressed cells
-                        </span>
+                        </Callout>
                         <div className='dim-slider-container'>
                             {/* <svg xmlns="http://www.w3.org/2000/svg">
                             <defs>
