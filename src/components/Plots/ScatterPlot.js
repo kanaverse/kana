@@ -247,7 +247,7 @@ const DimPlot = () => {
                             <text x="30%" y="100%" style={{ font: '8px sans-serif' }}>{exprMinMax[1].toFixed(2)}</text>
                         </svg> */}
                             <div className='dim-slider-gradient'>
-                                <span>{Math.round(exprMinMax[0])}</span>
+                                <span>{Math.round(exprMinMax[1])}</span>
                                 <div
                                     value-start={Math.round(exprMinMax[0])}
                                     value-end={Math.round(exprMinMax[1])}
@@ -255,7 +255,7 @@ const DimPlot = () => {
                                         backgroundImage: "linear-gradient(0deg, #F5F8FA, 50%, #2965CC)",
                                         width: '15px', height: '150px',
                                     }}></div>
-                                <span>{Math.round(exprMinMax[1])}</span>
+                                <span>{Math.round(exprMinMax[0])}</span>
                             </div>
                             <div className='dim-range-slider'>
                                 <RangeSlider
