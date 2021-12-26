@@ -2,7 +2,7 @@
 
 ## Overview
 
-**haggis** is a web application for single-cell RNA-seq data analysis that works directly in the browser.
+**kana** is a web application for single-cell RNA-seq data analysis that works directly in the browser.
 That's right - the calculations are performed client-side, by your browser, on your computer!
 This differs from the usual paradigm of, e.g., Shiny applications where data needs to be sent to a backend server that does the actual analysis.
 Our client-side approach has a number of advantages:
@@ -10,7 +10,7 @@ Our client-side approach has a number of advantages:
 - Your data is never transferred anywhere, so you don't have have to worry about problems with data privacy.
   These can be especially hairy when your backend server lies in a different jurisdiction from your data source.
   By performing the analysis on the client, we avoid all of these issues.
-- **haggis** is super-cheap to run and deploy, just serve it as a static website.
+- **kana** is super-cheap to run and deploy, just serve it as a static website.
   There's no need to maintain a server or cloud compute instance - let the user's machine take care of it.
   It also naturally scales to any number of users as they're automatically providing the compute.
 - By removing network latency, we can achieve a smooth interactive experience.
@@ -61,16 +61,16 @@ As promised, there's no need to set up a backend server.
 
 ### Architecture
 
-**haggis** uses the [**scran.js**](https://github.com/jkanche/scran.js) library for efficient client-side execution of scRNA-seq analysis steps.
+**kana** uses the [**scran.js**](https://github.com/jkanche/scran.js) library for efficient client-side execution of scRNA-seq analysis steps.
 This uses a variety of C/C++ libraries compiled to [WebAssembly](https://webassembly.org/) to enable heavy-duty calculations in the browser at near-native speed.
 
 <!--
 Traditional data analysis applications use ***function shipping***, where a client (or an application in the browser) wants to perform an operation on a dataset on a backend server.
 The client makes an API call to the server asking it to compute a function, the server responds with the results of the operation and the client/app displays them. 
-In **haggis**, we replace the server with the users's own laptop/machine. 
+In **kana**, we replace the server with the users's own laptop/machine. 
 -->
 
-All computations performed by **haggis** run in a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers).
+All computations performed by **kana** run in a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers).
 This avoids blocking on the main thread and allows the application to be more responsive.
 Data is sent to the main thread on an as-needed basis, e.g., for visualizations. 
 We also create separate Web Workers for the t-SNE and UMAP steps so that they can be run concurrently for maximum efficiency.
