@@ -245,7 +245,7 @@ const MarkerPlot = () => {
                                     return (<div className='row-container row-header'>
                                         <span>Gene</span>
                                         <span>Log-FC</span>
-                                        <span>Δ-d</span>
+                                        <span>Δ-detected</span>
                                         <span>Expression &nbsp;
                                             <Tooltip2 content="bar represents the mean expression of the gene and the color gradient represents detected." openOnTargetFocus={false}>
                                                 <Icon size={12} icon="help"></Icon>
@@ -343,7 +343,7 @@ const MarkerPlot = () => {
                             </div>
 
                             <div className='marker-filter-container'>
-                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Δ-d</Tag>
+                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Δ-detected</Tag>
                                 <Histogram data={deltas} height={35} color="#4580E6" />
                                 <div className='marker-filter-slider'>
                                     {deltaMinMax && <RangeSlider
