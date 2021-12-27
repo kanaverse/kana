@@ -1,11 +1,13 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
-import { Button, H4, Icon, Collapse, Label, InputGroup } from "@blueprintjs/core";
+import { Button, H4, H5, Icon, Collapse, Label, InputGroup, RangeSlider, Tag } from "@blueprintjs/core";
+import { Tooltip2 } from "@blueprintjs/popover2";
 import { Virtuoso } from 'react-virtuoso';
 import * as d3 from 'd3';
 
 import { AppContext } from '../../context/AppContext';
 import StackedHistogram from '../Plots/StackedHistogram';
 import getMinMax from '../Plots/utils';
+import Histogram from '../Plots/Histogram';
 
 import './markers.css';
 import Cell from '../Plots/Cell.js';
@@ -21,6 +23,16 @@ const MarkerPlot = () => {
     const [meanMinMax, setMeanMinMax] = useState(null);
     const [deltaMinMax, setDeltaMinMax] = useState(null);
     const [lfcMinMax, setLfcMinMax] = useState(null);
+    const [detectedMinMax, setDetectedMinMax] = useState(null);
+    const [minMaxs, setMinMaxs] = useState(null);
+
+    const [means, setMeans] = useState(null);
+    const [deltas, setDeltas] = useState(null);
+    const [lfcs, setLfcs] = useState(null);
+    const [detects, setDetects] = useState(null);
+
+    const [markerFilter, setMarkerFilter] = useState({});
+    const [prosRecords, setProsRecords] = useState(null);
 
     const detectedScale = d3.interpolateRdYlBu; //d3.interpolateRdBu;
     // d3.scaleSequential()
@@ -28,29 +40,72 @@ const MarkerPlot = () => {
     // .range(["red", "blue"])
     // .interpolate(d3.interpolateHcl);
 
-    const sortedRows = useMemo(() => {
+    useEffect(() => {
         if (!selectedClusterSummary) return selectedClusterSummary;
 
         let trecs = Object.values(selectedClusterSummary);
 
-        let means = trecs.map(x => x?.mean);
-        setMeanMinMax(getMinMax(means));
-
-        let deltas = trecs.map(x => x?.delta);
-        setDeltaMinMax(getMinMax(deltas));
-
-        let lfcs = trecs.map(x => x?.lfc);
-        setLfcMinMax(getMinMax(lfcs));
-
         if (trecs.length === 0) return trecs;
 
+
+        let tmpmeans = trecs.map(x => x?.mean);
+        // setMeanMinMax(getMinMax(tmpmeans));
+        let tmeanMinMax = d3.extent(tmpmeans)
+        setMeanMinMax([parseFloat(tmeanMinMax[0].toFixed(2)), parseFloat(tmeanMinMax[1].toFixed(2))]);
+        setMeans(tmpmeans);
+
+        let tmpdeltas = trecs.map(x => x?.delta);
+        // setDeltaMinMax(getMinMax(tmpdeltas));
+        let tdeltaMinMax = d3.extent(tmpdeltas)
+        setDeltaMinMax([parseFloat(tdeltaMinMax[0].toFixed(2)), parseFloat(tdeltaMinMax[1].toFixed(2))]);
+        // setDeltaMinMax(d3.extent(tmpdeltas));
+        setDeltas(tmpdeltas);
+
+        let tmplfcs = trecs.map(x => x?.lfc);
+        // setLfcMinMax(getMinMax(tmplfcs));
+        // setLfcMinMax(d3.extent(tmplfcs));
+        let tlfcsMinMax = d3.extent(tmplfcs)
+        setLfcMinMax([parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsMinMax[1].toFixed(2))]);
+        setLfcs(tmplfcs);
+
+        let tmpdetects = trecs.map(x => x?.detected);
+        // setDetectedMinMax(getMinMax(tmpdetects));
+        // setDetectedMinMax(d3.extent(tmpdetects));
+        let tdetectsMinMax = d3.extent(tmpdetects)
+        setDetectedMinMax([parseFloat(tdetectsMinMax[0].toFixed(2)), parseFloat(tdetectsMinMax[1].toFixed(2))]);
+        setDetects(tmpdetects);
+
+        setMinMaxs({
+            "lfc": [parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsMinMax[1].toFixed(2))],
+            "mean": [parseFloat(tmeanMinMax[0].toFixed(2)), parseFloat(tmeanMinMax[1].toFixed(2))],
+            "detected": [parseFloat(tdetectsMinMax[0].toFixed(2)), parseFloat(tdetectsMinMax[1].toFixed(2))],
+            "delta": [parseFloat(tdeltaMinMax[0].toFixed(2)), parseFloat(tdeltaMinMax[1].toFixed(2))],
+        });
+
         let sortedRows = [...trecs];
+
+        setProsRecords(sortedRows);
+
+    }, [selectedClusterSummary]);
+
+    const sortedRows = useMemo(() => {
+
+        if (!prosRecords) return [];
+
+        let sortedRows = prosRecords;
+        if (markerFilter) {
+            for (let key in markerFilter) {
+                let range = markerFilter[key];
+                if (range[0] == minMaxs[key][0] && range[1] == minMaxs[key][1]) continue;
+                sortedRows = sortedRows.filter((x) => x[key] >= range[0] && x[key] <= range[1]);
+            }
+        }
 
         if (!searchInput || searchInput === "") return sortedRows;
 
         sortedRows = sortedRows.filter((x) => x["gene"].toLowerCase().indexOf(searchInput.toLowerCase()) !== -1);
         return sortedRows;
-    }, [selectedClusterSummary, searchInput]);
+    }, [prosRecords, searchInput, markerFilter]);
 
     useEffect(() => {
         if (clusterData?.clusters) {
@@ -74,7 +129,14 @@ const MarkerPlot = () => {
         let clusArray = []
         clusterData?.clusters?.forEach(x => x === selectedCluster ? clusArray.push(1) : clusArray.push(0));
         setClusArrayStacked(clusArray);
-    }, [selectedCluster])
+    }, [selectedCluster]);
+
+    const handleMarkerFilter = (val, key) => {
+
+        let tmp = { ...markerFilter };
+        tmp[key] = val;
+        setMarkerFilter(tmp);
+    }
 
     return (
         <div className='marker-container'>
@@ -103,7 +165,7 @@ const MarkerPlot = () => {
                                 type={"text"}
                                 onChange={(e) => setSearchInput(e.target.value)}
                             />
-                            <Label>sort by
+                            <Label>sort by &nbsp;
                                 <select
                                     onChange={(x) => {
                                         setClusterRank(x.currentTarget.value);
@@ -132,6 +194,19 @@ const MarkerPlot = () => {
                                         </div>
                                     );
                                 },
+                                Header: () => {
+                                    return (<div className='row-container row-header'>
+                                        <span>Gene</span>
+                                        <span>log fold-change</span>
+                                        <span>Δd</span>
+                                        <span>Expression &nbsp;
+                                            <Tooltip2 content="bar represents the mean expression of the gene and the color gradient represents detected." openOnTargetFocus={false}>
+                                                <Icon size={12} icon="help"></Icon>
+                                            </Tooltip2>
+                                        </span>
+                                        <span></span>
+                                    </div>)
+                                }
                             }}
                             className='marker-list'
                             totalCount={sortedRows.length}
@@ -151,12 +226,12 @@ const MarkerPlot = () => {
                                             {<Cell minmax={deltaMinMax}
                                                 score={row.delta} color="#4580E6"
                                             />}
-                                            {<Cell minmax={meanMinMax} 
-                                                score={row.mean} color="#43BF4D"
+                                            {<Cell minmax={meanMinMax} colorscale={detectedScale}
+                                                score={row.mean} colorscore={row.detected}
                                             />}
-                                            {<Cell minmax={[0,1]}
+                                            {/* {<Cell minmax={[0,1]}
                                                 score={row.detected} color={detectedScale(row.detected)}
-                                            />}
+                                            />} */}
                                             <div className='row-action'>
                                                 <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
                                                     className='row-action'
@@ -201,7 +276,71 @@ const MarkerPlot = () => {
                             }}
                         />
                         <div className='marker-footer'>
-                            <p>Legend for bars</p>
+                            <H5 className='marker-footer-title'>Filter Markers</H5>
+
+                            <div className='marker-filter-container'>
+                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Log fold-change</Tag>
+                                <Histogram data={lfcs} height={35} color="#F5498B" />
+                                <div className='marker-filter-slider'>
+                                    {lfcMinMax && <RangeSlider
+                                        min={lfcMinMax[0]}
+                                        max={lfcMinMax[1]}
+                                        stepSize={Math.round(lfcMinMax[1] - lfcMinMax[0]) / 25}
+                                        onChange={(val) => handleMarkerFilter(val, "lfc")}
+                                        value={markerFilter?.["lfc"] ? markerFilter?.["lfc"] : lfcMinMax}
+                                        vertical={false}
+                                    />}
+                                </div>
+                            </div>
+
+                            <div className='marker-filter-container'>
+                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>delta-d</Tag>
+                                <Histogram data={deltas} height={35} color="#4580E6" />
+                                <div className='marker-filter-slider'>
+                                    {deltaMinMax && <RangeSlider
+                                        min={deltaMinMax[0]}
+                                        max={deltaMinMax[1]}
+                                        stepSize={Math.round(deltaMinMax[1] - deltaMinMax[0]) / 25}
+                                        onChange={(val) => handleMarkerFilter(val, "delta")}
+                                        value={markerFilter?.["delta"] ? markerFilter?.["delta"] : deltaMinMax}
+                                        vertical={false}
+                                    />}
+                                </div>
+                            </div>
+
+                            <div className='marker-filter-container'>
+                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Mean</Tag>
+                                <Histogram data={means} height={35} />
+                                <div className='marker-filter-slider'>
+                                    {meanMinMax && <RangeSlider
+                                        min={meanMinMax[0]}
+                                        max={meanMinMax[1]}
+                                        stepSize={Math.round(meanMinMax[1] - meanMinMax[0]) / 25}
+                                        onChange={(val) => handleMarkerFilter(val, "mean")}
+                                        value={markerFilter?.["mean"] ? markerFilter?.["mean"] : meanMinMax}
+                                        vertical={false}
+                                    />}
+                                </div>
+                            </div>
+
+                            <div className='marker-filter-container'>
+                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Detected</Tag>
+                                <Histogram data={detects} height={35} />
+                                <div className='marker-filter-slider'>
+                                    {detectedMinMax && <RangeSlider
+                                        min={detectedMinMax[0]}
+                                        max={detectedMinMax[1]}
+                                        stepSize={Math.round(detectedMinMax[1] - detectedMinMax[0]) / 25}
+                                        onChange={(val) => handleMarkerFilter(val, "detected")}
+                                        value={markerFilter?.["detected"] ? markerFilter?.["detected"] : detectedMinMax}
+                                        vertical={false}
+                                    />}
+                                </div>
+                            </div>
+                            {/* <Label>AUC</Label>
+                            <div className='marker-filter-container'></div>
+                            <Label>Cohen</Label>
+                            <div className='marker-filter-container'></div> */}
                         </div>
                     </div>
                     : ""

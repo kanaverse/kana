@@ -8,10 +8,15 @@ const Histogram = (props) => {
 
         let data = props?.data;
         let propwidth = props?.width;
+        let propheight = props?.height;
         let color = props?.color;
 
         if (!propwidth) {
             propwidth = 325;
+        }
+
+        if (!propheight) {
+            propheight = 150;
         }
 
         if (!color) {
@@ -23,9 +28,9 @@ const Histogram = (props) => {
         let containerEl = container.current;
         containerEl.innerHTML = "";
 
-        const margin = { top: 10, right: 30, bottom: 30, left: 40 },
+        const margin = { top: 5, right: 5, bottom: 5, left: 5 },
             width = propwidth - margin.left - margin.right,
-            height = 150 - margin.top - margin.bottom;
+            height = propheight - margin.top - margin.bottom;
 
         const svg = d3.select(containerEl)
             .append("svg")
@@ -66,7 +71,7 @@ const Histogram = (props) => {
             .attr("width", (d) => { return x(d.x1) - x(d.x0) - 1 })
             .attr("height", (d) => { return height - y(d.length); })
             .style("fill", color)
-    }, []);
+    }, [props?.data]);
 
     return (
         <div ref={container}></div>
