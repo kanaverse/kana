@@ -6,11 +6,12 @@ import * as d3 from 'd3';
 
 import { AppContext } from '../../context/AppContext';
 import StackedHistogram from '../Plots/StackedHistogram';
-import getMinMax from '../Plots/utils';
 import Histogram from '../Plots/Histogram';
 
-import './markers.css';
 import Cell from '../Plots/Cell.js';
+import HeatmapCell from '../Plots/HeatmapCell';
+
+import './markers.css';
 
 const MarkerPlot = () => {
 
@@ -34,6 +35,9 @@ const MarkerPlot = () => {
     const [markerFilter, setMarkerFilter] = useState({});
     const [prosRecords, setProsRecords] = useState(null);
 
+    const [lfcColorScale, setLfcColorScale] = useState(null);
+    const [deltaColorScale, setDeltaColorScale] = useState(null);
+
     const detectedScale = d3.interpolateRdYlBu; //d3.interpolateRdBu;
     // d3.scaleSequential()
     // .domain([0, 1])
@@ -46,7 +50,6 @@ const MarkerPlot = () => {
         let trecs = Object.values(selectedClusterSummary);
 
         if (trecs.length === 0) return trecs;
-
 
         let tmpmeans = trecs.map(x => x?.mean);
         // setMeanMinMax(getMinMax(tmpmeans));
@@ -61,12 +64,32 @@ const MarkerPlot = () => {
         // setDeltaMinMax(d3.extent(tmpdeltas));
         setDeltas(tmpdeltas);
 
+        // if (tdeltaMinMax?.length == 2) {
+        //     // var deltagradient = new Rainbow();
+        //     // deltagradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
+        //     // deltagradient.setNumberRange(...deltaMinMax);
+        //     // setDeltaColorScale(deltagradient);
+        //     const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
+        //         .range([parseFloat(tdeltaMinMax[0].toFixed(2)), 0, parseFloat(tdeltaMinMax[1].toFixed(2))]);
+        //     setDeltaColorScale(detectedScale);
+        // }
+
         let tmplfcs = trecs.map(x => x?.lfc);
         // setLfcMinMax(getMinMax(tmplfcs));
         // setLfcMinMax(d3.extent(tmplfcs));
         let tlfcsMinMax = d3.extent(tmplfcs)
         setLfcMinMax([parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsMinMax[1].toFixed(2))]);
         setLfcs(tmplfcs);
+
+        // if (tlfcsMinMax?.length === 2) {
+        //     // var lfcgradient = new Rainbow();
+        //     // lfcgradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
+        //     // lfcgradient.setNumberRange(...lfcMinMax);
+        //     // setLfcColorScale(lfcgradient);
+        //     const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
+        //         .range([parseFloat(tlfcsMinMax[0].toFixed(2)), 0, parseFloat(tlfcsMinMax[1].toFixed(2))]);
+        //     setLfcColorScale(detectedScale);
+        // }
 
         let tmpdetects = trecs.map(x => x?.detected);
         // setDetectedMinMax(getMinMax(tmpdetects));
@@ -87,6 +110,30 @@ const MarkerPlot = () => {
         setProsRecords(sortedRows);
 
     }, [selectedClusterSummary]);
+
+    // useEffect(() => {
+    //     if (lfcMinMax?.length === 2) {
+    //         // var lfcgradient = new Rainbow();
+    //         // lfcgradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
+    //         // lfcgradient.setNumberRange(...lfcMinMax);
+    //         // setLfcColorScale(lfcgradient);
+    //         const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
+    //             .range([lfcMinMax[0], 0, lfcMinMax[1]]);
+    //         setLfcColorScale(detectedScale);
+    //     }
+    // }, [lfcMinMax]);
+
+    // useEffect(() => {
+    //     if (deltaMinMax?.length == 2) {
+    //         // var deltagradient = new Rainbow();
+    //         // deltagradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
+    //         // deltagradient.setNumberRange(...deltaMinMax);
+    //         // setDeltaColorScale(deltagradient);
+    //         const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
+    //             .range([deltaMinMax[0], 0, deltaMinMax[1]]);
+    //         setDeltaColorScale(detectedScale);
+    //     }
+    // }, [deltaMinMax]);
 
     const sortedRows = useMemo(() => {
 
@@ -220,12 +267,14 @@ const MarkerPlot = () => {
                                         <div className='row-container'>
                                             <span>{row.gene}</span>
                                             {/* <span>Cohen: {row.cohen.toFixed(4)}, AUC</span> */}
-                                            {<Cell minmax={lfcMinMax}
+                                            {/* {<Cell minmax={lfcMinMax}
                                                 score={row.lfc} color="#F5498B"
                                             />}
                                             {<Cell minmax={deltaMinMax}
                                                 score={row.delta} color="#4580E6"
-                                            />}
+                                            />} */}
+                                            {<HeatmapCell minmax={lfcMinMax} colorscale={d3.interpolateRdBu} score={row.lfc} />}
+                                            {<HeatmapCell minmax={deltaMinMax} colorscale={d3.interpolateRdBu} score={row.delta} />}
                                             {<Cell minmax={meanMinMax} colorscale={detectedScale}
                                                 score={row.mean} colorscore={row.detected}
                                             />}
