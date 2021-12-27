@@ -725,9 +725,9 @@ onmessage = function (msg) {
           ordering[i] = i;
       }
       if (increasing) {
-          ordering.sort((f, s) => (ranking[f] < ranking[s]));
+          ordering.sort((f, s) => (ranking[f] - ranking[s]));
       } else {
-          ordering.sort((f, s) => (ranking[f] > ranking[s]));
+          ordering.sort((f, s) => (ranking[s] - ranking[f]));
       }
 
       // Apply that ordering to each statistic of interest.
