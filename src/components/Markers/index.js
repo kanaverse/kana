@@ -197,8 +197,8 @@ const MarkerPlot = () => {
                                 Header: () => {
                                     return (<div className='row-container row-header'>
                                         <span>Gene</span>
-                                        <span>log fold-change</span>
-                                        <span>Δd</span>
+                                        <span>Log-FC</span>
+                                        <span>Δ-d</span>
                                         <span>Expression &nbsp;
                                             <Tooltip2 content="bar represents the mean expression of the gene and the color gradient represents detected." openOnTargetFocus={false}>
                                                 <Icon size={12} icon="help"></Icon>
@@ -279,7 +279,7 @@ const MarkerPlot = () => {
                             <H5 className='marker-footer-title'>Filter Markers</H5>
 
                             <div className='marker-filter-container'>
-                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Log fold-change</Tag>
+                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Log-FC</Tag>
                                 <Histogram data={lfcs} height={35} color="#F5498B" />
                                 <div className='marker-filter-slider'>
                                     {lfcMinMax && <RangeSlider
@@ -294,7 +294,7 @@ const MarkerPlot = () => {
                             </div>
 
                             <div className='marker-filter-container'>
-                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>delta-d</Tag>
+                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Δ-d</Tag>
                                 <Histogram data={deltas} height={35} color="#4580E6" />
                                 <div className='marker-filter-slider'>
                                     {deltaMinMax && <RangeSlider
