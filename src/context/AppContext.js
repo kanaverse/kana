@@ -76,6 +76,9 @@ const AppContextProvider = ({ children }) => {
   const [selectedClusterSummary, setSelectedClusterSummary] = useState({});
   // set cluster colors
   const [clusterColors, setClusterColors] = useState(null);
+  // set Cluster rank-type
+  const [clusterRank, setClusterRank] = useState(null);
+
 
   // PCA
   const [pcaData, setPcaData] = useState(null);
@@ -92,7 +95,6 @@ const AppContextProvider = ({ children }) => {
   const [gene, setGene] = useState(null);
   // request gene expression
   const [reqGene, setReqGene] = useState(null);
-  // expr values per gene
 
   // Logs
   const [logs, setLogs] = useState([]);
@@ -137,6 +139,7 @@ const AppContextProvider = ({ children }) => {
         logs, setLogs,
         selectedCluster, setSelectedCluster,
         selectedClusterSummary, setSelectedClusterSummary,
+        clusterRank, setClusterRank,
         gene, setGene,
         clusterColors, setClusterColors,
         reqGene, setReqGene,

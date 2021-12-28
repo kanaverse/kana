@@ -27,7 +27,7 @@ function App() {
     setInitDims, setQcDims, defaultRedDims, setDefaultRedDims,
     setQcData, qcData, setClusterData, setFSelectionData,
     setUmapData, setPcaVarExp, logs, setLogs,
-    selectedCluster,
+    selectedCluster, clusterRank,
     selectedClusterSummary, setSelectedClusterSummary,
     reqGene } = useContext(AppContext);
 
@@ -43,10 +43,11 @@ function App() {
     selectedCluster !== null && window.Worker.postMessage({
       "type": "getMarkersForCluster",
       "payload": {
-        "cluster": selectedCluster
+        "cluster": selectedCluster,
+        "rank_type": clusterRank,
       }
     });
-  }, [selectedCluster])
+  }, [selectedCluster, clusterRank])
 
   useEffect(() => {
 
@@ -122,8 +123,10 @@ function App() {
         records[resp?.genes?.[i]] = {
           "gene": resp?.genes?.[i],
           "mean": x,
-          "auc": resp?.auc?.[i],
-          "cohen": resp?.cohen?.[i],
+          "delta": resp?.delta_d?.[i],
+          "lfc": resp?.lfc?.[i],
+          // "auc": resp?.auc?.[i],
+          // "cohen": resp?.cohen?.[i],
           "detected": resp?.detected?.[i],
           "expanded": false,
           "expr": null,

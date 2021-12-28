@@ -6,9 +6,10 @@
 
 .marker-table {
     display: grid;
-    grid-template-rows: 35px auto;
+    grid-template-rows: 35px calc(100vh - 450px) 275px;
     grid-template-columns: auto;
-    padding: 10px;
+    padding: 5px 0 0 0;
+    /* gap: 5px; */
 }
 
 .marker-header {
@@ -24,6 +25,39 @@
     grid-column: 1 / -1;
     text-align: start;
     overflow-x: hidden;
+    height: 100% !important;
+}
+
+.marker-footer {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: auto;
+    grid-template-rows: 25px repeat(4, auto);
+}
+
+/* .marker-footer-title {
+    grid-row: 1;
+    grid-column: 1/-1;
+    gap: 3px;
+} */
+
+.marker-filter-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.marker-filter-container-tag {
+    position: absolute;
+    top: 20%;
+    right: 20px;
+    /* font-size: 10px; */
+}
+
+.marker-filter-container > Histogram {
+    position: absolute;
 }
 
 .row-card {
@@ -40,11 +74,26 @@
 
 .row-container {
     display: grid;
-    grid-template-columns: 25% 25% 25% 25%;
+    grid-template-columns: 25% 15% 15% 25% 20%;
     gap: 2px;
     align-items: center;
 }
 
+.row-header {
+    font-size: 10px;
+    text-align: center;
+    align-items: center;
+}
+
+.marker-filter-slider {
+    margin: 0 5px 0 5px;
+    /* width: 100%; */
+    width: 315px;
+    position: absolute;
+    top: 60%;
+    z-index: 1;
+    font-size: 8px;
+}
 
 .row-action {
     display: flex;
