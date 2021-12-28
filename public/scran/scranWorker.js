@@ -692,7 +692,7 @@ onmessage = function (msg) {
       let cluster = payload.payload.cluster;
       let rank_type = payload.payload.rank_type;
       if (!rank_type || rank_type === undefined) {
-          rank_type = "cohen-min-rank";
+        rank_type = "cohen-min-rank";
       }
 
       var marker_results = utils.cached.marker_detection.raw;
@@ -702,41 +702,41 @@ onmessage = function (msg) {
       var index = 1;
       var increasing = false;
       if (rank_type.match(/-min$/)) {
-          index = 0;
+        index = 0;
       } else if (rank_type.match(/-min-rank$/)) {
-          increasing = true;
-          index = 4;
+        increasing = true;
+        index = 4;
       }
 
       var ranking = null;
       if (rank_type.match(/^cohen-/)) {
-          ranking = marker_results.cohen(cluster, index);
+        ranking = marker_results.cohen(cluster, index);
       } else if (rank_type.match(/^auc-/)) {
-          ranking = marker_results.auc(cluster, index);
+        ranking = marker_results.auc(cluster, index);
       } else if (rank_type.match(/^lfc-/)) {
-          ranking = marker_results.lfc(cluster, index);
+        ranking = marker_results.lfc(cluster, index);
       } else if (rank_type.match(/^delta-d-/)) {
-          ranking = marker_results.delta_detected(cluster, index);
+        ranking = marker_results.delta_detected(cluster, index);
       }
 
       // Computing the ordering based on the ranking statistic.
       var ordering = new Int32Array(ranking.length);
       for (var i = 0; i < ordering.length; i++) {
-          ordering[i] = i;
+        ordering[i] = i;
       }
       if (increasing) {
-          ordering.sort((f, s) => (ranking[f] - ranking[s]));
+        ordering.sort((f, s) => (ranking[f] - ranking[s]));
       } else {
-          ordering.sort((f, s) => (ranking[s] - ranking[f]));
+        ordering.sort((f, s) => (ranking[s] - ranking[f]));
       }
 
       // Apply that ordering to each statistic of interest.
-      var reorder = function(stats) {
-          var thing = new Float64Array(stats.length);
-          for (var i = 0; i < ordering.length; i++) {
-              thing[i] = stats[ordering[i]];
-          }
-          return thing;
+      var reorder = function (stats) {
+        var thing = new Float64Array(stats.length);
+        for (var i = 0; i < ordering.length; i++) {
+          thing[i] = stats[ordering[i]];
+        }
+        return thing;
       };
 
       var stat_detected = reorder(marker_results.detected(cluster, 0));
@@ -745,22 +745,22 @@ onmessage = function (msg) {
       var stat_delta_d = reorder(marker_results.delta_detected(cluster, 1));
 
       // Getting some names, bruh.
+      var mat = fetchNormalizedMatrix();
       if (!utils.cached.normalization.genes) {
-        var mat = fetchNormalizedMatrix();
         var perm = new WasmBuffer(wasm, mat.nrow(), "Int32Array");
         mat.permutation(perm.ptr);
-
-        let gene_indices = perm.array();
-        let genes = [];
-        for (let i = 0; i < mat.nrow(); i++) {
-          var o = ordering[i];
-          genes.push(utils.cached.inputs.genes[gene_indices[o]]);
-        }
-
-        utils.cached.normalization.genes = genes;
-
+        utils.cached.normalization.genes = perm.array();
         perm.free();
       }
+
+      let gene_indices = utils.cached.normalization.genes;
+      let genes = [];
+      for (let i = 0; i < mat.nrow(); i++) {
+        var o = ordering[i];
+        genes.push(utils.cached.inputs.genes[gene_indices[o]]);
+      }
+
+      utils.cached.normalization.genes_rankorder = genes;
 
       var resp = {
         "means": stat_mean,
@@ -769,7 +769,7 @@ onmessage = function (msg) {
         "delta_d": stat_delta_d,
         // "auc": utils.cached.marker_detection.raw.auc(cluster, 1).slice(),
         // "cohen": utils.cached.marker_detection.raw.cohen(cluster, 1).slice(),
-        "genes": utils.cached.normalization.genes,
+        "genes": utils.cached.normalization.genes_rankorder,
       }
 
       postMessage({
@@ -788,21 +788,32 @@ onmessage = function (msg) {
       // try {
       var buffer = utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", gExp_cached);
 
-      let row_idx = utils.cached.normalization.genes.indexOf(row);
+      // find position in genes inputs
+      let input_row_idx = utils.cached.inputs.genes.indexOf(row);
+      // find position in permutation matrix.
+      let row_idx = utils.cached.normalization.genes.indexOf(input_row_idx);
+
       var vec = null;
       if (row_idx != -1) {
         mat.row(row_idx, buffer.ptr)
         vec = JSON.parse(JSON.stringify(buffer.array()));
+        postMessage({
+          type: "setGeneExpression",
+          resp: {
+            gene: row,
+            expr: vec
+          },
+          msg: "Success: GET_GENE_EXPRESSION done"
+        });
+      } else {
+        postMessage({
+          type: "geneExpression",
+          resp: {
+            gene: row
+          },
+          msg: "Fail: GET_GENE_EXPRESSION"
+        });
       }
-
-      postMessage({
-        type: "setGeneExpression",
-        resp: {
-          gene: row,
-          expr: vec
-        },
-        msg: "Success: GET_GENE_EXPRESSION done"
-      });
       // } finally {
       // buffer.free();
       // }
