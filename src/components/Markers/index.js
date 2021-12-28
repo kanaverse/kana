@@ -195,7 +195,10 @@ const MarkerPlot = () => {
             {
                 clusSel ?
                     <select
-                        onChange={(x) => setSelectedCluster(parseInt(x.currentTarget?.value.replace("Cluster ", "")) - 1)}
+                        onChange={(x) => {
+                            setSelectedCluster(parseInt(x.currentTarget?.value.replace("Cluster ", "")) - 1);
+                            setGene(null);
+                        }}
                     >
                         {
                             clusSel.map((x, i) => (
