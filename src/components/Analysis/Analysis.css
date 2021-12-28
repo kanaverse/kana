@@ -1,13 +1,19 @@
 .inputs-container {
     display: grid;
-    grid-template-columns: 50% 50%;
-    grid-template-rows: auto auto auto auto;
+    grid-template-columns: auto minmax(325px, 30%);
+    /* grid-template-rows: auto auto auto auto; */
+    grid-auto-flow: row;
     gap: 10px;
 }
 
 .row-input {
     grid-row: 1;
-    grid-column: 1 / -1;
+    grid-column: 1;
+}
+
+.row-input-tooltips {
+    grid-row: 1 / -1;
+    grid-column: 2;
 }
 
 .col {
@@ -32,6 +38,7 @@
     margin-left: 5px;
     display: inline;
     text-decoration: underline;
+    cursor: help;
 }
 
 .analysis-dialog {
