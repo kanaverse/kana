@@ -1,72 +1,108 @@
 .scatter-plot {
-    margin: 5px;
-    height: 100%;
-    display: grid;
-    grid-gap: 5px;
-    grid-template-columns: 100px auto 175px;
-    grid-template-rows: 25px auto;
-    background-color: #fff;
+  margin: 5px;
+  height: 100%;
+  display: grid;
+  grid-gap: 5px;
+  grid-template-columns: 100px auto 225px;
+  grid-template-rows: 25px auto;
+  background-color: #fff;
 }
 
 .top-header {
-    /* padding: 5px; */
-    grid-column: 2 / -1;
-    grid-row: 1;
-    justify-self: end;
-    margin-top: 10px;
+  /* padding: 5px; */
+  grid-column: 2 / -1;
+  grid-row: 1;
+  justify-self: end;
+  margin-top: 10px;
 }
 
 .left-sidebar {
-    grid-row: 1 / -1;
-    grid-column: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  grid-row: 1 / -1;
+  grid-column: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .right-sidebar {
-    grid-row: 1 / -1;
-    grid-column: 3;
-    display: flex;
-    /* justify-content: center; */
-    align-items: center;
+  grid-row: 1 / -1;
+  grid-column: 3;
+  display: flex;
+  /* justify-content: center; */
+  align-items: center;
 }
 
 .right-sidebar ul {
-    padding: 0;
-    margin: 0;
+  padding: 0;
+  margin: 0;
+  list-style-position: inside;
+}
+
+.right-sidebar-cluster, .right-sidebar-slider {
+  padding-top: 5px;
 }
 
 .right-sidebar ul > li {
-    padding: 0;
-    margin: 0;
-    cursor: pointer;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
 }
 
 .right-sidebar ul > li:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .dim-plot {
-    grid-row: 2;
-    grid-column: 2;
-    vertical-align: center;
+  grid-row: 2;
+  grid-column: 2;
+  vertical-align: center;
 }
 
 .dim-button {
-    text-align: center;
+  text-align: center;
 }
 
 .dim-button > span {
-    margin-top: 5px;
+  margin-top: 5px;
 }
 
 .legend-highlight {
-    font-weight: bold;
-    font-style: italic;
-    font-size: 14px;
+  font-weight: bold;
+  font-style: italic;
+  font-size: 14px;
 }
 
+.dim-slider-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 5px;
+  padding: 5px;
+}
+
+.dim-range-slider {
+  padding-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 175px;
+}
+
+.dim-slider-gradient {
+  display: flex;
+  flex-direction: row;
+}
+
+/* .dim-slider-gradient::before {
+  content: attr(value-start);
+
+}
+
+.dim-slider-gradient::after {
+  content: attr(value-end);
+} */
+
 text {
-    font: '8px sans-serif;'
+  font: "8px sans-serif;";
 }

@@ -1,6 +1,6 @@
 import { ScatterGL } from 'scatter-gl';
 import { useEffect, useRef, useContext, useState } from 'react';
-import { ControlGroup, Button, Icon, ButtonGroup, Callout } from "@blueprintjs/core";
+import { ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider, Label } from "@blueprintjs/core";
 
 import { AppContext } from '../../context/AppContext';
 import getMinMax from './utils';
@@ -15,10 +15,43 @@ const DimPlot = () => {
     const [clusHighlight, setClusHighlight] = useState(null);
     const [showGradient, setShowGradient] = useState(false);
     const [exprMinMax, setExprMinMax] = useState(null);
+    const [sliderMinMax, setSliderMinMax] = useState(exprMinMax);
+    const [gradient, setGradient] = useState(null);
     // const scoreColors = ["#F6F6F6", "#3399FF"];
     const { plotRedDims, redDims, defaultRedDims, setDefaultRedDims, clusterData,
         tsneData, umapData, setPlotRedDims, clusterColors,
         gene, selectedClusterSummary } = useContext(AppContext);
+
+    useEffect(() => {
+
+        if (!gene || gene == "") {
+            setShowGradient(false);
+        }
+
+        if (selectedClusterSummary?.[gene]?.expr) {
+            let exprMinMax = getMinMax(selectedClusterSummary?.[gene]?.expr);
+            let val = exprMinMax[1] === 0 ? 0.01 : exprMinMax[1];
+            let tmpgradient = new Rainbow();
+            tmpgradient.setSpectrum('#F5F8FA', "#2965CC");
+            tmpgradient.setNumberRange(0, val);
+            setShowGradient(true);
+            setGradient(tmpgradient);
+            setSliderMinMax([0, val]);
+            setExprMinMax([0, val]);
+        }
+    }, [selectedClusterSummary?.[gene]?.expr], gene);
+
+    useEffect(() => {
+
+        if (Array.isArray(sliderMinMax)) {
+            let tmpgradient = new Rainbow();
+            tmpgradient.setSpectrum('#F5F8FA', "#2965CC");
+            tmpgradient.setNumberRange(...sliderMinMax);
+            setGradient(tmpgradient);
+            setShowGradient(true);
+        }
+
+    }, [sliderMinMax]);
 
     useEffect(() => {
 
@@ -99,14 +132,13 @@ const DimPlot = () => {
                     }
 
                     if (gene && Array.isArray(selectedClusterSummary?.[gene]?.expr)) {
-                        let exprMinMax = getMinMax(selectedClusterSummary[gene].expr);
-
-
-                        var gradient = new Rainbow();
-                        gradient.setSpectrum('#F5F8FA', "#2965CC");
-                        let val = exprMinMax[1] === 0 ? 0.01 : exprMinMax[1];
-                        gradient.setNumberRange(0, val);
-                        setExprMinMax([0, val]);
+                        // let exprMinMax = getMinMax(selectedClusterSummary[gene].expr);
+                        // var gradient = new Rainbow();
+                        // gradient.setSpectrum('#F5F8FA', "#2965CC");
+                        // let val = sliderMinMax[1] === 0 ? 0.01 : sliderMinMax[1];
+                        // gradient.setNumberRange(0, val);
+                        // setExprMinMax([0, val]);
+                        // setShowGradient(true);
                         setShowGradient(true);
 
                         return "#" + gradient.colorAt(selectedClusterSummary?.[gene]?.expr?.[i]);
@@ -126,7 +158,7 @@ const DimPlot = () => {
                 });
             }
         }
-    }, [plotRedDims, selectedClusterSummary, gene, clusHighlight]);
+    }, [plotRedDims, gradient, clusHighlight]);
 
     useEffect(() => {
         changeRedDim(defaultRedDims);
@@ -196,42 +228,76 @@ const DimPlot = () => {
                 }
             </div>
             <div className='right-sidebar'>
-                {showGradient ?
-                    <div>
-                        <svg xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <linearGradient id="geneGradient" gradientTransform="rotate(90)">
-                                    <stop offset="5%" stop-color="#F5F8FA" />
-                                    <stop offset="95%" stop-color="#2965CC" />
-                                </linearGradient>
-                            </defs>
-                            <rect x="25%" y="25%" width="13" height="150" fill="url('#geneGradient')" />
-                            <text x="25%" y="15%" style={{font: '8px sans-serif;'}}>{gene}</text>
-                            <text x="30%" y="25%" style={{font: '8px sans-serif;'}}>{exprMinMax[0]}</text>
-                            <text x="30%" y="100%" style={{font: '8px sans-serif;'}}>{exprMinMax[1].toFixed(2)}</text>
-                        </svg>
-                    </div>
-                    :
-                    <Callout title="CLUSTERS" icon="circle-arrow-left">
-                        <ul>
-                            {clusterColors?.map((x, i) => {
-                                return (<li key={i}
-                                    className={clusHighlight == i ? 'legend-highlight' : ''}
-                                    style={{ color: x }}
-                                    onClick={() => {
-                                        if (i === clusHighlight) {
-                                            setClusHighlight(null);
+                <div>
+                    {
+                        <div className='right-sidebar-cluster'>
+                            <Callout title="CLUSTERS" icon="circle-arrow-left">
+                            </Callout>
 
-                                        } else {
-                                            setClusHighlight(i);
-                                        }
-                                    }}
-                                > Cluster {i + 1} </li>)
-                            })}
-                        </ul>
-                    </Callout>
-                }
+                            <ul>
+                                {clusterColors?.map((x, i) => {
+                                    return (<li key={i}
+                                        className={clusHighlight == i ? 'legend-highlight' : ''}
+                                        style={{ color: x }}
+                                        onClick={() => {
+                                            if (i === clusHighlight) {
+                                                setClusHighlight(null);
 
+                                            } else {
+                                                setClusHighlight(i);
+                                            }
+                                        }}
+                                    > Cluster {i + 1} </li>)
+                                })}
+                            </ul>
+                        </div>
+                    }
+                    {showGradient ?
+                        <div className='right-sidebar-slider'>
+                            <Callout intent='primary' style={{
+                                textAlign: 'left'
+                            }
+                            }>Use the slider to adjust the color gradient of the plot. Useful when data is skewed
+                                by either a few lowly or highly expressed cells
+                            </Callout>
+                            <div className='dim-slider-container'>
+                                {/* <svg xmlns="http://www.w3.org/2000/svg">
+                                            <defs>
+                                                <linearGradient id="geneGradient" gradientTransform="rotate(0)">
+                                                    <stop offset="5%" stopColor="#F5F8FA" />
+                                                    <stop offset="95%" stopColor="#2965CC" />
+                                                </linearGradient>
+                                            </defs>
+                                            <rect x="5%" y="25%" width="50%" height="15" fill="url('#geneGradient')" />
+                                            <text x="20%" y="20%" style={{ font: '8px sans-serif' }}>{gene}</text>
+                                            <text x="30%" y="25%" style={{ font: '8px sans-serif' }}>{exprMinMax[0]}</text>
+                                            <text x="30%" y="100%" style={{ font: '8px sans-serif' }}>{exprMinMax[1].toFixed(2)}</text>
+                                        </svg> */}
+                                <div className='dim-slider-gradient'>
+                                    <span>{Math.round(exprMinMax[0])}</span>&nbsp;
+                                    <div
+                                        style={{
+                                            backgroundImage: `linear-gradient(to right, #F5F8FA ${(sliderMinMax[0] - exprMinMax[0])* 100/(exprMinMax[1]-exprMinMax[0])}%, ${((sliderMinMax[1] + sliderMinMax[0] - (2*exprMinMax[0])))* 100/(2*(exprMinMax[1]-exprMinMax[0]))}%, #2965CC ${(100-(exprMinMax[1] - sliderMinMax[1])* 100/(exprMinMax[1]-exprMinMax[0]))}%)`,
+                                            width: '175px', height: '15px',
+                                        }}></div>&nbsp;
+                                    <span>{Math.round(exprMinMax[1])}</span>
+                                </div>
+                                <div className='dim-range-slider'>
+                                    <RangeSlider
+                                        min={Math.round(exprMinMax[0])}
+                                        max={Math.round(exprMinMax[1])}
+                                        stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 25}
+                                        onChange={(range) => { setSliderMinMax(range) }}
+                                        value={[Math.round(sliderMinMax[0]), Math.round(sliderMinMax[1])]}
+                                        vertical={false}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        :
+                        ""
+                    }
+                </div>
             </div>
         </div>
     );
