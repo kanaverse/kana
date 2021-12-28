@@ -33,8 +33,9 @@ function IntroDialog({
             <Dialog {...props} isOpen={isOpen} onClose={handleClose}>
                 <div className={Classes.DIALOG_BODY}>
                     <Card elevation={Elevation.ZERO}>
-                        <p><strong>kana</strong> performs a standard scRNA-seq data analysis directly inside the browser.
-                        With just a few clicks, you can get a UMAP/t-SNE and marker genes in an intuitive interface for further exploration. 
+                        <p><strong>kana</strong> performs a standard scRNA-seq data analysis directly inside the browser.</p>
+                        
+                        <p>With just a few clicks, you can get a UMAP/t-SNE and marker genes in an intuitive interface for further exploration. 
                         No need to transfer data, no need to install software, no need to configure a backend server - 
                         just point to a Matrix Market file and we'll analyze <em>your</em> data on <em>your</em> computer, no questions asked.
                         </p>
