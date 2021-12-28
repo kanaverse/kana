@@ -35,6 +35,11 @@
 .right-sidebar ul {
   padding: 0;
   margin: 0;
+  list-style-position: inside;
+}
+
+.right-sidebar-cluster, .right-sidebar-slider {
+  padding-top: 5px;
 }
 
 .right-sidebar ul > li {
@@ -69,7 +74,7 @@
 
 .dim-slider-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   margin: 5px;
@@ -77,10 +82,16 @@
 }
 
 .dim-range-slider {
-  padding-left: 10px;
+  padding-top: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 175px;
+}
+
+.dim-slider-gradient {
+  display: flex;
+  flex-direction: row;
 }
 
 /* .dim-slider-gradient::before {

@@ -1,6 +1,6 @@
 import { ScatterGL } from 'scatter-gl';
 import { useEffect, useRef, useContext, useState } from 'react';
-import { ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider } from "@blueprintjs/core";
+import { ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider, Label } from "@blueprintjs/core";
 
 import { AppContext } from '../../context/AppContext';
 import getMinMax from './utils';
@@ -228,70 +228,76 @@ const DimPlot = () => {
                 }
             </div>
             <div className='right-sidebar'>
-                {showGradient ?
-                    <div>
-                        <Callout intent='primary' style={{
-                            textAlign: 'left'
-                        }
-                        }>Use the slider to adjust the color gradient of the plot. Useful when data is skewed
-                            by either a few lowly or highly expressed cells
-                        </Callout>
-                        <div className='dim-slider-container'>
-                            {/* <svg xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <linearGradient id="geneGradient" gradientTransform="rotate(0)">
-                                    <stop offset="5%" stopColor="#F5F8FA" />
-                                    <stop offset="95%" stopColor="#2965CC" />
-                                </linearGradient>
-                            </defs>
-                            <rect x="5%" y="25%" width="50%" height="15" fill="url('#geneGradient')" />
-                            <text x="20%" y="20%" style={{ font: '8px sans-serif' }}>{gene}</text>
-                            <text x="30%" y="25%" style={{ font: '8px sans-serif' }}>{exprMinMax[0]}</text>
-                            <text x="30%" y="100%" style={{ font: '8px sans-serif' }}>{exprMinMax[1].toFixed(2)}</text>
-                        </svg> */}
-                            <div className='dim-slider-gradient'>
-                                <span>{Math.round(exprMinMax[1])}</span>
-                                <div
-                                    value-start={Math.round(exprMinMax[0])}
-                                    value-end={Math.round(exprMinMax[1])}
-                                    style={{
-                                        backgroundImage: "linear-gradient(0deg, #F5F8FA, 50%, #2965CC)",
-                                        width: '15px', height: '150px',
-                                    }}></div>
-                                <span>{Math.round(exprMinMax[0])}</span>
-                            </div>
-                            <div className='dim-range-slider'>
-                                <RangeSlider
-                                    min={Math.round(exprMinMax[0])}
-                                    max={Math.round(exprMinMax[1])}
-                                    stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 50}
-                                    onChange={(range) => { setSliderMinMax(range) }}
-                                    value={[Math.round(sliderMinMax[0]), Math.round(sliderMinMax[1])]}
-                                    vertical={true}
-                                />
+                <div>
+                    {
+                        <div className='right-sidebar-cluster'>
+                            <Callout title="CLUSTERS" icon="circle-arrow-left">
+                            </Callout>
+
+                            <ul>
+                                {clusterColors?.map((x, i) => {
+                                    return (<li key={i}
+                                        className={clusHighlight == i ? 'legend-highlight' : ''}
+                                        style={{ color: x }}
+                                        onClick={() => {
+                                            if (i === clusHighlight) {
+                                                setClusHighlight(null);
+
+                                            } else {
+                                                setClusHighlight(i);
+                                            }
+                                        }}
+                                    > Cluster {i + 1} </li>)
+                                })}
+                            </ul>
+                        </div>
+                    }
+                    {showGradient ?
+                        <div className='right-sidebar-slider'>
+                            <Callout intent='primary' style={{
+                                textAlign: 'left'
+                            }
+                            }>Use the slider to adjust the color gradient of the plot. Useful when data is skewed
+                                by either a few lowly or highly expressed cells
+                            </Callout>
+                            <div className='dim-slider-container'>
+                                {/* <svg xmlns="http://www.w3.org/2000/svg">
+                                            <defs>
+                                                <linearGradient id="geneGradient" gradientTransform="rotate(0)">
+                                                    <stop offset="5%" stopColor="#F5F8FA" />
+                                                    <stop offset="95%" stopColor="#2965CC" />
+                                                </linearGradient>
+                                            </defs>
+                                            <rect x="5%" y="25%" width="50%" height="15" fill="url('#geneGradient')" />
+                                            <text x="20%" y="20%" style={{ font: '8px sans-serif' }}>{gene}</text>
+                                            <text x="30%" y="25%" style={{ font: '8px sans-serif' }}>{exprMinMax[0]}</text>
+                                            <text x="30%" y="100%" style={{ font: '8px sans-serif' }}>{exprMinMax[1].toFixed(2)}</text>
+                                        </svg> */}
+                                <div className='dim-slider-gradient'>
+                                    <span>{Math.round(exprMinMax[0])}</span>&nbsp;
+                                    <div
+                                        style={{
+                                            backgroundImage: `linear-gradient(to right, #F5F8FA ${(sliderMinMax[0] - exprMinMax[0])* 100/(exprMinMax[1]-exprMinMax[0])}%, ${((sliderMinMax[1] + sliderMinMax[0] - (2*exprMinMax[0])))* 100/(2*(exprMinMax[1]-exprMinMax[0]))}%, #2965CC ${(100-(exprMinMax[1] - sliderMinMax[1])* 100/(exprMinMax[1]-exprMinMax[0]))}%)`,
+                                            width: '175px', height: '15px',
+                                        }}></div>&nbsp;
+                                    <span>{Math.round(exprMinMax[1])}</span>
+                                </div>
+                                <div className='dim-range-slider'>
+                                    <RangeSlider
+                                        min={Math.round(exprMinMax[0])}
+                                        max={Math.round(exprMinMax[1])}
+                                        stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 25}
+                                        onChange={(range) => { setSliderMinMax(range) }}
+                                        value={[Math.round(sliderMinMax[0]), Math.round(sliderMinMax[1])]}
+                                        vertical={false}
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    :
-                    <Callout title="CLUSTERS" icon="circle-arrow-left">
-                        <ul>
-                            {clusterColors?.map((x, i) => {
-                                return (<li key={i}
-                                    className={clusHighlight == i ? 'legend-highlight' : ''}
-                                    style={{ color: x }}
-                                    onClick={() => {
-                                        if (i === clusHighlight) {
-                                            setClusHighlight(null);
-
-                                        } else {
-                                            setClusHighlight(i);
-                                        }
-                                    }}
-                                > Cluster {i + 1} </li>)
-                            })}
-                        </ul>
-                    </Callout>
-                }
+                        :
+                        ""
+                    }
+                </div>
             </div>
         </div>
     );
