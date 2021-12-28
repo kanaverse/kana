@@ -1,93 +1,162 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
-import { Button, H4, Icon, Collapse, Label, InputGroup } from "@blueprintjs/core";
+import { Button, H4, H5, Icon, Collapse, Label, InputGroup, RangeSlider, Tag } from "@blueprintjs/core";
+import { Tooltip2 } from "@blueprintjs/popover2";
 import { Virtuoso } from 'react-virtuoso';
 import * as d3 from 'd3';
 
 import { AppContext } from '../../context/AppContext';
 import StackedHistogram from '../Plots/StackedHistogram';
-import getMinMax from '../Plots/utils';
+import Histogram from '../Plots/Histogram';
+
+import Cell from '../Plots/Cell.js';
+import HeatmapCell from '../Plots/HeatmapCell';
 
 import './markers.css';
-import Cell from '../Plots/Cell.js';
 
 const MarkerPlot = () => {
 
     const { clusterData, selectedClusterSummary, setSelectedClusterSummary,
-        selectedCluster, setSelectedCluster,
+        selectedCluster, setSelectedCluster, setClusterRank,
         setReqGene, clusterColors, gene, setGene } = useContext(AppContext);
     const [clusSel, setClusSel] = useState(null);
     const [clusArrayStacked, setClusArrayStacked] = useState(null);
-    const [sortColumns, setSortColumns] = useState([{
-        columnKey: 'cohen',
-        direction: 'DSC'
-    }]);
     const [searchInput, setSearchInput] = useState(null);
     const [meanMinMax, setMeanMinMax] = useState(null);
-    const [cohenMinMax, setCohenMinMax] = useState(null);
+    const [deltaMinMax, setDeltaMinMax] = useState(null);
+    const [lfcMinMax, setLfcMinMax] = useState(null);
+    const [detectedMinMax, setDetectedMinMax] = useState(null);
+    const [minMaxs, setMinMaxs] = useState(null);
+
+    const [means, setMeans] = useState(null);
+    const [deltas, setDeltas] = useState(null);
+    const [lfcs, setLfcs] = useState(null);
+    const [detects, setDetects] = useState(null);
+
+    const [markerFilter, setMarkerFilter] = useState({});
+    const [prosRecords, setProsRecords] = useState(null);
+
+    const [lfcColorScale, setLfcColorScale] = useState(null);
+    const [deltaColorScale, setDeltaColorScale] = useState(null);
 
     const detectedScale = d3.interpolateRdYlBu; //d3.interpolateRdBu;
-        // d3.scaleSequential()
-        // .domain([0, 1])
-        // .range(["red", "blue"])
-        // .interpolate(d3.interpolateHcl);
+    // d3.scaleSequential()
+    // .domain([0, 1])
+    // .range(["red", "blue"])
+    // .interpolate(d3.interpolateHcl);
 
-    // const columns = [
-    //     { key: 'gene', name: 'Gene', sortable: true },
-    //     { key: 'mean', name: 'Mean', sortable: true },
-    //     // { key: 'auc', name: 'AUC' },
-    //     { key: 'cohen', name: 'Cohen', sortable: true },
-    //     { key: 'detected', name: 'Detected', sortable: true },
-    // ];
-
-    const getComparator = (sortColumn) => {
-        switch (sortColumn) {
-            case 'gene':
-                return (a, b) => {
-                    return a[sortColumn].localeCompare(b[sortColumn]);
-                };
-            case 'mean':
-            case 'cohen':
-            case 'detected':
-                return (a, b) => {
-                    return a[sortColumn] - b[sortColumn];
-                };
-            default:
-                throw new Error(`unsupported sortColumn: "${sortColumn}"`);
-        }
-    }
-
-    const sortedRows = useMemo(() => {
+    useEffect(() => {
         if (!selectedClusterSummary) return selectedClusterSummary;
 
         let trecs = Object.values(selectedClusterSummary);
 
-        let means = trecs.map(x => x?.mean);
-        setMeanMinMax(getMinMax(means));
-
-        let cohens = trecs.map(x => x?.cohen);
-        setCohenMinMax(getMinMax(cohens));
-
-        if (sortColumns.length === 0) return trecs;
-
         if (trecs.length === 0) return trecs;
 
-        let sortedRows = [...trecs];
-        sortedRows.sort((a, b) => {
-            for (const sort of sortColumns) {
-                const comparator = getComparator(sort.columnKey);
-                const compResult = comparator(a, b);
-                if (compResult !== 0) {
-                    return sort.direction === 'ASC' ? compResult : -compResult;
-                }
-            }
-            return 0;
+        let tmpmeans = trecs.map(x => x?.mean);
+        // setMeanMinMax(getMinMax(tmpmeans));
+        let tmeanMinMax = d3.extent(tmpmeans)
+        let tmeanval = tmeanMinMax[1] === 0 ? 0.01 : tmeanMinMax[1];
+        setMeanMinMax([parseFloat(tmeanMinMax[0].toFixed(2)), parseFloat(tmeanval.toFixed(2))]);
+        setMeans(tmpmeans);
+
+        let tmpdeltas = trecs.map(x => x?.delta);
+        // setDeltaMinMax(getMinMax(tmpdeltas));
+        let tdeltaMinMax = d3.extent(tmpdeltas)
+        let tdeltaval = tdeltaMinMax[1] === 0 ? 0.01 : tdeltaMinMax[1];
+        setDeltaMinMax([parseFloat(tdeltaMinMax[0].toFixed(2)), parseFloat(tdeltaval.toFixed(2))]);
+        // setDeltaMinMax(d3.extent(tmpdeltas));
+        setDeltas(tmpdeltas);
+
+        // if (tdeltaMinMax?.length == 2) {
+        //     // var deltagradient = new Rainbow();
+        //     // deltagradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
+        //     // deltagradient.setNumberRange(...deltaMinMax);
+        //     // setDeltaColorScale(deltagradient);
+        //     const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
+        //         .range([parseFloat(tdeltaMinMax[0].toFixed(2)), 0, parseFloat(tdeltaMinMax[1].toFixed(2))]);
+        //     setDeltaColorScale(detectedScale);
+        // }
+
+        let tmplfcs = trecs.map(x => x?.lfc);
+        // setLfcMinMax(getMinMax(tmplfcs));
+        // setLfcMinMax(d3.extent(tmplfcs));
+        let tlfcsMinMax = d3.extent(tmplfcs)
+        let tlfcsval = tlfcsMinMax[1] === 0 ? 0.01 : tlfcsMinMax[1];
+        setLfcMinMax([parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsval.toFixed(2))]);
+        setLfcs(tmplfcs);
+
+        // if (tlfcsMinMax?.length === 2) {
+        //     // var lfcgradient = new Rainbow();
+        //     // lfcgradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
+        //     // lfcgradient.setNumberRange(...lfcMinMax);
+        //     // setLfcColorScale(lfcgradient);
+        //     const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
+        //         .range([parseFloat(tlfcsMinMax[0].toFixed(2)), 0, parseFloat(tlfcsMinMax[1].toFixed(2))]);
+        //     setLfcColorScale(detectedScale);
+        // }
+
+        let tmpdetects = trecs.map(x => x?.detected);
+        // setDetectedMinMax(getMinMax(tmpdetects));
+        // setDetectedMinMax(d3.extent(tmpdetects));
+        let tdetectsMinMax = d3.extent(tmpdetects)
+        let tdetecval = tdetectsMinMax[1] === 0 ? 0.01 : tdetectsMinMax[1];
+        setDetectedMinMax([parseFloat(tdetectsMinMax[0].toFixed(2)), parseFloat(tdetecval.toFixed(2))]);
+        setDetects(tmpdetects);
+
+        setMinMaxs({
+            "lfc": [parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsval.toFixed(2))],
+            "mean": [parseFloat(tmeanMinMax[0].toFixed(2)), parseFloat(tmeanval.toFixed(2))],
+            "detected": [parseFloat(tdetectsMinMax[0].toFixed(2)), parseFloat(tdetecval.toFixed(2))],
+            "delta": [parseFloat(tdeltaMinMax[0].toFixed(2)), parseFloat(tdeltaval.toFixed(2))],
         });
+
+        let sortedRows = [...trecs];
+
+        setProsRecords(sortedRows);
+
+    }, [selectedClusterSummary]);
+
+    // useEffect(() => {
+    //     if (lfcMinMax?.length === 2) {
+    //         // var lfcgradient = new Rainbow();
+    //         // lfcgradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
+    //         // lfcgradient.setNumberRange(...lfcMinMax);
+    //         // setLfcColorScale(lfcgradient);
+    //         const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
+    //             .range([lfcMinMax[0], 0, lfcMinMax[1]]);
+    //         setLfcColorScale(detectedScale);
+    //     }
+    // }, [lfcMinMax]);
+
+    // useEffect(() => {
+    //     if (deltaMinMax?.length == 2) {
+    //         // var deltagradient = new Rainbow();
+    //         // deltagradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
+    //         // deltagradient.setNumberRange(...deltaMinMax);
+    //         // setDeltaColorScale(deltagradient);
+    //         const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
+    //             .range([deltaMinMax[0], 0, deltaMinMax[1]]);
+    //         setDeltaColorScale(detectedScale);
+    //     }
+    // }, [deltaMinMax]);
+
+    const sortedRows = useMemo(() => {
+
+        if (!prosRecords) return [];
+
+        let sortedRows = prosRecords;
+        if (markerFilter) {
+            for (let key in markerFilter) {
+                let range = markerFilter[key];
+                if (range[0] == minMaxs[key][0] && range[1] == minMaxs[key][1]) continue;
+                sortedRows = sortedRows.filter((x) => x[key] >= range[0] && x[key] <= range[1]);
+            }
+        }
 
         if (!searchInput || searchInput === "") return sortedRows;
 
         sortedRows = sortedRows.filter((x) => x["gene"].toLowerCase().indexOf(searchInput.toLowerCase()) !== -1);
         return sortedRows;
-    }, [selectedClusterSummary, sortColumns, searchInput]);
+    }, [prosRecords, searchInput, markerFilter]);
 
     useEffect(() => {
         if (clusterData?.clusters) {
@@ -111,7 +180,14 @@ const MarkerPlot = () => {
         let clusArray = []
         clusterData?.clusters?.forEach(x => x === selectedCluster ? clusArray.push(1) : clusArray.push(0));
         setClusArrayStacked(clusArray);
-    }, [selectedCluster])
+    }, [selectedCluster]);
+
+    const handleMarkerFilter = (val, key) => {
+
+        let tmp = { ...markerFilter };
+        tmp[key] = val;
+        setMarkerFilter(tmp);
+    }
 
     return (
         <div className='marker-container'>
@@ -119,7 +195,10 @@ const MarkerPlot = () => {
             {
                 clusSel ?
                     <select
-                        onChange={(x) => setSelectedCluster(parseInt(x.currentTarget?.value.replace("Cluster ", "")) - 1)}
+                        onChange={(x) => {
+                            setSelectedCluster(parseInt(x.currentTarget?.value.replace("Cluster ", "")) - 1);
+                            setGene(null);
+                        }}
                     >
                         {
                             clusSel.map((x, i) => (
@@ -140,16 +219,23 @@ const MarkerPlot = () => {
                                 type={"text"}
                                 onChange={(e) => setSearchInput(e.target.value)}
                             />
-                            <Label>sort by
+                            <Label>sort by &nbsp;
                                 <select
                                     onChange={(x) => {
-                                        setSortColumns([{
-                                            columnKey: x.currentTarget.value,
-                                            direction: 'DSC'
-                                        }])
-                                    }} defaultValue={"cohen"}>
-                                    <option>mean</option>
-                                    <option>cohen</option>
+                                        setClusterRank(x.currentTarget.value);
+                                    }} defaultValue={"cohen-min-rank"}>
+                                    <option>cohen-min</option>
+                                    <option>cohen-mean</option>
+                                    <option>cohen-min-rank</option>
+                                    <option>auc-min</option>
+                                    <option>auc-mean</option>
+                                    <option>auc-min-rank</option>
+                                    <option>lfc-min</option>
+                                    <option>lfc-mean</option>
+                                    <option>lfc-min-rank</option>
+                                    <option>delta-d-min</option>
+                                    <option>delta-d-mean</option>
+                                    <option>delta-d-min-rank</option>
                                 </select>
                             </Label>
                         </div>
@@ -162,9 +248,21 @@ const MarkerPlot = () => {
                                         </div>
                                     );
                                 },
+                                Header: () => {
+                                    return (<div className='row-container row-header'>
+                                        <span>Gene</span>
+                                        <span>Log-FC</span>
+                                        <span>Δ-detected</span>
+                                        <span>Expression &nbsp;
+                                            <Tooltip2 content="bar represents the mean expression of the gene and the color gradient represents detected." openOnTargetFocus={false}>
+                                                <Icon size={12} icon="help"></Icon>
+                                            </Tooltip2>
+                                        </span>
+                                        <span></span>
+                                    </div>)
+                                }
                             }}
                             className='marker-list'
-                            style={{ minHeight: '800px' }}
                             totalCount={sortedRows.length}
                             itemContent={index => {
                                 const row = sortedRows[index];
@@ -176,15 +274,20 @@ const MarkerPlot = () => {
                                         <div className='row-container'>
                                             <span>{row.gene}</span>
                                             {/* <span>Cohen: {row.cohen.toFixed(4)}, AUC</span> */}
-                                            {<Cell minmax={cohenMinMax} colorscale={detectedScale}
-                                                score={row.cohen} colorscore={row.auc}
+                                            {/* {<Cell minmax={lfcMinMax}
+                                                score={row.lfc} color="#F5498B"
                                             />}
+                                            {<Cell minmax={deltaMinMax}
+                                                score={row.delta} color="#4580E6"
+                                            />} */}
+                                            {<HeatmapCell minmax={lfcMinMax} colorscale={d3.interpolateRdBu} score={row.lfc} />}
+                                            {<HeatmapCell minmax={deltaMinMax} colorscale={d3.interpolateRdBu} score={row.delta} />}
                                             {<Cell minmax={meanMinMax} colorscale={detectedScale}
                                                 score={row.mean} colorscore={row.detected}
                                             />}
-                                            {/* <span>Mean: {row.mean.toFixed(4)}, Detected: {row.detected}
-                                            Scale {detectedScale(row.detected)}
-                                            minMax: {meanMinMax}</span> */}
+                                            {/* {<Cell minmax={[0,1]}
+                                                score={row.detected} color={detectedScale(row.detected)}
+                                            />} */}
                                             <div className='row-action'>
                                                 <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
                                                     className='row-action'
@@ -228,6 +331,73 @@ const MarkerPlot = () => {
                                 )
                             }}
                         />
+                        <div className='marker-footer'>
+                            <H5 className='marker-footer-title'>Filter Markers</H5>
+
+                            <div className='marker-filter-container'>
+                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Log-FC</Tag>
+                                <Histogram data={lfcs} height={35} color="#F5498B" />
+                                <div className='marker-filter-slider'>
+                                    {lfcMinMax && <RangeSlider
+                                        min={lfcMinMax[0]}
+                                        max={lfcMinMax[1]}
+                                        stepSize={Math.round(lfcMinMax[1] - lfcMinMax[0]) / 25}
+                                        onChange={(val) => handleMarkerFilter(val, "lfc")}
+                                        value={markerFilter?.["lfc"] ? markerFilter?.["lfc"] : lfcMinMax}
+                                        vertical={false}
+                                    />}
+                                </div>
+                            </div>
+
+                            <div className='marker-filter-container'>
+                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Δ-detected</Tag>
+                                <Histogram data={deltas} height={35} color="#4580E6" />
+                                <div className='marker-filter-slider'>
+                                    {deltaMinMax && <RangeSlider
+                                        min={deltaMinMax[0]}
+                                        max={deltaMinMax[1]}
+                                        stepSize={Math.round(deltaMinMax[1] - deltaMinMax[0]) / 25}
+                                        onChange={(val) => handleMarkerFilter(val, "delta")}
+                                        value={markerFilter?.["delta"] ? markerFilter?.["delta"] : deltaMinMax}
+                                        vertical={false}
+                                    />}
+                                </div>
+                            </div>
+
+                            <div className='marker-filter-container'>
+                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Mean</Tag>
+                                <Histogram data={means} height={35} />
+                                <div className='marker-filter-slider'>
+                                    {meanMinMax && <RangeSlider
+                                        min={meanMinMax[0]}
+                                        max={meanMinMax[1]}
+                                        stepSize={Math.round(meanMinMax[1] - meanMinMax[0]) / 25}
+                                        onChange={(val) => handleMarkerFilter(val, "mean")}
+                                        value={markerFilter?.["mean"] ? markerFilter?.["mean"] : meanMinMax}
+                                        vertical={false}
+                                    />}
+                                </div>
+                            </div>
+
+                            <div className='marker-filter-container'>
+                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Detected</Tag>
+                                <Histogram data={detects} height={35} />
+                                <div className='marker-filter-slider'>
+                                    {detectedMinMax && <RangeSlider
+                                        min={detectedMinMax[0]}
+                                        max={detectedMinMax[1]}
+                                        stepSize={Math.round(detectedMinMax[1] - detectedMinMax[0]) / 25}
+                                        onChange={(val) => handleMarkerFilter(val, "detected")}
+                                        value={markerFilter?.["detected"] ? markerFilter?.["detected"] : detectedMinMax}
+                                        vertical={false}
+                                    />}
+                                </div>
+                            </div>
+                            {/* <Label>AUC</Label>
+                            <div className='marker-filter-container'></div>
+                            <Label>Cohen</Label>
+                            <div className='marker-filter-container'></div> */}
+                        </div>
                     </div>
                     : ""
             }
