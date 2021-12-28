@@ -54,13 +54,15 @@ const MarkerPlot = () => {
         let tmpmeans = trecs.map(x => x?.mean);
         // setMeanMinMax(getMinMax(tmpmeans));
         let tmeanMinMax = d3.extent(tmpmeans)
-        setMeanMinMax([parseFloat(tmeanMinMax[0].toFixed(2)), parseFloat(tmeanMinMax[1].toFixed(2))]);
+        let tmeanval = tmeanMinMax[1] === 0 ? 0.01 : tmeanMinMax[1];
+        setMeanMinMax([parseFloat(tmeanMinMax[0].toFixed(2)), parseFloat(tmeanval.toFixed(2))]);
         setMeans(tmpmeans);
 
         let tmpdeltas = trecs.map(x => x?.delta);
         // setDeltaMinMax(getMinMax(tmpdeltas));
         let tdeltaMinMax = d3.extent(tmpdeltas)
-        setDeltaMinMax([parseFloat(tdeltaMinMax[0].toFixed(2)), parseFloat(tdeltaMinMax[1].toFixed(2))]);
+        let tdeltaval = tdeltaMinMax[1] === 0 ? 0.01 : tdeltaMinMax[1];
+        setDeltaMinMax([parseFloat(tdeltaMinMax[0].toFixed(2)), parseFloat(tdeltaval.toFixed(2))]);
         // setDeltaMinMax(d3.extent(tmpdeltas));
         setDeltas(tmpdeltas);
 
@@ -78,7 +80,8 @@ const MarkerPlot = () => {
         // setLfcMinMax(getMinMax(tmplfcs));
         // setLfcMinMax(d3.extent(tmplfcs));
         let tlfcsMinMax = d3.extent(tmplfcs)
-        setLfcMinMax([parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsMinMax[1].toFixed(2))]);
+        let tlfcsval = tlfcsMinMax[1] === 0 ? 0.01 : tlfcsMinMax[1];
+        setLfcMinMax([parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsval.toFixed(2))]);
         setLfcs(tmplfcs);
 
         // if (tlfcsMinMax?.length === 2) {
@@ -95,14 +98,15 @@ const MarkerPlot = () => {
         // setDetectedMinMax(getMinMax(tmpdetects));
         // setDetectedMinMax(d3.extent(tmpdetects));
         let tdetectsMinMax = d3.extent(tmpdetects)
-        setDetectedMinMax([parseFloat(tdetectsMinMax[0].toFixed(2)), parseFloat(tdetectsMinMax[1].toFixed(2))]);
+        let tdetecval = tdetectsMinMax[1] === 0 ? 0.01 : tdetectsMinMax[1];
+        setDetectedMinMax([parseFloat(tdetectsMinMax[0].toFixed(2)), parseFloat(tdetecval.toFixed(2))]);
         setDetects(tmpdetects);
 
         setMinMaxs({
-            "lfc": [parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsMinMax[1].toFixed(2))],
-            "mean": [parseFloat(tmeanMinMax[0].toFixed(2)), parseFloat(tmeanMinMax[1].toFixed(2))],
-            "detected": [parseFloat(tdetectsMinMax[0].toFixed(2)), parseFloat(tdetectsMinMax[1].toFixed(2))],
-            "delta": [parseFloat(tdeltaMinMax[0].toFixed(2)), parseFloat(tdeltaMinMax[1].toFixed(2))],
+            "lfc": [parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsval.toFixed(2))],
+            "mean": [parseFloat(tmeanMinMax[0].toFixed(2)), parseFloat(tmeanval.toFixed(2))],
+            "detected": [parseFloat(tdetectsMinMax[0].toFixed(2)), parseFloat(tdetecval.toFixed(2))],
+            "delta": [parseFloat(tdeltaMinMax[0].toFixed(2)), parseFloat(tdeltaval.toFixed(2))],
         });
 
         let sortedRows = [...trecs];
