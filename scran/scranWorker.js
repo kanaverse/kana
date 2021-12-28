@@ -745,8 +745,8 @@ onmessage = function (msg) {
       var stat_delta_d = reorder(marker_results.delta_detected(cluster, 1));
 
       // Getting some names, bruh.
-      var mat = fetchNormalizedMatrix();
       if (!utils.cached.normalization.genes) {
+        var mat = fetchNormalizedMatrix();
         var perm = new WasmBuffer(wasm, mat.nrow(), "Int32Array");
         mat.permutation(perm.ptr);
         utils.cached.normalization.genes = perm.array();
@@ -755,7 +755,7 @@ onmessage = function (msg) {
 
       let gene_indices = utils.cached.normalization.genes;
       let genes = [];
-      for (let i = 0; i < mat.nrow(); i++) {
+      for (let i = 0; i < gene_indices.length; i++) {
         var o = ordering[i];
         genes.push(utils.cached.inputs.genes[gene_indices[o]]);
       }
