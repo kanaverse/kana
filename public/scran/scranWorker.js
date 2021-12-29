@@ -818,6 +818,40 @@ onmessage = function (msg) {
       // buffer.free();
       // }
     });
+  } else if (payload.type == "computeCustomMarkers") {
+    loaded.then(wasm => {
+      var current_selection = payload.payload.selection; //select contains all indices of cells selected from the tsne plot
+      var custom = utils.initCache("custom_selection");
+
+      var new_selection = true;
+      if (custom.selection !== null && custom.selection.size == current_selection.length) {
+        new_selection = false;
+        var existing = custom.selection.array();
+        for (var i = 0; i < current_selection.length; i++) {
+          if (existing[i] != current_selection[i]) {
+            new_selection = true;
+            break;
+          }
+        }
+      }
+
+      if (new_selection) { 
+        var mat = fetchNormalizedMatrix();
+        var buffer = utils.allocateBuffer(wasm, current_selection.length, "Uint8Array", custom, "selection");
+        buffer.array().set(current_selection);
+        freeCache(custom.raw);
+        custom.raw = wasm.score_markers(mat, buffer.ptr, false, 0);
+      }
+
+      let rank_type = payload.payload.rank_type;
+      var resp = formatMarkerStats(wasm, custom.raw, rank_type, 1); // assumes that we have at least one cell in and outside the selection!
+
+      postMessage({
+        type: "setMarkersForCustomSelection",
+        resp: resp,
+        msg: "Success: GET_MARKER_GENE done"
+      }, [resp.means.buffer, resp.detected.buffer, resp.lfc.buffer, resp.delta_d.buffer]);
+    });
   } else {
     console.log("MIM:::msg type incorrect")
   }
