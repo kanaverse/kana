@@ -201,8 +201,8 @@ const MarkerPlot = () => {
                 clusSel ?
                     <select
                         onChange={(x) => {
-                            setSelectedCluster(parseInt(x.currentTarget?.value.replace("Cluster ", "")) - 1);
                             setGene(null);
+                            setSelectedCluster(parseInt(x.currentTarget?.value.replace("Cluster ", "")) - 1);
                         }}
                     >
                         {
