@@ -37,6 +37,7 @@ const DimPlot = () => {
 
         if (!gene || gene == "") {
             setShowGradient(false);
+            setGradient(null);
         }
 
         if (selectedClusterSummary?.[gene]?.expr) {
@@ -284,7 +285,8 @@ const DimPlot = () => {
                             >
                                 <ul>
                                     {clusterColors?.map((x, i) => {
-                                        return (<li key={i}
+                                        return i < clusterColors.length - Object.keys(customSelection).length ?
+                                         (<li key={i}
                                             className={clusHighlight == i ? 'legend-highlight' : ''}
                                             style={{ color: x }}
                                             onClick={() => {
@@ -296,6 +298,7 @@ const DimPlot = () => {
                                                 }
                                             }}
                                         > Cluster {i + 1} </li>)
+                                        : ""
                                     })}
                                 </ul>
                                 {
@@ -343,6 +346,10 @@ const DimPlot = () => {
                                                                     let tmpSel = { ...customSelection };
                                                                     delete tmpSel[x];
                                                                     setCustomSelection(tmpSel);
+
+                                                                    let tmpcolors = [...clusterColors];
+                                                                    tmpcolors = tmpcolors.slice(0, tmpcolors.length -1);
+                                                                    setClusterColors(tmpcolors);
                                                                 }}></Icon>
                                                         </div>
                                                     </li>)
