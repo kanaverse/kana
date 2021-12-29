@@ -29,7 +29,7 @@ function App() {
     setUmapData, setPcaVarExp, logs, setLogs,
     selectedCluster, clusterRank,
     selectedClusterSummary, setSelectedClusterSummary,
-    reqGene } = useContext(AppContext);
+    reqGene, customSelection } = useContext(AppContext);
 
   useEffect(() => {
     window.Worker.postMessage({
@@ -40,14 +40,31 @@ function App() {
 
   useEffect(() => {
 
-    selectedCluster !== null && window.Worker.postMessage({
-      "type": "getMarkersForCluster",
-      "payload": {
-        "cluster": selectedCluster,
-        "rank_type": clusterRank,
-      }
-    });
-  }, [selectedCluster, clusterRank])
+    if (selectedCluster !== null) {
+      window.Worker.postMessage({
+        "type": "getMarkersForCluster",
+        "payload": {
+          "cluster": selectedCluster,
+          "rank_type": clusterRank,
+        }
+      });
+    }
+  }, [selectedCluster, clusterRank]);
+
+  useEffect(() => {
+
+    if (customSelection !== null && Object.keys(customSelection).length > 0) {
+      let csLen = `cs${Object.keys(customSelection) - 1}`;
+      var cs = customSelection[csLen];
+      window.Worker.postMessage({
+        "type": "computeCustomMarkers",
+        "payload": {
+          "selection": cs,
+          "id": csLen
+        }
+      });
+    }
+  }, [customSelection])
 
   useEffect(() => {
 

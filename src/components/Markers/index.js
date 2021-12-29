@@ -1,5 +1,6 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
-import { Button, H4, H5, Icon, Collapse, Label, InputGroup, RangeSlider, Tag } from "@blueprintjs/core";
+import { Button, H4, H5, Icon, Collapse, Label, InputGroup, 
+    RangeSlider, Tag } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import { Virtuoso } from 'react-virtuoso';
 import * as d3 from 'd3';
@@ -17,7 +18,9 @@ const MarkerPlot = () => {
 
     const { clusterData, selectedClusterSummary, setSelectedClusterSummary,
         selectedCluster, setSelectedCluster, setClusterRank,
-        setReqGene, clusterColors, gene, setGene } = useContext(AppContext);
+        setReqGene, clusterColors, gene, setGene,
+        customSelection } = useContext(AppContext);
+
     const [clusSel, setClusSel] = useState(null);
     const [clusArrayStacked, setClusArrayStacked] = useState(null);
     const [searchInput, setSearchInput] = useState(null);
@@ -167,6 +170,8 @@ const MarkerPlot = () => {
                 clus.push(i + 1);
             }
 
+            clus = clus.concat(Object.keys(customSelection));
+
             setClusSel(clus);
             setSelectedCluster(0);
 
@@ -174,7 +179,7 @@ const MarkerPlot = () => {
             clusterData?.clusters?.forEach(x => x === 0 ? clusArray.push(1) : clusArray.push(0));
             setClusArrayStacked(clusArray);
         }
-    }, [clusterData]);
+    }, [clusterData, customSelection]);
 
     useEffect(() => {
         let clusArray = []
@@ -202,7 +207,7 @@ const MarkerPlot = () => {
                     >
                         {
                             clusSel.map((x, i) => (
-                                <option key={i}>Cluster {x}</option>
+                                <option key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
                             ))
                         }
                     </select>
