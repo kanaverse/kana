@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.css": "/static/css/main.4653806a.chunk.css",
-    "main.js": "/static/js/main.7d9d236b.chunk.js",
-    "main.js.map": "/static/js/main.7d9d236b.chunk.js.map",
+    "main.css": "/static/css/main.88aee0ee.chunk.css",
+    "main.js": "/static/js/main.78710263.chunk.js",
+    "main.js.map": "/static/js/main.78710263.chunk.js.map",
     "runtime-main.js": "/static/js/runtime-main.794ff2f7.js",
     "runtime-main.js.map": "/static/js/runtime-main.794ff2f7.js.map",
     "static/css/2.900532f1.chunk.css": "/static/css/2.900532f1.chunk.css",
@@ -14,7 +14,7 @@
     "service-worker.js": "/service-worker.js",
     "service-worker.js.map": "/service-worker.js.map",
     "static/css/2.900532f1.chunk.css.map": "/static/css/2.900532f1.chunk.css.map",
-    "static/css/main.4653806a.chunk.css.map": "/static/css/main.4653806a.chunk.css.map",
+    "static/css/main.88aee0ee.chunk.css.map": "/static/css/main.88aee0ee.chunk.css.map",
     "static/js/2.da2019e1.chunk.js.LICENSE.txt": "/static/js/2.da2019e1.chunk.js.LICENSE.txt",
     "static/media/index.css": "/static/media/icons-20.cde033c5.eot"
   },
@@ -22,7 +22,7 @@
     "static/js/runtime-main.794ff2f7.js",
     "static/css/2.900532f1.chunk.css",
     "static/js/2.da2019e1.chunk.js",
-    "static/css/main.4653806a.chunk.css",
-    "static/js/main.7d9d236b.chunk.js"
+    "static/css/main.88aee0ee.chunk.css",
+    "static/js/main.78710263.chunk.js"
   ]
 }
