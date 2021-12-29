@@ -279,7 +279,7 @@ const DimPlot = () => {
                 <div style={{ width: '100%' }}>
                     {
                         <div className='right-sidebar-cluster'>
-                            <Callout title="CLUSTERS" 
+                            <Callout title="CLUSTERS"
                             // icon="circle-arrow-left"
                             >
                                 <ul>
@@ -300,10 +300,10 @@ const DimPlot = () => {
                                 </ul>
                                 {
                                     Object.keys(customSelection).length > 0 ?
-                                        <div 
-                                        style={{
-                                            paddingTop: '5px'
-                                        }}>
+                                        <div
+                                            style={{
+                                                paddingTop: '5px'
+                                            }}>
                                             <span>Custom Selection &nbsp;
                                                 <Tooltip2 content="Custom selection of cells" openOnTargetFocus={false}>
                                                     <Icon icon="help"></Icon>
@@ -320,30 +320,30 @@ const DimPlot = () => {
                                                             alignItems: 'center',
                                                             flexDirection: 'row'
                                                         }}>
-                                                        <span
-                                                            style={{
-                                                                alignSelf: 'center'
-                                                            }}
-                                                            onClick={() => {
-                                                                if (x === clusHighlight) {
-                                                                    setClusHighlight(null);
+                                                            <span
+                                                                style={{
+                                                                    alignSelf: 'center'
+                                                                }}
+                                                                onClick={() => {
+                                                                    if (x === clusHighlight) {
+                                                                        setClusHighlight(null);
 
-                                                                } else {
-                                                                    setClusHighlight(x);
-                                                                }
-                                                            }}>Custom Selection {x.replace("cs", "")}
-                                                        </span>
-                                                        <Icon
-                                                            size={12}
-                                                            icon="trash"
-                                                            style={{
-                                                                paddingLeft: '2px'
-                                                            }}
-                                                            onClick={() => {
-                                                                let tmpSel = { ...customSelection };
-                                                                delete tmpSel[x];
-                                                                setCustomSelection(tmpSel);
-                                                            }}></Icon>
+                                                                    } else {
+                                                                        setClusHighlight(x);
+                                                                    }
+                                                                }}>Custom Selection {x.replace("cs", "")}
+                                                            </span>
+                                                            <Icon
+                                                                size={12}
+                                                                icon="trash"
+                                                                style={{
+                                                                    paddingLeft: '2px'
+                                                                }}
+                                                                onClick={() => {
+                                                                    let tmpSel = { ...customSelection };
+                                                                    delete tmpSel[x];
+                                                                    setCustomSelection(tmpSel);
+                                                                }}></Icon>
                                                         </div>
                                                     </li>)
                                                 })}
@@ -353,10 +353,11 @@ const DimPlot = () => {
                                         ""
                                 }
                             </Callout>
-                            <Divider />
+                            
                             {
                                 selectedPoints && selectedPoints.length > 0 ?
                                     <div>
+                                        <Divider />
                                         <span>Selection &nbsp;
                                             <Tooltip2 content="save this selection of cells" openOnTargetFocus={false}>
                                                 <Icon icon="help"></Icon>
@@ -379,14 +380,16 @@ const DimPlot = () => {
                     }
                     {showGradient ?
                         <div className='right-sidebar-slider'>
-                            <Callout intent='primary' style={{
-                                textAlign: 'left'
-                            }
-                            }>Use the slider to adjust the color gradient of the plot. Useful when data is skewed
-                                by either a few lowly or highly expressed cells
-                            </Callout>
-                            <div className='dim-slider-container'>
-                                {/* <svg xmlns="http://www.w3.org/2000/svg">
+                            <Divider />
+                            <Callout>
+                                <span>Customize Gradient &nbsp;
+                                    <Tooltip2 content="Use the slider to adjust the color gradient of the plot. Useful when data is skewed
+                                by either a few lowly or highly expressed cells" openOnTargetFocus={false}>
+                                        <Icon icon="help"></Icon>
+                                    </Tooltip2>
+                                </span>
+                                <div className='dim-slider-container'>
+                                    {/* <svg xmlns="http://www.w3.org/2000/svg">
                                             <defs>
                                                 <linearGradient id="geneGradient" gradientTransform="rotate(0)">
                                                     <stop offset="5%" stopColor="#F5F8FA" />
@@ -398,26 +401,27 @@ const DimPlot = () => {
                                             <text x="30%" y="25%" style={{ font: '8px sans-serif' }}>{exprMinMax[0]}</text>
                                             <text x="30%" y="100%" style={{ font: '8px sans-serif' }}>{exprMinMax[1].toFixed(2)}</text>
                                         </svg> */}
-                                <div className='dim-slider-gradient'>
-                                    <span>{Math.round(exprMinMax[0])}</span>&nbsp;
-                                    <div
-                                        style={{
-                                            backgroundImage: `linear-gradient(to right, #F5F8FA ${(sliderMinMax[0] - exprMinMax[0]) * 100 / (exprMinMax[1] - exprMinMax[0])}%, ${((sliderMinMax[1] + sliderMinMax[0] - (2 * exprMinMax[0]))) * 100 / (2 * (exprMinMax[1] - exprMinMax[0]))}%, #2965CC ${(100 - (exprMinMax[1] - sliderMinMax[1]) * 100 / (exprMinMax[1] - exprMinMax[0]))}%)`,
-                                            width: '175px', height: '15px',
-                                        }}></div>&nbsp;
-                                    <span>{Math.round(exprMinMax[1])}</span>
+                                    <div className='dim-slider-gradient'>
+                                        <span>{Math.round(exprMinMax[0])}</span>&nbsp;
+                                        <div
+                                            style={{
+                                                backgroundImage: `linear-gradient(to right, #F5F8FA ${(sliderMinMax[0] - exprMinMax[0]) * 100 / (exprMinMax[1] - exprMinMax[0])}%, ${((sliderMinMax[1] + sliderMinMax[0] - (2 * exprMinMax[0]))) * 100 / (2 * (exprMinMax[1] - exprMinMax[0]))}%, #2965CC ${(100 - (exprMinMax[1] - sliderMinMax[1]) * 100 / (exprMinMax[1] - exprMinMax[0]))}%)`,
+                                                width: '175px', height: '15px',
+                                            }}></div>&nbsp;
+                                        <span>{Math.round(exprMinMax[1])}</span>
+                                    </div>
+                                    <div className='dim-range-slider'>
+                                        <RangeSlider
+                                            min={Math.round(exprMinMax[0])}
+                                            max={Math.round(exprMinMax[1])}
+                                            stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 25}
+                                            onChange={(range) => { setSliderMinMax(range) }}
+                                            value={[Math.round(sliderMinMax[0]), Math.round(sliderMinMax[1])]}
+                                            vertical={false}
+                                        />
+                                    </div>
                                 </div>
-                                <div className='dim-range-slider'>
-                                    <RangeSlider
-                                        min={Math.round(exprMinMax[0])}
-                                        max={Math.round(exprMinMax[1])}
-                                        stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 25}
-                                        onChange={(range) => { setSliderMinMax(range) }}
-                                        value={[Math.round(sliderMinMax[0]), Math.round(sliderMinMax[1])]}
-                                        vertical={false}
-                                    />
-                                </div>
-                            </div>
+                            </Callout>
                         </div>
                         :
                         ""
