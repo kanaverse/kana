@@ -599,6 +599,21 @@ function formatMarkerStats(wasm, results, rank_type, cluster) {
   };
 }
 
+/*
+ * Free all marker results created from custom selections, so
+ * as to avoid memory leaks.
+ */
+
+function freeCustomMarkers() {
+  var custom = utils.initCache("custom_selection");
+  if ("selection" in custom) {
+    for (const [key, val] of custom.selection.entries()) {
+      utils.freeCache(val);
+    }
+    custom.selection = {};
+  }
+}
+
 /* 
  * Overlord function. This runs the executors and posts messages if the
  * response is not NULL.
@@ -649,6 +664,11 @@ function runAllSteps(wasm, state) {
       resp: filtered_out,
       msg: "Success: QC filtering completed"
     });
+
+    // We free custom marker results here, because a custom selection is only
+    // invalidated when the cell number or ordering changes... and this is the
+    // latest point at which the cell number or ordering can change.
+    freeCustomMarkers();
   }
 
   var norm_out = utils.processOutput(logNormCounts, wasm, {});
@@ -856,6 +876,10 @@ onmessage = function (msg) {
         msg: "Success: GET_MARKER_GENE done"
       }, [resp.means.buffer, resp.detected.buffer, resp.lfc.buffer, resp.delta_d.buffer]);
     });
+  } else if (payload.type == "removeCustomMarkers") {
+    var custom = utils.initCache("custom_selection");
+    var id = payload.payload.id;
+    utils.freeCache(custom.computed[id]);
   } else {
     console.log("MIM:::msg type incorrect")
   }
