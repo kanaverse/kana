@@ -279,7 +279,9 @@ const DimPlot = () => {
                 <div style={{ width: '100%' }}>
                     {
                         <div className='right-sidebar-cluster'>
-                            <Callout title="CLUSTERS" icon="circle-arrow-left">
+                            <Callout title="CLUSTERS" 
+                            // icon="circle-arrow-left"
+                            >
                                 <ul>
                                     {clusterColors?.map((x, i) => {
                                         return (<li key={i}
@@ -298,25 +300,52 @@ const DimPlot = () => {
                                 </ul>
                                 {
                                     Object.keys(customSelection).length > 0 ?
-                                        <div>
+                                        <div 
+                                        style={{
+                                            paddingTop: '5px'
+                                        }}>
                                             <span>Custom Selection &nbsp;
                                                 <Tooltip2 content="Custom selection of cells" openOnTargetFocus={false}>
                                                     <Icon icon="help"></Icon>
                                                 </Tooltip2>
-                                            </span>                                            <ul>
+                                            </span>
+                                            <ul>
                                                 {Object.keys(customSelection)?.map((x, i) => {
                                                     return (<li key={x}
                                                         className={clusHighlight == x ? 'legend-highlight' : ''}
                                                         style={{ color: clusterColors[Math.max(...clusterData?.clusters) + 1 + i] }}
-                                                        onClick={() => {
-                                                            if (x === clusHighlight) {
-                                                                setClusHighlight(null);
+                                                    >
+                                                        <div style={{
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            flexDirection: 'row'
+                                                        }}>
+                                                        <span
+                                                            style={{
+                                                                alignSelf: 'center'
+                                                            }}
+                                                            onClick={() => {
+                                                                if (x === clusHighlight) {
+                                                                    setClusHighlight(null);
 
-                                                            } else {
-                                                                setClusHighlight(x);
-                                                            }
-                                                        }}
-                                                    > Custom Selection {x} </li>)
+                                                                } else {
+                                                                    setClusHighlight(x);
+                                                                }
+                                                            }}>Custom Selection {x.replace("cs", "")}
+                                                        </span>
+                                                        <Icon
+                                                            size={12}
+                                                            icon="trash"
+                                                            style={{
+                                                                paddingLeft: '2px'
+                                                            }}
+                                                            onClick={() => {
+                                                                let tmpSel = { ...customSelection };
+                                                                delete tmpSel[x];
+                                                                setCustomSelection(tmpSel);
+                                                            }}></Icon>
+                                                        </div>
+                                                    </li>)
                                                 })}
                                             </ul>
                                         </div>
