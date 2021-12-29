@@ -1,11 +1,16 @@
 import { ScatterGL } from 'scatter-gl';
 import { useEffect, useRef, useContext, useState } from 'react';
-import { ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider, Label } from "@blueprintjs/core";
+import {
+    ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider,
+    Divider, Tag, Label
+} from "@blueprintjs/core";
+import { Tooltip2 } from "@blueprintjs/popover2";
 
 import { AppContext } from '../../context/AppContext';
 import getMinMax from './utils';
 
 import Rainbow from './rainbowvis';
+import { randomColor } from 'randomcolor';
 
 import "./ScatterPlot.css";
 
@@ -19,8 +24,14 @@ const DimPlot = () => {
     const [gradient, setGradient] = useState(null);
     // const scoreColors = ["#F6F6F6", "#3399FF"];
     const { plotRedDims, redDims, defaultRedDims, setDefaultRedDims, clusterData,
-        tsneData, umapData, setPlotRedDims, clusterColors,
-        gene, selectedClusterSummary } = useContext(AppContext);
+        tsneData, umapData, setPlotRedDims, clusterColors, setClusterColors,
+        gene, selectedClusterSummary,
+        customSelection, setCustomSelection } = useContext(AppContext);
+
+    // const [showPointSelection, setShowPointSelection] = useState(false);
+    const [selectedPoints, setSelectedPoints] = useState(null);
+    const [plotMode, setPlotMode] = useState('PAN');
+    // const []
 
     useEffect(() => {
 
@@ -67,8 +78,6 @@ const DimPlot = () => {
                 containerEl.style.width = "95%";
                 containerEl.style.height = "95%";
 
-                let lastSelectedPoints = [];
-
                 tmp_scatterplot = new ScatterGL(containerEl, {
                     // onClick: (point) => {
                     //     console.log(`click ${point}`);
@@ -76,27 +85,30 @@ const DimPlot = () => {
                     // onHover: (point) => {
                     //     console.log(`hover ${point}`);
                     // },
-                    // onSelect: (points) => {
-                    //     let message = '';
-                    //     if (points.length === 0 && lastSelectedPoints.length === 0) {
-                    //         message = 'no selection';
-                    //     } else if (points.length === 0 && lastSelectedPoints.length > 0) {
-                    //         message = 'deselected';
-                    //     } else if (points.length === 1) {
-                    //         message = `selected ${points}`;
-                    //     } else {
-                    //         message = `selected ${points.length} points`;
-                    //     }
-                    //     console.log(message);
-                    // },
+                    onSelect: (points) => {
+                        if (points.length !== 0) {
+                            setSelectedPoints(points);
+                        }
+                        // let message = '';
+                        // if (points.length === 0 && lastSelectedPoints.length === 0) {
+                        //     message = 'no selection';
+                        // } else if (points.length === 0 && lastSelectedPoints.length > 0) {
+                        //     message = 'deselected';
+                        // } else if (points.length === 1) {
+                        //     message = `selected ${points}`;
+                        // } else {
+                        //     message = `selected ${points.length} points`;
+                        // }
+                        // console.log(message);
+                    },
                     orbitControls: {
                         zoomSpeed: 1.25,
                     },
                     styles: {
                         point: {
-                            scaleDefault: 2.5,
-                            scaleSelected: 2.5,
-                            scaleHover: 2.5,
+                            scaleDefault: 1.75,
+                            scaleSelected: 2,
+                            scaleHover: 2,
                         }
                     }
                 });
@@ -127,8 +139,16 @@ const DimPlot = () => {
                     //     return 'red';
                     // }
 
-                    if (clusHighlight != null && clusHighlight !== cluster_mappings[i]) {
-                        return '#D3D3D3';
+                    if (selectedIndices.has(i)) {
+                        return "#30404D";
+                    }
+
+                    if (clusHighlight != null) {
+                        if (!String(clusHighlight).startsWith("cs")) {
+                            if (clusHighlight !== cluster_mappings[i]) return '#D3D3D3';
+                        } else {
+                            if (customSelection[clusHighlight].indexOf(i) === -1) return '#D3D3D3';
+                        }
                     }
 
                     if (gene && Array.isArray(selectedClusterSummary?.[gene]?.expr)) {
@@ -154,7 +174,13 @@ const DimPlot = () => {
                     }
 
                     setShowGradient(false);
-                    return cluster_colors[cluster_mappings[i]];
+
+                    if (clusHighlight != null && String(clusHighlight).startsWith("cs")) {
+                        let tmpclus = parseInt(clusHighlight.replace("cs", ""));
+                        return clusterColors[Math.max(...clusterData?.clusters) + tmpclus];
+                    } else {
+                        return cluster_colors[cluster_mappings[i]];
+                    }
                 });
             }
         }
@@ -181,9 +207,31 @@ const DimPlot = () => {
     const setInteraction = (x) => {
         if (x === "PAN") {
             scatterplot.setPanMode();
+            setPlotMode("PAN");
         } else if (x === "SELECT") {
             scatterplot.setSelectMode();
+            setPlotMode("SELECT");
         }
+    }
+
+    const clearPoints = () => {
+        setSelectedPoints(null);
+        scatterplot.select(null);
+    }
+
+    const savePoints = () => {
+        // generate random color
+        let color = randomColor({ luminosity: 'dark', count: 1 });
+        let tmpcolor = [...clusterColors];
+        tmpcolor.push(color[0]);
+        setClusterColors(tmpcolor);
+
+        let cid = Object.keys(customSelection).length;
+        let tmpSelection = { ...customSelection };
+        tmpSelection[`cs${cid + 1}`] = selectedPoints;
+        setCustomSelection(tmpSelection);
+
+        clearPoints();
     }
 
     return (
@@ -217,8 +265,8 @@ const DimPlot = () => {
                 {/* <Button>Play t-SNE Interactively</Button>
                 <Button>Color Plot by Metadata</Button>
                 <Button>What else ?</Button> */}
-                <Button icon="hand-up" onClick={x => setInteraction("PAN")}>Pan</Button>
-                <Button icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
+                <Button active={plotMode == "PAN"} icon="hand-up" onClick={x => setInteraction("PAN")}>Pan</Button>
+                <Button active={plotMode == "SELECT"} icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
             </ControlGroup>
             <div className='dim-plot'>
                 {
@@ -228,28 +276,76 @@ const DimPlot = () => {
                 }
             </div>
             <div className='right-sidebar'>
-                <div>
+                <div style={{ width: '100%' }}>
                     {
                         <div className='right-sidebar-cluster'>
                             <Callout title="CLUSTERS" icon="circle-arrow-left">
+                                <ul>
+                                    {clusterColors?.map((x, i) => {
+                                        return (<li key={i}
+                                            className={clusHighlight == i ? 'legend-highlight' : ''}
+                                            style={{ color: x }}
+                                            onClick={() => {
+                                                if (i === clusHighlight) {
+                                                    setClusHighlight(null);
+
+                                                } else {
+                                                    setClusHighlight(i);
+                                                }
+                                            }}
+                                        > Cluster {i + 1} </li>)
+                                    })}
+                                </ul>
+                                {
+                                    Object.keys(customSelection).length > 0 ?
+                                        <div>
+                                            <span>Custom Selection &nbsp;
+                                                <Tooltip2 content="Custom selection of cells" openOnTargetFocus={false}>
+                                                    <Icon icon="help"></Icon>
+                                                </Tooltip2>
+                                            </span>                                            <ul>
+                                                {Object.keys(customSelection)?.map((x, i) => {
+                                                    return (<li key={x}
+                                                        className={clusHighlight == x ? 'legend-highlight' : ''}
+                                                        style={{ color: clusterColors[Math.max(...clusterData?.clusters) + 1 + i] }}
+                                                        onClick={() => {
+                                                            if (x === clusHighlight) {
+                                                                setClusHighlight(null);
+
+                                                            } else {
+                                                                setClusHighlight(x);
+                                                            }
+                                                        }}
+                                                    > Custom Selection {x} </li>)
+                                                })}
+                                            </ul>
+                                        </div>
+                                        :
+                                        ""
+                                }
                             </Callout>
-
-                            <ul>
-                                {clusterColors?.map((x, i) => {
-                                    return (<li key={i}
-                                        className={clusHighlight == i ? 'legend-highlight' : ''}
-                                        style={{ color: x }}
-                                        onClick={() => {
-                                            if (i === clusHighlight) {
-                                                setClusHighlight(null);
-
-                                            } else {
-                                                setClusHighlight(i);
-                                            }
-                                        }}
-                                    > Cluster {i + 1} </li>)
-                                })}
-                            </ul>
+                            <Divider />
+                            {
+                                selectedPoints && selectedPoints.length > 0 ?
+                                    <div>
+                                        <span>Selection &nbsp;
+                                            <Tooltip2 content="save this selection of cells" openOnTargetFocus={false}>
+                                                <Icon icon="help"></Icon>
+                                            </Tooltip2>
+                                        </span>
+                                        <div className='selection-container'>
+                                            <span>{selectedPoints.length} cells selected</span>
+                                            <div className='selection-button-container'>
+                                                <Button small={true} intent='primary'
+                                                    onClick={savePoints}>Save</Button>
+                                                <Button small={true}
+                                                    onClick={clearPoints}>Clear</Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    :
+                                    ""
+                            }
                         </div>
                     }
                     {showGradient ?
@@ -277,7 +373,7 @@ const DimPlot = () => {
                                     <span>{Math.round(exprMinMax[0])}</span>&nbsp;
                                     <div
                                         style={{
-                                            backgroundImage: `linear-gradient(to right, #F5F8FA ${(sliderMinMax[0] - exprMinMax[0])* 100/(exprMinMax[1]-exprMinMax[0])}%, ${((sliderMinMax[1] + sliderMinMax[0] - (2*exprMinMax[0])))* 100/(2*(exprMinMax[1]-exprMinMax[0]))}%, #2965CC ${(100-(exprMinMax[1] - sliderMinMax[1])* 100/(exprMinMax[1]-exprMinMax[0]))}%)`,
+                                            backgroundImage: `linear-gradient(to right, #F5F8FA ${(sliderMinMax[0] - exprMinMax[0]) * 100 / (exprMinMax[1] - exprMinMax[0])}%, ${((sliderMinMax[1] + sliderMinMax[0] - (2 * exprMinMax[0]))) * 100 / (2 * (exprMinMax[1] - exprMinMax[0]))}%, #2965CC ${(100 - (exprMinMax[1] - sliderMinMax[1]) * 100 / (exprMinMax[1] - exprMinMax[0]))}%)`,
                                             width: '175px', height: '15px',
                                         }}></div>&nbsp;
                                     <span>{Math.round(exprMinMax[1])}</span>

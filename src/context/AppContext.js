@@ -78,7 +78,8 @@ const AppContextProvider = ({ children }) => {
   const [clusterColors, setClusterColors] = useState(null);
   // set Cluster rank-type
   const [clusterRank, setClusterRank] = useState(null);
-
+  // custom selection on tsne plot
+  const [customSelection, setCustomSelection] = useState({});
 
   // PCA
   const [pcaData, setPcaData] = useState(null);
@@ -143,7 +144,8 @@ const AppContextProvider = ({ children }) => {
         gene, setGene,
         clusterColors, setClusterColors,
         reqGene, setReqGene,
-        openInput, setOpenInput
+        openInput, setOpenInput,
+        customSelection, setCustomSelection
       }}
     >
       {children}
