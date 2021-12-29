@@ -880,6 +880,7 @@ onmessage = function (msg) {
     var custom = utils.initCache("custom_selection");
     var id = payload.payload.id;
     utils.freeCache(custom.computed[id]);
+    delete custom.computed[id];
   } else {
     console.log("MIM:::msg type incorrect")
   }
