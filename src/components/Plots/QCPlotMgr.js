@@ -1,4 +1,4 @@
-import ViolinPlot from './ViolinPlot';
+import ViolinPlotBasic from './ViolinPlotBasic';
 import './QCPlots.css';
 
 const QCPlotMgr = (props) => {
@@ -17,7 +17,7 @@ const QCPlotMgr = (props) => {
                     }
                     return (
                         <div key={x}>
-                            <ViolinPlot {...props2} />
+                            <ViolinPlotBasic {...props2} />
                         </div>)
                 })
             }
