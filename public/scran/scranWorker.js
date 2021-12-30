@@ -143,8 +143,7 @@ function computeQualityControlMetrics(wasm, args) {
       //   self.qc_metrics[x] = self.qc_metrics[x].map(x => Math.log2(x + 1));
       // }
 
-      var tmin = Math.min(...current);
-      var tmax = Math.max(...current);
+      var [tmin, tmax] = utils.getMinMax(current);
       ranges[x] = [tmin, tmax];
 
       // var tscale = d3.scaleLinear()

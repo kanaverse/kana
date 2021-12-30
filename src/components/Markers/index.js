@@ -211,6 +211,8 @@ const MarkerPlot = () => {
                                 tmpselection = tmpselection.replace("Custom Selection ", "")
                             }
                             setSelectedCluster(tmpselection);
+
+                            setMarkerFilter({});
                         }}
                     >
                         {
@@ -493,7 +495,7 @@ const MarkerPlot = () => {
                                     {lfcMinMax && <RangeSlider
                                         min={lfcMinMax[0]}
                                         max={lfcMinMax[1]}
-                                        stepSize={Math.round(lfcMinMax[1] - lfcMinMax[0]) / 25}
+                                        stepSize={parseFloat((Math.abs(lfcMinMax[1] - lfcMinMax[0]) / 20).toFixed(2))}
                                         onChange={(val) => handleMarkerFilter(val, "lfc")}
                                         value={markerFilter?.["lfc"] ? markerFilter?.["lfc"] : lfcMinMax}
                                         vertical={false}
@@ -508,7 +510,7 @@ const MarkerPlot = () => {
                                     {deltaMinMax && <RangeSlider
                                         min={deltaMinMax[0]}
                                         max={deltaMinMax[1]}
-                                        stepSize={Math.round(deltaMinMax[1] - deltaMinMax[0]) / 25}
+                                        stepSize={parseFloat((Math.abs(deltaMinMax[1] - deltaMinMax[0]) / 20).toFixed(2))}
                                         onChange={(val) => handleMarkerFilter(val, "delta")}
                                         value={markerFilter?.["delta"] ? markerFilter?.["delta"] : deltaMinMax}
                                         vertical={false}
@@ -523,7 +525,7 @@ const MarkerPlot = () => {
                                     {meanMinMax && <RangeSlider
                                         min={meanMinMax[0]}
                                         max={meanMinMax[1]}
-                                        stepSize={Math.round(meanMinMax[1] - meanMinMax[0]) / 25}
+                                        stepSize={parseFloat((Math.abs(meanMinMax[1] - meanMinMax[0]) / 20).toFixed(2))}
                                         onChange={(val) => handleMarkerFilter(val, "mean")}
                                         value={markerFilter?.["mean"] ? markerFilter?.["mean"] : meanMinMax}
                                         vertical={false}
@@ -538,7 +540,7 @@ const MarkerPlot = () => {
                                     {detectedMinMax && <RangeSlider
                                         min={detectedMinMax[0]}
                                         max={detectedMinMax[1]}
-                                        stepSize={Math.round(detectedMinMax[1] - detectedMinMax[0]) / 25}
+                                        stepSize={parseFloat((Math.abs(detectedMinMax[1] - detectedMinMax[0]) / 20).toFixed(2))}
                                         onChange={(val) => handleMarkerFilter(val, "detected")}
                                         value={markerFilter?.["detected"] ? markerFilter?.["detected"] : detectedMinMax}
                                         vertical={false}

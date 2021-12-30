@@ -2,13 +2,15 @@ import './App.css';
 import Header from "./components/Header";
 import Gallery from './components/Gallery';
 
-import { Overlay, Spinner } from "@blueprintjs/core";
+import { Label, Overlay, Spinner } from "@blueprintjs/core";
 
 import { useState, useEffect, useContext } from 'react';
 import { AppContext } from './context/AppContext';
 
 import DimPlot from './components/Plots/ScatterPlot.js';
 import MarkerPlot from './components/Markers';
+import Pong from './components/Spinners/Pong';
+import Spinner2 from './components/Spinners/Spinner2';
 
 function App() {
 
@@ -29,8 +31,9 @@ function App() {
     setUmapData, setPcaVarExp, logs, setLogs,
     selectedCluster, clusterRank,
     selectedClusterSummary, setSelectedClusterSummary,
-    reqGene, customSelection,
-    delCustomSelection, setDelCustomSelection } = useContext(AppContext);
+    reqGene, customSelection, clusterData,
+    delCustomSelection, setDelCustomSelection,
+    setSelectedCluster, setShowGame, showGame } = useContext(AppContext);
 
   useEffect(() => {
     window.Worker.postMessage({
@@ -132,6 +135,7 @@ function App() {
     } else if (payload.type === "snn_cluster_graph_DATA") {
       const { resp } = payload;
       setClusterData(resp);
+      setSelectedCluster(0);
     } else if (payload.type === "tsne_DATA" || payload.type === "tsne_iter") {
       const { resp } = payload;
       setTsneData(resp);
@@ -141,6 +145,7 @@ function App() {
         setDefaultRedDims("TSNE");
       }
       setRedDims(tmp);
+      setShowGame(false);
     } else if (payload.type === "umap_DATA") {
       const { resp } = payload;
       setUmapData(resp);
@@ -181,10 +186,31 @@ function App() {
       <Header />
       <div className="App-content">
         <div className="plot">
-          <DimPlot />
+          {
+            defaultRedDims ?
+              <DimPlot /> :
+              showGame ?
+              <Pong /> :
+              <div style={{
+                width: '100%',
+                height: '100%'
+              }}></div>
+          }
         </div>
         <div className="marker">
-          <MarkerPlot />
+          {clusterData ?
+            <MarkerPlot /> :
+            <div style={{
+              height: '100%',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Spinner2 />
+              <Label>Generating nearest neighbor graph to compute clusters....</Label>
+            </div>}
         </div>
         <div className="analysis">
           <Gallery />

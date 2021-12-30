@@ -42,6 +42,7 @@ const AppContextProvider = ({ children }) => {
 
   // app open inputs
   const [openInput, setOpenInput] = useState(false);
+  const [showGame, setShowGame] = useState(false);
 
   // wasm state and error 
   const [wasmInitialized, setWasmInitialized] = useState(false);
@@ -115,6 +116,8 @@ const AppContextProvider = ({ children }) => {
         },
         "msg": "not much to pass"
       });
+
+      setShowGame(true);
     }
   }, [inputFiles, params, wasmInitialized]);
 
@@ -148,7 +151,8 @@ const AppContextProvider = ({ children }) => {
         reqGene, setReqGene,
         openInput, setOpenInput,
         customSelection, setCustomSelection,
-        delCustomSelection, setDelCustomSelection
+        delCustomSelection, setDelCustomSelection,
+        showGame, setShowGame
       }}
     >
       {children}
