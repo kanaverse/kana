@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import * as d3 from 'd3';
 
-// did not write this on my own complete but modified it
+// did not write this on my own complete but modified it especially the
+// jitter part but doesn't quite work on large datasets
 const ViolinPlot = (props) => {
     const container = useRef();
 

@@ -16,21 +16,32 @@ import "./ScatterPlot.css";
 
 const DimPlot = () => {
     const container = useRef();
+
+    // ref to the plot object
     const [scatterplot, setScatterplot] = useState(null);
+    // set which cluster to highlight, also for custom selections
     const [clusHighlight, setClusHighlight] = useState(null);
+    // show a gradient on the plot ?
     const [showGradient, setShowGradient] = useState(false);
+    // expression min & max
     const [exprMinMax, setExprMinMax] = useState(null);
+    // user selected min and max from UI
     const [sliderMinMax, setSliderMinMax] = useState(exprMinMax);
+    // gradient scale
     const [gradient, setGradient] = useState(null);
+
     const { plotRedDims, redDims, defaultRedDims, setDefaultRedDims, clusterData,
         tsneData, umapData, setPlotRedDims, clusterColors, setClusterColors,
         gene, selectedClusterSummary,
         customSelection, setCustomSelection,
         setDelCustomSelection } = useContext(AppContext);
 
+    // keeps track of what points were selected in lasso selections
     const [selectedPoints, setSelectedPoints] = useState(null);
+    // set mode for plot
     const [plotMode, setPlotMode] = useState('PAN');
 
+    // if either gene or expression changes, compute gradients and min/max
     useEffect(() => {
 
         if (!gene || gene == "") {
@@ -51,6 +62,7 @@ const DimPlot = () => {
         }
     }, [selectedClusterSummary?.[gene]?.expr], gene);
 
+    // hook to also react when user changes the slider
     useEffect(() => {
 
         if (Array.isArray(sliderMinMax)) {
@@ -71,6 +83,7 @@ const DimPlot = () => {
 
             let tmp_scatterplot = scatterplot;
 
+            // only create the plot object once
             if (!tmp_scatterplot) {
                 const containerEl = container.current;
 
@@ -99,6 +112,7 @@ const DimPlot = () => {
                 setScatterplot(tmp_scatterplot);
             }
 
+            // if dimensions are available
             if (plotRedDims?.plot) {
 
                 let cluster_mappings = plotRedDims?.clusters;
@@ -116,6 +130,15 @@ const DimPlot = () => {
                 const max = Math.max(...clusterData?.clusters);
                 tmp_scatterplot.render(dataset);
 
+                // callback for coloring cells on the plot
+                // by default chooses the cluster assigned color for the plot
+                // if a gradient bar is available, sets gradient 
+                // if a cluster is highlighted, grays out all other cells except the cells
+                // in the cluster or selection
+                // priority of rendering
+                // gradient selection > cluster selection > graying out
+                // an initial implementation also used a per cluster gradient to color cells
+                // by expression, commmented out
                 tmp_scatterplot.setPointColorer((i, selectedIndices, hoverIndex) => {
 
                     if (selectedIndices.has(i)) {
@@ -160,6 +183,7 @@ const DimPlot = () => {
         changeRedDim(defaultRedDims);
     }, [defaultRedDims])
 
+    // handler for switching dimensions
     const changeRedDim = (x) => {
         if (defaultRedDims === "TSNE") {
             setPlotRedDims({
@@ -189,6 +213,7 @@ const DimPlot = () => {
         scatterplot.select(null);
     }
 
+    // save use selected selection of cells
     const savePoints = () => {
         // generate random color
         let color = randomColor({ luminosity: 'dark', count: 1 });

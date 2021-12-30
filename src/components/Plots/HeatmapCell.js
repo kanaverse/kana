@@ -1,6 +1,8 @@
 import { useRef } from "react";
 import * as d3 from 'd3';
 
+// similar to cell, but fills the entire div, 
+// width is not controlled in this case
 const HeatmapCell = (props) => {
     const container = useRef();
 
