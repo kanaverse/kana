@@ -14,7 +14,7 @@ function AnalysisDialog({
     ...props
 }) {
     const [isOpen, setIsOpen] = useState(false);
-    const [showStepHelper, setShowStepHelper] = useState(null);
+    const [showStepHelper, setShowStepHelper] = useState(1);
     const handleButtonClick = useCallback(() => setIsOpen(!isOpen), [isOpen]);
     const handleClose = useCallback(() => setIsOpen(false), []);
     const { inputFiles, setInputFiles,
