@@ -22,7 +22,7 @@ const Histogram = (props) => {
         if (!color) {
             color = "#00B3A4";
         }
-    
+
         if (!data) return "";
 
         let containerEl = container.current;
@@ -60,6 +60,7 @@ const Histogram = (props) => {
 
         y.domain([0, d3.max(bins, (d) => { return d.length; })]);
 
+        // Hide y-axis
         // svg.append("g")
         //     .call(d3.axisLeft(y));
 

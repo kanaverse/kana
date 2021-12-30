@@ -28,11 +28,11 @@ const Header = () => {
         <NavbarGroup className="navbar-group" align={Alignment.LEFT}>
 
           <NavbarHeading>SCRAN.JS</NavbarHeading>
-          
+
           <NavbarDivider />
           <span>Analyze Single-cell RNA-seq Datasets</span>
           <NavbarDivider />
-          
+
           <AnalysisDialog
             icon="document"
             title="Import dataset & update parameters (mouseover for more info)"
@@ -40,13 +40,13 @@ const Header = () => {
             includeFooter={true}
             {...state} />
           <NavbarDivider />
-          
+
           <Stats />
           <NavbarDivider />
-          
+
           <Logs />
           <NavbarDivider />
-          
+
           <IntroDialog
             icon="document"
             title="Single-cell RNA-seq analysis in the browser"

@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
 import {
-    Button, H4, H5, Icon, Collapse, Label, InputGroup,
+    Button, H4, H5, Icon, Collapse, InputGroup,
     RangeSlider, Tag, HTMLSelect, Classes, Card, Elevation
 } from "@blueprintjs/core";
 import { Tooltip2, Popover2 } from "@blueprintjs/popover2";
@@ -40,9 +40,6 @@ const MarkerPlot = () => {
     const [markerFilter, setMarkerFilter] = useState({});
     const [prosRecords, setProsRecords] = useState(null);
 
-    const [lfcColorScale, setLfcColorScale] = useState(null);
-    const [deltaColorScale, setDeltaColorScale] = useState(null);
-
     const detectedScale = d3.interpolateRdYlBu; //d3.interpolateRdBu;
     // d3.scaleSequential()
     // .domain([0, 1])
@@ -57,51 +54,24 @@ const MarkerPlot = () => {
         if (trecs.length === 0) return trecs;
 
         let tmpmeans = trecs.map(x => x?.mean);
-        // setMeanMinMax(getMinMax(tmpmeans));
         let tmeanMinMax = d3.extent(tmpmeans)
         let tmeanval = tmeanMinMax[1] === 0 ? 0.01 : tmeanMinMax[1];
         setMeanMinMax([parseFloat(tmeanMinMax[0].toFixed(2)), parseFloat(tmeanval.toFixed(2))]);
         setMeans(tmpmeans);
 
         let tmpdeltas = trecs.map(x => x?.delta);
-        // setDeltaMinMax(getMinMax(tmpdeltas));
         let tdeltaMinMax = d3.extent(tmpdeltas)
         let tdeltaval = tdeltaMinMax[1] === 0 ? 0.01 : tdeltaMinMax[1];
         setDeltaMinMax([parseFloat(tdeltaMinMax[0].toFixed(2)), parseFloat(tdeltaval.toFixed(2))]);
-        // setDeltaMinMax(d3.extent(tmpdeltas));
         setDeltas(tmpdeltas);
 
-        // if (tdeltaMinMax?.length == 2) {
-        //     // var deltagradient = new Rainbow();
-        //     // deltagradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
-        //     // deltagradient.setNumberRange(...deltaMinMax);
-        //     // setDeltaColorScale(deltagradient);
-        //     const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
-        //         .range([parseFloat(tdeltaMinMax[0].toFixed(2)), 0, parseFloat(tdeltaMinMax[1].toFixed(2))]);
-        //     setDeltaColorScale(detectedScale);
-        // }
-
         let tmplfcs = trecs.map(x => x?.lfc);
-        // setLfcMinMax(getMinMax(tmplfcs));
-        // setLfcMinMax(d3.extent(tmplfcs));
         let tlfcsMinMax = d3.extent(tmplfcs)
         let tlfcsval = tlfcsMinMax[1] === 0 ? 0.01 : tlfcsMinMax[1];
         setLfcMinMax([parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsval.toFixed(2))]);
         setLfcs(tmplfcs);
 
-        // if (tlfcsMinMax?.length === 2) {
-        //     // var lfcgradient = new Rainbow();
-        //     // lfcgradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
-        //     // lfcgradient.setNumberRange(...lfcMinMax);
-        //     // setLfcColorScale(lfcgradient);
-        //     const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
-        //         .range([parseFloat(tlfcsMinMax[0].toFixed(2)), 0, parseFloat(tlfcsMinMax[1].toFixed(2))]);
-        //     setLfcColorScale(detectedScale);
-        // }
-
         let tmpdetects = trecs.map(x => x?.detected);
-        // setDetectedMinMax(getMinMax(tmpdetects));
-        // setDetectedMinMax(d3.extent(tmpdetects));
         let tdetectsMinMax = d3.extent(tmpdetects)
         let tdetecval = tdetectsMinMax[1] === 0 ? 0.01 : tdetectsMinMax[1];
         setDetectedMinMax([parseFloat(tdetectsMinMax[0].toFixed(2)), parseFloat(tdetecval.toFixed(2))]);
@@ -119,30 +89,6 @@ const MarkerPlot = () => {
         setProsRecords(sortedRows);
 
     }, [selectedClusterSummary]);
-
-    // useEffect(() => {
-    //     if (lfcMinMax?.length === 2) {
-    //         // var lfcgradient = new Rainbow();
-    //         // lfcgradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
-    //         // lfcgradient.setNumberRange(...lfcMinMax);
-    //         // setLfcColorScale(lfcgradient);
-    //         const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
-    //             .range([lfcMinMax[0], 0, lfcMinMax[1]]);
-    //         setLfcColorScale(detectedScale);
-    //     }
-    // }, [lfcMinMax]);
-
-    // useEffect(() => {
-    //     if (deltaMinMax?.length == 2) {
-    //         // var deltagradient = new Rainbow();
-    //         // deltagradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
-    //         // deltagradient.setNumberRange(...deltaMinMax);
-    //         // setDeltaColorScale(deltagradient);
-    //         const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
-    //             .range([deltaMinMax[0], 0, deltaMinMax[1]]);
-    //         setDeltaColorScale(detectedScale);
-    //     }
-    // }, [deltaMinMax]);
 
     const sortedRows = useMemo(() => {
 
@@ -213,8 +159,7 @@ const MarkerPlot = () => {
                             setSelectedCluster(tmpselection);
 
                             setMarkerFilter({});
-                        }}
-                    >
+                        }}>
                         {
                             clusSel.map((x, i) => (
                                 <option key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
@@ -285,19 +230,12 @@ const MarkerPlot = () => {
                             itemContent={index => {
                                 const row = sortedRows[index];
                                 const rowexp = row.expanded;
-                                const rowExpr = row.expr; //geneExprData[row.gene];
+                                const rowExpr = row.expr;
 
                                 return (
                                     <div>
                                         <div className='row-container'>
                                             <span>{row.gene}</span>
-                                            {/* <span>Cohen: {row.cohen.toFixed(4)}, AUC</span> */}
-                                            {/* {<Cell minmax={lfcMinMax}
-                                                score={row.lfc} color="#F5498B"
-                                            />}
-                                            {<Cell minmax={deltaMinMax}
-                                                score={row.delta} color="#4580E6"
-                                            />} */}
                                             {
                                                 <Popover2
                                                     popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
@@ -340,8 +278,7 @@ const MarkerPlot = () => {
                                                                 </tr>
                                                             </table>
                                                         </Card>
-                                                    }
-                                                >
+                                                    }>
                                                     <HeatmapCell minmax={lfcMinMax} colorscale={d3.interpolateRdBu} score={row.lfc} />
                                                 </Popover2>
                                             }
@@ -387,8 +324,7 @@ const MarkerPlot = () => {
                                                                 </tr>
                                                             </table>
                                                         </Card>
-                                                    }
-                                                >
+                                                    }>
                                                     <HeatmapCell minmax={deltaMinMax} colorscale={d3.interpolateRdBu} score={row.delta} />
                                                 </Popover2>}
                                             {
@@ -433,15 +369,11 @@ const MarkerPlot = () => {
                                                                 </tr>
                                                             </table>
                                                         </Card>
-                                                    }
-                                                >
+                                                    }>
                                                     <Cell minmax={meanMinMax} colorscale={detectedScale}
                                                         score={row.mean} colorscore={row.detected}
                                                     />
                                                 </Popover2>}
-                                            {/* {<Cell minmax={[0,1]}
-                                                score={row.detected} color={detectedScale(row.detected)}
-                                            />} */}
                                             <div className='row-action'>
                                                 <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
                                                     className='row-action'
@@ -547,10 +479,6 @@ const MarkerPlot = () => {
                                     />}
                                 </div>
                             </div>
-                            {/* <Label>AUC</Label>
-                            <div className='marker-filter-container'></div>
-                            <Label>Cohen</Label>
-                            <div className='marker-filter-container'></div> */}
                         </div>
                     </div>
                     : ""

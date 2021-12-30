@@ -1,8 +1,8 @@
 import {
     Button, Classes, Dialog, Text, FileInput, NumericInput,
-    Label, H5, Tag, Position, HTMLSelect, Switch, Callout
+    Label, H5, Tag, HTMLSelect, Switch, Callout
 } from "@blueprintjs/core";
-import { Tooltip2, Popover2 } from "@blueprintjs/popover2";
+import { Tooltip2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback, useEffect } from "react";
 
 import { AppContext } from "../../context/AppContext";
@@ -200,9 +200,9 @@ function AnalysisDialog({
                                                 Use ANN
                                             </span>
                                         </Text>
-                                        <Switch style={{marginTop: '10px'}} large={true} checked={tmpInputParams["cluster"]["clus-approx"]} 
-                                        innerLabelChecked="true" innerLabel="false"
-                                        onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-approx": e.target.checked } }) }} />
+                                        <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["cluster"]["clus-approx"]}
+                                            innerLabelChecked="true" innerLabel="false"
+                                            onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-approx": e.target.checked } }) }} />
                                     </Label>
 
                                     <Label className="row-input">
@@ -340,12 +340,12 @@ function AnalysisDialog({
                                 <p>At this step, we compute per-cell quality control (QC)
                                     metrics such as the total count per cell, the total number
                                     of detected features and (if the feature annotation is supplied)
-                                    the mitochondrial proportion in each cell. 
+                                    the mitochondrial proportion in each cell.
                                 </p>
                                 <p>We remove low-quality
                                     cells based on these metrics - specifically, cells with low total
                                     counts/number of detected features or high mitochondrial proportions
-                                    are filtered out. 
+                                    are filtered out.
                                 </p>
                                 <p>We use an outlier-based approach to define the
                                     filter threshold under the assumption that most cells in the
@@ -508,7 +508,5 @@ function AnalysisDialog({
         </>
     );
 }
-
-
 
 export default AnalysisDialog;

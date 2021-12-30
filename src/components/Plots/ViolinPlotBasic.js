@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import * as d3 from 'd3';
 
-// did not write this on my own complete but modified it
 const ViolinPlotBasic = (props) => {
     const container = useRef();
 

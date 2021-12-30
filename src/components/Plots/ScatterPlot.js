@@ -2,7 +2,7 @@ import { ScatterGL } from 'scatter-gl';
 import { useEffect, useRef, useContext, useState } from 'react';
 import {
     ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider,
-    Divider, Tag, Label
+    Divider
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
@@ -22,17 +22,14 @@ const DimPlot = () => {
     const [exprMinMax, setExprMinMax] = useState(null);
     const [sliderMinMax, setSliderMinMax] = useState(exprMinMax);
     const [gradient, setGradient] = useState(null);
-    // const scoreColors = ["#F6F6F6", "#3399FF"];
     const { plotRedDims, redDims, defaultRedDims, setDefaultRedDims, clusterData,
         tsneData, umapData, setPlotRedDims, clusterColors, setClusterColors,
         gene, selectedClusterSummary,
         customSelection, setCustomSelection,
         setDelCustomSelection } = useContext(AppContext);
 
-    // const [showPointSelection, setShowPointSelection] = useState(false);
     const [selectedPoints, setSelectedPoints] = useState(null);
     const [plotMode, setPlotMode] = useState('PAN');
-    // const []
 
     useEffect(() => {
 
@@ -81,27 +78,10 @@ const DimPlot = () => {
                 containerEl.style.height = "95%";
 
                 tmp_scatterplot = new ScatterGL(containerEl, {
-                    // onClick: (point) => {
-                    //     console.log(`click ${point}`);
-                    // },
-                    // onHover: (point) => {
-                    //     console.log(`hover ${point}`);
-                    // },
                     onSelect: (points) => {
                         if (points.length !== 0) {
                             setSelectedPoints(points);
                         }
-                        // let message = '';
-                        // if (points.length === 0 && lastSelectedPoints.length === 0) {
-                        //     message = 'no selection';
-                        // } else if (points.length === 0 && lastSelectedPoints.length > 0) {
-                        //     message = 'deselected';
-                        // } else if (points.length === 1) {
-                        //     message = `selected ${points}`;
-                        // } else {
-                        //     message = `selected ${points.length} points`;
-                        // }
-                        // console.log(message);
                     },
                     orbitControls: {
                         zoomSpeed: 1.25,
@@ -133,15 +113,10 @@ const DimPlot = () => {
                     clusters: cluster_mappings
                 };
                 const dataset = new ScatterGL.Dataset(points, metadata);
-
                 const max = Math.max(...clusterData?.clusters);
-
                 tmp_scatterplot.render(dataset);
 
                 tmp_scatterplot.setPointColorer((i, selectedIndices, hoverIndex) => {
-                    // if (hoverIndex === i) {
-                    //     return 'red';
-                    // }
 
                     if (selectedIndices.has(i)) {
                         return "#30404D";
@@ -156,16 +131,9 @@ const DimPlot = () => {
                     }
 
                     if (gene && Array.isArray(selectedClusterSummary?.[gene]?.expr)) {
-                        // let exprMinMax = getMinMax(selectedClusterSummary[gene].expr);
-                        // var gradient = new Rainbow();
-                        // gradient.setSpectrum('#F5F8FA', "#2965CC");
-                        // let val = sliderMinMax[1] === 0 ? 0.01 : sliderMinMax[1];
-                        // gradient.setNumberRange(0, val);
-                        // setExprMinMax([0, val]);
-                        // setShowGradient(true);
-                        // setShowGradient(true);
 
                         return "#" + gradient.colorAt(selectedClusterSummary?.[gene]?.expr?.[i]);
+                        // if we want per cell gradient 
                         // let colorGradients = cluster_colors.map(x => {
                         //     var gradient = new Rainbow();
                         //     gradient.setSpectrum('#D3D3D3', x);
@@ -176,8 +144,6 @@ const DimPlot = () => {
 
                         // return "#" + colorGradients[cluster_mappings[i]].colorAt(selectedClusterSummary?.[gene]?.expr?.[i])
                     }
-
-                    // setShowGradient(false);
 
                     if (clusHighlight != null && String(clusHighlight).startsWith("cs")) {
                         let tmpclus = parseInt(clusHighlight.replace("cs", ""));
@@ -267,11 +233,12 @@ const DimPlot = () => {
                 </Button>
             </ButtonGroup>
             <ControlGroup className="top-header" fill={false} vertical={false}>
-                {/* <Button>Play t-SNE Interactively</Button>
-                <Button>Color Plot by Metadata</Button>
-                <Button>What else ?</Button> */}
-                <Button active={plotMode == "PAN"} intent={plotMode === "PAN" ? "primary": "none"} icon="hand-up" onClick={x => setInteraction("PAN")}>Pan</Button>
-                <Button active={plotMode == "SELECT"} intent={plotMode === "SELECT" ? "primary": "none"} icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
+                <Button active={plotMode == "PAN"}
+                    intent={plotMode === "PAN" ? "primary" : "none"}
+                    icon="hand-up" onClick={x => setInteraction("PAN")}>Pan</Button>
+                <Button active={plotMode == "SELECT"}
+                    intent={plotMode === "SELECT" ? "primary" : "none"}
+                    icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
             </ControlGroup>
             <div className='dim-plot'>
                 {
@@ -284,25 +251,22 @@ const DimPlot = () => {
                 <div style={{ width: '100%' }}>
                     {
                         <div className='right-sidebar-cluster'>
-                            <Callout title="CLUSTERS"
-                            // icon="circle-arrow-left"
-                            >
+                            <Callout title="CLUSTERS">
                                 <ul>
                                     {clusterColors?.map((x, i) => {
                                         return i < clusterColors.length - Object.keys(customSelection).length ?
-                                         (<li key={i}
-                                            className={clusHighlight == i ? 'legend-highlight' : ''}
-                                            style={{ color: x }}
-                                            onClick={() => {
-                                                if (i === clusHighlight) {
-                                                    setClusHighlight(null);
-
-                                                } else {
-                                                    setClusHighlight(i);
-                                                }
-                                            }}
-                                        > Cluster {i + 1} </li>)
-                                        : ""
+                                            (<li key={i}
+                                                className={clusHighlight == i ? 'legend-highlight' : ''}
+                                                style={{ color: x }}
+                                                onClick={() => {
+                                                    if (i === clusHighlight) {
+                                                        setClusHighlight(null);
+                                                    } else {
+                                                        setClusHighlight(i);
+                                                    }
+                                                }}
+                                            > Cluster {i + 1} </li>)
+                                            : ""
                                     })}
                                 </ul>
                                 {
@@ -352,7 +316,7 @@ const DimPlot = () => {
                                                                     setCustomSelection(tmpSel);
 
                                                                     let tmpcolors = [...clusterColors];
-                                                                    tmpcolors = tmpcolors.slice(0, tmpcolors.length -1);
+                                                                    tmpcolors = tmpcolors.slice(0, tmpcolors.length - 1);
                                                                     setClusterColors(tmpcolors);
 
                                                                     setDelCustomSelection(x);
@@ -366,7 +330,6 @@ const DimPlot = () => {
                                         ""
                                 }
                             </Callout>
-                            
                             {
                                 selectedPoints && selectedPoints.length > 0 ?
                                     <div>
@@ -402,18 +365,6 @@ const DimPlot = () => {
                                     </Tooltip2>
                                 </span>
                                 <div className='dim-slider-container'>
-                                    {/* <svg xmlns="http://www.w3.org/2000/svg">
-                                            <defs>
-                                                <linearGradient id="geneGradient" gradientTransform="rotate(0)">
-                                                    <stop offset="5%" stopColor="#F5F8FA" />
-                                                    <stop offset="95%" stopColor="#2965CC" />
-                                                </linearGradient>
-                                            </defs>
-                                            <rect x="5%" y="25%" width="50%" height="15" fill="url('#geneGradient')" />
-                                            <text x="20%" y="20%" style={{ font: '8px sans-serif' }}>{gene}</text>
-                                            <text x="30%" y="25%" style={{ font: '8px sans-serif' }}>{exprMinMax[0]}</text>
-                                            <text x="30%" y="100%" style={{ font: '8px sans-serif' }}>{exprMinMax[1].toFixed(2)}</text>
-                                        </svg> */}
                                     <div className='dim-slider-gradient'>
                                         <span>{Math.round(exprMinMax[0])}</span>&nbsp;
                                         <div
