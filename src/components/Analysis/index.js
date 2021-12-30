@@ -30,9 +30,9 @@ function AnalysisDialog({
     }
 
     const [inputText, setInputText] = useState({
-        mtx: "Choose mtx file...",
-        gene: "Choose gene file...",
-        barcode: "Choose barcode file...",
+        mtx: "Choose Matrix Market file",
+        gene: "Choose feature/gene annotation",
+        barcode: "Choose barcode annotation",
     });
 
     useEffect(() => {
@@ -56,13 +56,13 @@ function AnalysisDialog({
                                 </H5>
                                 <div className="row">
                                     <Label className="row-input">
-                                        <FileInput text="Choose Matrix Market file" onInputChange={(msg) => { setInputText({ ...inputText, "mtx": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "mtx": msg.target.files }) }} />
+                                        <FileInput text={inputText.mtx} onInputChange={(msg) => { setInputText({ ...inputText, "mtx": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "mtx": msg.target.files }) }} />
                                     </Label>
                                     <Label className="row-input">
-                                        <FileInput text="Choose feature annotation" onInputChange={(msg) => { setInputText({ ...inputText, "gene": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "gene": msg.target.files }) }} />
+                                        <FileInput text={inputText.gene} onInputChange={(msg) => { setInputText({ ...inputText, "gene": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "gene": msg.target.files }) }} />
                                     </Label>
                                     <Label className="row-input">
-                                        <FileInput text="Choose barcode annotation" onInputChange={(msg) => { setInputText({ ...inputText, "barcode": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "barcode": msg.target.files }) }} />
+                                        <FileInput text={inputText.barcode} onInputChange={(msg) => { setInputText({ ...inputText, "barcode": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "barcode": msg.target.files }) }} />
                                     </Label>
                                 </div>
                             </div>
