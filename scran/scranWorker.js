@@ -199,10 +199,14 @@ function filterCells(wasm, args) {
     utils.freeCache(qcf_cache["raw"]);
 
     var mat = fetchCountMatrix();
-    var thresholds = utils.cached["quality_control_thresholds"]["raw"];
-    var discard_ptr = thresholds.discard_overall().byteOffset;
+    var discards = utils.allocateBuffer(wasm, mat.ncol(), "Uint8Array", qcf_cache, "discard");
 
-    qcf_cache["raw"] = wasm.filter_cells(mat, discard_ptr, false);
+    // Possibly use a different filtering criterion here, as long 
+    // as the choice of what to discard is put into 'discards'.
+    var thresholds = utils.cached["quality_control_thresholds"]["raw"];
+    discards.array().set(thresholds.discard_overall());
+
+    qcf_cache["raw"] = wasm.filter_cells(mat, discards.ptr, false);
 
     return {};
   });
@@ -214,11 +218,30 @@ function fetchFilteredMatrix() { // helper for downstream functions.
 
 function logNormCounts(wasm, args) {
   var step = "normalization";
-  return utils.runStep(step, args, ["quality_control_filtered"], () => {
+  return utils.runStep(step, args, ["quality_control_metrics", "quality_control_filtered"], () => {
     var norm_cache = utils.initCache(step);
     utils.freeCache(norm_cache["raw"]);
     var mat = fetchFilteredMatrix();
-    norm_cache["raw"] = wasm.log_norm_counts(mat, false, 0, false, 0);
+
+    // Reusing the totals computed earlier.
+    var sf_buffer = utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", norm_cache);
+    var sums = utils.cached["quality_control_metrics"]["raw"].sums();
+    var discards = utils.cached["quality_control_filtered"]["discard"].array();
+
+    var size_factors = sf_buffer.array();
+    var j = 0;
+    for (var i = 0; i < discards.length; ++i) {
+        if (!discards[i]) {
+            size_factors[j] = sums[i];
+            j++;
+        }
+    }
+
+    if (j != mat.ncol()) {
+        throw "normalization and filtering are not in sync";
+    }
+
+    norm_cache["raw"] = wasm.log_norm_counts(mat, true, sf_buffer.ptr, false, 0);
     return {};
   });
 }
@@ -520,7 +543,7 @@ function launchUmap(wasm, params) {
 
 function formatMarkerStats(wasm, results, rank_type, cluster) {
   if (!rank_type || rank_type === undefined) {
-    rank_type = "cohen-min-rank";
+      rank_type = "cohen-min-rank";
   }
 
   // Choosing the ranking statistic. Do NOT do any Wasm allocations
@@ -528,41 +551,41 @@ function formatMarkerStats(wasm, results, rank_type, cluster) {
   var index = 1;
   var increasing = false;
   if (rank_type.match(/-min$/)) {
-    index = 0;
+      index = 0;
   } else if (rank_type.match(/-min-rank$/)) {
-    increasing = true;
-    index = 4;
+      increasing = true;
+      index = 4;
   }
 
   var ranking = null;
   if (rank_type.match(/^cohen-/)) {
-    ranking = results.cohen(cluster, index);
+      ranking = results.cohen(cluster, index);
   } else if (rank_type.match(/^auc-/)) {
-    ranking = results.auc(cluster, index);
+      ranking = results.auc(cluster, index);
   } else if (rank_type.match(/^lfc-/)) {
-    ranking = results.lfc(cluster, index);
+      ranking = results.lfc(cluster, index);
   } else if (rank_type.match(/^delta-d-/)) {
-    ranking = results.delta_detected(cluster, index);
+      ranking = results.delta_detected(cluster, index);
   }
 
   // Computing the ordering based on the ranking statistic.
   var ordering = new Int32Array(ranking.length);
   for (var i = 0; i < ordering.length; i++) {
-    ordering[i] = i;
+      ordering[i] = i;
   }
   if (increasing) {
-    ordering.sort((f, s) => (ranking[f] - ranking[s]));
+      ordering.sort((f, s) => (ranking[f] - ranking[s]));
   } else {
-    ordering.sort((f, s) => (ranking[s] - ranking[f]));
+      ordering.sort((f, s) => (ranking[s] - ranking[f]));
   }
 
   // Apply that ordering to each statistic of interest.
-  var reorder = function (stats) {
-    var thing = new Float64Array(stats.length);
-    for (var i = 0; i < ordering.length; i++) {
-      thing[i] = stats[ordering[i]];
-    }
-    return thing;
+  var reorder = function(stats) {
+      var thing = new Float64Array(stats.length);
+      for (var i = 0; i < ordering.length; i++) {
+          thing[i] = stats[ordering[i]];
+      }
+      return thing;
   };
 
   var stat_detected = reorder(results.detected(cluster, 0));
@@ -811,6 +834,7 @@ onmessage = function (msg) {
       var mat = fetchNormalizedMatrix();
       var t1 = performance.now();
       var gExp_cached = utils.initCache("fetchGeneExpr");
+      // try {
       var buffer = utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", gExp_cached);
 
       // find position in genes inputs
@@ -839,12 +863,15 @@ onmessage = function (msg) {
           msg: "Fail: GET_GENE_EXPRESSION"
         });
       }
+      // } finally {
+      // buffer.free();
+      // }
     });
   } else if (payload.type == "computeCustomMarkers") {
     loaded.then(wasm => {
       var custom = utils.initCache("custom_selection");
       if (!("computed" in custom)) {
-        custom.computed = {};
+        custom.computed = {};          
       }
 
       var id = payload.payload.id;
@@ -872,7 +899,7 @@ onmessage = function (msg) {
       let rank_type = payload.payload.rank_type;
       var id = payload.payload.cluster;
       var results = custom.computed[id];
-      var resp = formatMarkerStats(wasm, results, rank_type, 1);
+      var resp = formatMarkerStats(wasm, results, rank_type, 1); 
       postMessage({
         type: "setMarkersForCustomSelection",
         resp: resp,
