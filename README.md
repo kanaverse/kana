@@ -42,7 +42,7 @@ The interface provides a depiction of the dimensionality reduction of choice,
 a ranking of marker genes for the cluster of interest,
 and diagnostic plots from the individual analysis steps.
 
-![Features](assets/scran.js.app.png)
+![Features](assets/pbmc_68k.png)
 
 **Tips and tricks:**
 
