@@ -1,6 +1,10 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
-import { Button, H4, H5, Icon, Collapse, Label, InputGroup, Position, Classes, Card, Elevation } from "@blueprintjs/core";
+import {
+    Button, H4, Icon, Collapse, Label, InputGroup,
+    Position, Classes, Card, Elevation, UL
+} from "@blueprintjs/core";
 import { Tooltip2, Popover2 } from '@blueprintjs/popover2';
+
 import { Virtuoso } from 'react-virtuoso';
 import * as d3 from 'd3';
 
@@ -190,18 +194,30 @@ const MarkerPlot = () => {
                                                         preventOverflow: { enabled: true },
                                                     }}
                                                     content={
-                                                        <div key="text">
-                                                            <Card elevation={Elevation.ZERO}>
-                                                                <H5>{row.gene}</H5>
-                                                                <p>Cohen Score : {row.cohen.toFixed(2)}</p>
-                                                                <p>AUC : {row.auc.toFixed(2)}</p>
-                                                                <p>Detected : {row.detected.toFixed(2)}</p>
-                                                                <p>Mean Expression: {row.mean.toFixed(2)}</p>
-                                                                <H5>Summary stats</H5>
-                                                                <p>Cohen Range : {cohenMinMax[0].toFixed(2)}, {cohenMinMax[1].toFixed(2)}</p>
-                                                                <p>Mean Range: {meanMinMax[0].toFixed(2)}, {meanMinMax[1].toFixed(2)}</p>
-                                                            </Card>
-                                                        </div>
+                                                        <Card elevation={Elevation.ZERO}>
+                                                            <table>
+                                                                <tr>
+                                                                    <td></td>
+                                                                    <th scope="col">{row.gene}</th>
+                                                                    <th scope="col">Overall</th>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Cohen</th>
+                                                                    <td>{row.cohen.toFixed(2)}</td>
+                                                                    <td style={{fontStyle: 'italic'}}>∈ [{cohenMinMax[0].toFixed(2)}, {cohenMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Detected</th>
+                                                                    <td>{row.detected.toFixed(2)}</td>
+                                                                    <td style={{fontStyle: 'italic'}}>∈ [0, 1]</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Mean Expression</th>
+                                                                    <td>{row.mean.toFixed(2)}</td>
+                                                                    <td style={{fontStyle: 'italic'}}>∈ [{meanMinMax[0].toFixed(2)}, {meanMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                            </table>
+                                                        </Card>
                                                     }
                                                 >
                                                     <Cell minmax={cohenMinMax} colorscale={detectedScale}
@@ -221,18 +237,20 @@ const MarkerPlot = () => {
                                                         preventOverflow: { enabled: true },
                                                     }}
                                                     content={
-                                                        <div key="text">
-                                                            <Card elevation={Elevation.ZERO}>
-                                                                <H5>{row.gene} :: Info Card</H5>
-                                                                <p>Cohen Score : {row.cohen.toFixed(2)}</p>
-                                                                <p>AUC : {row.auc.toFixed(2)}</p>
-                                                                <p>Detected : {row.detected.toFixed(2)}</p>
-                                                                <p>Mean Expression: {row.mean.toFixed(2)}</p>
-                                                                <H5>Summary stats</H5>
-                                                                <p>Cohen Range : {cohenMinMax[0].toFixed(2)}, {cohenMinMax[1].toFixed(2)}</p>
-                                                                <p>Mean Range: {meanMinMax[0].toFixed(2)}, {meanMinMax[1].toFixed(2)}</p>
-                                                            </Card>
-                                                        </div>
+                                                        <Card>
+                                                            <Label>{row.gene}</Label>
+                                                            <UL style={{ fontSize: '12px' }}>
+                                                                <li>Cohen Score : {row.cohen.toFixed(2)}</li>
+                                                                <li>AUC : {row.auc.toFixed(2)}</li>
+                                                                <li>Detected : {row.detected.toFixed(2)}</li>
+                                                                <li>Mean Expression: {row.mean.toFixed(2)}</li>
+                                                            </UL>
+                                                            <Label>Summary stats</Label>
+                                                            <UL style={{ fontSize: '12px' }}>
+                                                                <li>Cohen ∈ [{cohenMinMax[0].toFixed(2)}, {cohenMinMax[1].toFixed(2)}]</li>
+                                                                <li>Mean ∈ [{meanMinMax[0].toFixed(2)}, {meanMinMax[1].toFixed(2)}]</li>
+                                                            </UL>
+                                                        </Card>
                                                     }
                                                 >
                                                     <Cell minmax={meanMinMax} colorscale={detectedScale}
