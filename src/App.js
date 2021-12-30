@@ -42,8 +42,10 @@ function App() {
   useEffect(() => {
 
     if (selectedCluster !== null) {
+      let type = String(selectedCluster).startsWith("cs") ?
+        "getMarkersForSelection" : "getMarkersForCluster";
       window.Worker.postMessage({
-        "type": "getMarkersForCluster",
+        "type": type,
         "payload": {
           "cluster": selectedCluster,
           "rank_type": clusterRank,
@@ -147,7 +149,8 @@ function App() {
       setRedDims(tmp);
     } else if (payload.type === "markerGene_DATA") {
       // const { type, resp } = payload;
-    } else if (payload.type === "setMarkersForCluster") {
+    } else if (payload.type === "setMarkersForCluster"
+      || payload.type === "setMarkersForCustomSelection") {
       const { resp } = payload;
       let records = {};
       resp.means.forEach((x, i) => {

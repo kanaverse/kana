@@ -204,7 +204,13 @@ const MarkerPlot = () => {
                     <HTMLSelect
                         onChange={(x) => {
                             setGene(null);
-                            setSelectedCluster(parseInt(x.currentTarget?.value.replace("Cluster ", "")) - 1);
+                            let tmpselection =x.currentTarget?.value;
+                            if (tmpselection.startsWith("Cluster")) {
+                                tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1
+                            } else if (tmpselection.startsWith("Custom")) {
+                                tmpselection = tmpselection.replace("Custom Selection ", "")
+                            }
+                            setSelectedCluster(tmpselection);
                         }}
                     >
                         {

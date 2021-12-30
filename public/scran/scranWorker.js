@@ -873,8 +873,9 @@ onmessage = function (msg) {
     });
   } else if (payload.type == "getMarkersForSelection") {
     loaded.then(wasm => {
+      var custom = utils.initCache("custom_selection");
       let rank_type = payload.payload.rank_type;
-      var id = payload.payload.id;
+      var id = payload.payload.cluster;
       var results = custom.computed[id];
       var resp = formatMarkerStats(wasm, results, rank_type, 1); 
       postMessage({
