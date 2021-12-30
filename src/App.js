@@ -12,9 +12,14 @@ import MarkerPlot from './components/Markers';
 import Pong from './components/Spinners/Pong';
 import Spinner2 from './components/Spinners/Spinner2';
 
+// App is the single point of contact with the web workers
+// All requests and responses are received here
+
 function App() {
 
+  // show loading screen ?
   const [loading, setLoading] = useState(true);
+  // props for dialogs
   const loadingProps = {
     autoFocus: true,
     canEscapeKeyClose: false,
@@ -35,6 +40,7 @@ function App() {
     delCustomSelection, setDelCustomSelection,
     setSelectedCluster, setShowGame, showGame } = useContext(AppContext);
 
+  // initializes various things on the worker side
   useEffect(() => {
     window.Worker.postMessage({
       "type": "INIT",
@@ -42,6 +48,8 @@ function App() {
     });
   }, [])
 
+  // request worker for new markers 
+  // if either the cluster or the ranking changes
   useEffect(() => {
 
     if (selectedCluster !== null) {
@@ -57,6 +65,8 @@ function App() {
     }
   }, [selectedCluster, clusterRank]);
 
+  // compute markers in the worker 
+  // when a new custom selection of cells is made through the UI
   useEffect(() => {
 
     if (customSelection !== null && Object.keys(customSelection).length > 0) {
@@ -72,6 +82,7 @@ function App() {
     }
   }, [customSelection]);
 
+  // Remove a custom selection from cache
   useEffect(() => {
     if (delCustomSelection !== null) {
       window.Worker.postMessage({
@@ -85,6 +96,7 @@ function App() {
     }
   }, [delCustomSelection])
 
+  // get expression for a gene from worker
   useEffect(() => {
 
     reqGene !== null && window.Worker.postMessage({
@@ -95,6 +107,8 @@ function App() {
     });
   }, [reqGene])
 
+  // callback for all responses from workers
+  // all interactions are logged and shown on the UI
   window.Worker.onmessage = (msg) => {
     const payload = msg.data;
 
@@ -127,32 +141,36 @@ function App() {
       setFSelectionData(resp);
     } else if (payload.type === "pca_DATA") {
       const { resp } = payload;
-      let tmp = [...redDims];
-      tmp.push("PCA");
-      setRedDims(tmp);
       setPcaVarExp(resp);
     } else if (payload.type === "snn_cluster_graph_DATA") {
       const { resp } = payload;
       setClusterData(resp);
+
+      // show markers for the first cluster
       setSelectedCluster(0);
     } else if (payload.type === "tsne_DATA" || payload.type === "tsne_iter") {
       const { resp } = payload;
       setTsneData(resp);
+
       let tmp = [...redDims];
       tmp.push("TSNE");
+      // once t-SNE is available, set this as the default display
       if (!defaultRedDims) {
         setDefaultRedDims("TSNE");
       }
+
       setRedDims(tmp);
+      // also don't show the pong game anymore
       setShowGame(false);
     } else if (payload.type === "umap_DATA") {
       const { resp } = payload;
       setUmapData(resp);
+
+      // enable UMAP selection
       let tmp = [...redDims];
       tmp.push("UMAP");
       setRedDims(tmp);
     } else if (payload.type === "markerGene_DATA") {
-      // const { type, resp } = payload;
     } else if (payload.type === "setMarkersForCluster"
       || payload.type === "setMarkersForCustomSelection") {
       const { resp } = payload;
@@ -187,11 +205,11 @@ function App() {
             defaultRedDims ?
               <DimPlot /> :
               showGame ?
-              <Pong /> :
-              <div style={{
-                width: '100%',
-                height: '100%'
-              }}></div>
+                <Pong /> :
+                <div style={{
+                  width: '100%',
+                  height: '100%'
+                }}></div>
           }
         </div>
         <div className="marker">

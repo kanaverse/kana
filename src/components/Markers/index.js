@@ -23,29 +23,40 @@ const MarkerPlot = () => {
         setReqGene, clusterColors, gene, setGene,
         customSelection } = useContext(AppContext);
 
+    // what cluster is selected
     const [clusSel, setClusSel] = useState(null);
+    // binary vector for stacked histogram plots, this cluster (1) vs others (0)
     const [clusArrayStacked, setClusArrayStacked] = useState(null);
+    // gene search
     const [searchInput, setSearchInput] = useState(null);
+
+    // ranges for various marker stats
     const [meanMinMax, setMeanMinMax] = useState(null);
     const [deltaMinMax, setDeltaMinMax] = useState(null);
     const [lfcMinMax, setLfcMinMax] = useState(null);
     const [detectedMinMax, setDetectedMinMax] = useState(null);
     const [minMaxs, setMinMaxs] = useState(null);
 
+    // params for filtering
     const [means, setMeans] = useState(null);
     const [deltas, setDeltas] = useState(null);
     const [lfcs, setLfcs] = useState(null);
     const [detects, setDetects] = useState(null);
 
+    // stores range filters from UI
     const [markerFilter, setMarkerFilter] = useState({});
+    // records to show after filtering
     const [prosRecords, setProsRecords] = useState(null);
 
+    // scale to use for detected on expression bar
     const detectedScale = d3.interpolateRdYlBu; //d3.interpolateRdBu;
     // d3.scaleSequential()
     // .domain([0, 1])
     // .range(["red", "blue"])
     // .interpolate(d3.interpolateHcl);
 
+    // if a cluster changes, its summary data is requested from the worker
+    // pre-process results for UI
     useEffect(() => {
         if (!selectedClusterSummary) return selectedClusterSummary;
 
@@ -90,6 +101,7 @@ const MarkerPlot = () => {
 
     }, [selectedClusterSummary]);
 
+    // genes to show, hook for filters and input
     const sortedRows = useMemo(() => {
 
         if (!prosRecords) return [];
@@ -109,6 +121,7 @@ const MarkerPlot = () => {
         return sortedRows;
     }, [prosRecords, searchInput, markerFilter]);
 
+    // update clusters when custom selection is made in the UI
     useEffect(() => {
         if (clusterData?.clusters) {
             let max_clusters = Math.max(...clusterData.clusters);
@@ -121,7 +134,9 @@ const MarkerPlot = () => {
             clus = clus.concat(Object.keys(customSelection));
 
             setClusSel(clus);
-            setSelectedCluster(0);
+            if (selectedCluster == null) {
+                setSelectedCluster(0);
+            }
 
             let clusArray = []
             clusterData?.clusters?.forEach(x => x === 0 ? clusArray.push(1) : clusArray.push(0));
@@ -129,6 +144,7 @@ const MarkerPlot = () => {
         }
     }, [clusterData, customSelection]);
 
+    // hook for figure out this vs other cells for stacked histograms
     useEffect(() => {
         let clusArray = []
         clusterData?.clusters?.forEach(x => x === selectedCluster ? clusArray.push(1) : clusArray.push(0));

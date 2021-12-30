@@ -14,6 +14,7 @@ import Logs from '../Logs';
 import IntroDialog from "../Intro";
 
 const Header = () => {
+  // state for dialogs
   const [state] = useState({
     autoFocus: true,
     canEscapeKeyClose: true,
