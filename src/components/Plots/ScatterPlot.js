@@ -26,7 +26,8 @@ const DimPlot = () => {
     const { plotRedDims, redDims, defaultRedDims, setDefaultRedDims, clusterData,
         tsneData, umapData, setPlotRedDims, clusterColors, setClusterColors,
         gene, selectedClusterSummary,
-        customSelection, setCustomSelection } = useContext(AppContext);
+        customSelection, setCustomSelection,
+        setDelCustomSelection } = useContext(AppContext);
 
     // const [showPointSelection, setShowPointSelection] = useState(false);
     const [selectedPoints, setSelectedPoints] = useState(null);
@@ -350,6 +351,8 @@ const DimPlot = () => {
                                                                     let tmpcolors = [...clusterColors];
                                                                     tmpcolors = tmpcolors.slice(0, tmpcolors.length -1);
                                                                     setClusterColors(tmpcolors);
+
+                                                                    setDelCustomSelection(x);
                                                                 }}></Icon>
                                                         </div>
                                                     </li>)

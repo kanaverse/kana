@@ -29,7 +29,8 @@ function App() {
     setUmapData, setPcaVarExp, logs, setLogs,
     selectedCluster, clusterRank,
     selectedClusterSummary, setSelectedClusterSummary,
-    reqGene, customSelection } = useContext(AppContext);
+    reqGene, customSelection,
+    delCustomSelection, setDelCustomSelection } = useContext(AppContext);
 
   useEffect(() => {
     window.Worker.postMessage({
@@ -54,7 +55,7 @@ function App() {
   useEffect(() => {
 
     if (customSelection !== null && Object.keys(customSelection).length > 0) {
-      let csLen = `cs${Object.keys(customSelection) - 1}`;
+      let csLen = `cs${Object.keys(customSelection).length}`;
       var cs = customSelection[csLen];
       window.Worker.postMessage({
         "type": "computeCustomMarkers",
@@ -64,7 +65,20 @@ function App() {
         }
       });
     }
-  }, [customSelection])
+  }, [customSelection]);
+
+  useEffect(() => {
+    if (delCustomSelection !== null) {
+      window.Worker.postMessage({
+        "type": "removeCustomMarkers",
+        "payload": {
+          "id": delCustomSelection
+        }
+      });
+
+      setDelCustomSelection(null);
+    }
+  }, [delCustomSelection])
 
   useEffect(() => {
 
