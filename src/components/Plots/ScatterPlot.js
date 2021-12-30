@@ -233,7 +233,8 @@ const DimPlot = () => {
         tmpSelection[`cs${cid + 1}`] = selectedPoints;
         setCustomSelection(tmpSelection);
 
-        clearPoints();
+        setSelectedPoints(null);
+        scatterplot.select(null);
     }
 
     return (
