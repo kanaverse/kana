@@ -17,7 +17,7 @@ const Header = () => {
   const [state] = useState({
     autoFocus: true,
     canEscapeKeyClose: true,
-    canOutsideClickClose: true,
+    canOutsideClickClose: false,
     enforceFocus: true,
     shouldReturnFocusOnClose: true,
   });
@@ -51,6 +51,7 @@ const Header = () => {
             icon="document"
             title="Single-cell RNA-seq analysis in the browser"
             isOpen={true}
+            {...state}
           />
         </NavbarGroup>
       </Navbar>
