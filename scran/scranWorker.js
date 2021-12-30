@@ -856,20 +856,27 @@ onmessage = function (msg) {
       var results = custom.computed[id];
       if (results === undefined) {
         var mat = fetchNormalizedMatrix();
-        var buffer = utils.allocateBuffer(wasm, mat.ncol(), "Uint8Array", custom, "buffer");
+        var buffer = utils.allocateBuffer(wasm, mat.ncol(), "Int32Array", custom, "buffer");
         var tmp = buffer.array();
         tmp.fill(0);
 
         var current_selection = payload.payload.selection; //select contains all indices of cells selected from the tsne plot
         current_selection.forEach(element => { tmp[element] = 1; });
 
-        results = wasm.score_markers(mat, buffer.ptr, false, 0);
-        custom.computed[id] = results;
+        custom.computed[id] = wasm.score_markers(mat, buffer.ptr, false, 0); // assumes that we have at least one cell in and outside the selection!
       }
 
+      postMessage({
+        type: "computeCustomMarkers",
+        msg: "Success: COMPUTE_CUSTOM_MARKERS done"
+      });
+    });
+  } else if (payload.type == "getMarkersForSelection") {
+    loaded.then(wasm => {
       let rank_type = payload.payload.rank_type;
-      var resp = formatMarkerStats(wasm, results, rank_type, 1); // assumes that we have at least one cell in and outside the selection!
-
+      var id = payload.payload.id;
+      var results = custom.computed[id];
+      var resp = formatMarkerStats(wasm, results, rank_type, 1); 
       postMessage({
         type: "setMarkersForCustomSelection",
         resp: resp,
