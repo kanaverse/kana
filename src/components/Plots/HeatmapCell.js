@@ -20,7 +20,7 @@ const HeatmapCell = (props) => {
     return (
         <div ref={container}
             style={{
-                width: propwidth, height: '66%',
+                width: propwidth, height: '15px',
                 margin: '5px', border: '1px solid gainsboro',
                 alignItems: 'center',
                 backgroundColor: detectedScale(score)

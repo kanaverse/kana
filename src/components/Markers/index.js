@@ -1,9 +1,9 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
 import {
     Button, H4, H5, Icon, Collapse, Label, InputGroup,
-    RangeSlider, Tag, HTMLSelect
+    RangeSlider, Tag, HTMLSelect, Classes, Card, Elevation
 } from "@blueprintjs/core";
-import { Tooltip2 } from "@blueprintjs/popover2";
+import { Tooltip2, Popover2 } from "@blueprintjs/popover2";
 import { Virtuoso } from 'react-virtuoso';
 import * as d3 from 'd3';
 
@@ -204,7 +204,7 @@ const MarkerPlot = () => {
                     <HTMLSelect
                         onChange={(x) => {
                             setGene(null);
-                            let tmpselection =x.currentTarget?.value;
+                            let tmpselection = x.currentTarget?.value;
                             if (tmpselection.startsWith("Cluster")) {
                                 tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1
                             } else if (tmpselection.startsWith("Custom")) {
@@ -296,11 +296,147 @@ const MarkerPlot = () => {
                                             {<Cell minmax={deltaMinMax}
                                                 score={row.delta} color="#4580E6"
                                             />} */}
-                                            {<HeatmapCell minmax={lfcMinMax} colorscale={d3.interpolateRdBu} score={row.lfc} />}
-                                            {<HeatmapCell minmax={deltaMinMax} colorscale={d3.interpolateRdBu} score={row.delta} />}
-                                            {<Cell minmax={meanMinMax} colorscale={detectedScale}
-                                                score={row.mean} colorscore={row.detected}
-                                            />}
+                                            {
+                                                <Popover2
+                                                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                                    hasBackdrop={false}
+                                                    interactionKind="hover"
+                                                    placement='auto'
+                                                    hoverOpenDelay={500}
+                                                    modifiers={{
+                                                        arrow: { enabled: true },
+                                                        flip: { enabled: true },
+                                                        preventOverflow: { enabled: true },
+                                                    }}
+                                                    content={
+                                                        <Card elevation={Elevation.ZERO}>
+                                                            <table>
+                                                                <tr>
+                                                                    <td></td>
+                                                                    <th scope="col">{row.gene}</th>
+                                                                    <th scope="col">Overall</th>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Log-FC</th>
+                                                                    <td>{row.lfc.toFixed(2)}</td>
+                                                                    <td style={{ fontStyle: 'italic' }}>∈ [{lfcMinMax[0].toFixed(2)}, {lfcMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Δ-detected</th>
+                                                                    <td>{row.delta.toFixed(2)}</td>
+                                                                    <td style={{ fontStyle: 'italic' }}>∈ [{deltaMinMax[0].toFixed(2)}, {deltaMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Detected</th>
+                                                                    <td>{row.detected.toFixed(2)}</td>
+                                                                    <td style={{ fontStyle: 'italic' }}>∈ [{detectedMinMax[0].toFixed(2)}, {detectedMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Expression</th>
+                                                                    <td>{row.mean.toFixed(2)}</td>
+                                                                    <td style={{ fontStyle: 'italic' }}>∈ [{meanMinMax[0].toFixed(2)}, {meanMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                            </table>
+                                                        </Card>
+                                                    }
+                                                >
+                                                    <HeatmapCell minmax={lfcMinMax} colorscale={d3.interpolateRdBu} score={row.lfc} />
+                                                </Popover2>
+                                            }
+                                            {
+                                                <Popover2
+                                                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                                    hasBackdrop={false}
+                                                    interactionKind="hover"
+                                                    placement='auto'
+                                                    hoverOpenDelay={500}
+                                                    modifiers={{
+                                                        arrow: { enabled: true },
+                                                        flip: { enabled: true },
+                                                        preventOverflow: { enabled: true },
+                                                    }}
+                                                    content={
+                                                        <Card elevation={Elevation.ZERO}>
+                                                            <table>
+                                                                <tr>
+                                                                    <td></td>
+                                                                    <th scope="col">{row.gene}</th>
+                                                                    <th scope="col">Overall</th>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Δ-detected</th>
+                                                                    <td>{row.delta.toFixed(2)}</td>
+                                                                    <td style={{ fontStyle: 'italic' }}>∈ [{deltaMinMax[0].toFixed(2)}, {deltaMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Detected</th>
+                                                                    <td>{row.detected.toFixed(2)}</td>
+                                                                    <td style={{ fontStyle: 'italic' }}>∈ [{detectedMinMax[0].toFixed(2)}, {detectedMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Log-FC</th>
+                                                                    <td>{row.lfc.toFixed(2)}</td>
+                                                                    <td style={{ fontStyle: 'italic' }}>∈ [{lfcMinMax[0].toFixed(2)}, {lfcMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Expression</th>
+                                                                    <td>{row.mean.toFixed(2)}</td>
+                                                                    <td style={{ fontStyle: 'italic' }}>∈ [{meanMinMax[0].toFixed(2)}, {meanMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                            </table>
+                                                        </Card>
+                                                    }
+                                                >
+                                                    <HeatmapCell minmax={deltaMinMax} colorscale={d3.interpolateRdBu} score={row.delta} />
+                                                </Popover2>}
+                                            {
+                                                <Popover2
+                                                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                                    hasBackdrop={false}
+                                                    interactionKind="hover"
+                                                    placement='auto'
+                                                    hoverOpenDelay={500}
+                                                    modifiers={{
+                                                        arrow: { enabled: true },
+                                                        flip: { enabled: true },
+                                                        preventOverflow: { enabled: true },
+                                                    }}
+                                                    content={
+                                                        <Card elevation={Elevation.ZERO}>
+                                                            <table>
+                                                                <tr>
+                                                                    <td></td>
+                                                                    <th scope="col">{row.gene}</th>
+                                                                    <th scope="col">Overall</th>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Expression</th>
+                                                                    <td>{row.mean.toFixed(2)}</td>
+                                                                    <td style={{ fontStyle: 'italic' }}>∈ [{meanMinMax[0].toFixed(2)}, {meanMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Log-FC</th>
+                                                                    <td>{row.lfc.toFixed(2)}</td>
+                                                                    <td style={{ fontStyle: 'italic' }}>∈ [{lfcMinMax[0].toFixed(2)}, {lfcMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Δ-detected</th>
+                                                                    <td>{row.delta.toFixed(2)}</td>
+                                                                    <td style={{ fontStyle: 'italic' }}>∈ [{deltaMinMax[0].toFixed(2)}, {deltaMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th scope="row">Detected</th>
+                                                                    <td>{row.detected.toFixed(2)}</td>
+                                                                    <td style={{ fontStyle: 'italic' }}>∈ [{detectedMinMax[0].toFixed(2)}, {detectedMinMax[1].toFixed(2)}]</td>
+                                                                </tr>
+                                                            </table>
+                                                        </Card>
+                                                    }
+                                                >
+                                                    <Cell minmax={meanMinMax} colorscale={detectedScale}
+                                                        score={row.mean} colorscore={row.detected}
+                                                    />
+                                                </Popover2>}
                                             {/* {<Cell minmax={[0,1]}
                                                 score={row.detected} color={detectedScale(row.detected)}
                                             />} */}
