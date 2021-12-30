@@ -199,10 +199,14 @@ function filterCells(wasm, args) {
     utils.freeCache(qcf_cache["raw"]);
 
     var mat = fetchCountMatrix();
-    var thresholds = utils.cached["quality_control_thresholds"]["raw"];
-    var discard_ptr = thresholds.discard_overall().byteOffset;
+    var discards = utils.allocateBuffer(wasm, mat.ncol(), "Uint8Array", qcf_cache, "discard");
 
-    qcf_cache["raw"] = wasm.filter_cells(mat, discard_ptr, false);
+    // Possibly use a different filtering criterion here, as long 
+    // as the choice of what to discard is put into 'discards'.
+    var thresholds = utils.cached["quality_control_thresholds"]["raw"];
+    discards.array().set(thresholds.discard_overall());
+
+    qcf_cache["raw"] = wasm.filter_cells(mat, discards.ptr, false);
 
     return {};
   });
@@ -214,11 +218,30 @@ function fetchFilteredMatrix() { // helper for downstream functions.
 
 function logNormCounts(wasm, args) {
   var step = "normalization";
-  return utils.runStep(step, args, ["quality_control_filtered"], () => {
+  return utils.runStep(step, args, ["quality_control_metrics", "quality_control_filtered"], () => {
     var norm_cache = utils.initCache(step);
     utils.freeCache(norm_cache["raw"]);
     var mat = fetchFilteredMatrix();
-    norm_cache["raw"] = wasm.log_norm_counts(mat, false, 0, false, 0);
+
+    // Reusing the totals computed earlier.
+    var sf_buffer = utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", norm_cache);
+    var sums = utils.cached["quality_control_metrics"]["raw"].sums();
+    var discards = utils.cached["quality_control_filtered"]["discard"].array();
+
+    var size_factors = sf_buffer.array();
+    var j = 0;
+    for (var i = 0; i < discards.length; ++i) {
+        if (!discards[i]) {
+            size_factors[j] = sums[i];
+            j++;
+        }
+    }
+
+    if (j != mat.ncol()) {
+        throw "normalization and filtering are not in sync";
+    }
+
+    norm_cache["raw"] = wasm.log_norm_counts(mat, true, sf_buffer.ptr, false, 0);
     return {};
   });
 }
