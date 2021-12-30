@@ -116,3 +116,18 @@ utils.allocateBuffer = function(wasm, size, type, cache, name = "buffer") {
   }
   return cache[name];
 };
+
+// Calculate min max of an array
+utils.getMinMax = (arr) => {
+  var max = -Number.MAX_VALUE,
+      min = Number.MAX_VALUE;
+  arr.forEach(function (x) {
+      if (max < x) {
+          max = x;
+      }
+      if (min > x) {
+          min = x;
+      }
+  });
+  return [min, max];
+}
