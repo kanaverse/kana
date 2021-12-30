@@ -266,8 +266,8 @@ const DimPlot = () => {
                 {/* <Button>Play t-SNE Interactively</Button>
                 <Button>Color Plot by Metadata</Button>
                 <Button>What else ?</Button> */}
-                <Button active={plotMode == "PAN"} icon="hand-up" onClick={x => setInteraction("PAN")}>Pan</Button>
-                <Button active={plotMode == "SELECT"} icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
+                <Button active={plotMode == "PAN"} intent={plotMode === "PAN" ? "primary": "none"} icon="hand-up" onClick={x => setInteraction("PAN")}>Pan</Button>
+                <Button active={plotMode == "SELECT"} intent={plotMode === "SELECT" ? "primary": "none"} icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
             </ControlGroup>
             <div className='dim-plot'>
                 {
