@@ -134,6 +134,8 @@ const DimPlot = () => {
                 };
                 const dataset = new ScatterGL.Dataset(points, metadata);
 
+                const max = Math.max(...clusterData?.clusters);
+
                 tmp_scatterplot.render(dataset);
 
                 tmp_scatterplot.setPointColorer((i, selectedIndices, hoverIndex) => {
@@ -149,7 +151,7 @@ const DimPlot = () => {
                         if (!String(clusHighlight).startsWith("cs")) {
                             if (clusHighlight !== cluster_mappings[i]) return '#D3D3D3';
                         } else {
-                            if (customSelection[clusHighlight].indexOf(i) === -1) return '#D3D3D3';
+                            if (!customSelection[clusHighlight].includes(i)) return '#D3D3D3';
                         }
                     }
 
@@ -161,7 +163,7 @@ const DimPlot = () => {
                         // gradient.setNumberRange(0, val);
                         // setExprMinMax([0, val]);
                         // setShowGradient(true);
-                        setShowGradient(true);
+                        // setShowGradient(true);
 
                         return "#" + gradient.colorAt(selectedClusterSummary?.[gene]?.expr?.[i]);
                         // let colorGradients = cluster_colors.map(x => {
@@ -175,11 +177,11 @@ const DimPlot = () => {
                         // return "#" + colorGradients[cluster_mappings[i]].colorAt(selectedClusterSummary?.[gene]?.expr?.[i])
                     }
 
-                    setShowGradient(false);
+                    // setShowGradient(false);
 
                     if (clusHighlight != null && String(clusHighlight).startsWith("cs")) {
                         let tmpclus = parseInt(clusHighlight.replace("cs", ""));
-                        return clusterColors[Math.max(...clusterData?.clusters) + tmpclus];
+                        return cluster_colors[max + tmpclus];
                     } else {
                         return cluster_colors[cluster_mappings[i]];
                     }
