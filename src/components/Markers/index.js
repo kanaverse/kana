@@ -211,6 +211,8 @@ const MarkerPlot = () => {
                                 tmpselection = tmpselection.replace("Custom Selection ", "")
                             }
                             setSelectedCluster(tmpselection);
+
+                            setMarkerFilter({});
                         }}
                     >
                         {
