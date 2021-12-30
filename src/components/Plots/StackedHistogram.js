@@ -45,12 +45,12 @@ const StackedHistogram = (props) => {
             .call(d3.axisBottom(x));
 
         const histogram = d3.histogram()
-            .value((d) => { return d; })  
-            .domain(x.domain())  
-            .thresholds(x.ticks(25)); 
-            
+            .value((d) => { return d; })
+            .domain(x.domain())
+            .thresholds(x.ticks(25));
+
         const bins = histogram(data);
-        const allCells = histogram(data.filter((d, i)=> { return clusters?.[i] === 0 }));
+        const allCells = histogram(data.filter((d, i) => { return clusters?.[i] === 0 }));
         const clusterCells = histogram(data.filter((d, i) => { return clusters?.[i] === 1 }));
 
         const y = d3.scaleLinear()

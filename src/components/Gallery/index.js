@@ -3,9 +3,8 @@ import PCABarPlot from "../Plots/PCABarPlot";
 import ClusterBarPlot from "../Plots/ClusterBarPlot";
 import { useContext } from 'react';
 import { AppContext } from './../../context/AppContext';
-import { Card, Elevation, Callout } from "@blueprintjs/core";
+import { Card, Elevation } from "@blueprintjs/core";
 import QCPlotMgr from "../Plots/QCPlotMgr";
-import Stats from '../Stats';
 
 import './Gallery.css';
 
@@ -15,11 +14,6 @@ const Gallery = () => {
   return (
     <>
       <div className="gallery-cont">
-        {/* <Callout className="gallery-text" title="Analysis results">
-          This sections shows visualizations to explore the performance
-          or metrics at each step of the analysis. <br />
-          <Stats />
-        </Callout> */}
         {
           clusterData ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
@@ -40,7 +34,7 @@ const Gallery = () => {
           qcData && qcData?.["thresholds"] ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
               <h5>QC Statistics</h5>
-              <QCPlotMgr data={qcData}/>
+              <QCPlotMgr data={qcData} />
             </Card>
             : ""
         }

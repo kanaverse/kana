@@ -107,7 +107,6 @@ function App() {
     }
 
     if (payload.type === "INIT") {
-      // TODO: need a timeout here so the screen doesn't flicker
       setLoading(false);
       setWasmInitialized(true);
     } else if (payload.type === "input_DIMS") {
@@ -164,8 +163,6 @@ function App() {
           "mean": x,
           "delta": resp?.delta_d?.[i],
           "lfc": resp?.lfc?.[i],
-          // "auc": resp?.auc?.[i],
-          // "cohen": resp?.cohen?.[i],
           "detected": resp?.detected?.[i],
           "expanded": false,
           "expr": null,
