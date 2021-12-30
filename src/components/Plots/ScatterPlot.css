@@ -3,7 +3,7 @@
   height: 100%;
   display: grid;
   grid-gap: 5px;
-  grid-template-columns: 100px auto 225px;
+  grid-template-columns: 100px auto 250px;
   grid-template-rows: 25px auto;
   background-color: #fff;
 }
@@ -25,7 +25,7 @@
 }
 
 .right-sidebar {
-  grid-row: 1 / -1;
+  grid-row: 2 / -1;
   grid-column: 3;
   display: flex;
   /* justify-content: center; */
@@ -50,6 +50,10 @@
 
 .right-sidebar ul > li:hover {
   text-decoration: underline;
+}
+
+right-sidebar-cluster > Callout {
+  padding-left: 20px;
 }
 
 .dim-plot {
@@ -105,4 +109,22 @@
 
 text {
   font: "8px sans-serif;";
+}
+
+.selection-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+}
+
+/* .selection-button-container {
+  display: flex;
+  flex-direction: column;
+  height: 50px;
+} */
+
+.selection-button-container > Button {
+  margin: 2px;
 }

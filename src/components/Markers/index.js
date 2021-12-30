@@ -1,5 +1,8 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
-import { Button, H4, H5, Icon, Collapse, Label, InputGroup, RangeSlider, Tag } from "@blueprintjs/core";
+import {
+    Button, H4, H5, Icon, Collapse, Label, InputGroup,
+    RangeSlider, Tag, HTMLSelect
+} from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import { Virtuoso } from 'react-virtuoso';
 import * as d3 from 'd3';
@@ -17,7 +20,9 @@ const MarkerPlot = () => {
 
     const { clusterData, selectedClusterSummary, setSelectedClusterSummary,
         selectedCluster, setSelectedCluster, setClusterRank,
-        setReqGene, clusterColors, gene, setGene } = useContext(AppContext);
+        setReqGene, clusterColors, gene, setGene,
+        customSelection } = useContext(AppContext);
+
     const [clusSel, setClusSel] = useState(null);
     const [clusArrayStacked, setClusArrayStacked] = useState(null);
     const [searchInput, setSearchInput] = useState(null);
@@ -167,6 +172,8 @@ const MarkerPlot = () => {
                 clus.push(i + 1);
             }
 
+            clus = clus.concat(Object.keys(customSelection));
+
             setClusSel(clus);
             setSelectedCluster(0);
 
@@ -174,7 +181,7 @@ const MarkerPlot = () => {
             clusterData?.clusters?.forEach(x => x === 0 ? clusArray.push(1) : clusArray.push(0));
             setClusArrayStacked(clusArray);
         }
-    }, [clusterData]);
+    }, [clusterData, customSelection]);
 
     useEffect(() => {
         let clusArray = []
@@ -194,18 +201,24 @@ const MarkerPlot = () => {
             <H4>Marker Genes</H4>
             {
                 clusSel ?
-                    <select
+                    <HTMLSelect
                         onChange={(x) => {
-                            setSelectedCluster(parseInt(x.currentTarget?.value.replace("Cluster ", "")) - 1);
                             setGene(null);
+                            let tmpselection =x.currentTarget?.value;
+                            if (tmpselection.startsWith("Cluster")) {
+                                tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1
+                            } else if (tmpselection.startsWith("Custom")) {
+                                tmpselection = tmpselection.replace("Custom Selection ", "")
+                            }
+                            setSelectedCluster(tmpselection);
                         }}
                     >
                         {
                             clusSel.map((x, i) => (
-                                <option key={i}>Cluster {x}</option>
+                                <option key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
                             ))
                         }
-                    </select>
+                    </HTMLSelect>
                     : ""
             }
             {
@@ -219,8 +232,11 @@ const MarkerPlot = () => {
                                 type={"text"}
                                 onChange={(e) => setSearchInput(e.target.value)}
                             />
-                            <Label>sort by &nbsp;
-                                <select
+                            <span>
+                                <Icon icon="sort" style={{
+                                    paddingRight: '5px'
+                                }}></Icon>
+                                <HTMLSelect
                                     onChange={(x) => {
                                         setClusterRank(x.currentTarget.value);
                                     }} defaultValue={"cohen-min-rank"}>
@@ -236,8 +252,8 @@ const MarkerPlot = () => {
                                     <option>delta-d-min</option>
                                     <option>delta-d-mean</option>
                                     <option>delta-d-min-rank</option>
-                                </select>
-                            </Label>
+                                </HTMLSelect>
+                            </span>
                         </div>
                         <Virtuoso
                             components={{

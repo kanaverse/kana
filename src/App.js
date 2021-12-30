@@ -29,7 +29,8 @@ function App() {
     setUmapData, setPcaVarExp, logs, setLogs,
     selectedCluster, clusterRank,
     selectedClusterSummary, setSelectedClusterSummary,
-    reqGene } = useContext(AppContext);
+    reqGene, customSelection,
+    delCustomSelection, setDelCustomSelection } = useContext(AppContext);
 
   useEffect(() => {
     window.Worker.postMessage({
@@ -40,14 +41,46 @@ function App() {
 
   useEffect(() => {
 
-    selectedCluster !== null && window.Worker.postMessage({
-      "type": "getMarkersForCluster",
-      "payload": {
-        "cluster": selectedCluster,
-        "rank_type": clusterRank,
-      }
-    });
-  }, [selectedCluster, clusterRank])
+    if (selectedCluster !== null) {
+      let type = String(selectedCluster).startsWith("cs") ?
+        "getMarkersForSelection" : "getMarkersForCluster";
+      window.Worker.postMessage({
+        "type": type,
+        "payload": {
+          "cluster": selectedCluster,
+          "rank_type": clusterRank,
+        }
+      });
+    }
+  }, [selectedCluster, clusterRank]);
+
+  useEffect(() => {
+
+    if (customSelection !== null && Object.keys(customSelection).length > 0) {
+      let csLen = `cs${Object.keys(customSelection).length}`;
+      var cs = customSelection[csLen];
+      window.Worker.postMessage({
+        "type": "computeCustomMarkers",
+        "payload": {
+          "selection": cs,
+          "id": csLen
+        }
+      });
+    }
+  }, [customSelection]);
+
+  useEffect(() => {
+    if (delCustomSelection !== null) {
+      window.Worker.postMessage({
+        "type": "removeCustomMarkers",
+        "payload": {
+          "id": delCustomSelection
+        }
+      });
+
+      setDelCustomSelection(null);
+    }
+  }, [delCustomSelection])
 
   useEffect(() => {
 
@@ -116,7 +149,8 @@ function App() {
       setRedDims(tmp);
     } else if (payload.type === "markerGene_DATA") {
       // const { type, resp } = payload;
-    } else if (payload.type === "setMarkersForCluster") {
+    } else if (payload.type === "setMarkersForCluster"
+      || payload.type === "setMarkersForCustomSelection") {
       const { resp } = payload;
       let records = {};
       resp.means.forEach((x, i) => {
