@@ -1,6 +1,8 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
-import { Button, H4, H5, Icon, Collapse, Label, InputGroup, 
-    RangeSlider, Tag } from "@blueprintjs/core";
+import {
+    Button, H4, H5, Icon, Collapse, Label, InputGroup,
+    RangeSlider, Tag, HTMLSelect
+} from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import { Virtuoso } from 'react-virtuoso';
 import * as d3 from 'd3';
@@ -199,7 +201,7 @@ const MarkerPlot = () => {
             <H4>Marker Genes</H4>
             {
                 clusSel ?
-                    <select
+                    <HTMLSelect
                         onChange={(x) => {
                             setGene(null);
                             setSelectedCluster(parseInt(x.currentTarget?.value.replace("Cluster ", "")) - 1);
@@ -210,7 +212,7 @@ const MarkerPlot = () => {
                                 <option key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
                             ))
                         }
-                    </select>
+                    </HTMLSelect>
                     : ""
             }
             {
@@ -224,8 +226,11 @@ const MarkerPlot = () => {
                                 type={"text"}
                                 onChange={(e) => setSearchInput(e.target.value)}
                             />
-                            <Label>sort by &nbsp;
-                                <select
+                            <span>
+                                <Icon icon="sort" style={{
+                                    paddingRight: '5px'
+                                }}></Icon>
+                                <HTMLSelect
                                     onChange={(x) => {
                                         setClusterRank(x.currentTarget.value);
                                     }} defaultValue={"cohen-min-rank"}>
@@ -241,8 +246,8 @@ const MarkerPlot = () => {
                                     <option>delta-d-min</option>
                                     <option>delta-d-mean</option>
                                     <option>delta-d-min-rank</option>
-                                </select>
-                            </Label>
+                                </HTMLSelect>
+                            </span>
                         </div>
                         <Virtuoso
                             components={{
