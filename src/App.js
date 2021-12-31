@@ -237,7 +237,7 @@ function App() {
       >
         <div className="spinner">
           <Spinner size={100} />
-          <p>Initializing SCRAN.JS</p>
+          <p>Initializing kana</p>
         </div>
       </Overlay>
     </div>
