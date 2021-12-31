@@ -44,7 +44,7 @@ const ViolinPlotBasic = (props) => {
 
         var x = d3.scaleBand()
             .range([0, width])
-            .domain([props?.label])
+            .domain([props?.showLabel])
             .padding(0.05)
 
         svg.append("g")
