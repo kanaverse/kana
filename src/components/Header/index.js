@@ -31,7 +31,7 @@ const Header = () => {
           <NavbarHeading>kana</NavbarHeading>
 
           <NavbarDivider />
-          <span>Analyze Single-cell RNA-seq Datasets</span>
+          <span>Single cell RNA-seq analysis in the browser</span>
           <NavbarDivider />
 
           <AnalysisDialog
