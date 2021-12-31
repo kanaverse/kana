@@ -28,7 +28,7 @@ const Header = () => {
       <Navbar className="bp3-dark">
         <NavbarGroup className="navbar-group" align={Alignment.LEFT}>
 
-          <NavbarHeading>SCRAN.JS</NavbarHeading>
+          <NavbarHeading>kana</NavbarHeading>
 
           <NavbarDivider />
           <span>Analyze Single-cell RNA-seq Datasets</span>
