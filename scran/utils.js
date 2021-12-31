@@ -94,6 +94,50 @@ utils.processOutput = function(body, wasm, args) {
   return output;
 };
 
+/* Recursively extract buffers from TypedArrays.
+ * 
+ * The idea is to extract buffers from an object containing one or more TypedArrays,
+ * to enable transfer of the memory store across workers via postMessage.
+ */
+utils.extractBuffers = function(object, store) {
+  if (Array.isArray(object)) {
+    for (const element of object) {
+      utils.extractBuffers(element, store);
+    }
+  } else if (object.constructor == Object) {
+    for (const [key, element] of Object.entries(object)) {
+      utils.extractBuffers(element, store);
+    }
+  } else if (ArrayBuffer.isView(object)) {
+    if (! (object.buffer instanceof ArrayBuffer)) {
+      throw "only ArrayBuffers should be in the message payload";
+    }
+    store.push(object.buffer);
+  }
+}
+
+/* Post a response after job success.
+ *
+ * This will identify all transferrable buffers to include in the `postMessage` call.
+ * It will also eliminate the redundant `$step` property.
+ */
+utils.postSuccess = function(info, message) {
+  if (info !== null) {
+    var transferable = [];
+    utils.extractBuffers(info, transferable);
+    console.log(info);
+
+    var step = info["$step"];
+    delete info["$step"];
+
+    postMessage({
+      type: `${step}_DATA`,
+      resp: info,
+      msg: "Success: " + message
+    }, transferable);
+  }
+}
+
 /* Allocate a cached buffer on the Wasm heap.
  *
  * Creates a `WasmBuffer` in the cache if one does not already exist with the
