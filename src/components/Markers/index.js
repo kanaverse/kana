@@ -270,7 +270,7 @@ const MarkerPlot = () => {
                                                                 <tr>
                                                                     <td></td>
                                                                     <th scope="col">{row.gene}</th>
-                                                                    <th scope="col">Overall</th>
+                                                                    <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
                                                                     <th scope="row">Log-FC</th>
@@ -316,7 +316,7 @@ const MarkerPlot = () => {
                                                                 <tr>
                                                                     <td></td>
                                                                     <th scope="col">{row.gene}</th>
-                                                                    <th scope="col">Overall</th>
+                                                                    <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
                                                                     <th scope="row">Δ-detected</th>
@@ -361,7 +361,7 @@ const MarkerPlot = () => {
                                                                 <tr>
                                                                     <td></td>
                                                                     <th scope="col">{row.gene}</th>
-                                                                    <th scope="col">Overall</th>
+                                                                    <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
                                                                     <th scope="row">Expression</th>
