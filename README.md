@@ -16,7 +16,7 @@ Our client-side approach has a number of advantages:
 - By removing network latency, we can achieve a smooth interactive experience.
   This ranges from steps such as animated dimensionality reductions to user-driven marker detection.
 
-<img src="assets/scran.js.app.gif" align="center" width="75%" height="75%"/>
+<img src="assets/pbmc_68k.gif"/>
 
 ## For users
 
