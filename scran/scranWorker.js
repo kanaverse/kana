@@ -162,9 +162,9 @@ function computeQualityControlMetrics(wasm, args) {
 
     return {
       "data": {
-        "sums": qc_output.sums().slice(),
-        "detected": qc_output.detected().slice(),
-        "proportion": qc_output.subset_proportions(0).slice()
+        "sums": qc_output.sums(),
+        "detected": qc_output.detected(),
+        "proportion": qc_output.subset_proportions(0)
       },
       // "sums": distributions.sums,
       // "detected": distributions.detected,
@@ -204,8 +204,7 @@ function filterCells(wasm, args) {
     // Possibly use a different filtering criterion here, as long 
     // as the choice of what to discard is put into 'discards'.
     var thresholds = utils.cached["quality_control_thresholds"]["raw"];
-    var to_discard = thresholds.discard_overall();
-    discards.array().set(to_discard);
+    discards.array().set(thresholds.discard_overall());
 
     qcf_cache["raw"] = wasm.filter_cells(mat, discards.ptr, false);
 
@@ -269,7 +268,7 @@ function modelGeneVar(wasm, args) {
       "means": model_output.means(0).slice(),
       "vars": model_output.variances(0).slice(),
       "fitted": model_output.fitted(0).slice(),
-      "resids": feat_cached.residuals.slice()
+      "resids": feat_cached.residuals
     };
   });
 }
@@ -376,10 +375,11 @@ function chooseClustering(wasm, args) {
     var num_obs = fetchNormalizedMatrix().ncol();
     var buffer = utils.allocateBuffer(wasm, num_obs, "Int32Array", clust_cached);
 
+    var vec = buffer.array();
     if (args.method == "snn_graph") {
       var clustering = utils.cached["snn_cluster_graph"].raw;
       var src = clustering.membership(clustering.best());
-      buffer.array().set(src);
+      vec.set(src);
     }
 
     return {};
@@ -543,7 +543,7 @@ function launchUmap(wasm, params) {
 
 function formatMarkerStats(wasm, results, rank_type, cluster) {
   if (!rank_type || rank_type === undefined) {
-      rank_type = "cohen-min-rank";
+    rank_type = "cohen-min-rank";
   }
 
   // Choosing the ranking statistic. Do NOT do any Wasm allocations
@@ -551,41 +551,41 @@ function formatMarkerStats(wasm, results, rank_type, cluster) {
   var index = 1;
   var increasing = false;
   if (rank_type.match(/-min$/)) {
-      index = 0;
+    index = 0;
   } else if (rank_type.match(/-min-rank$/)) {
-      increasing = true;
-      index = 4;
+    increasing = true;
+    index = 4;
   }
 
   var ranking = null;
   if (rank_type.match(/^cohen-/)) {
-      ranking = results.cohen(cluster, index);
+    ranking = results.cohen(cluster, index);
   } else if (rank_type.match(/^auc-/)) {
-      ranking = results.auc(cluster, index);
+    ranking = results.auc(cluster, index);
   } else if (rank_type.match(/^lfc-/)) {
-      ranking = results.lfc(cluster, index);
+    ranking = results.lfc(cluster, index);
   } else if (rank_type.match(/^delta-d-/)) {
-      ranking = results.delta_detected(cluster, index);
+    ranking = results.delta_detected(cluster, index);
   }
 
   // Computing the ordering based on the ranking statistic.
   var ordering = new Int32Array(ranking.length);
   for (var i = 0; i < ordering.length; i++) {
-      ordering[i] = i;
+    ordering[i] = i;
   }
   if (increasing) {
-      ordering.sort((f, s) => (ranking[f] - ranking[s]));
+    ordering.sort((f, s) => (ranking[f] - ranking[s]));
   } else {
-      ordering.sort((f, s) => (ranking[s] - ranking[f]));
+    ordering.sort((f, s) => (ranking[s] - ranking[f]));
   }
 
   // Apply that ordering to each statistic of interest.
-  var reorder = function(stats) {
-      var thing = new Float64Array(stats.length);
-      for (var i = 0; i < ordering.length; i++) {
-          thing[i] = stats[ordering[i]];
-      }
-      return thing;
+  var reorder = function (stats) {
+    var thing = new Float64Array(stats.length);
+    for (var i = 0; i < ordering.length; i++) {
+      thing[i] = stats[ordering[i]];
+    }
+    return thing;
   };
 
   var stat_detected = reorder(results.detected(cluster, 0));
@@ -655,10 +655,22 @@ function runAllSteps(wasm, state) {
   }
 
   var metrics_out = utils.processOutput(computeQualityControlMetrics, wasm, {});
-  utils.postSuccess(metrics_out, "QC metrics computed");
+  if (metrics_out !== null) {
+    postMessage({
+      type: `${metrics_out["$step"]}_DATA`,
+      resp: metrics_out,
+      msg: "Success: QC metrics computed"
+    });
+  }
 
   var thresholds_out = utils.processOutput(computeQualityControlThresholds, wasm, { "nmads": state.params.qc["qc-nmads"] });
-  utils.postSuccess(thresholds_out, "QC thresholds computed");
+  if (thresholds_out !== null) {
+    postMessage({
+      type: `${thresholds_out["$step"]}_DATA`,
+      resp: thresholds_out,
+      msg: "Success: QC thresholds computed"
+    });
+  }
 
   var filtered_out = utils.processOutput(filterCells, wasm, {});
   if (filtered_out !== null) {
@@ -669,24 +681,53 @@ function runAllSteps(wasm, state) {
       msg: `Success: Data filtered, dimensions: ${mat.nrow()}, ${mat.ncol()}`
     });
 
+    postMessage({
+      type: `${filtered_out["$step"]}_DATA`,
+      resp: filtered_out,
+      msg: "Success: QC filtering completed"
+    });
+
     // We free custom marker results here, because a custom selection is only
     // invalidated when the cell number or ordering changes... and this is the
     // latest point at which the cell number or ordering can change.
     freeCustomMarkers();
   }
-  utils.postSuccess(filtered_out, "QC filtering completed");
 
   var norm_out = utils.processOutput(logNormCounts, wasm, {});
-  utils.postSuccess(norm_out, "Log-normalization completed");
+  if (norm_out !== null) {
+    postMessage({
+      type: `${norm_out["$step"]}_DATA`,
+      resp: norm_out,
+      msg: "Success: Log-normalization complete"
+    });
+  }
 
   var feat_out = utils.processOutput(modelGeneVar, wasm, { "span": state.params.fSelection["fsel-span"] });
-  utils.postSuccess(feat_out, "Variance modelling completed");
+  if (feat_out !== null) {
+    postMessage({
+      type: `${feat_out["$step"]}_DATA`,
+      resp: feat_out,
+      msg: "Success: Mean-variance relationship modelled"
+    });
+  }
 
   var pca_out = utils.processOutput(runPCA, wasm, { "num_hvgs": state.params.pca["pca-hvg"], "num_pcs": state.params.pca["pca-npc"] });
-  utils.postSuccess(pca_out, "Principal components analysis completed");
+  if (norm_out !== null) {
+    postMessage({
+      type: `${pca_out["$step"]}_DATA`,
+      resp: pca_out,
+      msg: "Success: PCA complete"
+    });
+  }
 
   var index_out = utils.processOutput(buildNeighborIndex, wasm, { "approximate": state.params.cluster["clus-approx"] });
-  utils.postSuccess(index_out, "Neighbor search index constructed");
+  if (index_out !== null) {
+    postMessage({
+      type: `${index_out["$step"]}_DATA`,
+      resp: index_out,
+      msg: "Success: Index construction complete"
+    });
+  }
 
   launchTsne(wasm, {
     "perplexity": state.params.tsne["tsne-perp"],
@@ -700,19 +741,49 @@ function runAllSteps(wasm, state) {
   });
 
   var neighbors_out = utils.processOutput(findSNNeighbors, wasm, { "k": state.params.cluster["clus-k"] });
-  utils.postSuccess(neighbors_out, "Neighbor search for clustering complete");
+  if (neighbors_out !== null) {
+    postMessage({
+      type: `${neighbors_out["$step"]}_DATA`,
+      resp: neighbors_out,
+      msg: "Success: Neighbor search complete"
+    });
+  }
 
   var graph_out = utils.processOutput(buildSNNGraph, wasm, { "scheme": state.params.cluster["clus-scheme"] });
-  utils.postSuccess(graph_out, "Shared nearest neighbor graph constructed");
+  if (graph_out !== null) {
+    postMessage({
+      type: `${graph_out["$step"]}_DATA`,
+      resp: graph_out,
+      msg: "Success: Neighbor search complete"
+    });
+  }
 
   var cluster_out = utils.processOutput(clusterSNNGraph, wasm, { "resolution": state.params.cluster["clus-res"] });
-  utils.postSuccess(cluster_out, "Community detection from SNN graph complete");
+  if (cluster_out !== null) {
+    postMessage({
+      type: `${cluster_out["$step"]}_DATA`,
+      resp: cluster_out,
+      msg: "Success: Graph clustering complete"
+    });
+  }
 
   var choose_out = utils.processOutput(chooseClustering, wasm, { "method": state.params.cluster["clus-method"] });
-  utils.postSuccess(choose_out, "Clustering of interest chosen");
+  if (choose_out !== null) {
+    postMessage({
+      type: `${choose_out["$step"]}_DATA`,
+      resp: choose_out,
+      msg: "Success: Clustering chosen"
+    });
+  }
 
   var marker_out = utils.processOutput(scoreMarkers, wasm, {});
-  utils.postSuccess(marker_out, "Marker detection complete");
+  if (marker_out !== null) {
+    postMessage({
+      type: `${marker_out["$step"]}_DATA`,
+      resp: marker_out,
+      msg: "Success: Marker detection complete"
+    });
+  }
 }
 
 var loaded;
@@ -763,7 +834,6 @@ onmessage = function (msg) {
       var mat = fetchNormalizedMatrix();
       var t1 = performance.now();
       var gExp_cached = utils.initCache("fetchGeneExpr");
-      // try {
       var buffer = utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", gExp_cached);
 
       // find position in genes inputs
@@ -792,15 +862,12 @@ onmessage = function (msg) {
           msg: "Fail: GET_GENE_EXPRESSION"
         });
       }
-      // } finally {
-      // buffer.free();
-      // }
     });
   } else if (payload.type == "computeCustomMarkers") {
     loaded.then(wasm => {
       var custom = utils.initCache("custom_selection");
       if (!("computed" in custom)) {
-        custom.computed = {};          
+        custom.computed = {};
       }
 
       var id = payload.payload.id;
@@ -828,7 +895,7 @@ onmessage = function (msg) {
       let rank_type = payload.payload.rank_type;
       var id = payload.payload.cluster;
       var results = custom.computed[id];
-      var resp = formatMarkerStats(wasm, results, rank_type, 1); 
+      var resp = formatMarkerStats(wasm, results, rank_type, 1);
       postMessage({
         type: "setMarkersForCustomSelection",
         resp: resp,
