@@ -37,6 +37,7 @@ Briefly, this involves:
 - Clustering with graph-based methods
 - The usual dimensionality reductions (t-SNE/UMAP)
 - Marker detection for each cluster
+- Make custom cell selections and detect markers for this selection
 
 The interface provides a depiction of the dimensionality reduction of choice,
 a ranking of marker genes for the cluster of interest,
@@ -49,6 +50,8 @@ and diagnostic plots from the individual analysis steps.
 - Clicking on a cluster name in the legend will highlight that cluster in the t-SNE/UMAP plot.
 - Clicking on the droplet icon in the marker table will color the t-SNE/UMAP plot by the expression of the selected gene.
 - Clicking on the plus icon in the marker table will give some details about that gene's expression in the selected cluster, including a histogram relative to cells in other clusters.
+- Hovering over the bars in the Markers section for a gene displays a tooltip on different statistics for that gene vs the selected cluster.
+- Filter markers either by searching for a gene or using the sliders to filter by various statistics.
 - Clicking on "What's happening" will show logs describing how long each step of the analysis took (and any errors during the analysis).
 
 ## For developers
