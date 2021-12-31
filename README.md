@@ -16,7 +16,7 @@ Our client-side approach has a number of advantages:
 - By removing network latency, we can achieve a smooth interactive experience.
   This ranges from steps such as animated dimensionality reductions to user-driven marker detection.
 
-<img src="assets/pbmc_68k.gif"/>
+![Overview and Analysis pbmc 68k dataset](assets/pbmc_68k.gif)
 
 ## For users
 
