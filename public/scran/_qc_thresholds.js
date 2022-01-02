@@ -59,14 +59,14 @@ const scran_qc_thresholds = {};
   };
 
   /** Public functions (custom) **/
-  x.fetchDiscardOffset = function(wasm) {
+  x.fetchDiscards = function(wasm) {
     if (reloaded) {
       var current = cache.reloaded.discards;
       var buffer = scran_utils.allocateBuffer(wasm, current.length, "Uint8Array", cache);
       buffer.set(current);
-      return buffer.ptr;
+      return buffer.array();
     } else {
-      return cache.raw.discard_overall().byteOffset;
+      return cache.raw.discard_overall();
     }
   };
 })(scran_qc_thresholds);
