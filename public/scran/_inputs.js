@@ -4,14 +4,14 @@ importScripts("./_utils.js");
 const scran_inputs = {};
 
 (function(x) {
+  /** Private members **/
   cache = {};
   parameters = {};
 
-  // To be interrogated by downstream steps to figure out whether the
-  // inputs changed.
+  /** Public members **/
   x.changed = false;
 
-  // Files are not directly comparable, so we just check their name and size.
+  /** Private functions **/
   function mockFiles(files) {
     var mock = [];
     for (const f of files) {
@@ -20,6 +20,7 @@ const scran_inputs = {};
     return mock;
   }
 
+  /** Public functions (standard) **/
   x.compute = function(wasm, args) {
     // Skipping if we don't see a change in the relevant files.
     var mock_args = { 
@@ -93,10 +94,11 @@ const scran_inputs = {};
     return null;
   };
 
-  x.unserialize = function(saved) {
+  x.unserialize = function(wasm, saved) {
     return;
   };
 
+  /** Public functions (custom) **/
   x.fetchCountMatrix = function() {
     return cache.matrix;
   };
