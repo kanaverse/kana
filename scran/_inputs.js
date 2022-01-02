@@ -4,14 +4,14 @@ importScripts("./_utils.js");
 const scran_inputs = {};
 
 (function(x) {
-  cache = {};
-  parameters = {};
+  /** Private members **/
+  var cache = {};
+  var parameters = {};
 
-  // To be interrogated by downstream steps to figure out whether the
-  // inputs changed.
+  /** Public members **/
   x.changed = false;
 
-  // Files are not directly comparable, so we just check their name and size.
+  /** Private functions **/
   function mockFiles(files) {
     var mock = [];
     for (const f of files) {
@@ -20,6 +20,7 @@ const scran_inputs = {};
     return mock;
   }
 
+  /** Public functions (standard) **/
   x.compute = function(wasm, args) {
     // Skipping if we don't see a change in the relevant files.
     var mock_args = { 
@@ -28,7 +29,7 @@ const scran_inputs = {};
       "genes": mockFiles(args.files[2])
     }
 
-    if (scran_utils.compareParameters(mock_args, scran_inputs.parameters)) {
+    if (!scran_utils.changedParameters(mock_args, parameters)) {
         x.changed = false;
         return;
     }
@@ -90,14 +91,23 @@ const scran_inputs = {};
    * to capture the arguments as well.
    */
   x.serialize = function(wasm) {
-    return null;
+    return {
+      "parameters": parameters,
+      "contents": x.results(wasm)        
+    };
   };
 
-  x.unserialize = function(saved) {
+  x.unserialize = function(wasm, saved) {
+    parameters = saved.parameters;
+    cache.reloaded = saved.contents;
     return;
   };
 
-  x.fetchCountMatrix = function() {
+  /** Public functions (custom) **/
+  x.fetchCountMatrix = function(wasm) {
+    if ("reloaded" in cache) {
+      /** TODO: something to reconstitute the matrix! **/
+    }
     return cache.matrix;
   };
 })(scran_inputs);

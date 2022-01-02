@@ -4,20 +4,15 @@ importScripts("./_inputs.js");
 const scran_qc_metrics = {};
 
 (function(x) {
-  cache = {};
-  parameters = {};
-  reloaded = false;
+  /** Private members **/
+  var cache = {};
+  var parameters = {};
 
-  // To be interrogated by downstream steps to figure out whether the
-  // inputs changed.
+  /** Public members **/
   x.changed = false;
 
-  x.compute = function(wasm, args) {
-    if (!scran_inputs.changed || !scran_utils.compareParameters(parameters, args)) {
-      x.changed = false;
-      return;
-    }
-
+  /** Private functions **/
+  function rawCompute(wasm) {
     scran_utils.freeCache(cache.raw);
     var mat = fetchCountMatrix();
 
@@ -31,15 +26,13 @@ const scran_qc_metrics = {};
       subsets.free();
     }
 
-    x.changed = true;
-    reloaded = false;
     delete cache.reloaded; 
     return;
-  };
+  }
 
-  function fetchData() {
+  function fetchResults() {
     var data = {};
-    if (reloaded) {
+    if ("reloaded" in cache) {
       var qc_output = cache.reloaded;
       data.sums = qc_output.sums.slice();
       data.detected = qc_output.detected.slice();
@@ -53,8 +46,20 @@ const scran_qc_metrics = {};
     return data;
   }
 
+  /** Public functions (standard) **/
+  x.compute = function(wasm, args) {
+    if (!scran_inputs.changed && !scran_utils.changedParameters(parameters, args)) {
+      x.changed = false;
+    } else {
+      rawCompute(wasm);
+      parameters = args;
+      x.changed = true;
+    }
+    return;
+  };
+
   x.results = function(wasm) {
-    var data = fetchData();
+    var data = fetchResults();
 
     var ranges = {};
     ranges.sums = scran_utils.computeRange(data.sums);
@@ -67,13 +72,35 @@ const scran_qc_metrics = {};
   x.serialize = function(wasm) {
     return {
       "parameters": parameters,
-      "contents": fetchData()
+      "contents": fetchResults()
     };
   };
 
-  x.unserialize = function(saved) {
-    reloaded = true;
+  x.unserialize = function(wasm, saved) {
+    /* TODO: reconstutite a fully-formed QCMetrics object so that
+     * fetchQCMetrics() doesn't have to recompute it.
+     */
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
+    return;
   };
+
+  /** Public functions (custom) **/
+  x.fetchQCMetrics = function(wasm) {
+    if ("reloaded" in cache) {
+      rawCompute(wasm);
+    } 
+    return cache.raw;
+  };
+
+  x.fetchSumsUNSAFE = function(wasm) {
+    if ("reloaded" in cache) {
+      return cache.reloaded.sums;
+    } else {
+      // Unsafe, because we're returning a raw view into the Wasm heap,
+      // which might be invalidated upon further allocations.
+      return cache.raw.sums();
+    }
+  };
+
 })(scran_qc_metrics);
