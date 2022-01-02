@@ -11,8 +11,8 @@ scran_utils.freeCache = function(object) {
 };
 
 /* Compare two parameter sets. */
-scran_utils.compareParameters = function(x, y) {
-    return JSON.stringify(x) == JSON.stringify(y);
+scran_utils.changedParameters = function(x, y) {
+    return JSON.stringify(x) != JSON.stringify(y);
 };
 
 /* Calculate range of an array */

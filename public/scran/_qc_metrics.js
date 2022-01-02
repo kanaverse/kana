@@ -51,7 +51,7 @@ const scran_qc_metrics = {};
 
   /** Public functions (standard) **/
   x.compute = function(wasm, args) {
-    if (!scran_inputs.changed || !scran_utils.compareParameters(parameters, args)) {
+    if (!scran_inputs.changed && !scran_utils.changedParameters(parameters, args)) {
       x.changed = false;
     } else {
       rawCompute(wasm);

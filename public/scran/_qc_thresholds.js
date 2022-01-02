@@ -14,7 +14,7 @@ const scran_qc_thresholds = {};
 
   /** Public functions (standard) **/
   x.compute = function(wasm, args) {
-    if (!scran_qc_metrics.changed || !scran_utils.compareParameters(parameters, args)) {
+    if (!scran_qc_metrics.changed && !scran_utils.changedParameters(parameters, args)) {
       x.changed = false;
     } else {
       scran_utils.freeCache(cache.raw);

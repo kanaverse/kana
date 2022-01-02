@@ -29,7 +29,7 @@ const scran_inputs = {};
       "genes": mockFiles(args.files[2])
     }
 
-    if (scran_utils.compareParameters(mock_args, scran_inputs.parameters)) {
+    if (!scran_utils.changedParameters(mock_args, parameters)) {
         x.changed = false;
         return;
     }
