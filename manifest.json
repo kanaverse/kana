@@ -1,6 +1,6 @@
 {
-  "short_name": "kana",
-  "name": "Single cell RNA-seq analysis in the browser",
+  "short_name": "SCRAN.JS",
+  "name": "Analyze single cell data in the browser",
   "icons": [
     {
       "src": "favicon.ico",
