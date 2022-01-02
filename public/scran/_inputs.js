@@ -5,9 +5,9 @@ const scran_inputs = {};
 
 (function(x) {
   /** Private members **/
-  cache = {};
-  parameters = {};
-  reloaded = false;
+  var cache = {};
+  var parameters = {};
+  var reloaded = false;
 
   /** Public members **/
   x.changed = false;
@@ -92,11 +92,16 @@ const scran_inputs = {};
    * to capture the arguments as well.
    */
   x.serialize = function(wasm) {
-    return null;
+    return {
+      "parameters": parameters,
+      "contents": x.results(wasm)        
+    };
   };
 
   x.unserialize = function(wasm, saved) {
     reloaded = true;
+    parameters = saved.parameters;
+    cache.reloaded = saved.contents;
     return;
   };
 

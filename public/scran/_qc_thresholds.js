@@ -5,9 +5,9 @@ const scran_qc_thresholds = {};
 
 (function(x) {
   /** Private members **/
-  cache = {};
-  parameters = {};
-  reloaded = false;
+  var cache = {};
+  var parameters = {};
+  var reloaded = false;
 
   /** Public members **/
   x.changed = false;
@@ -18,7 +18,7 @@ const scran_qc_thresholds = {};
       x.changed = false;
     } else {
       scran_utils.freeCache(cache.raw);
-      var metrics = scran_qc_metrics.fetchQCMetrics();
+      var metrics = scran_qc_metrics.fetchQCMetrics(wasm);
       cache.raw = wasm.per_cell_qc_filters(metrics, false, 0, args.nmads);
       x.changed = true;
     }
@@ -56,17 +56,28 @@ const scran_qc_thresholds = {};
     reloaded = true;
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
+    return;
   };
 
   /** Public functions (custom) **/
-  x.fetchDiscards = function(wasm) {
+  x.fetchDiscardsHeapOffset = function(wasm) {
     if (reloaded) {
       var current = cache.reloaded.discards;
       var buffer = scran_utils.allocateBuffer(wasm, current.length, "Uint8Array", cache);
       buffer.set(current);
-      return buffer.array();
+      return buffer.ptr;
     } else {
-      return cache.raw.discard_overall();
+      return cache.raw.discard_overall().byteOffset;
+    }
+  };
+
+  x.fetchDiscards = function(wasm) {
+    if (reloaded) {
+      return cache.reloaded.discards;
+    } else {
+      // Don't return 'overall' directly; callers might be doing arbitrary Wasm
+      // allocations, so it's just safer to suffer the cost of making a copy.
+      return cache.raw.discard_overall().slice();
     }
   };
 })(scran_qc_thresholds);

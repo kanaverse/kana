@@ -5,9 +5,9 @@ const scran_qc_metrics = {};
 
 (function(x) {
   /** Private members **/
-  cache = {};
-  parameters = {};
-  reloaded = false;
+  var cache = {};
+  var parameters = {};
+  var reloaded = false;
 
   /** Public members **/
   x.changed = false;
@@ -85,6 +85,7 @@ const scran_qc_metrics = {};
     reloaded = true;
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
+    return;
   };
 
   /** Public functions (custom) **/
@@ -93,6 +94,16 @@ const scran_qc_metrics = {};
       rawCompute(wasm);
     } 
     return cache.raw;
+  }
+
+  x.fetchSums = function(wasm) {
+    if (reloaded) {
+      return cache.reloaded.sums;
+    } else {
+      // Don't return 'sums' directly; callers might be doing arbitrary Wasm
+      // allocations, so it's just safer to suffer the cost of making a copy.
+      return cache.raw.sums().slice();
+    }
   }
 
 })(scran_qc_metrics);
