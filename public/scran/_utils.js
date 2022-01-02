@@ -1,3 +1,5 @@
+importScripts("./WasmBuffer.js");
+
 const scran_utils = {};
 
 /* Free a cached Wasm-constructed object. */
@@ -26,3 +28,28 @@ scran_utils.computeRange = (arr) => {
   });
   return [min, max];
 }
+
+/* Allocate a cached buffer on the Wasm heap.
+ *
+ * Creates a `WasmBuffer` in the cache if one does not already exist with the
+ * desired size and type. This avoids unnecessary reallocations if an
+ * appropriate buffer was already created from a previous run.
+ */
+scran_utils.allocateBuffer = function(wasm, size, type, cache, name = "buffer") {
+  var reallocate = true;
+  if (name in cache) {
+    var candidate = cache[name];
+    if (candidate.size != size || candidate.type != type) {
+      candidate.free();
+    } else {
+      reallocate = false;
+    }
+  }
+
+  if (reallocate) {
+    cache[name] = new WasmBuffer(wasm, size, type);
+  }
+  return cache[name];
+};
+
+
