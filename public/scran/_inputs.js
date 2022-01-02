@@ -7,6 +7,7 @@ const scran_inputs = {};
   /** Private members **/
   cache = {};
   parameters = {};
+  reloaded = false;
 
   /** Public members **/
   x.changed = false;
@@ -95,11 +96,15 @@ const scran_inputs = {};
   };
 
   x.unserialize = function(wasm, saved) {
+    reloaded = true;
     return;
   };
 
   /** Public functions (custom) **/
-  x.fetchCountMatrix = function() {
+  x.fetchCountMatrix = function(wasm) {
+    if (reloaded) {
+      /** TODO: something to reconstitute the matrix! **/
+    }
     return cache.matrix;
   };
 })(scran_inputs);
