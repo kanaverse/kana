@@ -81,7 +81,7 @@ const scran_inputs = {};
     return;
   };
 
-  x.results = function() {
+  x.results = function(wasm) {
     return {};
   };
 
@@ -89,7 +89,7 @@ const scran_inputs = {};
    * or just their paths, or... Note that serialization needs
    * to capture the arguments as well.
    */
-  x.serialize = function() {
+  x.serialize = function(wasm) {
     return null;
   };
 

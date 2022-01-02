@@ -53,7 +53,7 @@ const scran_qc_metrics = {};
     return data;
   }
 
-  x.results = function() {
+  x.results = function(wasm) {
     var data = fetchData();
 
     var ranges = {};
@@ -64,7 +64,7 @@ const scran_qc_metrics = {};
     return { "data": data, "ranges": ranges };
   };
 
-  x.serialize = function() {
+  x.serialize = function(wasm) {
     return {
       "parameters": parameters,
       "contents": fetchData()
