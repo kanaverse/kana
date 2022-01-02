@@ -7,7 +7,6 @@ const scran_qc_metrics = {};
   /** Private members **/
   var cache = {};
   var parameters = {};
-  var reloaded = false;
 
   /** Public members **/
   x.changed = false;
@@ -27,15 +26,13 @@ const scran_qc_metrics = {};
       subsets.free();
     }
 
-    x.changed = true;
-    reloaded = false;
     delete cache.reloaded; 
     return;
   }
 
   function fetchResults() {
     var data = {};
-    if (reloaded) {
+    if ("reloaded" in cache) {
       var qc_output = cache.reloaded;
       data.sums = qc_output.sums.slice();
       data.detected = qc_output.detected.slice();
@@ -55,6 +52,7 @@ const scran_qc_metrics = {};
       x.changed = false;
     } else {
       rawCompute(wasm);
+      parameters = args;
       x.changed = true;
     }
     return;
@@ -82,7 +80,6 @@ const scran_qc_metrics = {};
     /* TODO: reconstutite a fully-formed QCMetrics object so that
      * fetchQCMetrics() doesn't have to recompute it.
      */
-    reloaded = true;
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
     return;
@@ -90,20 +87,20 @@ const scran_qc_metrics = {};
 
   /** Public functions (custom) **/
   x.fetchQCMetrics = function(wasm) {
-    if (reloaded) {
+    if ("reloaded" in cache) {
       rawCompute(wasm);
     } 
     return cache.raw;
-  }
+  };
 
-  x.fetchSums = function(wasm) {
-    if (reloaded) {
+  x.fetchSumsUNSAFE = function(wasm) {
+    if ("reloaded" in cache) {
       return cache.reloaded.sums;
     } else {
-      // Don't return 'sums' directly; callers might be doing arbitrary Wasm
-      // allocations, so it's just safer to suffer the cost of making a copy.
-      return cache.raw.sums().slice();
+      // Unsafe, because we're returning a raw view into the Wasm heap,
+      // which might be invalidated upon further allocations.
+      return cache.raw.sums();
     }
-  }
+  };
 
 })(scran_qc_metrics);

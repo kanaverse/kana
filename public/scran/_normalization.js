@@ -9,7 +9,6 @@ const scran_normalization = {};
   /** Private members **/
   var cache = {};
   var parameters = {};
-  var reloaded = false;
 
   /** Public members **/
   x.changed = false;
@@ -17,11 +16,13 @@ const scran_normalization = {};
   /** Private functions **/
   function rawCompute(wasm) {
     var mat = scran_qc_filter.fetchFilteredMatrix(wasm);
-    var sums = scran_qc_metrics.fetchSums(wasm);
-    var discards = scran_qc_thresholds.fetchDiscards(wasm);
+    var sf_buffer = utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", cache);
+
+    // Better not have any more allocations in between now and filling of size_factors!
+    var sums = scran_qc_metrics.fetchSumsUNSAFE(wasm);
+    var discards = scran_qc_thresholds.fetchDiscardsUNSAFE(wasm);
 
     // Reusing the totals computed earlier.
-    var sf_buffer = utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", cache);
     var size_factors = sf_buffer.array();
     var j = 0;
     for (var i = 0; i < discards.length; ++i) {
@@ -38,7 +39,7 @@ const scran_normalization = {};
     scran_utils.freeCache(cache.matrix);
     cache.matrix = wasm.log_norm_counts(mat, true, sf_buffer.ptr, false, 0);
 
-    reloaded = false;
+    delete cache.reloaded;
     return;
   }
 
@@ -48,6 +49,7 @@ const scran_normalization = {};
       x.changed = false;
     } else {
       rawCompute(wasm);
+      parameters = args;
       x.changed = true;
     }
     return;
@@ -65,7 +67,6 @@ const scran_normalization = {};
   };
 
   x.unserialize = function(wasm, saved) {
-    reloaded = true;
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
     return;
@@ -73,7 +74,7 @@ const scran_normalization = {};
 
   /** Public functions (custom) **/
   x.fetchNormalizedMatrix = function(wasm) {
-    if (reloaded) {
+    if ("reloaded" in cache) {
       rawCompute(wasm);
     }
     return cache.matrix;

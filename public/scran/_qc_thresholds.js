@@ -7,7 +7,6 @@ const scran_qc_thresholds = {};
   /** Private members **/
   var cache = {};
   var parameters = {};
-  var reloaded = false;
 
   /** Public members **/
   x.changed = false;
@@ -20,6 +19,9 @@ const scran_qc_thresholds = {};
       scran_utils.freeCache(cache.raw);
       var metrics = scran_qc_metrics.fetchQCMetrics(wasm);
       cache.raw = wasm.per_cell_qc_filters(metrics, false, 0, args.nmads);
+
+      parameters = args;
+      delete cache.reloaded;
       x.changed = true;
     }
     return;
@@ -27,8 +29,12 @@ const scran_qc_thresholds = {};
 
   x.results = function(wasm) {
     let data;
-    if (reloaded) {
-      data = cache.reloaded;
+    if ("reloaded" in cache) {
+      data = {
+        "sums": cache.reloaded.sums,
+        "detected": cache.reloaded.detected,
+        "proportion": cache.reloaded.proportion
+      };
     } else {
       data = {
         "sums": filter_output.thresholds_sums()[0],
@@ -41,7 +47,7 @@ const scran_qc_thresholds = {};
 
   x.serialize = function(wasm) {
     var contents = x.results();
-    if (reloaded) {
+    if ("reloaded" in cache) {
       contents.discards = cache.reloaded.discards;
     } else {
       contents.discards = cache.raw.discard_overall().slice();
@@ -53,7 +59,6 @@ const scran_qc_thresholds = {};
   };
 
   x.unserialize = function(saved) {
-    reloaded = true;
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
     return;
@@ -61,7 +66,7 @@ const scran_qc_thresholds = {};
 
   /** Public functions (custom) **/
   x.fetchDiscardsHeapOffset = function(wasm) {
-    if (reloaded) {
+    if ("reloaded" in cache) {
       var current = cache.reloaded.discards;
       var buffer = scran_utils.allocateBuffer(wasm, current.length, "Uint8Array", cache);
       buffer.set(current);
@@ -71,13 +76,13 @@ const scran_qc_thresholds = {};
     }
   };
 
-  x.fetchDiscards = function(wasm) {
-    if (reloaded) {
+  x.fetchDiscardsUNSAFE = function(wasm) {
+    if ("reloaded" in cache) {
       return cache.reloaded.discards;
     } else {
-      // Don't return 'overall' directly; callers might be doing arbitrary Wasm
-      // allocations, so it's just safer to suffer the cost of making a copy.
-      return cache.raw.discard_overall().slice();
+      // Unsafe, because we're returning a raw view into the Wasm heap,
+      // which might be invalidated upon further allocations.
+      return cache.raw.discard_overall();
     }
   };
 })(scran_qc_thresholds);

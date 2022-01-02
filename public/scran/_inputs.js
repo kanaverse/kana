@@ -7,7 +7,6 @@ const scran_inputs = {};
   /** Private members **/
   var cache = {};
   var parameters = {};
-  var reloaded = false;
 
   /** Public members **/
   x.changed = false;
@@ -99,7 +98,6 @@ const scran_inputs = {};
   };
 
   x.unserialize = function(wasm, saved) {
-    reloaded = true;
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
     return;
@@ -107,7 +105,7 @@ const scran_inputs = {};
 
   /** Public functions (custom) **/
   x.fetchCountMatrix = function(wasm) {
-    if (reloaded) {
+    if ("reloaded" in cache) {
       /** TODO: something to reconstitute the matrix! **/
     }
     return cache.matrix;

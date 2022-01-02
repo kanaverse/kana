@@ -8,7 +8,6 @@ const scran_qc_filter = {};
   /** Private members **/
   cache = {};
   parameters = {};
-  reloaded = false;
 
   /** Public members **/
   x.changed = false;
@@ -19,9 +18,9 @@ const scran_qc_filter = {};
 
     var mat = scran_inputs.fetchCountMatrix(wasm);
     var disc_offset = scran_qc_thresholds.fetchDiscardsHeapOffset(wasm);
-
     cache.matrix = wasm.filter_cells(mat, disc_offset, false);
-    reloaded = false;
+
+    delete cache.reloaded;
     return;
   }
 
@@ -31,6 +30,7 @@ const scran_qc_filter = {};
       x.changed = false;
     } else {
       rawCompute(wasm);
+      parameters = args;
       x.changed = true;
     }
     return;
@@ -48,7 +48,6 @@ const scran_qc_filter = {};
   };
 
   x.unserialize = function(wasm, saved) {
-    reloaded = true;
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
     return;
@@ -56,7 +55,7 @@ const scran_qc_filter = {};
 
   /** Public functions (standard) **/
   x.fetchFilteredMatrix = function(wasm) {
-    if (reloaded) {
+    if ("reloaded" in cache) {
       rawCompute(wasm);
     }
     return cache.matrix;    
