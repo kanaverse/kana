@@ -52,4 +52,9 @@ scran_utils.allocateBuffer = function(wasm, size, type, cache, name = "buffer") 
   return cache[name];
 };
 
-
+/* Transfers an array's contents into a Wasm buffer. */
+scran_utils.wasmifyArray = function(wasm, arr) {
+  var tmp = new WasmBuffer(wasm, arr.length, arr.constructor.name);
+  tmp.set(arr);
+  return tmp;
+}

@@ -56,7 +56,7 @@ const scran_pca = {};
     var var_exp;
 
     if ("reloaded" in cache) {
-      var_exp = cache.reloaded.var_exp;
+      var_exp = cache.reloaded.var_exp.slice();
     } else {
       var pca_output = cached.raw;
       var_exp = pca_output.variance_explained().slice();
@@ -81,18 +81,15 @@ const scran_pca = {};
   x.unserialize = function(wasm, saved) {
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
-
-    var tmp = new WasmBuffer(wasm, cache.reloaded.pcs.length, "Float64Array");
-    tmp.set(cache.reloaded.pcs);
-    cache.reloaded.pcs = tmp;
+    cache.reloaded.pcs = scran_utils.wasmifyArray(wasm, cache.reloaded.pcs);
     return;
   };
 
   /** Public functions (custom) **/
-  x.fetchPCsUNSAFE = function(wasm) {
+  x.fetchPCsOFFSET = function(wasm) {
     var pcs = fetchPCsUNSAFE(wasm);
     return {
-      "matrix": pcs,
+      "offset": pcs.byteOffset,
       "num_pcs": parameters.num_pcs,
       "num_obs": pcs.length / parameters.num_pcs
     };
