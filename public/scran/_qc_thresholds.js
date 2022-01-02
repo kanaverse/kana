@@ -65,7 +65,7 @@ const scran_qc_thresholds = {};
   };
 
   /** Public functions (custom) **/
-  x.fetchDiscardsHeapOffset = function(wasm) {
+  x.fetchDiscardsOFFSET = function(wasm) {
     if ("reloaded" in cache) {
       var current = cache.reloaded.discards;
       var buffer = scran_utils.allocateBuffer(wasm, current.length, "Uint8Array", cache);

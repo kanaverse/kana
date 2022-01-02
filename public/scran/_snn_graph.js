@@ -1,32 +1,28 @@
 importScripts("./_utils.js");
-importScripts("./_inputs.js");
-importScripts("./_qc_thresholds.js");
+importScripts("./_snn_neighbors.js");
 
-const scran_qc_filter = {};
+const scran_snn_graph = {};
 
 (function(x) {
   /** Private members **/
-  cache = {};
-  parameters = {};
+  var cache = {};
+  var parameters = {};
 
   /** Public members **/
   x.changed = false;
 
   /** Private functions **/
   function rawCompute(wasm) {
-    scran_utils.freeCache(cache.matrix);
-
-    var mat = scran_inputs.fetchCountMatrix(wasm);
-    var disc_offset = scran_qc_thresholds.fetchDiscardsOFFSET(wasm);
-    cache.matrix = wasm.filter_cells(mat, disc_offset, false);
-
+    scran_utils.freeCache(cache.raw);
+    var neighbors = scran_snn_neighbors.fetchNeighbors(wasm);
+    cached.raw = wasm.build_snn_graph(neighbors, args.scheme);
     delete cache.reloaded;
     return;
   }
 
   /** Public functions (standard) **/
   x.compute = function(wasm, args) {
-    if (!scran_inputs.changed && !scran_qc_thresholds.changed && !scran_utils.compareParameters(parameters, args)) {
+    if (!scran_snn_neighbors.changed && !scran_utils.changedParameters(parameters, args)) {
       x.changed = false;
     } else {
       rawCompute(wasm);
@@ -34,8 +30,8 @@ const scran_qc_filter = {};
       x.changed = true;
     }
     return;
-  }
-   
+  };
+
   x.results = function(wasm) {
     return {};
   };
@@ -53,12 +49,11 @@ const scran_qc_filter = {};
     return;
   };
 
-  /** Public functions (standard) **/
-  x.fetchFilteredMatrix = function(wasm) {
+  /** Public functions (custom) **/
+  x.fetchGraph = function(wasm) {
     if ("reloaded" in cache) {
       rawCompute(wasm);
     }
-    return cache.matrix;    
+    return cache.raw;
   };
-
-})(scran_qc_filter);
+})(scran_snn_graph);
