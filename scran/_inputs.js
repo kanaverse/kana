@@ -17,6 +17,22 @@ const scran_inputs = {};
     return mock;
   }
 
+  function permuteGenes(wasm, genes) {
+    var output = genes.slice();
+    var buf = new WasmBuffer(wasm, cache.matrix.nrow(), "Int32Array");
+    try {
+      cache.matrix.permutation(buf.ptr);
+
+      var perm = buf.array();
+      for (var i = 0; i < perm.length; i++) {
+        output[perm[i]] = genes[i];
+      }
+    } finally {
+      buf.free();
+    }
+    return output;
+  }
+
   /** Public functions (standard) **/
   x.compute = function(wasm, args) {
     // Skipping if we don't see a change in the relevant files.
@@ -66,13 +82,13 @@ const scran_inputs = {};
       var reader = new FileReaderSync();
       var file_size = genes_file[0].size;
       var buffer = reader.readAsText(genes_file[0]);
-      cache.genes = tsv.parse(buffer);
+      cache.gene_names = permuteGenes(wasm, tsv.parse(buffer)); /** TODO: pretty sure this'll break. **/
     } else {
       let genes = []
       for (let i = 0; i < cache.matrix.nrow(); i++) {
         genes.push(`Gene ${i + 1}`);
       }
-      cache.genes = genes;
+      cache.gene_names = permuteGenes(wasm, genes);
     }
 
     x.changed = true;
@@ -88,6 +104,12 @@ const scran_inputs = {};
    * to capture the arguments as well.
    */
   x.serialize = function(wasm) {
+    var contents = {};
+    if ("reloaded" in cache) {
+      contents = contents.reloaded;
+    } else {
+      contents.gene_names = cache.gene_names;
+    }
     return {
       "parameters": parameters,
       "contents": x.results(wasm)        
@@ -107,4 +129,12 @@ const scran_inputs = {};
     }
     return cache.matrix;
   };
+
+  x.fetchGeneNames = function(wasm) {
+    if ("reloaded" in cache) {
+      return cache.reloaded.gene_names;
+    } else {
+      return cache.gene_names;
+    }
+  }
 })(scran_inputs);
