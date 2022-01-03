@@ -32,7 +32,8 @@ const scran_umap_run = {};
     return;
   };
 
-  x.results = function(wasm) {
+  /** Public functions (custom) **/
+  x.fetchResults = function(wasm) {
     var xy = scran_utils_viz_child.extractXY(cache.buffer);
     return {
       "x": xy.x,

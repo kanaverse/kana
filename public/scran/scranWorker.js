@@ -42,6 +42,22 @@ var runStep = function(mode, wasm, namespace, step, message, args = {}, extra = 
   }
 }
 
+var runStepDimRed = async function(mode, wasm, namespace, step, message, args) {
+  if (mode == "serialize") {
+    state[step] = await namespace.serialize(wasm);
+  } else {
+    if (mode == "run") {
+      namespace.compute(wasm, args);
+    } else {
+      namespace.unserialize(wasm, state[step]);
+    }
+    if (namespace.changed || mode == "unserialize") {
+      var res = await namespace.results(wasm);
+      scran_utils.postSuccess(res, step, message);
+    }
+  }
+}
+
 function runAllSteps(wasm, state, mode = "run") {
   runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded", 
     { "files": state.files },
@@ -87,13 +103,13 @@ function runAllSteps(wasm, state, mode = "run") {
     { "approximate": state.params.cluster["clus-approx"] }
   );
 
-  /** TODO: figure out how to serialize these guys. */
-  scran_tsne_monitor.compute(wasm, {
+  // Special async steps - these are run separately.
+  var tsne = runStepDimRed(mode, wasm, scran_tsne_monitor, "tsne", "t-SNE completed", {
     "perplexity": state.params.tsne["tsne-perp"],
     "iterations": state.params.tsne["tsne-iter"]
   });
 
-  scran_umap_monitor.compute(wasm, {
+  var umap = runStepDimRed(mode, wasm, scran_umap_monitor, "umap", "UMAP completed", {
     "num_epochs": state.params.umap["umap-epochs"],
     "num_neighbors": state.params.umap["umap-nn"],
     "min_dist": state.params.umap["umap-min_dist"]
@@ -118,6 +134,8 @@ function runAllSteps(wasm, state, mode = "run") {
   runStep(mode, wasm, scran_score_markers, "marker_detection", "Marker detection complete");
 
   runStep(mode, wasm, scran_custom_markers, "custom_marker_management", "Pruning of custom markers finished");
+
+  return Promise.all([tsne, umap]);
 }
 
 /***************************************/

@@ -21,10 +21,6 @@ const scran_tsne_init = {};
     return;
   };
  
-  x.results = function(wasm) {
-    return {};
-  };
-
   /** Public functions (custom) **/
   x.cloneInit = function(wasm) {
     return cache.raw.deepcopy();

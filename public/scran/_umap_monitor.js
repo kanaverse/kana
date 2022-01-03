@@ -2,7 +2,7 @@ const scran_umap_monitor = {};
 
 (function(x) {
   /** Private members **/
-  var cache = {};
+  var cache = { "counter": 0, "promises": {} };
   var parameters = {};
   var worker = null;
 
@@ -17,7 +17,8 @@ const scran_umap_monitor = {};
     }
 
     if (worker == null) {
-      worker = scran_utils_viz_parent.createWorker("./umapWorker.js", "umap", "UMAP");
+      worker = scran_utils_viz_parent.createWorker("./umapWorker.js", cache);
+      cache.initialized = scran_utils_viz_parent.initializeWorker(worker, cache);
     }
    
     var nn_out = null;
@@ -25,19 +26,25 @@ const scran_umap_monitor = {};
       nn_out = scran_utils_viz_parent.computeNeighbors(wasm, args.num_neighbors);
     }
 
-    scran_utils_viz_parent.postMessage(worker, args, nn_out);
+    cache.run = cache.initialized.then(x => scran_utils_viz_parent.runWithNeighbors(worker, args, nn_out, cache));
 
     parameters = args;
     delete cache.reloaded;
     x.changed = true;
   };
 
+  x.results = function(wasm) {
+    return scran_utils_viz_parent.retrieveCoordinates(worker, cache);
+  }
+
   x.serialize = function(wasm) {
-    /* TODO: interrogate the worker for coordinates and return a promise. */
-    return {
-      "parameters": parameters,
-      "contents": {} 
-    };
+    return scran_utils_viz_parent.retrieveCoordinates(worker, cache)
+    .then(contents => {
+      return {
+        "parameters": parameters,
+        "contents": contents
+      };
+    });
   };
 
   x.unserialize = function(wasm, saved) {
