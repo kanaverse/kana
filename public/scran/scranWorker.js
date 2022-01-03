@@ -1,6 +1,7 @@
 importScripts("./WasmBuffer.js");
 importScripts("./_utils.js");
 importScripts("./_utils_viz_parent.js");
+importScripts("./_utils_markers.js");
 
 importScripts("./_inputs.js");
 importScripts("https://cdn.jsdelivr.net/npm/d3-dsv@3");
@@ -126,13 +127,15 @@ onmessage = function (msg) {
     loaded.then(wasm => {
       let cluster = payload.payload.cluster;
       let rank_type = payload.payload.rank_type;
-      var marker_results = utils.cached.marker_detection.raw;
-      var resp = formatMarkerStats(wasm, marker_results, rank_type, cluster);
+      var resp = scran_score_markers.fetchGroupResults(wasm, rank_type, cluster);
+
+      var transferrable = [];
+      scran_utils.extractBuffers(resp, transferrable);
       postMessage({
         type: "setMarkersForCluster",
         resp: resp,
         msg: "Success: GET_MARKER_GENE done"
-      }, [resp.means.buffer, resp.detected.buffer, resp.lfc.buffer, resp.delta_d.buffer]);
+      }, transferrable);
     });
   } else if (payload.type == "getGeneExpression") {
     loaded.then(wasm => {

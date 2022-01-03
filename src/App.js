@@ -162,7 +162,7 @@ function App() {
         records[resp?.genes?.[i]] = {
           "gene": resp?.genes?.[i],
           "mean": x,
-          "delta": resp?.delta_d?.[i],
+          "delta": resp?.delta_detected?.[i],
           "lfc": resp?.lfc?.[i],
           // "auc": resp?.auc?.[i],
           // "cohen": resp?.cohen?.[i],
