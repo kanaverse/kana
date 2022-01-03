@@ -87,9 +87,9 @@ const scran_inputs = {};
       var reader = new FileReaderSync();
       var file_size = genes_file[0].size;
       var buffer = reader.readAsText(genes_file[0]);
-      cache.genes = tsv.parse(buffer); 
+      cache.gene_names = tsv.parse(buffer); 
     } else {
-      cache.genes = dummyGenes(cache.matrix.nrow());
+      cache.gene_names = dummyGenes(cache.matrix.nrow());
     }
 
     parameters = mock_args;
@@ -116,11 +116,11 @@ const scran_inputs = {};
 
     var genes = guessGenesFromHDF5(contents);
     if (genes === null) {
-      cache.genes = dummyGenes(cache.matrix.nrow());
+      cache.gene_names = dummyGenes(cache.matrix.nrow());
     } else {
       /** TODO: handle multiple names properly. **/
       for (const [key, val] of Object.entries(genes)) {
-        cache.genes = val;
+        cache.gene_names = val;
         break;
       }
     }
@@ -143,7 +143,7 @@ const scran_inputs = {};
       throw "unknown matrix file extension for '" + first_name + "'";
     }
    
-    cache.genes = permuteGenes(cache.genes);
+    cache.gene_names = permuteGenes(wasm, cache.gene_names);
     return;
   };
 

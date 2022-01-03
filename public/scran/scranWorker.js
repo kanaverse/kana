@@ -1,4 +1,5 @@
 importScripts("./WasmBuffer.js");
+importScripts("./HDF5Reader.js");
 importScripts("./_utils.js");
 importScripts("./_utils_viz_parent.js");
 importScripts("./_utils_markers.js");
