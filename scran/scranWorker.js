@@ -22,52 +22,72 @@ importScripts("./_umap_monitor.js");
 importScripts("./_score_markers.js");
 importScripts("./_custom_markers.js");
 
-function runAllSteps(wasm, state) {
-  scran_inputs.compute(wasm, { "files": state.files });
-  if (scran_inputs.changed) {
-    var mat = scran_inputs.fetchCountMatrix(wasm);
-    postMessage({
-      type: "inputs_DIMS",
-      resp: `${mat.nrow()} X ${mat.ncol()}`,
-      msg: `Success: Data loaded, dimensions: ${mat.nrow()}, ${mat.ncol()}`
-    });
+/***************************************/
+
+var runStep = function(mode, wasm, namespace, step, message, args = {}, extra = null) {
+  if (mode == "serialize") {
+    state[step] = namespace.serialize(wasm);
+  } else {
+    if (mode == "run") {
+      namespace.compute(wasm, args);
+    } else {
+      namespace.unserialize(wasm, state[step]);
+    }
+    if (namespace.changed || mode == "unserialize") {
+      if (extra !== null) {
+        extra();
+      }
+      scran_utils.postSuccess(namespace.results(wasm), step, message);
+    }
   }
-  scran_utils.postSuccess(wasm, scran_inputs, "inputs", "count matrix loaded"); 
+}
 
-  scran_qc_metrics.compute(wasm, {});
-  scran_utils.postSuccess(wasm, scran_qc_metrics, "quality_control_metrics", "QC metrics computed");
+function runAllSteps(wasm, state, mode = "run") {
+  runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded", 
+    { "files": state.files },
+    () => {
+      var dims = scran_inputs.fetchDimensions(wasm);
+      postMessage({
+        type: "inputs_DIMS",
+        resp: `${dims.num_genes} X ${dims.num_cells}`,
+        msg: `Success: Data loaded, dimensions: ${dims.num_genes}, ${dims.num_cells}`
+      });
+    }
+  );
 
-  scran_qc_thresholds.compute(wasm, { "nmads": state.params.qc["qc-nmads"] });
-  scran_utils.postSuccess(wasm, scran_qc_thresholds, "quality_control_thresholds", "QC thresholds computed");
+  runStep(mode, wasm, scran_qc_metrics, "quality_control_metrics", "QC metrics computed");
 
-  scran_qc_filter.compute(wasm, {});
-  if (scran_qc_filter.changed) {
-    var mat = scran_qc_filter.fetchFilteredMatrix(wasm);
-    postMessage({
-      type: "qc_filter_DIMS",
-      resp: `${mat.nrow()} X ${mat.ncol()}`,
-      msg: `Success: Data filtered, dimensions: ${mat.nrow()}, ${mat.ncol()}`
-    });
+  runStep(mode, wasm, scran_qc_thresholds, "quality_control_thresholds", "QC thresholds computed",
+    { "nmads": state.params.qc["qc-nmads"] }
+  );
 
-    // We free custom marker results here, because a custom selection is only
-    // invalidated when the cell number or ordering changes... and this is the
-    // latest point at which the cell number or ordering can change.
-//    freeCustomMarkers(); // TODO: put this back in.
-  }
-  scran_utils.postSuccess(wasm, scran_qc_filter, "quality_control_filtered", "QC filtering completed");
+  runStep(mode, wasm, scran_qc_filter, "quality_control_filtered", "QC filtering completed", {},
+    () => {
+      var genes = scran_inputs.fetchGeneNames(wasm);
+      var remaining = scran_qc_filter.fetchRetained(wasm);
+      postMessage({
+        type: "qc_filter_DIMS",
+        resp: `${genes.length} X ${remaining}`,
+        msg: `Success: Data filtered, dimensions: ${genes.length}, ${remaining}`
+      });
+    }
+  );
 
-  scran_normalization.compute(wasm, {});
-  scran_utils.postSuccess(wasm, scran_normalization, "normalization", "Log-normalization completed");
+  runStep(mode, wasm, scran_normalization, "normalization", "Log-normalization completed");
 
-  scran_model_gene_var.compute(wasm, { "span": state.params.fSelection["fsel-span"] });
-  scran_utils.postSuccess(wasm, scran_model_gene_var, "feature_selection", "Variance modelling completed");
+  runStep(mode, wasm, scran_model_gene_var, "feature_selection", "Variance modelling completed",
+    { "span": state.params.fSelection["fsel-span"] }
+  );
 
-  scran_pca.compute(wasm, { "num_hvgs": state.params.pca["pca-hvg"], "num_pcs": state.params.pca["pca-npc"] });
-  scran_utils.postSuccess(wasm, scran_pca, "pca", "Principal components analysis completed");
+  runStep(mode, wasm, scran_pca, "pca", "Principal components analysis completed",
+    { "num_hvgs": state.params.pca["pca-hvg"], "num_pcs": state.params.pca["pca-npc"] }
+  );
 
-  scran_neighbor_index.compute(wasm, { "approximate": state.params.cluster["clus-approx"] });
-  scran_utils.postSuccess(wasm, scran_neighbor_index, "neighbor_index", "Neighbor search index constructed");
+  runStep(mode, wasm, scran_neighbor_index, "neighbor_index", "Neighbor search index constructed",
+    { "approximate": state.params.cluster["clus-approx"] }
+  );
 
+  /** TODO: figure out how to serialize these guys. */
   scran_tsne_monitor.compute(wasm, {
     "perplexity": state.params.tsne["tsne-perp"],
     "iterations": state.params.tsne["tsne-iter"]
@@ -79,23 +99,28 @@ function runAllSteps(wasm, state) {
     "min_dist": state.params.umap["umap-min_dist"]
   });
 
-  scran_snn_neighbors.compute(wasm, { "k": state.params.cluster["clus-k"] });
-  scran_utils.postSuccess(wasm, scran_snn_neighbors, "snn_find_neighbors", "Neighbor search for clustering complete");
+  runStep(mode, wasm, scran_snn_neighbors, "snn_find_neighbors", "Neighbor search for clustering complete",
+    { "k": state.params.cluster["clus-k"] }
+  );
 
-  scran_snn_graph.compute(wasm, { "scheme": state.params.cluster["clus-scheme"] });
-  scran_utils.postSuccess(wasm, scran_snn_graph, "snn_build_graph", "Shared nearest neighbor graph constructed");
+  runStep(mode, wasm, scran_snn_graph, "snn_build_graph", "Shared nearest neighbor graph constructed",
+    { "scheme": state.params.cluster["clus-scheme"] }
+  );
 
-  scran_snn_cluster.compute(wasm, { "resolution": state.params.cluster["clus-res"] });
-  scran_utils.postSuccess(wasm, scran_snn_cluster, "snn_cluster_graph", "Community detection from SNN graph complete");
+  runStep(mode, wasm, scran_snn_cluster, "snn_cluster_graph", "Community detection from SNN graph complete",
+    { "resolution": state.params.cluster["clus-res"] }
+  );
 
-  scran_choose_clustering.compute(wasm, { "method": state.params.cluster["clus-method"] });
-  scran_utils.postSuccess(wasm, scran_choose_clustering, "choose_clustering", "Clustering of interest chosen");
+  runStep(mode, wasm, scran_choose_clustering, "choose_clustering", "Clustering of interest chosen",
+    { "method": state.params.cluster["clus-method"] }
+  );
 
-  scran_score_markers.compute(wasm, {});
-  scran_utils.postSuccess(wasm, scran_score_markers, "marker_detection", "Marker detection complete");
+  runStep(mode, wasm, scran_score_markers, "marker_detection", "Marker detection complete");
 
-  scran_custom_markers.compute(wasm, {}); // no need to send a signal here, this is just cleaning up.
+  runStep(mode, wasm, scran_custom_markers, "custom_marker_management", "Pruning of custom markers finished");
 }
+
+/***************************************/
 
 var loaded;
 onmessage = function (msg) {
