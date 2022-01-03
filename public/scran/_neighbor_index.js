@@ -1,6 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_pca.js");
-
 const scran_neighbor_index = {};
 
 (function(x) {

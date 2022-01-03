@@ -1,6 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_viz_neighbors.js");
-
 const scran_umap_init = {};
 
 (function(x) {

@@ -1,6 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_snn_cluster.js");
-
 const scran_choose_clustering = {};
 
 (function(x) {

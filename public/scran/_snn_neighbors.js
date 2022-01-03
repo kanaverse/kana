@@ -1,6 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_neighbor_index.js");
-
 const scran_snn_neighbors = {};
 
 (function(x) {

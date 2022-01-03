@@ -1,8 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_qc_metrics.js");
-importScripts("./_qc_thresholds.js");
-importScripts("./_qc_filter.js");
-
 const scran_normalization = {};
 
 (function(x) {

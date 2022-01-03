@@ -1,7 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_normalization.js");
-importScripts("./_model_gene_var.js");
-
 const scran_pca = {};
 
 (function(x) {

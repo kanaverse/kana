@@ -1,7 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_vizutils_child.js");
-importScripts("./_tsne_init.js");
-
 const scran_tsne_run = {};
 
 (function(x) {
@@ -39,7 +35,7 @@ const scran_tsne_run = {};
   };
 
   x.results = function(wasm) {
-    var xy = scran_vizutils_child.extractXY(cache.buffer);
+    var xy = scran_utils_viz_child.extractXY(cache.buffer);
     return {
       "x": xy.x,
       "y": xy.y,

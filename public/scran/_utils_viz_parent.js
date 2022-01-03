@@ -1,9 +1,6 @@
-importScripts("./_utils.js");
-importScripts("./_neighbor_index.js");
+const scran_utils_viz_parent = {};
 
-const scran_vizutils_parent = {};
-
-scran_vizutils_parent.computeNeighbors = function(wasm, k) {
+scran_utils_viz_parent.computeNeighbors = function(wasm, k) {
   var nn_index = scran_neighbor_index.fetchNeighborIndex(wasm);
 
   var output = { "num_obs": nn_index.num_obs() };
@@ -39,7 +36,7 @@ scran_vizutils_parent.computeNeighbors = function(wasm, k) {
   return output;
 };
 
-scran_vizutils_parent.createWorker = function(script, name, long_name) {
+scran_utils_viz_parent.createWorker = function(script, name, long_name) {
   var worker = new Worker("./umapWorker.js");
   worker.postMessage({ "cmd": "INIT" });
   
@@ -61,7 +58,7 @@ scran_vizutils_parent.createWorker = function(script, name, long_name) {
   return worker;
 };
 
-scran_vizutils_parent.sendNeighbors = function(worker, args, nn_out) {
+scran_utils_viz_parent.sendNeighbors = function(worker, args, nn_out) {
   var run_msg = {
     "cmd": "RUN",
     "params": args 

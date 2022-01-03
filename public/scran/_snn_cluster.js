@@ -1,6 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_snn_graph.js");
-
 const scran_snn_cluster = {};
 
 (function(x) {

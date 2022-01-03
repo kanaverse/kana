@@ -1,6 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_normalization.js");
-
 const scran_model_gene_var = {};
 
 (function(x) {

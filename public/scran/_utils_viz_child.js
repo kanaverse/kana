@@ -1,8 +1,6 @@
-importScripts("./WasmBuffer.js");
+const scran_utils_viz_child = {};
 
-const scran_vizutils_child = {};
-
-scran_vizutils_child.recreateNeighbors = function(wasm, neighbors) {
+scran_utils_viz_child.recreateNeighbors = function(wasm, neighbors) {
   var output = null;
   var rbuf = null;
   var ibuf = null;
@@ -35,7 +33,7 @@ scran_vizutils_child.recreateNeighbors = function(wasm, neighbors) {
   return output;
 };
 
-scran_vizutils_child.extractXY = function(buffer) {
+scran_utils_viz_child.extractXY = function(buffer) {
   var nobs = buffer.size / 2;
   var x = new Float64Array(nobs);
   var y = new Float64Array(nobs);

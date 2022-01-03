@@ -1,7 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_inputs.js");
-importScripts("./_qc_thresholds.js");
-
 const scran_qc_filter = {};
 
 (function(x) {

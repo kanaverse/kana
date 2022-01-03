@@ -1,7 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_vizutils_parent.js");
-importScripts("./_neighbor_index.js");
-
 const scran_tsne_monitor = {};
 
 (function(x) {
@@ -21,16 +17,16 @@ const scran_tsne_monitor = {};
     }
 
     if (worker == null) {
-      worker = scran_vizutils_parent.createWorker("./tsneWorker.js", "tsne", "t-SNE");
+      worker = scran_utils_viz_parent.createWorker("./tsneWorker.js", "tsne", "t-SNE");
     }
    
     var nn_out = null;
     if (scran_neighbor_index.changed || scran_utils.changedParameters(parameters.perplexity, args.perplexity)) {
       var k = wasm.perplexity_to_k(params.perplexity);
-      nn_out = scran_vizutils_parent.transferNeighbors(wasm, k);
+      nn_out = scran_utils_viz_parent.transferNeighbors(wasm, k);
     }
 
-    scran_vizutils_parent.sendNeighbors(worker, args, nn_out);
+    scran_utils_viz_parent.sendNeighbors(worker, args, nn_out);
 
     parameters = args;
     delete cache.reloaded;

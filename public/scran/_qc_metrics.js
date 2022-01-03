@@ -1,6 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_inputs.js");
-
 const scran_qc_metrics = {};
 
 (function(x) {

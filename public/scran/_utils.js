@@ -1,5 +1,3 @@
-importScripts("./WasmBuffer.js");
-
 const scran_utils = {};
 
 /* Free a cached Wasm-constructed object. */
@@ -58,3 +56,41 @@ scran_utils.wasmifyArray = function(wasm, arr) {
   tmp.set(arr);
   return tmp;
 }
+
+/* Recursively extract buffers from TypedArrays.
+ *
+ * The idea is to extract buffers from an object containing one or more TypedArrays,
+ * to enable transfer of the memory store across workers via postMessage.
+ */
+scran_utils.extractBuffers = function(object, store) {
+  if (Array.isArray(object)) {
+    for (const element of object) {
+      utils.extractBuffers(element, store);
+    }
+  } else if (object.constructor == Object) {
+    for (const [key, element] of Object.entries(object)) {
+      utils.extractBuffers(element, store);
+    }
+  } else if (ArrayBuffer.isView(object)) {
+    if (! (object.buffer instanceof ArrayBuffer)) {
+      throw "only ArrayBuffers should be in the message payload";
+    }
+    store.push(object.buffer);
+  }
+};
+
+/* Post a response after job success. */
+scran_utils.postSuccess = function(wasm, namespace, step, message) {
+  if (namespace.changed) {
+    var info = namespace.results(wasm);
+
+    var transferable = [];
+    utils.extractBuffers(info, transferable);
+
+    postMessage({
+      type: `${step}_DATA`,
+      resp: info,
+      msg: "Success: " + message
+    }, transferable);
+  }
+};
