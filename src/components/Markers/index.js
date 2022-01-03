@@ -138,11 +138,15 @@ const MarkerPlot = () => {
                 setSelectedCluster(0);
             }
 
-            let clusArray = []
-            clusterData?.clusters?.forEach(x => x === 0 ? clusArray.push(1) : clusArray.push(0));
+            let clusArray = [];
+            if(String(selectedCluster).startsWith("cs")) {
+                clusterData?.clusters?.forEach((x,i) => customSelection[selectedCluster].includes(i) ? clusArray.push(1) : clusArray.push(0));
+            } else {
+                clusterData?.clusters?.forEach(x => x === selectedCluster ? clusArray.push(1) : clusArray.push(0));
+            }
             setClusArrayStacked(clusArray);
         }
-    }, [clusterData, customSelection]);
+    }, [clusterData, customSelection, selectedCluster]);
 
     // hook for figure out this vs other cells for stacked histograms
     useEffect(() => {
@@ -175,6 +179,7 @@ const MarkerPlot = () => {
                             setSelectedCluster(tmpselection);
 
                             setMarkerFilter({});
+                            setGene(null);
                         }}>
                         {
                             clusSel.map((x, i) => (
@@ -418,7 +423,9 @@ const MarkerPlot = () => {
                                                     }}
                                                 >
                                                     <Icon icon={'tint'}
-                                                        color={row.gene === gene ? clusterColors[selectedCluster] : ''}
+                                                        color={row.gene === gene ? 
+                                                            String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : ''
+                                                            : ''}
                                                     ></Icon>
                                                 </Button>
                                             </div>
