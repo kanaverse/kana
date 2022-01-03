@@ -22,10 +22,6 @@ const scran_viz_neighbors = {};
     return;
   };
 
-  x.results = function(wasm) {
-    return {};
-  };
-
   /** Public functions (custom) **/
   x.fetchResults = function(wasm) {
     return cache.raw;

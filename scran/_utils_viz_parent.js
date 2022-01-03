@@ -36,38 +36,60 @@ scran_utils_viz_parent.computeNeighbors = function(wasm, k) {
   return output;
 };
 
-scran_utils_viz_parent.createWorker = function(script, name, long_name) {
+scran_utils_viz_parent.createWorker = function(script, cache) {
   var worker = new Worker(script);
-  worker.postMessage({ "cmd": "INIT" });
-  
   worker.onmessage = function (msg) {
-    var type = msg.data.type;
-    if (type == name + "_run_DATA") {
-      var x = msg.data.resp.x;
-      var y = msg.data.resp.y;
-      postMessage({
-        type: name + "_DATA",
-        resp: { "x": x, "y": y },
-        msg: "Success: " + long_name + " run completed"
-      }, [x.buffer, y.buffer]);
-    } else if (type == "error") {
-      throw msg.data.object;
+    var id = msg.data.id;
+    var fun = cache.promises[id];
+    if (msg.data.type == "error") {
+      fun.reject(msg.data.error);
+    } else {
+      fun.resolve(msg.data.data);
     }
+    delete cache.promises[id];
   };
-
   return worker;
 };
 
-scran_utils_viz_parent.postMessage = function(worker, args, nn_out) {
+scran_utils_viz_parent.sendTask = function(worker, payload, cache, transferrable = []) {
+  var i = cache.counter;
+  var p = new Promise((resolve, reject) => {
+    cache.promises[i] = { "resolve": resolve, "reject": reject };
+  });
+  cache.counter++;
+  payload.id = i;
+  worker.postMessage(payload, transferrable);
+  return p;
+};
+
+scran_utils_viz_parent.initializeWorker = function(worker, cache) {
+  return scran_utils_viz_parent.sendTask(worker, { "cmd": "INIT" }, cache);
+};
+
+scran_utils_viz_parent.runWithNeighbors = function(worker, args, nn_out, cache) {
   var run_msg = {
     "cmd": "RUN",
     "params": args 
   };
 
+  var transferrable = [];
   if (nn_out !== null) {
     run_msg.neighbors = nn_out;
-    worker.postMessage(run_msg, [nn_out.runs.buffer, nn_out.indices.buffer, nn_out.distances.buffer]);
+    scran_utils.extractBuffers(nn_out, transferrable);
+  }
+
+  return scran_utils_viz_parent.sendTask(worker, run_msg, cache, transferrable);
+};
+
+scran_utils_viz_parent.retrieveCoordinates = function(worker, cache) {
+  if ("reloaded" in cache) {
+    // Buffers are transferred to the main thread, so we need to make sure we
+    // clone it so that we don't lose our master copy.
+    var copy = cache.reloaded;
+    copy.x = copy.x.slice();
+    copy.y = copy.y.slice();
+    return new Promise(resolve => resolve(copy));
   } else {
-    worker.postMessage(run_msg);
+    return cache.run.then(x => scran_utils_viz_parent.sendTask(worker, { "cmd": "FETCH" }, cache));
   }
 };
