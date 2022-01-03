@@ -20,6 +20,7 @@ importScripts("./_snn_neighbors.js");
 importScripts("./_tsne_monitor.js");
 importScripts("./_umap_monitor.js");
 importScripts("./_score_markers.js");
+importScripts("./_custom_markers.js");
 
 function runAllSteps(wasm, state) {
   scran_inputs.compute(wasm, { "files": state.files });
@@ -92,6 +93,8 @@ function runAllSteps(wasm, state) {
 
   scran_score_markers.compute(wasm, {});
   scran_utils.postSuccess(wasm, scran_score_markers, "marker_detection", "Marker detection complete");
+
+  scran_custom_markers.compute(wasm, {}); // no need to send a signal here, this is just cleaning up.
 }
 
 var loaded;
@@ -179,25 +182,7 @@ onmessage = function (msg) {
     });
   } else if (payload.type == "computeCustomMarkers") {
     loaded.then(wasm => {
-      var custom = utils.initCache("custom_selection");
-      if (!("computed" in custom)) {
-        custom.computed = {};          
-      }
-
-      var id = payload.payload.id;
-      var results = custom.computed[id];
-      if (results === undefined) {
-        var mat = fetchNormalizedMatrix();
-        var buffer = utils.allocateBuffer(wasm, mat.ncol(), "Int32Array", custom, "buffer");
-        var tmp = buffer.array();
-        tmp.fill(0);
-
-        var current_selection = payload.payload.selection; //select contains all indices of cells selected from the tsne plot
-        current_selection.forEach(element => { tmp[element] = 1; });
-
-        custom.computed[id] = wasm.score_markers(mat, buffer.ptr, false, 0); // assumes that we have at least one cell in and outside the selection!
-      }
-
+      scran_custom_markers.addSelection(wasm, payload.payload.id, payload.payload.selection);
       postMessage({
         type: "computeCustomMarkers",
         msg: "Success: COMPUTE_CUSTOM_MARKERS done"
@@ -205,22 +190,19 @@ onmessage = function (msg) {
     });
   } else if (payload.type == "getMarkersForSelection") {
     loaded.then(wasm => {
-      var custom = utils.initCache("custom_selection");
-      let rank_type = payload.payload.rank_type;
-      var id = payload.payload.cluster;
-      var results = custom.computed[id];
-      var resp = formatMarkerStats(wasm, results, rank_type, 1); 
+      var resp = scran_custom_markers.fetchResults(wasm, payload.payload.cluster, payload.payload.rank_type);
+      var transferrable = [];
+      scran_utils.extractBuffers(resp, transferrable);
       postMessage({
         type: "setMarkersForCustomSelection",
         resp: resp,
         msg: "Success: GET_MARKER_GENE done"
-      }, [resp.means.buffer, resp.detected.buffer, resp.lfc.buffer, resp.delta_d.buffer]);
+      }, transferrable);
     });
   } else if (payload.type == "removeCustomMarkers") {
-    var custom = utils.initCache("custom_selection");
-    var id = payload.payload.id;
-    utils.freeCache(custom.computed[id]);
-    delete custom.computed[id];
+    loaded.then(wasm => {
+      scran_custom_markers.removeSelection(Wasm, payload.payload.id);
+    });
   } else {
     console.log("MIM:::msg type incorrect")
   }
