@@ -26,9 +26,13 @@ const scran_snn_cluster = {};
       var graph = scran_snn_graph.fetchGraph(wasm);
       cached.raw = wasm.cluster_snn_graph(graph, args.resolution);
 
-      delete cache.reloaded;
       parameters = args;
       x.changed = true;
+
+      if ("reloaded" in cache) {
+        cache.reloaded.clusters.free();
+        delete cache.reloaded;
+      }
     }
     return;
   };
