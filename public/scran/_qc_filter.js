@@ -46,6 +46,16 @@ const scran_qc_filter = {};
   x.unserialize = function(wasm, saved) {
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
+
+    // Precomputing this for easier retrieval later.
+    var discards = scran_qc_thresholds.fetchDiscardsUNSAFE(wasm);
+    var retained = 0;
+    for (const i of discards) {
+      if (i == 0) {
+        retained++;
+      }
+    }
+    cache.reloaded.retained = retained;
     return;
   };
 
@@ -55,6 +65,14 @@ const scran_qc_filter = {};
       rawCompute(wasm);
     }
     return cache.matrix;    
+  };
+
+  x.fetchRetained = function(wasm) {
+    if ("reloaded" in cache) {
+      return cache.reloaded.retained;
+    } else {
+      return cache.matrix.ncol();
+    }
   };
 
 })(scran_qc_filter);

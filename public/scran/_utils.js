@@ -80,17 +80,12 @@ scran_utils.extractBuffers = function(object, store) {
 };
 
 /* Post a response after job success. */
-scran_utils.postSuccess = function(wasm, namespace, step, message) {
-  if (namespace.changed) {
-    var info = namespace.results(wasm);
-
-    var transferable = [];
-    scran_utils.extractBuffers(info, transferable);
-
-    postMessage({
-      type: `${step}_DATA`,
-      resp: info,
-      msg: "Success: " + message
-    }, transferable);
-  }
+scran_utils.postSuccess = function(info, step, message) {
+  var transferable = [];
+  scran_utils.extractBuffers(info, transferable);
+  postMessage({
+    type: `${step}_DATA`,
+    resp: info,
+    msg: "Success: " + message
+  }, transferable);
 };

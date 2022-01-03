@@ -91,12 +91,14 @@ const scran_inputs = {};
       cache.gene_names = permuteGenes(wasm, genes);
     }
 
+    parameters = args;
+    delete cache.reloaded; 
     x.changed = true;
     return;
   };
 
   x.results = function(wasm) {
-    return {};
+    return { "gene_names": x.fetchGeneNames(wasm) };
   };
 
   /* TODO: figure out whether/how to serialize entire files,
@@ -105,11 +107,14 @@ const scran_inputs = {};
    */
   x.serialize = function(wasm) {
     var contents = {};
+
     if ("reloaded" in cache) {
       contents = contents.reloaded;
     } else {
       contents.gene_names = cache.gene_names;
+      contents.num_cells = cache.matrix.ncol();
     }
+
     return {
       "parameters": parameters,
       "contents": x.results(wasm)        
@@ -135,6 +140,20 @@ const scran_inputs = {};
       return cache.reloaded.gene_names;
     } else {
       return cache.gene_names;
+    }
+  }
+
+  x.fetchDimensions = function(wasm) {
+    if ("reloaded" in cache) {
+      return { 
+        "num_genes": cache.reloaded.gene_names.length,
+        "num_cells": cache.reloaded.num_cells
+      };
+    } else {
+      return { 
+        "num_genes": cache.matrix.nrow(),
+        "num_cells": cache.matrix.ncol()
+      };
     }
   }
 })(scran_inputs);

@@ -27,14 +27,18 @@ onmessage = function(msg) {
   } else {
     loaded.then(wasm => {
       scran_viz_neighbors.compute(wasm, msg.data);
-      scran_utils.postSuccess(wasm, scran_viz_neighbors, "neighbor_reconstruction", "Neighbor results reconstructed");
+      scran_utils.postSuccess(scran_viz_neighbors.results(wasm), "neighbor_reconstruction", "Neighbor results reconstructed");
 
       var params = msg.data.params;
       scran_tsne_init.compute(wasm, { "perplexity": params.perplexity });
-      scran_utils.postSuccess(wasm, scran_tsne_init, "tsne_init", "t-SNE initialized");
+      if (scran_tsne_init.changed) {
+        scran_utils.postSuccess(scran_tsne_init.results(wasm), "tsne_init", "t-SNE initialized");
+      }
 
       scran_tsne_run.compute(wasm, { "iterations": params.iterations });
-      scran_utils.postSuccess(wasm, scran_tsne_run, "tsne_run", "t-SNE run completed");
+      if (scran_tsne_run.changed) {
+        scran_utils.postSuccess(scran_tsne_run.results(wasm), "tsne_run", "t-SNE run completed");
+      }
     })
     .catch(error => {
       postMessage({ 

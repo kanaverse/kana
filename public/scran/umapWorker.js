@@ -27,14 +27,18 @@ onmessage = function(msg) {
   } else {
     loaded.then(wasm => {
       scran_viz_neighbors.compute(wasm, msg.data);
-      scran_utils.postSuccess(wasm, scran_viz_neighbors, "neighbor_reconstruction", "Neighbor results reconstructed");
+      scran_utils.postSuccess(scran_viz_neighbors.results(wasm), "neighbor_reconstruction", "Neighbor results reconstructed");
 
       var params = msg.data.params;
       scran_umap_init.compute(wasm, { "min_dist": params.min_dist, "num_epochs": params.num_epochs });
-      scran_utils.postSuccess(wasm, scran_umap_init, "umap_init", "UMAP initialized");
+      if (scran_umap_init.changed) {
+        scran_utils.postSuccess(scran_umap_init.results(wasm), "umap_init", "UMAP initialized");
+      }
 
       scran_umap_run.compute(wasm, {});
-      scran_utils.postSuccess(wasm, scran_umap_run, "umap_run", "UMAP run completed");
+      if (scran_umap_run.changed) {
+        scran_utils.postSuccess(scran_umap_run.results(wasm), "umap_run", "UMAP run completed");
+      }
     })
     .catch(error => {
       postMessage({ 
