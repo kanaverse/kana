@@ -22,11 +22,11 @@ const scran_tsne_monitor = {};
    
     var nn_out = null;
     if (scran_neighbor_index.changed || scran_utils.changedParameters(parameters.perplexity, args.perplexity)) {
-      var k = wasm.perplexity_to_k(params.perplexity);
-      nn_out = scran_utils_viz_parent.transferNeighbors(wasm, k);
+      var k = wasm.perplexity_to_k(args.perplexity);
+      nn_out = scran_utils_viz_parent.computeNeighbors(wasm, k);
     }
 
-    scran_utils_viz_parent.sendNeighbors(worker, args, nn_out);
+    scran_utils_viz_parent.postMessage(worker, args, nn_out);
 
     parameters = args;
     delete cache.reloaded;

@@ -34,8 +34,8 @@ const scran_pca = {};
       });
 
       // Actually performing the PCA.
-      utils.freeCache(cache.raw);
-      cached.raw = wasm.run_pca(mat, args.num_pcs, true, sub.ptr, false);
+      scran_utils.freeCache(cache.raw);
+      cache.raw = wasm.run_pca(mat, args.num_pcs, true, sub.ptr, false);
 
       x.changed = true;
       parameters = args;
@@ -54,7 +54,7 @@ const scran_pca = {};
     if ("reloaded" in cache) {
       var_exp = cache.reloaded.var_exp.slice();
     } else {
-      var pca_output = cached.raw;
+      var pca_output = cache.raw;
       var_exp = pca_output.variance_explained().slice();
       var total_var = pca_output.total_variance();
       for (var n = 0; n < var_exp.length; n++) {

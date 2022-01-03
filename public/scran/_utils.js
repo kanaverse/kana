@@ -65,11 +65,11 @@ scran_utils.wasmifyArray = function(wasm, arr) {
 scran_utils.extractBuffers = function(object, store) {
   if (Array.isArray(object)) {
     for (const element of object) {
-      utils.extractBuffers(element, store);
+      scran_utils.extractBuffers(element, store);
     }
   } else if (object.constructor == Object) {
     for (const [key, element] of Object.entries(object)) {
-      utils.extractBuffers(element, store);
+      scran_utils.extractBuffers(element, store);
     }
   } else if (ArrayBuffer.isView(object)) {
     if (! (object.buffer instanceof ArrayBuffer)) {
@@ -85,7 +85,7 @@ scran_utils.postSuccess = function(wasm, namespace, step, message) {
     var info = namespace.results(wasm);
 
     var transferable = [];
-    utils.extractBuffers(info, transferable);
+    scran_utils.extractBuffers(info, transferable);
 
     postMessage({
       type: `${step}_DATA`,

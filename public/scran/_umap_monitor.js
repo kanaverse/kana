@@ -22,10 +22,10 @@ const scran_umap_monitor = {};
    
     var nn_out = null;
     if (scran_neighbor_index.changed || scran_utils.changedParameters(parameters.num_neighbors, args.num_neighbors)) {
-      nn_out = scran_utils_viz_parent.transferNeighbors(wasm, args.num_neighbors);
+      nn_out = scran_utils_viz_parent.computeNeighbors(wasm, args.num_neighbors);
     }
 
-    scran_utils_viz_parent.sendNeighbors(worker, args, nn_out);
+    scran_utils_viz_parent.postMessage(worker, args, nn_out);
 
     parameters = args;
     delete cache.reloaded;

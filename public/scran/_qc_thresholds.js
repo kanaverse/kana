@@ -33,14 +33,15 @@ const scran_qc_thresholds = {};
         "proportion": cache.reloaded.proportion
       };
     } else {
+      var obj = cache.raw;
       data = {
-        "sums": filter_output.thresholds_sums()[0],
-        "detected": filter_output.thresholds_detected()[0],
-        "proportion": filter_output.thresholds_proportions(0)[0] // TODO: generalize...
+        "sums": obj.thresholds_sums()[0],
+        "detected": obj.thresholds_detected()[0],
+        "proportion": obj.thresholds_proportions(0)[0] // TODO: generalize...
       };
     }
     return data;
-  });
+  };
 
   x.serialize = function(wasm) {
     var contents = x.results();

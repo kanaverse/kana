@@ -13,11 +13,11 @@ const scran_model_gene_var = {};
     if (!scran_normalization.changed && !scran_utils.changedParameters(parameters, args)) {
       x.changed = false;
     } else {
-      var mat = fetchNormalizedMatrix(wasm);
-      cached.raw = wasm.model_gene_var(mat, false, 0, args.span);
+      var mat = scran_normalization.fetchNormalizedMatrix(wasm);
+      cache.raw = wasm.model_gene_var(mat, false, 0, args.span);
 
-      cached.sorted_residuals = model_output.residuals(0).slice(); // a separate copy.
-      cached.sorted_residuals.sort();
+      cache.sorted_residuals = cache.raw.residuals(0).slice(); // a separate copy.
+      cache.sorted_residuals.sort();
       
       parameters = args;
       delete cache.reloaded;

@@ -11,7 +11,7 @@ const scran_qc_metrics = {};
   /** Private functions **/
   function rawCompute(wasm) {
     scran_utils.freeCache(cache.raw);
-    var mat = fetchCountMatrix();
+    var mat = scran_inputs.fetchCountMatrix();
 
     // Testing:
     var nsubsets = 1;

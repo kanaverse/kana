@@ -1,7 +1,7 @@
 const scran_utils_viz_parent = {};
 
 scran_utils_viz_parent.computeNeighbors = function(wasm, k) {
-  var nn_index = scran_neighbor_index.fetchNeighborIndex(wasm);
+  var nn_index = scran_neighbor_index.fetchIndex(wasm);
 
   var output = { "num_obs": nn_index.num_obs() };
   var results = null, rbuf = null, ibuf = null, dbuf = null;
@@ -58,7 +58,7 @@ scran_utils_viz_parent.createWorker = function(script, name, long_name) {
   return worker;
 };
 
-scran_utils_viz_parent.sendNeighbors = function(worker, args, nn_out) {
+scran_utils_viz_parent.postMessage = function(worker, args, nn_out) {
   var run_msg = {
     "cmd": "RUN",
     "params": args 
