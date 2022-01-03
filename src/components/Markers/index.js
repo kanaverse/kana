@@ -137,21 +137,17 @@ const MarkerPlot = () => {
             if (selectedCluster == null) {
                 setSelectedCluster(0);
             }
-
-            let clusArray = [];
-            if(String(selectedCluster).startsWith("cs")) {
-                clusterData?.clusters?.forEach((x,i) => customSelection[selectedCluster].includes(i) ? clusArray.push(1) : clusArray.push(0));
-            } else {
-                clusterData?.clusters?.forEach(x => x === selectedCluster ? clusArray.push(1) : clusArray.push(0));
-            }
-            setClusArrayStacked(clusArray);
         }
     }, [clusterData, customSelection, selectedCluster]);
 
     // hook for figure out this vs other cells for stacked histograms
     useEffect(() => {
-        let clusArray = []
-        clusterData?.clusters?.forEach(x => x === selectedCluster ? clusArray.push(1) : clusArray.push(0));
+        var clusArray = [];
+        if(String(selectedCluster).startsWith("cs")) {
+            clusterData?.clusters?.forEach((x,i) => customSelection[selectedCluster].includes(i) ? clusArray.push(1) : clusArray.push(0));
+        } else {
+            clusterData?.clusters?.forEach(x => x === selectedCluster ? clusArray.push(1) : clusArray.push(0));
+        }
         setClusArrayStacked(clusArray);
     }, [selectedCluster]);
 
@@ -432,8 +428,8 @@ const MarkerPlot = () => {
                                         </div>
                                         <Collapse isOpen={rowexp}>
                                             {/* <Histogram data={rowExpr} color={clusterColors[selectedCluster]} /> */}
-                                            {clusArrayStacked && <StackedHistogram data={rowExpr}
-                                                color={clusterColors[selectedCluster]}
+                                            {rowExpr && <StackedHistogram data={rowExpr}
+                                                color={String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : clusterColors[selectedCluster]}
                                                 clusters={clusArrayStacked} />}
                                         </Collapse>
                                     </div>
