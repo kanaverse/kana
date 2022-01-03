@@ -1,25 +1,23 @@
-var vizutils = {};
+const scran_utils_viz_child = {};
 
-vizutils.recreateNeighbors = function(wasm, neighbors) {
-  var step = "neighbor_results";
-  var nn_cached = utils.initCache(step);
-  utils.freeCache(nn_cached["raw"]);
-
+scran_utils_viz_child.recreateNeighbors = function(wasm, neighbors) {
+  var output = null;
   var rbuf = null;
   var ibuf = null;
   var dbuf = null;
+
   try {
     var num_obs = neighbors.num_obs;
     var size = neighbors.size;
 
     rbuf = new WasmBuffer(wasm, num_obs, "Int32Array");
-    rbuf.array().set(neighbors.runs);
+    rbuf.set(neighbors.runs);
     ibuf = new WasmBuffer(wasm, size, "Int32Array");
-    ibuf.array().set(neighbors.indices);
+    ibuf.set(neighbors.indices);
     dbuf = new WasmBuffer(wasm, size, "Float64Array");
-    dbuf.array().set(neighbors.distances);
+    dbuf.set(neighbors.distances);
 
-    nn_cached["raw"] = new wasm.NeighborResults(neighbors.num_obs, rbuf.ptr, ibuf.ptr, dbuf.ptr);
+    output = new wasm.NeighborResults(neighbors.num_obs, rbuf.ptr, ibuf.ptr, dbuf.ptr);
   } finally {
     if (rbuf !== null) {
       rbuf.free();
@@ -32,11 +30,10 @@ vizutils.recreateNeighbors = function(wasm, neighbors) {
     }
   }
 
-  utils.upstream.add(step);
-  return;
+  return output;
 };
 
-vizutils.extractXY = function(buffer) {
+scran_utils_viz_child.extractXY = function(buffer) {
   var nobs = buffer.size / 2;
   var x = new Float64Array(nobs);
   var y = new Float64Array(nobs);
@@ -46,6 +43,6 @@ vizutils.extractXY = function(buffer) {
     x[i] = buf[2*i];
     y[i] = buf[2*i + 1];
   }
- 
+
   return { "x": x, "y": y };
 }
