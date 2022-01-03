@@ -119,6 +119,8 @@ scran_utils_markers.fetchGroupResults = function(wasm, results, reloaded, rank_t
     stat_delta_d = reorder(results.delta_detected(group, 1));
   }
 
+  /** TODO: move this to the main thread to avoid having to 
+   * continually (un)serialize a large string array. */
   var genes = scran_inputs.fetchGeneNames(wasm);
   var new_genes = [];
   for (const o of ordering) {
@@ -132,20 +134,4 @@ scran_utils_markers.fetchGroupResults = function(wasm, results, reloaded, rank_t
     "lfc": stat_lfc,
     "delta_detected": stat_delta_d
   };
-}
-
-/*
- * Free all marker results created from custom selections, so
- * as to avoid memory leaks.
- */
-
-scran_utils_markers.freeCustomMarkers = function() {
-  var custom = utils.initCache("custom_selection");
-  if ("selection" in custom) {
-    for (const [key, val] of custom.selection.entries()) {
-      utils.freeCache(val);
-    }
-    custom.selection = {};
-  }
-}
-
+};
