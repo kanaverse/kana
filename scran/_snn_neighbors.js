@@ -1,6 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_neighbor_index.js");
-
 const scran_snn_neighbors = {};
 
 (function(x) {
@@ -12,9 +9,9 @@ const scran_snn_neighbors = {};
   x.changed = false;
 
   /** Private functions **/
-  function rawCompute(wasm) {
+  function rawCompute(wasm, args) {
     scran_utils.freeCache(cache.raw);
-    var nn_index = scran_neighbor_index.fetchNeighborIndex(wasm);
+    var nn_index = scran_neighbor_index.fetchIndex(wasm);
     cache.raw = wasm.find_nearest_neighbors(nn_index, args.k);
     delete cache.reloaded;
     return;
@@ -25,7 +22,7 @@ const scran_snn_neighbors = {};
     if (!scran_neighbor_index.changed && !scran_utils.changedParameters(parameters, args)) {
       x.changed = false;
     } else {
-      rawCompute(wasm);
+      rawCompute(wasm, args);
       parameters = args;
       x.changed = true;
     }
@@ -52,7 +49,7 @@ const scran_snn_neighbors = {};
   /** Public functions (custom) **/
   x.fetchNeighbors = function(wasm) {
     if ("reloaded" in cache) {
-      rawCompute(wasm);
+      rawCompute(wasm, parameters);
     }
     return cache.raw;
   };

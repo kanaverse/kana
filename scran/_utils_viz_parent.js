@@ -1,10 +1,7 @@
-importScripts("./_utils.js");
-importScripts("./_neighbor_index.js");
+const scran_utils_viz_parent = {};
 
-const scran_vizutils_parent = {};
-
-scran_vizutils_parent.computeNeighbors = function(wasm, k) {
-  var nn_index = scran_neighbor_index.fetchNeighborIndex(wasm);
+scran_utils_viz_parent.computeNeighbors = function(wasm, k) {
+  var nn_index = scran_neighbor_index.fetchIndex(wasm);
 
   var output = { "num_obs": nn_index.num_obs() };
   var results = null, rbuf = null, ibuf = null, dbuf = null;
@@ -39,13 +36,13 @@ scran_vizutils_parent.computeNeighbors = function(wasm, k) {
   return output;
 };
 
-scran_vizutils_parent.createWorker = function(script, name, long_name) {
-  var worker = new Worker("./umapWorker.js");
+scran_utils_viz_parent.createWorker = function(script, name, long_name) {
+  var worker = new Worker(script);
   worker.postMessage({ "cmd": "INIT" });
   
   worker.onmessage = function (msg) {
     var type = msg.data.type;
-    if (type == "run_" + name + "_DATA") {
+    if (type == name + "_run_DATA") {
       var x = msg.data.resp.x;
       var y = msg.data.resp.y;
       postMessage({
@@ -61,7 +58,7 @@ scran_vizutils_parent.createWorker = function(script, name, long_name) {
   return worker;
 };
 
-scran_vizutils_parent.sendNeighbors = function(worker, args, nn_out) {
+scran_utils_viz_parent.postMessage = function(worker, args, nn_out) {
   var run_msg = {
     "cmd": "RUN",
     "params": args 

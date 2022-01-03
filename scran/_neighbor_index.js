@@ -1,6 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_pca.js");
-
 const scran_neighbor_index = {};
 
 (function(x) {
@@ -12,7 +9,7 @@ const scran_neighbor_index = {};
   x.changed = false;
 
   /** Private functions **/
-  function rawCompute(wasm) {
+  function rawCompute(wasm, args) {
     scran_utils.freeCache(cache.raw);
     var pcs = scran_pca.fetchPCsOFFSET(wasm);
     cache.raw = wasm.build_neighbor_index(pcs.offset, pcs.num_pcs, pcs.num_obs, args.approximate);
@@ -25,7 +22,7 @@ const scran_neighbor_index = {};
     if (!scran_pca.changed && !scran_utils.changedParameters(parameters, args)) {
       x.changed = false;
     } else {
-      rawCompute(wasm);
+      rawCompute(wasm, args);
       parameters = args;
       x.changed = true;
     }
@@ -52,7 +49,7 @@ const scran_neighbor_index = {};
   /** Public functions (custom) **/
   x.fetchIndex = function(wasm) {
     if ("reloaded" in cache) {
-      rawCompute(wasm);
+      rawCompute(wasm, parameters);
     }
     return cache.raw;
   };

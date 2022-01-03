@@ -1,8 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_qc_metrics.js");
-importScripts("./_qc_thresholds.js");
-importScripts("./_qc_filter.js");
-
 const scran_normalization = {};
 
 (function(x) {
@@ -16,7 +11,7 @@ const scran_normalization = {};
   /** Private functions **/
   function rawCompute(wasm) {
     var mat = scran_qc_filter.fetchFilteredMatrix(wasm);
-    var sf_buffer = utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", cache);
+    var sf_buffer = scran_utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", cache);
 
     // Better not have any more allocations in between now and filling of size_factors!
     var sums = scran_qc_metrics.fetchSumsUNSAFE(wasm);

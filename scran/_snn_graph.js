@@ -1,6 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_snn_neighbors.js");
-
 const scran_snn_graph = {};
 
 (function(x) {
@@ -12,10 +9,10 @@ const scran_snn_graph = {};
   x.changed = false;
 
   /** Private functions **/
-  function rawCompute(wasm) {
+  function rawCompute(wasm, args) {
     scran_utils.freeCache(cache.raw);
     var neighbors = scran_snn_neighbors.fetchNeighbors(wasm);
-    cached.raw = wasm.build_snn_graph(neighbors, args.scheme);
+    cache.raw = wasm.build_snn_graph(neighbors, args.scheme);
     delete cache.reloaded;
     return;
   }
@@ -25,7 +22,7 @@ const scran_snn_graph = {};
     if (!scran_snn_neighbors.changed && !scran_utils.changedParameters(parameters, args)) {
       x.changed = false;
     } else {
-      rawCompute(wasm);
+      rawCompute(wasm, args);
       parameters = args;
       x.changed = true;
     }
@@ -52,7 +49,7 @@ const scran_snn_graph = {};
   /** Public functions (custom) **/
   x.fetchGraph = function(wasm) {
     if ("reloaded" in cache) {
-      rawCompute(wasm);
+      rawCompute(wasm, parameters);
     }
     return cache.raw;
   };

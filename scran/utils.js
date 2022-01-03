@@ -1,17 +1,5 @@
 var utils = {};
 
-utils.cached = {};
-utils.parameters = {};
-utils.upstream = new Set();
-
-/* Creates the cache for a given step. */
-utils.initCache = function(key) {
-  if (! (key in utils.cached)) {
-    utils.cached[key] = {};
-  }
-  return utils.cached[key];
-};
-
 /* Free a cached Wasm-constructed object. */
 utils.freeCache = function(object) {
   if (object !== undefined && object !== null) {
@@ -19,6 +7,13 @@ utils.freeCache = function(object) {
   }
   return;
 };
+
+/* Compare two parameter sets. */
+utils.compareParameters = function(x, y) {
+    return JSON.stringify(x) == JSON.stringify(y);
+};
+
+/* Indicate whether 
 
 /* Decide whether to run a step.
  *
@@ -34,7 +29,7 @@ utils.freeCache = function(object) {
  * The return value of `body` should be an object as an extra `$step` property is
  * added with the name of the step for convenience. 
  */ 
-utils.runStep = function(step, latest, depends, body) {
+utils.runStep = function(step, previous, latest, depends, body) {
   var previous = utils.parameters[step];
   var changed = true;
   var upchanged = false;
@@ -138,40 +133,4 @@ utils.postSuccess = function(info, message) {
   }
 }
 
-/* Allocate a cached buffer on the Wasm heap.
- *
- * Creates a `WasmBuffer` in the cache if one does not already exist with the
- * desired size and type. This avoids unnecessary reallocations if an
- * appropriate buffer was already created from a previous run.
- */
-utils.allocateBuffer = function(wasm, size, type, cache, name = "buffer") {
-  var reallocate = true;
-  if (name in cache) {
-    var candidate = cache[name];
-    if (candidate.size != size || candidate.type != type) {
-      candidate.free();
-    } else {
-      reallocate = false;
-    }
-  }
 
-  if (reallocate) {
-    cache[name] = new WasmBuffer(wasm, size, type);
-  }
-  return cache[name];
-};
-
-// Calculate min max of an array
-utils.getMinMax = (arr) => {
-  var max = -Number.MAX_VALUE,
-      min = Number.MAX_VALUE;
-  arr.forEach(function (x) {
-      if (max < x) {
-          max = x;
-      }
-      if (min > x) {
-          min = x;
-      }
-  });
-  return [min, max];
-}

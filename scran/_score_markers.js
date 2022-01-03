@@ -1,7 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_normalization.js");
-importScripts("./_choose_clustering.js");
-
 const scran_score_markers = {};
 
 (function(x) {

@@ -1,6 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_snn_graph.js");
-
 const scran_snn_cluster = {};
 
 (function(x) {
@@ -13,7 +10,7 @@ const scran_snn_cluster = {};
 
   /** Private functions (standard) **/
   function fetchClusters(wasm) {
-    var chosen = clustering.best();
+    var chosen = cache.raw.best();
     return cache.raw.membership(chosen);
   }
 
@@ -24,7 +21,7 @@ const scran_snn_cluster = {};
     } else {
       scran_utils.freeCache(cache.raw);
       var graph = scran_snn_graph.fetchGraph(wasm);
-      cached.raw = wasm.cluster_snn_graph(graph, args.resolution);
+      cache.raw = wasm.cluster_snn_graph(graph, args.resolution);
 
       parameters = args;
       x.changed = true;

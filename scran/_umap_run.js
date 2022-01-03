@@ -1,7 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_vizutils_child.js");
-importScripts("./_umap_init.js");
-
 const scran_umap_run = {};
 
 (function(x) {
@@ -14,7 +10,7 @@ const scran_umap_run = {};
 
   /** Public functions (standard) **/
   x.compute = function(wasm, args) {
-    if (!scran_umap_neighbors.changed && !scran_utils.changedParameters(args, parameters)) {
+    if (!scran_umap_init.changed && !scran_utils.changedParameters(args, parameters)) {
       x.changed = false;
     } else {
       var init = scran_umap_init.cloneInit(wasm);
@@ -23,7 +19,7 @@ const scran_umap_run = {};
       try {
         cache.total = init.num_epochs();
         var delay = 15;
-        for (; init.epoch() < total; ) {
+        for (; init.epoch() < cache.total; ) {
           wasm.run_umap(init, delay, buffer.ptr);
         }
       } finally {
@@ -37,7 +33,7 @@ const scran_umap_run = {};
   };
 
   x.results = function(wasm) {
-    var xy = scran_vizutils_child.extractXY(cache.buffer);
+    var xy = scran_utils_viz_child.extractXY(cache.buffer);
     return {
       "x": xy.x,
       "y": xy.y,

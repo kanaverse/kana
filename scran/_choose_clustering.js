@@ -1,6 +1,3 @@
-importScripts("./_utils.js");
-importScripts("./_snn_cluster.js");
-
 const scran_choose_clustering = {};
 
 (function(x) {
@@ -49,7 +46,7 @@ const scran_choose_clustering = {};
   /** Public functions (custom) **/
   x.fetchClustersOFFSET = function(wasm) {
 //    if (parameters.method == "snn_graph") {
-      return scran_snn_graph.fetchClustersOFFSET(wasm); // really the only option right now.
+      return scran_snn_cluster.fetchClustersOFFSET(wasm); // really the only option right now.
 //  }
   };
-})(scran_snn_cluster);
+})(scran_choose_clustering);
