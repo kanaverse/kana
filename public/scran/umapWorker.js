@@ -1,46 +1,10 @@
 importScripts("./WasmBuffer.js");
-importScripts("./utils.js");
-importScripts("./vizutils.js");
+importScripts("./_utils.js");
+importScripts("./_utils_viz_child.js");
 
-function initializeUmap(wasm, args) {
-  var step = "init_umap";
-  return utils.runStep(step, args, ["neighbor_results"], () => {
-    var init_cache = utils.initCache(step);
-    utils.freeCache(init_cache["raw"]);
-
-    var nn_umap = utils.cached.neighbor_results.raw;
-    var umap_buffer = utils.allocateBuffer(wasm, nn_umap.num_obs() * 2, "Float64Array", init_cache);
-    init_cache.raw = wasm.initialize_umap(nn_umap, args.num_epochs, args.min_dist, umap_buffer.ptr);
-
-    return {};
-  });
-}
-
-function runUmap(wasm, args) {
-  var step = "run_umap";
-  return utils.runStep(step, args, ["init_umap"], () => {
-    var buffer = utils.cached.init_umap.buffer;
-
-    var total;
-    var init_umap_copy = utils.cached.init_umap.raw.deepcopy();
-    try {
-      total = init_umap_copy.num_epochs();
-      var delay = 15;
-      for (; init_umap_copy.epoch() < total; ) {
-        wasm.run_umap(init_umap_copy, delay, buffer.ptr);
-      }
-    } finally {
-      init_umap_copy.delete();
-    }
-
-    var xy = vizutils.extractXY(buffer);
-    return {
-      "x": xy.x,
-      "y": xy.y,
-      "iterations": total
-    };
-  });
-}
+importScripts("./_viz_neighbors.js");
+importScripts("./_umap_init.js");
+importScripts("./_umap_run.js");
 
 var loaded;
 onmessage = function(msg) {
@@ -61,37 +25,21 @@ onmessage = function(msg) {
     });
 
   } else {
-    utils.upstream.clear();
-
     loaded.then(wasm => {
-      utils.upstream.clear();
-      if (msg.data.neighbors !== undefined) {
-        vizutils.recreateNeighbors(wasm, msg.data.neighbors);
-      }
+      scran_viz_neighbors.compute(wasm, msg.data);
+      scran_utils.postSuccess(wasm, scran_viz_neighbors, "neighbor_reconstruction", "Neighbor results reconstructed");
 
       var params = msg.data.params;
-      var init_out = utils.processOutput(initializeUmap, wasm, { "min_dist": params.min_dist, "num_epochs": params.num_epochs });
-      if (init_out !== null) {
-        postMessage({
-            type: `${init_out["$step"]}_DATA`,
-            resp: init_out,
-            msg: "Success: UMAP initialized"
-        });
-      }
+      scran_umap_init.compute(wasm, { "min_dist": params.min_dist, "num_epochs": params.num_epochs });
+      scran_utils.postSuccess(wasm, scran_umap_init, "umap_init", "UMAP initialized");
 
-      var run_out = utils.processOutput(runUmap, wasm, {});
-      if (run_out !== null) {
-        postMessage({
-            type: `${run_out["$step"]}_DATA`,
-            resp: run_out,
-            msg: "Success: UMAP run completed"
-        }, [run_out.x.buffer, run_out.y.buffer]);
-      }
+      scran_umap_run.compute(wasm, {});
+      scran_utils.postSuccess(wasm, scran_umap_run, "umap_run", "UMAP run completed");
     })
     .catch(error => {
       postMessage({ 
-          "type": "error",
-          "object": error
+        "type": "error",
+        "object": error
       });
     })
   }

@@ -12,7 +12,7 @@ const scran_viz_neighbors = {};
   x.compute = function(wasm, args) {
     if ("neighbors" in args) {
       scran_utils.freeCache(cache.raw);
-      cache.raw = scran_utils_viz_child.recreateNeighbors(wasm, msg.data.neighbors);
+      cache.raw = scran_utils_viz_child.recreateNeighbors(wasm, args.neighbors);
 
       // Don't set parameters = args here, there's no point.
       x.changed = true;

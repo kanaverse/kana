@@ -37,12 +37,12 @@ scran_utils_viz_parent.computeNeighbors = function(wasm, k) {
 };
 
 scran_utils_viz_parent.createWorker = function(script, name, long_name) {
-  var worker = new Worker("./umapWorker.js");
+  var worker = new Worker(script);
   worker.postMessage({ "cmd": "INIT" });
   
   worker.onmessage = function (msg) {
     var type = msg.data.type;
-    if (type == "run_" + name + "_DATA") {
+    if (type == name + "_run_DATA") {
       var x = msg.data.resp.x;
       var y = msg.data.resp.y;
       postMessage({
