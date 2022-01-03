@@ -143,31 +143,8 @@ onmessage = function (msg) {
   } else if (payload.type == "getGeneExpression") {
     loaded.then(wasm => {
       let row = payload.payload.gene;
-      var t0 = performance.now();
-      var mat = fetchNormalizedMatrix();
-      var t1 = performance.now();
-      var gExp_cached = utils.initCache("fetchGeneExpr");
-      // try {
-      var buffer = utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", gExp_cached);
-
-      // find position in genes inputs
-      let input_row_idx = utils.cached.inputs.genes.indexOf(row);
-      // find position in permutation matrix.
-      let row_idx = utils.cached.normalization.genes.indexOf(input_row_idx);
-
-      var vec = null;
-      if (row_idx != -1) {
-        mat.row(row_idx, buffer.ptr)
-        vec = JSON.parse(JSON.stringify(buffer.array()));
-        postMessage({
-          type: "setGeneExpression",
-          resp: {
-            gene: row,
-            expr: vec
-          },
-          msg: "Success: GET_GENE_EXPRESSION done"
-        });
-      } else {
+      let row_idx = scran_inputs.fetchGeneNames(wasm).indexOf(row);
+      if (row_idx == -1) {
         postMessage({
           type: "geneExpression",
           resp: {
@@ -175,10 +152,17 @@ onmessage = function (msg) {
           },
           msg: "Fail: GET_GENE_EXPRESSION"
         });
+      } else {
+        var vec = scran_normalization.fetchExpression(wasm, row_idx);
+        postMessage({
+          type: "setGeneExpression",
+          resp: {
+            gene: row,
+            expr: vec
+          },
+          msg: "Success: GET_GENE_EXPRESSION done"
+        }, [vec.buffer]);
       }
-      // } finally {
-      // buffer.free();
-      // }
     });
   } else if (payload.type == "computeCustomMarkers") {
     loaded.then(wasm => {

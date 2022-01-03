@@ -65,6 +65,7 @@ scran_utils_markers.fetchGroupResults = function(wasm, results, reloaded, rank_t
     ranking = reloaded[group][effect][summary];
   } else {
     var index = 1;
+    var increasing = false;
     if (rank_type.match(/-min$/)) {
         index = 0;
     } else if (rank_type.match(/-min-rank$/)) {

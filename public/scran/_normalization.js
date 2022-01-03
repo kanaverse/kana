@@ -11,14 +11,14 @@ const scran_normalization = {};
   /** Private functions **/
   function rawCompute(wasm) {
     var mat = scran_qc_filter.fetchFilteredMatrix(wasm);
-    var sf_buffer = scran_utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", cache);
+    var buffer = scran_utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", cache);
 
     // Better not have any more allocations in between now and filling of size_factors!
     var sums = scran_qc_metrics.fetchSumsUNSAFE(wasm);
     var discards = scran_qc_thresholds.fetchDiscardsUNSAFE(wasm);
 
     // Reusing the totals computed earlier.
-    var size_factors = sf_buffer.array();
+    var size_factors = buffer.array();
     var j = 0;
     for (var i = 0; i < discards.length; ++i) {
       if (!discards[i]) {
@@ -32,7 +32,7 @@ const scran_normalization = {};
     }
 
     scran_utils.freeCache(cache.matrix);
-    cache.matrix = wasm.log_norm_counts(mat, true, sf_buffer.ptr, false, 0);
+    cache.matrix = wasm.log_norm_counts(mat, true, buffer.ptr, false, 0);
 
     delete cache.reloaded;
     return;
@@ -73,5 +73,11 @@ const scran_normalization = {};
       rawCompute(wasm);
     }
     return cache.matrix;
+  };
+
+  x.fetchExpression = function(wasm, index) {
+    var buffer = scran_utils.allocateBuffer(wasm, cache.matrix.ncol(), "Float64Array", cache); // re-using the buffer.
+    cache.matrix.row(index, buffer.ptr)
+    return buffer.array().slice();    
   };
 })(scran_normalization);
