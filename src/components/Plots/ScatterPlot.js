@@ -345,6 +345,10 @@ const DimPlot = () => {
                                                                     setClusterColors(tmpcolors);
 
                                                                     setDelCustomSelection(x);
+
+                                                                    if (clusHighlight === x) {
+                                                                        setClusHighlight(null);
+                                                                    }
                                                                 }}></Icon>
                                                         </div>
                                                     </li>)
