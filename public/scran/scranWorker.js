@@ -80,9 +80,10 @@ var runStepDimRed = async function (mode, wasm, namespace, step, message, state,
 
 function runAllSteps(wasm, state, mode = "run") {
   runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded", state,
-    () => { 
-      return { 
-       "files": state.files 
+    () => {
+      return {
+        "format": state.files.format,
+        "files": state.files.files
       };
     }
   );
@@ -92,7 +93,7 @@ function runAllSteps(wasm, state, mode = "run") {
   runStep(mode, wasm, scran_qc_thresholds, "quality_control_thresholds", "QC thresholds computed", state,
     () => {
       return {
-        "nmads": state.params.qc["qc-nmads"] 
+        "nmads": state.params.qc["qc-nmads"]
       };
     }
   );
@@ -113,7 +114,7 @@ function runAllSteps(wasm, state, mode = "run") {
     () => {
       return {
         "num_hvgs": state.params.pca["pca-hvg"],
-        "num_pcs": state.params.pca["pca-npc"] 
+        "num_pcs": state.params.pca["pca-npc"]
       };
     }
   );
@@ -121,7 +122,7 @@ function runAllSteps(wasm, state, mode = "run") {
   runStep(mode, wasm, scran_neighbor_index, "neighbor_index", "Neighbor search index constructed", state,
     () => {
       return {
-        "approximate": state.params.cluster["clus-approx"] 
+        "approximate": state.params.cluster["clus-approx"]
       };
     }
   );
@@ -149,7 +150,7 @@ function runAllSteps(wasm, state, mode = "run") {
   runStep(mode, wasm, scran_snn_neighbors, "snn_find_neighbors", "Neighbor search for clustering complete", state,
     () => {
       return {
-        "k": state.params.cluster["clus-k"] 
+        "k": state.params.cluster["clus-k"]
       };
     }
   );
@@ -157,7 +158,7 @@ function runAllSteps(wasm, state, mode = "run") {
   runStep(mode, wasm, scran_snn_graph, "snn_build_graph", "Shared nearest neighbor graph constructed", state,
     () => {
       return {
-        "scheme": state.params.cluster["clus-scheme"] 
+        "scheme": state.params.cluster["clus-scheme"]
       };
     }
   );
@@ -165,7 +166,7 @@ function runAllSteps(wasm, state, mode = "run") {
   runStep(mode, wasm, scran_snn_cluster, "snn_cluster_graph", "Community detection from SNN graph complete", state,
     () => {
       return {
-        "resolution": state.params.cluster["clus-res"] 
+        "resolution": state.params.cluster["clus-res"]
       };
     }
   );
@@ -173,7 +174,7 @@ function runAllSteps(wasm, state, mode = "run") {
   runStep(mode, wasm, scran_choose_clustering, "choose_clustering", "Clustering of interest chosen", state,
     () => {
       return {
-        "method": state.params.cluster["clus-method"] 
+        "method": state.params.cluster["clus-method"]
       };
     }
   );
@@ -208,19 +209,19 @@ onmessage = function (msg) {
     });
   }
   // 
-  else if(payload.type == "EXPORT") {
+  else if (payload.type == "EXPORT") {
     loaded.then(wasm => {
       let state = {};
-      runAllSteps(wasm, state, mode="serialize")
-      .then(x => {
-        var output = scran_utils_serialize.save(state);
-        console.log(output.byteLength);
-        postMessage({
-          type: "exportState",
-          resp: output,
-          msg: "Success: application state exported"
-        }, [output]);
-      });
+      runAllSteps(wasm, state, mode = "serialize")
+        .then(x => {
+          var output = scran_utils_serialize.save(state);
+          console.log(output.byteLength);
+          postMessage({
+            type: "exportState",
+            resp: output,
+            msg: "Success: application state exported"
+          }, [output]);
+        });
     });
   }
   // custom events from UI
