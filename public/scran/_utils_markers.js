@@ -2,27 +2,27 @@ const scran_utils_markers = {};
 
 scran_utils_markers.serializeGroupStats = function(obj, group) {
   return {
-    "means": obj.means(i, 0).slice(),
-    "detected": obj.detected(i, 0).slice(),
+    "means": obj.means(group, 0).slice(),
+    "detected": obj.detected(group, 0).slice(),
     "lfc": {
-      "min": obj.lfc(i, 0).slice(),
-      "mean": obj.lfc(i, 1).slice(),
-      "min-rank": obj.lfc(i, 4).slice()
+      "min": obj.lfc(group, 0).slice(),
+      "mean": obj.lfc(group, 1).slice(),
+      "min-rank": obj.lfc(group, 4).slice()
     },
     "delta_detected": {
-      "min": obj.delta_detected(i, 0).slice(),
-      "mean": obj.delta_detected(i, 1).slice(),
-      "min-rank": obj.delta_detected(i, 4).slice()
+      "min": obj.delta_detected(group, 0).slice(),
+      "mean": obj.delta_detected(group, 1).slice(),
+      "min-rank": obj.delta_detected(group, 4).slice()
     },
     "cohen": {
-      "min": obj.cohen(i, 0).slice(),
-      "mean": obj.cohen(i, 1).slice(),
-      "min-rank": obj.cohen(i, 4).slice()
+      "min": obj.cohen(group, 0).slice(),
+      "mean": obj.cohen(group, 1).slice(),
+      "min-rank": obj.cohen(group, 4).slice()
     },
     "auc": {
-      "min": obj.auc(i, 0).slice(),
-      "mean": obj.auc(i, 1).slice(),
-      "min-rank": obj.auc(i, 4).slice()
+      "min": obj.auc(group, 0).slice(),
+      "mean": obj.auc(group, 1).slice(),
+      "min-rank": obj.auc(group, 4).slice()
     }
   };
 };
