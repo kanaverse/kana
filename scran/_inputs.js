@@ -33,13 +33,23 @@ const scran_inputs = {};
     return output;
   }
 
-  /** Public functions (standard) **/
-  x.compute = function(wasm, args) {
-    // Skipping if we don't see a change in the relevant files.
+  function dummyGenes(nrows) {
+    let genes = []
+    for (let i = 0; i < nrows; i++) {
+      genes.push(`Gene ${i + 1}`);
+    }
+    return genes;
+  }
+
+  function loadMatrixMarket(wasm, input) {
+    var mtx_files = input[0];
+    var barcode_file = input[1];
+    var genes_file = input[2];
+
     var mock_args = { 
-      "matrix": mockFiles(args.files[0]),
-      "barcodes": mockFiles(args.files[1]),
-      "genes": mockFiles(args.files[2])
+      "matrix": mockFiles(mtx_files),
+      "barcodes": mockFiles(barcode_file),
+      "genes": mockFiles(genes_file)
     }
 
     if (!scran_utils.changedParameters(mock_args, parameters)) {
@@ -47,11 +57,7 @@ const scran_inputs = {};
         return;
     }
 
-    // Going through the loading process.
-    var input = args.files;
-    var mtx_files = input[0];
     scran_utils.freeCache(cache.matrix);
-
     var reader = new FileReaderSync();
     var file_size = mtx_files[0].size;
     var contents = reader.readAsArrayBuffer(mtx_files[0]);
@@ -67,9 +73,9 @@ const scran_inputs = {};
       buffer.free();
     }
 
+    /** TODO: support Gzipped TSV files here. **/
     const tsv = d3.dsvFormat("\t");
 
-    var barcode_file = input[1];
     if (barcode_file.length > 0) {
       var reader = new FileReaderSync();
       var file_size = barcode_file[0].size;
@@ -77,23 +83,67 @@ const scran_inputs = {};
       cache.barcodes = tsv.parse(buffer);
     }
 
-    var genes_file = input[2];
     if (genes_file.length > 0) {
       var reader = new FileReaderSync();
       var file_size = genes_file[0].size;
       var buffer = reader.readAsText(genes_file[0]);
-      cache.gene_names = permuteGenes(wasm, tsv.parse(buffer)); /** TODO: pretty sure this'll break. **/
+      cache.gene_names = tsv.parse(buffer); 
     } else {
-      let genes = []
-      for (let i = 0; i < cache.matrix.nrow(); i++) {
-        genes.push(`Gene ${i + 1}`);
-      }
-      cache.gene_names = permuteGenes(wasm, genes);
+      cache.gene_names = dummyGenes(cache.matrix.nrow());
     }
 
-    parameters = args;
+    parameters = mock_args;
     delete cache.reloaded; 
     x.changed = true;
+    return;
+  }
+
+  function loadHDF5(wasm, input) {
+    var h5_files = input[0];
+    var mock_args = { 
+      "matrix": mockFiles(h5_files),
+    }
+
+    if (!scran_utils.changedParameters(mock_args, parameters)) {
+        x.changed = false;
+        return;
+    }
+
+    scran_utils.freeCache(cache.matrix);
+    var reader = new FileReaderSync();
+    var contents = reader.readAsArrayBuffer(h5_files[0]);
+    cache.matrix = readMatrixFromHDF5(wasm, contents); 
+
+    var genes = guessGenesFromHDF5(contents);
+    if (genes === null) {
+      cache.gene_names = dummyGenes(cache.matrix.nrow());
+    } else {
+      /** TODO: handle multiple names properly. **/
+      for (const [key, val] of Object.entries(genes)) {
+        cache.gene_names = val;
+        break;
+      }
+    }
+
+    parameters = mock_args;
+    delete cache.reloaded; 
+    x.changed = true;
+    return;
+  }
+
+  /** Public functions (standard) **/
+  x.compute = function(wasm, args) {
+    var first_name = args.files[0][0].name;
+
+    if (first_name.match(/\.mtx/)) {
+      loadMatrixMarket(wasm, args.files);
+    } else if (first_name.match(/\.h5/) || first_name.match(/\.hdf5/)) {
+      loadHDF5(wasm, args.files);
+    } else {
+      throw "unknown matrix file extension for '" + first_name + "'";
+    }
+   
+    cache.gene_names = permuteGenes(wasm, cache.gene_names);
     return;
   };
 
