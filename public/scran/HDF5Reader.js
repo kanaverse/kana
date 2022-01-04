@@ -1,6 +1,6 @@
-var window = {};
-importScripts("https://cdn.jsdelivr.net/gh/usnistgov/jsfive@master/dist/hdf5.js");
-var hdf5 = window.hdf5;
+// This assumes that WasmBuffer.js is somehow loaded.
+// It also assumes that https://github.com/usnistgov/jsfive is somehow 
+// loaded and its functions are available in the "hdf5" namespace.
 
 function cloneIntoWasmBuffer(wasm, arr) {
     // Let's try to figure out what the hell this is.

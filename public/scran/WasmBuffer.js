@@ -44,9 +44,21 @@ class WasmBuffer {
             size: 4,
             wasm: "HEAPF32",
         },
+        Int8Array: {
+            size: 1,
+            wasm: "HEAP8",
+        },
         Uint8Array: {
             size: 1,
             wasm: "HEAPU8",
+        },
+        Int16Array: {
+            size: 2,
+            wasm: "HEAP16",
+        },
+        Uint16Array: {
+            size: 2,
+            wasm: "HEAPU16",
         },
         Int32Array: {
             size: 4,
@@ -55,6 +67,14 @@ class WasmBuffer {
         Uint32Array: {
             size: 4,
             wasm: "HEAPU32",
+        },
+        Int64Array: {
+            size: 8,
+            wasm: "HEAP64",
+        },
+        Uint64Array: {
+            size: 8,
+            wasm: "HEAPU64",
         }
     };
 
@@ -75,12 +95,22 @@ class WasmBuffer {
             arr = new Float64Array(buffer, ptr, size);
         } else if (type == "Float32Array") {
             arr = new Float32Array(buffer, ptr, size);
+        } else if (type == "Int8Array") {
+            arr = new Int8Array(buffer, ptr, size);
         } else if (type == "Uint8Array") {
             arr = new Uint8Array(buffer, ptr, size);
+        } else if (type == "Int16Array") {
+            arr = new Int16Array(buffer, ptr, size);
+        } else if (type == "Uint16Array") {
+            arr = new Uint16Array(buffer, ptr, size);
         } else if (type == "Int32Array") {
             arr = new Int32Array(buffer, ptr, size);
         } else if (type == "Uint32Array") {
             arr = new Uint32Array(buffer, ptr, size);
+        } else if (type == "Int64Array") {
+            arr = new Int64Array(buffer, ptr, size);
+        } else if (type == "Uint64Array") {
+            arr = new Uint64Array(buffer, ptr, size);
         }
 
         return arr;
