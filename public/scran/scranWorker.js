@@ -77,8 +77,12 @@ var runStepDimRed = async function (mode, wasm, namespace, step, message, state,
 }
 
 function runAllSteps(wasm, state, mode = "run") {
-  runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded", 
-    { "files": state.files }
+  runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded", state,
+    () => { 
+      return { 
+       "files": state.files 
+      };
+    }
   );
 
   runStep(mode, wasm, scran_qc_metrics, "quality_control_metrics", "QC metrics computed", state);
