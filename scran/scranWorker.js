@@ -5,13 +5,15 @@ importScripts("./_utils.js");
 importScripts("./_utils_viz_parent.js");
 importScripts("./_utils_markers.js");
 
+// Some external dependencies.
 var window = {};
 importScripts("https://cdn.jsdelivr.net/gh/usnistgov/jsfive@master/dist/hdf5.js");
 var hdf5 = window.hdf5;
-
-importScripts("./_inputs.js");
+importScripts("https://cdn.jsdelivr.net/pako/1.0.3/pako.min.js");
+var pako = window.pako;
 importScripts("https://cdn.jsdelivr.net/npm/d3-dsv@3");
 
+importScripts("./_inputs.js");
 importScripts("./_qc_metrics.js");
 importScripts("./_qc_thresholds.js");
 importScripts("./_qc_filter.js");
