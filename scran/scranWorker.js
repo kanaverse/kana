@@ -65,15 +65,7 @@ var runStepDimRed = async function(mode, wasm, namespace, step, message, args) {
 
 function runAllSteps(wasm, state, mode = "run") {
   runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded", 
-    { "files": state.files },
-    () => {
-      var dims = scran_inputs.fetchDimensions(wasm);
-      postMessage({
-        type: "inputs_DIMS",
-        resp: `${dims.num_genes} X ${dims.num_cells}`,
-        msg: `Success: Data loaded, dimensions: ${dims.num_genes}, ${dims.num_cells}`
-      });
-    }
+    { "files": state.files }
   );
 
   runStep(mode, wasm, scran_qc_metrics, "quality_control_metrics", "QC metrics computed");
@@ -82,17 +74,7 @@ function runAllSteps(wasm, state, mode = "run") {
     { "nmads": state.params.qc["qc-nmads"] }
   );
 
-  runStep(mode, wasm, scran_qc_filter, "quality_control_filtered", "QC filtering completed", {},
-    () => {
-      var genes = scran_inputs.fetchGeneNames(wasm);
-      var remaining = scran_qc_filter.fetchRetained(wasm);
-      postMessage({
-        type: "qc_filter_DIMS",
-        resp: `${genes.length} X ${remaining}`,
-        msg: `Success: Data filtered, dimensions: ${genes.length}, ${remaining}`
-      });
-    }
-  );
+  runStep(mode, wasm, scran_qc_filter, "quality_control_filtered", "QC filtering completed", {});
 
   runStep(mode, wasm, scran_normalization, "normalization", "Log-normalization completed");
 
