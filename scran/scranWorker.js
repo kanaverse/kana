@@ -28,8 +28,9 @@ importScripts("./_score_markers.js");
 importScripts("./_custom_markers.js");
 
 /***************************************/
+var state = {};
 
-var runStep = function(mode, wasm, namespace, step, message, args = {}, extra = null) {
+var runStep = function (mode, wasm, namespace, step, message, args = {}, extra = null) {
   if (mode == "serialize") {
     state[step] = namespace.serialize(wasm);
   } else {
@@ -47,7 +48,7 @@ var runStep = function(mode, wasm, namespace, step, message, args = {}, extra = 
   }
 }
 
-var runStepDimRed = async function(mode, wasm, namespace, step, message, args) {
+var runStepDimRed = async function (mode, wasm, namespace, step, message, args) {
   if (mode == "serialize") {
     state[step] = await namespace.serialize(wasm);
   } else {
@@ -64,7 +65,7 @@ var runStepDimRed = async function(mode, wasm, namespace, step, message, args) {
 }
 
 function runAllSteps(wasm, state, mode = "run") {
-  runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded", 
+  runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded",
     { "files": state.files },
     () => {
       var dims = scran_inputs.fetchDimensions(wasm);
@@ -163,6 +164,13 @@ onmessage = function (msg) {
   } else if (payload.type == "RUN") {
     loaded.then(wasm => {
       runAllSteps(wasm, payload.payload);
+    });
+  }
+  // 
+  else if(payload.type == "EXPORT") {
+    loaded.then(wasm => {
+      // let state = {};
+      runAllSteps(wasm, payload.payload, mode="serialize");
     });
   }
   // custom events from UI
