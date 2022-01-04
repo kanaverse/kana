@@ -9,10 +9,14 @@ const scran_inputs = {};
   x.changed = false;
 
   /** Private functions (misc) **/
+  function mockFile(f) {
+    return { "name": f.name, "size": f.size };
+  }
+
   function mockFiles(files) {
     var mock = [];
     for (const f of files) {
-      mock.push({ "name": f.name, "size": f.size });
+      mock.push(mockFile(f));
     }
     return mock;
   }
@@ -42,12 +46,14 @@ const scran_inputs = {};
   }
 
   /** Private functions (MatrixMarket) **/
-  function loadMatrixMarketRaw(wasm, args, getMtxBuffer, getGenesBuffer, getBarcodesBuffer) {
-    var mtx_buffer = getMtxBuffer();
-    var contents = new Uint8Array(mtx_buffer);
-    var files = { "type": "MatrixMarket", "buffered": { "mtx": mtx_buffer } };
-
+  function loadMatrixMarketRaw(wasm, args, getMtxBuffers, getGenesBuffer) {
     scran_utils.freeCache(cache.matrix);
+
+    var mtx_buffers = getMtxBuffers();
+    var files = { "type": "MatrixMarket", "buffered": { "mtx": mtx_buffers } };
+
+    // In theory, this section may support multiple files (e.g., for multiple samples).
+    var contents = new Uint8Array(mtx_buffers[0]);
     var buffer = new WasmBuffer(wasm, contents.length, "Uint8Array");
     try {
       buffer.set(contents);
@@ -58,26 +64,30 @@ const scran_inputs = {};
       buffer.free();
     }
 
-    /** TODO: support Gzipped TSV files here. Also support loading from a buffer object. **/
-//    const tsv = d3.dsvFormat("\t");
-//
-//    if (barcode_file.length > 0) {
-//      var reader = new FileReaderSync();
-//      var file_size = barcode_file[0].size;
-//      var buffer = reader.readAsText(barcode_file[0]);
-//      cache.barcodes = tsv.parse(buffer);
-//    }
-//
-//    if (genes_file.length > 0) {
-//      var reader = new FileReaderSync();
-//      var file_size = genes_file[0].size;
-//      var buffer = reader.readAsText(genes_file[0]);
-//      cache.gene_names = tsv.parse(buffer); 
-//    } else {
-//      cache.gene_names = dummyGenes(cache.matrix.nrow());
-//    }
+    var genes_buffer = getGenesBuffer();
+    if (genes_buffer !== null) {
+      const tsv = d3.dsvFormat("\t");
 
-    cache.gene_names = dummyGenes(cache.matrix.nrow());
+      // TODO: support Gzipped files, handle multiple columns.
+      const dec = new TextDecoder();
+      let genes_str = dec.decode(new Uint8Array(genes_buffer));
+      let parsed = tsv.parseRows(genes_str);
+      
+      if (parsed.length != cache.matrix.nrow()) {
+        throw "number of matrix rows is not equal to the number of genes in '" + args.genes.name + "'";
+      }
+
+      var ids = [], symb = [];
+      parsed.forEach(x => {
+        ids.push(x[0]);
+        symb.push(x[1]);
+      });
+
+      cache.gene_names = ids;
+      files.buffered.genes = genes_buffer;
+    } else {
+      cache.gene_names = dummyGenes(cache.matrix.nrow());
+    }
 
     cache.gene_names = permuteGenes(wasm, cache.gene_names);
 
@@ -88,13 +98,12 @@ const scran_inputs = {};
 
   function loadMatrixMarket(wasm, input) {
     var mtx_files = input[0];
-    var barcode_file = input[1];
-    var genes_file = input[2];
+    var mock_args = { "mtx": mockFiles(mtx_files) };
 
-    var mock_args = { 
-      "mtx": mockFiles(mtx_files),
-      "barcodes": mockFiles(barcode_file),
-      "genes": mockFiles(genes_file)
+    var genes_file = input[2];
+    var has_genes = (genes_file instanceof File);
+    if (has_genes) {
+      mock_args.genes = mockFile(genes_file);
     }
 
     if (!scran_utils.changedParameters(mock_args, parameters)) {
@@ -106,10 +115,20 @@ const scran_inputs = {};
       mock_args,
       () => {
         var reader = new FileReaderSync();
-        return reader.readAsArrayBuffer(mtx_files[0]);
+        var output = [];
+        for (var i = 0; i < mtx_files.length; i++) {
+          output.push(reader.readAsArrayBuffer(mtx_files[i]));
+        }
+        return output;
       },
-      () => {},
-      () => {}
+      () => {
+        if (has_genes) {
+          var reader = new FileReaderSync();
+          return reader.readAsArrayBuffer(genes_file);
+        } else {
+          return null;
+        }
+      }
     );
 
     parameters = mock_args;
@@ -121,9 +140,11 @@ const scran_inputs = {};
   function loadHDF5Raw(wasm, getHDF5Buffer) {
     scran_utils.freeCache(cache.matrix);
 
-    var h5_buffer = getHDF5Buffer();
-    cache.matrix = readMatrixFromHDF5(wasm, h5_buffer); 
-    var files = { "type": "HDF5", "buffered": { "h5": h5_buffer } };
+    var h5_buffers = getHDF5Buffers();
+    var files = { "type": "HDF5", "buffered": { "h5": h5_buffers } };
+
+    // In theory, we could support multiple HDF5 buffers.
+    cache.matrix = readMatrixFromHDF5(wasm, h5_buffers[0]); 
 
     var genes = guessGenesFromHDF5(contents);
     if (genes === null) {
@@ -144,19 +165,23 @@ const scran_inputs = {};
 
   function loadHDF5(wasm, input) {
     var h5_files = input[0];
-    var mock_args = { 
-      "matrix": mockFiles(h5_files),
-    }
+    var mock_args = { "matrix": mockFiles(h5_files) }
 
     if (!scran_utils.changedParameters(mock_args, parameters)) {
         x.changed = false;
         return;
     }
 
-    loadHDF5Raw(wasm, () => {
-      var reader = new FileReaderSync();
-      return reader.readAsArrayBuffer(h5_files[0]);
-    });
+    loadHDF5Raw(wasm,
+      () => {
+        var reader = new FileReaderSync();
+        var output = [];
+        for (var i = 0; i < h5_files.length; i++) {
+          output.push(reader.readAsArrayBuffer(h5_files[i]));
+        }
+        return output;
+      }
+    );
 
     parameters = mock_args;
     x.changed = true;
@@ -165,8 +190,8 @@ const scran_inputs = {};
 
   /** Public functions (standard) **/
   x.compute = function(wasm, args) {
+    // TODO: switch to args telling us what the data type is.
     var first_name = args.files[0][0].name;
-
     if (first_name.match(/\.mtx/)) {
       loadMatrixMarket(wasm, args.files);
     } else if (first_name.match(/\.h5/) || first_name.match(/\.hdf5/)) {
@@ -174,7 +199,6 @@ const scran_inputs = {};
     } else {
       throw "unknown matrix file extension for '" + first_name + "'";
     }
-   
     return;
   };
 
@@ -221,7 +245,6 @@ const scran_inputs = {};
         loadMatrixMarketRaw(wasm,
           parameters,
           () => cache.reloaded.files.buffered.mtx,
-          () => cache.reloaded.files.buffered.barcodes,
           () => cache.reloaded.files.buffered.genes 
         );
       } else {

@@ -26,10 +26,19 @@ const scran_utils_serialize = {};
     var total_len = 0;
 
     for (const [key, val] of Object.entries(buffered)) {
-      var count = all_buffers.length;
-      all_buffers.push(val);
-      buffered[key] = { "count": count, "size": val.byteLength };
-      total_len += val.byteLength;
+      if (Array.isArray(val)) {
+        for (var i = 0; i < val.length; i++) {
+          var count = all_buffers.length;
+          all_buffers.push(val[i]);
+          total_len += val[i].byteLength;
+          val[i] = { "count": count, "size": val[i].byteLength };
+        }
+      } else {
+        var count = all_buffers.length;
+        all_buffers.push(val);
+        total_len += val.byteLength;
+        buffered[key] = { "count": count, "size": val.byteLength };
+      }
     }
 
     // Converting all other TypedArrays to normal arrays.
