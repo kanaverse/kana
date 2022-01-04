@@ -52,9 +52,10 @@ const Header = () => {
             includeFooter={true}
             {...state} />
           <NavbarDivider />
-
-          <EditableText defaultValue={datasetName} intent="primary"
-            onConfirm={(val) => { setDatasetName(val) }} />
+          <Tooltip2 content="Modify dataset title">
+            <EditableText defaultValue={datasetName} intent="primary"
+              onConfirm={(val) => { setDatasetName(val) }} />
+          </Tooltip2>
           <NavbarDivider />
 
           <Stats />
@@ -62,7 +63,7 @@ const Header = () => {
           <ButtonGroup>
             <Popover2 content={
               <Menu>
-                <MenuItem text="Save" icon="floppy-disk" disabled={true}/>
+                <MenuItem text="Save" icon="floppy-disk" disabled={true} />
                 <MenuItem text="Download" icon="download"
                   onClick={() => {
                     setExportState(true);

@@ -38,7 +38,7 @@ function App() {
     selectedClusterSummary, setSelectedClusterSummary,
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection,
-    setSelectedCluster, setShowGame, showGame, datasetName } = useContext(AppContext);
+    setSelectedCluster, setShowGame, showGame, datasetName, setExportState } = useContext(AppContext);
 
   // initializes various things on the worker side
   useEffect(() => {
@@ -206,8 +206,10 @@ function App() {
         type: "text/plain"
       });
       tmpLink.href = URL.createObjectURL(fileNew);
-      tmpLink.download = datasetName + ".kana";
+      tmpLink.download = datasetName.split(' ').join('_') + ".kana.gz";
       tmpLink.click();
+
+      setExportState(false);
     }
   }
 
