@@ -587,7 +587,7 @@ function AnalysisDialog({
                                 </div>
                             </div>
                         } />
-                        <Tab id="load" title="Load saved analysis" disabled={true} panel={
+                        <Tab id="load" title="Load saved analysis" panel={
                             <div className="inputs-container">
                                 <div className='row-input'>
                                     <div className="col">
