@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
 import {
-    Button, H4, H5, Icon, Collapse, Label, InputGroup,
+    Button, H4, H5, Icon, Collapse, InputGroup,
     RangeSlider, Tag, HTMLSelect, Classes, Card, Elevation
 } from "@blueprintjs/core";
 import { Tooltip2, Popover2 } from "@blueprintjs/popover2";
@@ -23,32 +23,40 @@ const MarkerPlot = () => {
         setReqGene, clusterColors, gene, setGene,
         customSelection } = useContext(AppContext);
 
+    // what cluster is selected
     const [clusSel, setClusSel] = useState(null);
+    // binary vector for stacked histogram plots, this cluster (1) vs others (0)
     const [clusArrayStacked, setClusArrayStacked] = useState(null);
+    // gene search
     const [searchInput, setSearchInput] = useState(null);
+
+    // ranges for various marker stats
     const [meanMinMax, setMeanMinMax] = useState(null);
     const [deltaMinMax, setDeltaMinMax] = useState(null);
     const [lfcMinMax, setLfcMinMax] = useState(null);
     const [detectedMinMax, setDetectedMinMax] = useState(null);
     const [minMaxs, setMinMaxs] = useState(null);
 
+    // params for filtering
     const [means, setMeans] = useState(null);
     const [deltas, setDeltas] = useState(null);
     const [lfcs, setLfcs] = useState(null);
     const [detects, setDetects] = useState(null);
 
+    // stores range filters from UI
     const [markerFilter, setMarkerFilter] = useState({});
+    // records to show after filtering
     const [prosRecords, setProsRecords] = useState(null);
 
-    const [lfcColorScale, setLfcColorScale] = useState(null);
-    const [deltaColorScale, setDeltaColorScale] = useState(null);
-
+    // scale to use for detected on expression bar
     const detectedScale = d3.interpolateRdYlBu; //d3.interpolateRdBu;
     // d3.scaleSequential()
     // .domain([0, 1])
     // .range(["red", "blue"])
     // .interpolate(d3.interpolateHcl);
 
+    // if a cluster changes, its summary data is requested from the worker
+    // pre-process results for UI
     useEffect(() => {
         if (!selectedClusterSummary) return selectedClusterSummary;
 
@@ -57,51 +65,24 @@ const MarkerPlot = () => {
         if (trecs.length === 0) return trecs;
 
         let tmpmeans = trecs.map(x => x?.mean);
-        // setMeanMinMax(getMinMax(tmpmeans));
         let tmeanMinMax = d3.extent(tmpmeans)
         let tmeanval = tmeanMinMax[1] === 0 ? 0.01 : tmeanMinMax[1];
         setMeanMinMax([parseFloat(tmeanMinMax[0].toFixed(2)), parseFloat(tmeanval.toFixed(2))]);
         setMeans(tmpmeans);
 
         let tmpdeltas = trecs.map(x => x?.delta);
-        // setDeltaMinMax(getMinMax(tmpdeltas));
         let tdeltaMinMax = d3.extent(tmpdeltas)
         let tdeltaval = tdeltaMinMax[1] === 0 ? 0.01 : tdeltaMinMax[1];
         setDeltaMinMax([parseFloat(tdeltaMinMax[0].toFixed(2)), parseFloat(tdeltaval.toFixed(2))]);
-        // setDeltaMinMax(d3.extent(tmpdeltas));
         setDeltas(tmpdeltas);
 
-        // if (tdeltaMinMax?.length == 2) {
-        //     // var deltagradient = new Rainbow();
-        //     // deltagradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
-        //     // deltagradient.setNumberRange(...deltaMinMax);
-        //     // setDeltaColorScale(deltagradient);
-        //     const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
-        //         .range([parseFloat(tdeltaMinMax[0].toFixed(2)), 0, parseFloat(tdeltaMinMax[1].toFixed(2))]);
-        //     setDeltaColorScale(detectedScale);
-        // }
-
         let tmplfcs = trecs.map(x => x?.lfc);
-        // setLfcMinMax(getMinMax(tmplfcs));
-        // setLfcMinMax(d3.extent(tmplfcs));
         let tlfcsMinMax = d3.extent(tmplfcs)
         let tlfcsval = tlfcsMinMax[1] === 0 ? 0.01 : tlfcsMinMax[1];
         setLfcMinMax([parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsval.toFixed(2))]);
         setLfcs(tmplfcs);
 
-        // if (tlfcsMinMax?.length === 2) {
-        //     // var lfcgradient = new Rainbow();
-        //     // lfcgradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
-        //     // lfcgradient.setNumberRange(...lfcMinMax);
-        //     // setLfcColorScale(lfcgradient);
-        //     const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
-        //         .range([parseFloat(tlfcsMinMax[0].toFixed(2)), 0, parseFloat(tlfcsMinMax[1].toFixed(2))]);
-        //     setLfcColorScale(detectedScale);
-        // }
-
         let tmpdetects = trecs.map(x => x?.detected);
-        // setDetectedMinMax(getMinMax(tmpdetects));
-        // setDetectedMinMax(d3.extent(tmpdetects));
         let tdetectsMinMax = d3.extent(tmpdetects)
         let tdetecval = tdetectsMinMax[1] === 0 ? 0.01 : tdetectsMinMax[1];
         setDetectedMinMax([parseFloat(tdetectsMinMax[0].toFixed(2)), parseFloat(tdetecval.toFixed(2))]);
@@ -120,30 +101,7 @@ const MarkerPlot = () => {
 
     }, [selectedClusterSummary]);
 
-    // useEffect(() => {
-    //     if (lfcMinMax?.length === 2) {
-    //         // var lfcgradient = new Rainbow();
-    //         // lfcgradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
-    //         // lfcgradient.setNumberRange(...lfcMinMax);
-    //         // setLfcColorScale(lfcgradient);
-    //         const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
-    //             .range([lfcMinMax[0], 0, lfcMinMax[1]]);
-    //         setLfcColorScale(detectedScale);
-    //     }
-    // }, [lfcMinMax]);
-
-    // useEffect(() => {
-    //     if (deltaMinMax?.length == 2) {
-    //         // var deltagradient = new Rainbow();
-    //         // deltagradient.setSpectrum('#e41a1c', "#377eb8", "#4daf4a");
-    //         // deltagradient.setNumberRange(...deltaMinMax);
-    //         // setDeltaColorScale(deltagradient);
-    //         const detectedScale = d3.scaleSequential(d3.interpolateRdBu)
-    //             .range([deltaMinMax[0], 0, deltaMinMax[1]]);
-    //         setDeltaColorScale(detectedScale);
-    //     }
-    // }, [deltaMinMax]);
-
+    // genes to show, hook for filters and input
     const sortedRows = useMemo(() => {
 
         if (!prosRecords) return [];
@@ -163,6 +121,7 @@ const MarkerPlot = () => {
         return sortedRows;
     }, [prosRecords, searchInput, markerFilter]);
 
+    // update clusters when custom selection is made in the UI
     useEffect(() => {
         if (clusterData?.clusters) {
             let max_clusters = Math.max(...clusterData.clusters);
@@ -175,17 +134,20 @@ const MarkerPlot = () => {
             clus = clus.concat(Object.keys(customSelection));
 
             setClusSel(clus);
-            setSelectedCluster(0);
-
-            let clusArray = []
-            clusterData?.clusters?.forEach(x => x === 0 ? clusArray.push(1) : clusArray.push(0));
-            setClusArrayStacked(clusArray);
+            if (selectedCluster == null) {
+                setSelectedCluster(0);
+            }
         }
-    }, [clusterData, customSelection]);
+    }, [clusterData, customSelection, selectedCluster]);
 
+    // hook for figure out this vs other cells for stacked histograms
     useEffect(() => {
-        let clusArray = []
-        clusterData?.clusters?.forEach(x => x === selectedCluster ? clusArray.push(1) : clusArray.push(0));
+        var clusArray = [];
+        if(String(selectedCluster).startsWith("cs")) {
+            clusterData?.clusters?.forEach((x,i) => customSelection[selectedCluster].includes(i) ? clusArray.push(1) : clusArray.push(0));
+        } else {
+            clusterData?.clusters?.forEach(x => x === selectedCluster ? clusArray.push(1) : clusArray.push(0));
+        }
         setClusArrayStacked(clusArray);
     }, [selectedCluster]);
 
@@ -213,8 +175,8 @@ const MarkerPlot = () => {
                             setSelectedCluster(tmpselection);
 
                             setMarkerFilter({});
-                        }}
-                    >
+                            setGene(null);
+                        }}>
                         {
                             clusSel.map((x, i) => (
                                 <option key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
@@ -285,19 +247,12 @@ const MarkerPlot = () => {
                             itemContent={index => {
                                 const row = sortedRows[index];
                                 const rowexp = row.expanded;
-                                const rowExpr = row.expr; //geneExprData[row.gene];
+                                const rowExpr = row.expr;
 
                                 return (
                                     <div>
                                         <div className='row-container'>
                                             <span>{row.gene}</span>
-                                            {/* <span>Cohen: {row.cohen.toFixed(4)}, AUC</span> */}
-                                            {/* {<Cell minmax={lfcMinMax}
-                                                score={row.lfc} color="#F5498B"
-                                            />}
-                                            {<Cell minmax={deltaMinMax}
-                                                score={row.delta} color="#4580E6"
-                                            />} */}
                                             {
                                                 <Popover2
                                                     popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
@@ -316,7 +271,7 @@ const MarkerPlot = () => {
                                                                 <tr>
                                                                     <td></td>
                                                                     <th scope="col">{row.gene}</th>
-                                                                    <th scope="col">Overall</th>
+                                                                    <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
                                                                     <th scope="row">Log-FC</th>
@@ -340,8 +295,7 @@ const MarkerPlot = () => {
                                                                 </tr>
                                                             </table>
                                                         </Card>
-                                                    }
-                                                >
+                                                    }>
                                                     <HeatmapCell minmax={lfcMinMax} colorscale={d3.interpolateRdBu} score={row.lfc} />
                                                 </Popover2>
                                             }
@@ -363,7 +317,7 @@ const MarkerPlot = () => {
                                                                 <tr>
                                                                     <td></td>
                                                                     <th scope="col">{row.gene}</th>
-                                                                    <th scope="col">Overall</th>
+                                                                    <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
                                                                     <th scope="row">Δ-detected</th>
@@ -387,8 +341,7 @@ const MarkerPlot = () => {
                                                                 </tr>
                                                             </table>
                                                         </Card>
-                                                    }
-                                                >
+                                                    }>
                                                     <HeatmapCell minmax={deltaMinMax} colorscale={d3.interpolateRdBu} score={row.delta} />
                                                 </Popover2>}
                                             {
@@ -409,7 +362,7 @@ const MarkerPlot = () => {
                                                                 <tr>
                                                                     <td></td>
                                                                     <th scope="col">{row.gene}</th>
-                                                                    <th scope="col">Overall</th>
+                                                                    <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
                                                                     <th scope="row">Expression</th>
@@ -433,15 +386,11 @@ const MarkerPlot = () => {
                                                                 </tr>
                                                             </table>
                                                         </Card>
-                                                    }
-                                                >
+                                                    }>
                                                     <Cell minmax={meanMinMax} colorscale={detectedScale}
                                                         score={row.mean} colorscore={row.detected}
                                                     />
                                                 </Popover2>}
-                                            {/* {<Cell minmax={[0,1]}
-                                                score={row.detected} color={detectedScale(row.detected)}
-                                            />} */}
                                             <div className='row-action'>
                                                 <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
                                                     className='row-action'
@@ -470,15 +419,17 @@ const MarkerPlot = () => {
                                                     }}
                                                 >
                                                     <Icon icon={'tint'}
-                                                        color={row.gene === gene ? clusterColors[selectedCluster] : ''}
+                                                        color={row.gene === gene ? 
+                                                            String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : ''
+                                                            : ''}
                                                     ></Icon>
                                                 </Button>
                                             </div>
                                         </div>
                                         <Collapse isOpen={rowexp}>
                                             {/* <Histogram data={rowExpr} color={clusterColors[selectedCluster]} /> */}
-                                            {clusArrayStacked && <StackedHistogram data={rowExpr}
-                                                color={clusterColors[selectedCluster]}
+                                            {rowExpr && <StackedHistogram data={rowExpr}
+                                                color={String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : clusterColors[selectedCluster]}
                                                 clusters={clusArrayStacked} />}
                                         </Collapse>
                                     </div>
@@ -547,10 +498,6 @@ const MarkerPlot = () => {
                                     />}
                                 </div>
                             </div>
-                            {/* <Label>AUC</Label>
-                            <div className='marker-filter-container'></div>
-                            <Label>Cohen</Label>
-                            <div className='marker-filter-container'></div> */}
                         </div>
                     </div>
                     : ""

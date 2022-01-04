@@ -1,5 +1,6 @@
 import { useRef } from "react";
 
+// uses two divs to fill out bars given various props
 const Cell = (props) => {
     const container = useRef();
 

@@ -10,6 +10,7 @@ const AppContextProvider = ({ children }) => {
     barcode: null,
   });
 
+  // default params 
   const [params, setParams] = useState({
     qc: {
       "qc-nmads": 3

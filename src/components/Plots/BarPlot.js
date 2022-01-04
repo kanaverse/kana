@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as d3 from 'd3';
 
+// a typical d3 bar plot
 const BarPlot = (props) => {
     const container = useRef();
 
@@ -10,7 +11,7 @@ const BarPlot = (props) => {
         let color = props?.color;
         let ymax = props?.ymax;
 
-        if(!ymax) {
+        if (!ymax) {
             ymax = Math.max(...data.map((d) => { return d.value; }));
         }
 
@@ -54,7 +55,7 @@ const BarPlot = (props) => {
         var y = d3.scaleLinear()
             .domain([0, ymax])
             .range([height, 0]);
-            
+
         svg.append("g")
             .call(d3.axisLeft(y));
 
@@ -66,8 +67,8 @@ const BarPlot = (props) => {
             .attr("y", (d) => { return y(d.value); })
             .attr("width", x.bandwidth())
             .attr("height", (d) => { return height - y(d.value); })
-            .attr("fill", (d,i) => {
-                if (Array.isArray(color) ) {
+            .attr("fill", (d, i) => {
+                if (Array.isArray(color)) {
                     return color[i];
                 }
                 return color;

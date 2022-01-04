@@ -1,6 +1,8 @@
 import ViolinPlotBasic from './ViolinPlotBasic';
 import './QCPlots.css';
 
+// shows the QC plots for sums, detected and proportion
+// transforms data to a log scale or %
 const QCPlotMgr = (props) => {
 
     let qcData = props.data;
