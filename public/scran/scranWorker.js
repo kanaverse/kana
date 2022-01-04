@@ -27,6 +27,8 @@ importScripts("./_umap_monitor.js");
 importScripts("./_score_markers.js");
 importScripts("./_custom_markers.js");
 
+importScripts("./mito.js");
+
 /***************************************/
 
 var runStep = function(mode, wasm, namespace, step, message, args = {}, extra = null) {
