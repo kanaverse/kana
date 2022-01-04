@@ -22,6 +22,7 @@ function AnalysisDialog({
 
     let [tmpInputFiles, setTmpInputFiles] = useState(inputFiles);
     let [tmpInputParams, setTmpInputParams] = useState(params);
+    let [tmpInputValid, setTmpInputValid] = useState(true);
 
     function handleImport() {
         setParams(tmpInputParams);
@@ -37,7 +38,39 @@ function AnalysisDialog({
 
     useEffect(() => {
         openInput && setIsOpen(true);
-    }, [openInput])
+    }, [openInput]);
+
+    useEffect(() => {
+        if (tmpInputFiles && tmpInputFiles.mtx) {
+            if (!(inputText.mtx.endsWith("mtx") ||
+                inputText.mtx.endsWith("mtx.gz") ||
+                inputText.mtx.endsWith("hdf5")  ||
+                inputText.mtx.endsWith("h5")
+                )) {
+                setTmpInputValid(false);
+            }
+        }
+    }, [tmpInputFiles?.mtx]);
+
+    useEffect(() => {
+        if (tmpInputFiles && tmpInputFiles.gene) {
+            if (!(inputText.gene.endsWith("tsv") ||
+                inputText.gene.endsWith("tsv.gz")
+            )) {
+                setTmpInputValid(false);
+            }
+        }
+    }, [tmpInputFiles?.gene]);
+
+    useEffect(() => {
+        if (tmpInputFiles && tmpInputFiles.barcode) {
+            if (!(inputText.barcode.endsWith("tsv") ||
+                inputText.barcode.endsWith("tsv.gz")
+            )) {
+                setTmpInputValid(false);
+            }
+        }
+    }, [tmpInputFiles?.barcode]);
 
     return (
         <>
@@ -325,6 +358,21 @@ function AnalysisDialog({
                     </div>
 
                     <div className="row-input-tooltips">
+                        {
+                            !tmpInputValid &&
+                            <Callout intent="danger"
+                                title="Incorrect file format"
+                                style={{
+                                    marginBottom: '10px'
+                                }}>
+                                <p>Upload files that in one of these formats;
+                                    <ul>
+                                        <li>Matrix Market - <code>*.mtx</code> or <code>*.mtx.gz</code></li>
+                                        <li>features or genes, <code>*.tsv</code> or <code>*.tsv.gz</code></li>
+                                    </ul>
+                                </p>
+                            </Callout>
+                        }
                         {showStepHelper == 1 &&
                             <Callout intent="primary">
                                 <p>We currently support files in the Cellranger format -
@@ -496,7 +544,7 @@ function AnalysisDialog({
                     <div className={Classes.DIALOG_FOOTER}>
                         <div className={Classes.DIALOG_FOOTER_ACTIONS}>
                             <Tooltip2 content="Run Analysis">
-                                <Button icon="function" onClick={handleImport}>Analyze</Button>
+                                <Button disabled={!tmpInputValid} icon="function" onClick={handleImport}>Analyze</Button>
                             </Tooltip2>
                         </div>
                     </div>
