@@ -120,16 +120,8 @@ scran_utils_markers.fetchGroupResults = function(wasm, results, reloaded, rank_t
     stat_delta_d = reorder(results.delta_detected(group, 1));
   }
 
-  /** TODO: move this to the main thread to avoid having to 
-   * continually (un)serialize a large string array. */
-  var genes = scran_inputs.fetchGeneNames(wasm);
-  var new_genes = [];
-  for (const o of ordering) {
-      new_genes.push(genes[o]);
-  }
-
   return {
-    "genes": new_genes,
+    "ordering": ordering,
     "means": stat_mean,
     "detected": stat_detected,
     "lfc": stat_lfc,

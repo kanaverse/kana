@@ -27,8 +27,6 @@ importScripts("./_umap_monitor.js");
 importScripts("./_score_markers.js");
 importScripts("./_custom_markers.js");
 
-importScripts("./mito.js");
-
 /***************************************/
 
 var runStep = function(mode, wasm, namespace, step, message, args = {}, extra = null) {
@@ -166,27 +164,16 @@ onmessage = function (msg) {
     });
   } else if (payload.type == "getGeneExpression") {
     loaded.then(wasm => {
-      let row = payload.payload.gene;
-      let row_idx = scran_inputs.fetchGeneNames(wasm).indexOf(row);
-      if (row_idx == -1) {
-        postMessage({
-          type: "geneExpression",
-          resp: {
-            gene: row
-          },
-          msg: "Fail: GET_GENE_EXPRESSION"
-        });
-      } else {
-        var vec = scran_normalization.fetchExpression(wasm, row_idx);
-        postMessage({
-          type: "setGeneExpression",
-          resp: {
-            gene: row,
-            expr: vec
-          },
-          msg: "Success: GET_GENE_EXPRESSION done"
-        }, [vec.buffer]);
-      }
+      let row_idx = payload.payload.gene;
+      var vec = scran_normalization.fetchExpression(wasm, row_idx);
+      postMessage({
+        type: "setGeneExpression",
+        resp: {
+          gene: row_idx,
+          expr: vec
+        },
+        msg: "Success: GET_GENE_EXPRESSION done"
+      }, [vec.buffer]);
     });
   } else if (payload.type == "computeCustomMarkers") {
     loaded.then(wasm => {
