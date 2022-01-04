@@ -43,9 +43,9 @@ const scran_inputs = {};
 
   /** Private functions (MatrixMarket) **/
   function loadMatrixMarketRaw(wasm, args, getMtxBuffer, getGenesBuffer, getBarcodesBuffer) {
-    var contents = new Uint8Array(getMtxBuffer());
-    var files = { "type": "MatrixMarket", "buffered": {} };
-    files.buffered.mtx = contents;
+    var mtx_buffer = getMtxBuffer();
+    var contents = new Uint8Array(mtx_buffer);
+    var files = { "type": "MatrixMarket", "buffered": { "mtx": mtx_buffer } };
 
     scran_utils.freeCache(cache.matrix);
     var buffer = new WasmBuffer(wasm, contents.length, "Uint8Array");
@@ -121,9 +121,9 @@ const scran_inputs = {};
   function loadHDF5Raw(wasm, getHDF5Buffer) {
     scran_utils.freeCache(cache.matrix);
 
-    var contents = getHDF5Buffer();
-    cache.matrix = readMatrixFromHDF5(wasm, contents); 
-    var files = { "type": "HDF5", "buffered": { "h5": contents } };
+    var h5_buffer = getHDF5Buffer();
+    cache.matrix = readMatrixFromHDF5(wasm, h5_buffer); 
+    var files = { "type": "HDF5", "buffered": { "h5": h5_buffer } };
 
     var genes = guessGenesFromHDF5(contents);
     if (genes === null) {
