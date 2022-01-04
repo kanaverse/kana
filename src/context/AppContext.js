@@ -121,7 +121,7 @@ const AppContextProvider = ({ children }) => {
         "msg": "not much to pass"
       });
 
-      setShowGame(true);
+      // setShowGame(true);
     }
   }, [inputFiles, params, wasmInitialized]);
 

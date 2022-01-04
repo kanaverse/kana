@@ -77,19 +77,12 @@ var runStepDimRed = async function (mode, wasm, namespace, step, message, state,
 }
 
 function runAllSteps(wasm, state, mode = "run") {
+<<<<<<< HEAD
   runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded", state,
     () => { 
       return { 
        "files": state.files 
       };
-    },
-    () => {
-      var dims = scran_inputs.fetchDimensions(wasm);
-      postMessage({
-        type: "inputs_DIMS",
-        resp: `${dims.num_genes} X ${dims.num_cells}`,
-        msg: `Success: Data loaded, dimensions: ${dims.num_genes}, ${dims.num_cells}`
-      });
     }
   );
 
@@ -103,18 +96,7 @@ function runAllSteps(wasm, state, mode = "run") {
     }
   );
 
-  runStep(mode, wasm, scran_qc_filter, "quality_control_filtered", "QC filtering completed", state, 
-    null,
-    () => {
-      var genes = scran_inputs.fetchGeneNames(wasm);
-      var remaining = scran_qc_filter.fetchRetained(wasm);
-      postMessage({
-        type: "qc_filter_DIMS",
-        resp: `${genes.length} X ${remaining}`,
-        msg: `Success: Data filtered, dimensions: ${genes.length}, ${remaining}`
-      });
-    }
-  );
+  runStep(mode, wasm, scran_qc_filter, "quality_control_filtered", "QC filtering completed", state); 
 
   runStep(mode, wasm, scran_normalization, "normalization", "Log-normalization completed", state);
 
@@ -236,15 +218,7 @@ onmessage = function (msg) {
     });
   }
   // custom events from UI
-  else if (payload.type == "setQCThresholds") {
-    data.thresholds = payload.input;
-
-    postMessage({
-      type: "qc_DIMS",
-      resp: `${data.filteredMatrix.nrow()} X ${data.filteredMatrix.ncol()}`,
-      msg: `Success: QC - Thresholds Sync Complete, ${data.filteredMatrix.nrow()}, ${data.filteredMatrix.ncol()}`
-    })
-  } else if (payload.type == "getMarkersForCluster") {
+  else if (payload.type == "getMarkersForCluster") {
     loaded.then(wasm => {
       let cluster = payload.payload.cluster;
       let rank_type = payload.payload.rank_type;

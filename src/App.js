@@ -2,7 +2,7 @@ import './App.css';
 import Header from "./components/Header";
 import Gallery from './components/Gallery';
 
-import { Label, Overlay, Spinner } from "@blueprintjs/core";
+import { Button, Label, Overlay, Spinner } from "@blueprintjs/core";
 
 import { useState, useEffect, useContext } from 'react';
 import { AppContext } from './context/AppContext';
@@ -123,10 +123,8 @@ function App() {
     if (payload.type === "INIT") {
       setLoading(false);
       setWasmInitialized(true);
-    } else if (payload.type === "input_DIMS") {
-      setInitDims(payload.resp);
-    } else if (payload.type === "quality_control_filtered_DIMS") {
-      setQcDims(payload.resp);
+    } else if (payload.type === "inputs_DATA") {
+      setInitDims(`${payload.resp.dimensions.num_genes} genes, ${payload.resp.dimensions.num_cells} cells`);
     } else if (payload.type === "quality_control_metrics_DATA") {
       const { resp } = payload;
       setQcData(resp);
@@ -135,7 +133,8 @@ function App() {
       let tmp = { ...qcData };
       tmp["thresholds"] = resp;
       setQcData(tmp);
-    } else if (payload.type === "feature_selection_DIMS") {
+    } else if (payload.type === "quality_control_filtered_DATA") {
+      setQcDims(`${payload.resp.retained} cells`);
     } else if (payload.type === "feature_selection_DATA") {
       const { resp } = payload;
       setFSelectionData(resp);
@@ -205,11 +204,33 @@ function App() {
             defaultRedDims ?
               <DimPlot /> :
               showGame ?
-                <Pong /> :
                 <div style={{
+                  height: '100%',
                   width: '100%',
-                  height: '100%'
-                }}></div>
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingTop: '50px'
+                }}>
+                  <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+                  <Button onClick={() => { setShowGame(false) }}>I'm good, go back</Button>
+                  <Pong />
+                </div>
+                :
+                <div style={{
+                  height: '100%',
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingTop: '50px'
+                }}>
+                  <Spinner2 />
+                  <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+                  <Button onClick={() => { setShowGame(true) }}>Play Pong</Button>
+                </div>
           }
         </div>
         <div className="marker">

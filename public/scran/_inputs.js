@@ -179,7 +179,10 @@ const scran_inputs = {};
   };
 
   x.results = function(wasm) {
-    return { "gene_names": x.fetchGeneNames(wasm) };
+    return {
+      "gene_names": x.fetchGeneNames(wasm),
+      "dimensions": x.fetchDimensions(wasm)
+    };
   };
 
   /* TODO: figure out whether/how to serialize entire files,
