@@ -148,7 +148,7 @@ onmessage = function (msg) {
     });
   }
   // custom events from UI
-  } else if (payload.type == "getMarkersForCluster") {
+  else if (payload.type == "getMarkersForCluster") {
     loaded.then(wasm => {
       let cluster = payload.payload.cluster;
       let rank_type = payload.payload.rank_type;
