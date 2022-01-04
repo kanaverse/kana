@@ -45,6 +45,9 @@ const AppContextProvider = ({ children }) => {
   const [openInput, setOpenInput] = useState(false);
   const [showGame, setShowGame] = useState(false);
 
+  // app export state 
+  const [exportState, setExportState] = useState(false);
+
   // wasm state and error 
   const [wasmInitialized, setWasmInitialized] = useState(false);
   const [error, setError] = useState(null);
@@ -125,6 +128,22 @@ const AppContextProvider = ({ children }) => {
     }
   }, [inputFiles, params, wasmInitialized]);
 
+  useEffect(() => {
+
+    if (exportState) {
+      window.Worker.postMessage({
+        "type": "EXPORT",
+        "payload": {
+          "files": [inputFiles.mtx,
+          inputFiles.barcode ? inputFiles.barcode[0] : [],
+          inputFiles.gene ? inputFiles.gene[0] : []], //mtx, barcode, gene
+          "params": params
+        },
+        "msg": "not much to pass"
+      });
+    }
+  }, [exportState]);
+
   return (
     <AppContext.Provider
       value={{
@@ -157,7 +176,8 @@ const AppContextProvider = ({ children }) => {
         openInput, setOpenInput,
         customSelection, setCustomSelection,
         delCustomSelection, setDelCustomSelection,
-        showGame, setShowGame
+        showGame, setShowGame,
+        exportState, setExportState
       }}
     >
       {children}

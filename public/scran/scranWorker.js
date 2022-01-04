@@ -28,8 +28,9 @@ importScripts("./_score_markers.js");
 importScripts("./_custom_markers.js");
 
 /***************************************/
+var state = {};
 
-var runStep = function(mode, wasm, namespace, step, message, args = {}, extra = null) {
+var runStep = function (mode, wasm, namespace, step, message, args = {}, extra = null) {
   if (mode == "serialize") {
     state[step] = namespace.serialize(wasm);
   } else {
@@ -47,7 +48,7 @@ var runStep = function(mode, wasm, namespace, step, message, args = {}, extra = 
   }
 }
 
-var runStepDimRed = async function(mode, wasm, namespace, step, message, args) {
+var runStepDimRed = async function (mode, wasm, namespace, step, message, args) {
   if (mode == "serialize") {
     state[step] = await namespace.serialize(wasm);
   } else {
@@ -145,6 +146,13 @@ onmessage = function (msg) {
   } else if (payload.type == "RUN") {
     loaded.then(wasm => {
       runAllSteps(wasm, payload.payload);
+    });
+  }
+  // 
+  else if(payload.type == "EXPORT") {
+    loaded.then(wasm => {
+      // let state = {};
+      runAllSteps(wasm, payload.payload, mode="serialize");
     });
   }
   // custom events from UI
