@@ -42,7 +42,7 @@ const scran_inputs = {};
   }
 
   /** Private functions (MatrixMarket) **/
-  function loadMatrixMarketRaw(wasm, getMtxBuffer, getGenesBuffer, getBarcodesBuffer) {
+  function loadMatrixMarketRaw(wasm, args, getMtxBuffer, getGenesBuffer, getBarcodesBuffer) {
     var contents = new Uint8Array(getMtxBuffer());
     var files = { "type": "MatrixMarket", "buffered": {} };
     files.buffered.mtx = contents;
@@ -51,9 +51,9 @@ const scran_inputs = {};
     var buffer = new WasmBuffer(wasm, contents.length, "Uint8Array");
     try {
       buffer.set(contents);
-      var ext = mtx_files[0].name.split('.').pop();
+      var ext = args.mtx[0].name.split('.').pop();
       var is_compressed = (ext == "gz");
-      cache.matrix = wasm.read_matrix_market(buffer.ptr, mtx_files[0].size, is_compressed);
+      cache.matrix = wasm.read_matrix_market(buffer.ptr, buffer.size, is_compressed);
     } finally {
       buffer.free();
     }
@@ -92,7 +92,7 @@ const scran_inputs = {};
     var genes_file = input[2];
 
     var mock_args = { 
-      "matrix": mockFiles(mtx_files),
+      "mtx": mockFiles(mtx_files),
       "barcodes": mockFiles(barcode_file),
       "genes": mockFiles(genes_file)
     }
@@ -103,6 +103,7 @@ const scran_inputs = {};
     }
 
     loadMatrixMarketRaw(wasm,
+      mock_args,
       () => {
         var reader = new FileReaderSync();
         return reader.readAsArrayBuffer(mtx_files[0]);
@@ -192,9 +193,9 @@ const scran_inputs = {};
     var contents = {};
 
     if ("reloaded" in cache) {
-      contents.gene_names = contents.reloaded.gene_names;
-      contents.num_cells = contents.reloaded.num_cells;
-      contents.files = contents.reloaded.files;
+      contents.gene_names = cache.reloaded.gene_names;
+      contents.num_cells = cache.reloaded.num_cells;
+      contents.files = cache.reloaded.files;
     } else {
       contents.gene_names = cache.gene_names;
       contents.num_cells = cache.matrix.ncol();
@@ -217,7 +218,8 @@ const scran_inputs = {};
   x.fetchCountMatrix = function(wasm) {
     if ("reloaded" in cache) {
       if (cache.reloaded.files.type == "MatrixMarket") {
-        loadMatrixMarketRaw(wasm, 
+        loadMatrixMarketRaw(wasm,
+          parameters,
           () => cache.reloaded.files.buffered.mtx,
           () => cache.reloaded.files.buffered.barcodes,
           () => cache.reloaded.files.buffered.genes 
