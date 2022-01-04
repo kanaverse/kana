@@ -22,7 +22,7 @@ const scran_qc_filter = {};
 
   /** Public functions (standard) **/
   x.compute = function(wasm, args) {
-    if (!scran_inputs.changed && !scran_qc_thresholds.changed && !scran_utils.compareParameters(parameters, args)) {
+    if (!scran_inputs.changed && !scran_qc_thresholds.changed && !scran_utils.changedParameters(parameters, args)) {
       x.changed = false;
     } else {
       rawCompute(wasm);
