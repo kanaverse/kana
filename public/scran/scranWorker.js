@@ -214,7 +214,12 @@ onmessage = function (msg) {
       runAllSteps(wasm, state, mode="serialize")
       .then(x => {
         var output = scran_utils_serialize.save(state);
-        console.log(output);
+        console.log(output.byteLength);
+        postMessage({
+          type: "exportState",
+          resp: output,
+          msg: "Success: application state exported"
+        }, [output]);
       });
     });
   }
