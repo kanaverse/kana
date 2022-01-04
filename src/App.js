@@ -148,7 +148,7 @@ function App() {
 
       // show markers for the first cluster
       setSelectedCluster(0);
-    } else if (payload.type === "tsne_DATA" || payload.type === "tsne_iter") {
+    } else if (payload.type === "tsne_DATA") { //|| payload.type === "tsne_iter") {
       const { resp } = payload;
       setTsneData(resp);
 
