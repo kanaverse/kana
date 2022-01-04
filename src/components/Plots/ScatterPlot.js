@@ -43,8 +43,7 @@ const DimPlot = () => {
 
     // if either gene or expression changes, compute gradients and min/max
     useEffect(() => {
-
-        if (!gene || gene == "") {
+        if (gene === null) {
             setShowGradient(false);
             setGradient(null);
         }
@@ -153,7 +152,7 @@ const DimPlot = () => {
                         }
                     }
 
-                    if (gene && Array.isArray(selectedClusterSummary?.[gene]?.expr)) {
+                    if (gene !== null && Array.isArray(selectedClusterSummary?.[gene]?.expr)) {
 
                         return "#" + gradient.colorAt(selectedClusterSummary?.[gene]?.expr?.[i]);
                         // if we want per cell gradient 

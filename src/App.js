@@ -31,7 +31,7 @@ function App() {
   };
 
   const { setWasmInitialized, setTsneData, setRedDims, redDims,
-    setInitDims, setQcDims, defaultRedDims, setDefaultRedDims,
+    setGenesInfo, setInitDims, setQcDims, defaultRedDims, setDefaultRedDims,
     setQcData, qcData, setClusterData, setFSelectionData,
     setUmapData, setPcaVarExp, logs, setLogs,
     selectedCluster, clusterRank,
@@ -125,6 +125,7 @@ function App() {
       setWasmInitialized(true);
     } else if (payload.type === "inputs_DATA") {
       setInitDims(`${payload.resp.dimensions.num_genes} genes, ${payload.resp.dimensions.num_cells} cells`);
+      setGenesInfo(payload.resp.gene_names); 
     } else if (payload.type === "quality_control_metrics_DATA") {
       const { resp } = payload;
       setQcData(resp);
@@ -173,25 +174,30 @@ function App() {
     } else if (payload.type === "setMarkersForCluster"
       || payload.type === "setMarkersForCustomSelection") {
       const { resp } = payload;
-      let records = {};
+      let records = [];
       resp.means.forEach((x, i) => {
-        records[resp?.genes?.[i]] = {
-          "gene": resp?.genes?.[i],
+        records.push({
+          "index": i,
+          "row": resp?.ordering?.[i],
           "mean": x,
           "delta": resp?.delta_detected?.[i],
           "lfc": resp?.lfc?.[i],
           "detected": resp?.detected?.[i],
           "expanded": false,
           "expr": null,
-        }
+        });
       });
       setSelectedClusterSummary(records);
     } else if (payload.type === "setGeneExpression") {
       const { resp } = payload;
-
-      let gtmp = { ...selectedClusterSummary };
-      gtmp[resp.gene].expr = Object.values(resp.expr);
-      setSelectedClusterSummary(gtmp);
+      let tmp = [...selectedClusterSummary];
+      for (var i = 0; i < tmp.length; i++) {
+        if (resp.gene === tmp[i].row) {
+          tmp[i].expr = Object.values(resp.expr);
+          break;
+        }
+      }
+      setSelectedClusterSummary(tmp);
     }
   }
 
