@@ -43,7 +43,11 @@ const AppContextProvider = ({ children }) => {
 
   // app open inputs
   const [openInput, setOpenInput] = useState(false);
+  // show in-app game ?
   const [showGame, setShowGame] = useState(false);
+
+  // creates a default dataset name
+  const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()).slice(0,5));
 
   // app export state 
   const [exportState, setExportState] = useState(false);
@@ -177,7 +181,8 @@ const AppContextProvider = ({ children }) => {
         customSelection, setCustomSelection,
         delCustomSelection, setDelCustomSelection,
         showGame, setShowGame,
-        exportState, setExportState
+        exportState, setExportState,
+        datasetName, setDatasetName
       }}
     >
       {children}

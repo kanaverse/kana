@@ -5,7 +5,13 @@ import {
   NavbarDivider,
   NavbarGroup,
   NavbarHeading,
+  ButtonGroup,
+  Menu,
+  MenuItem,
+  EditableText
 } from "@blueprintjs/core";
+
+import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 
 import { useContext, useState } from 'react';
 
@@ -26,7 +32,7 @@ const Header = () => {
     shouldReturnFocusOnClose: true,
   });
 
-  const {setExportState} = useContext(AppContext);
+  const { setExportState, datasetName, setDatasetName } = useContext(AppContext);
 
   return (
     <>
@@ -47,13 +53,25 @@ const Header = () => {
             {...state} />
           <NavbarDivider />
 
-          <Stats />
+          <EditableText defaultValue={datasetName} intent="primary"
+            onConfirm={(val) => { setDatasetName(val) }} />
           <NavbarDivider />
 
-          <Button intent="warning"
-          onClick={() => {
-            setExportState(true);
-          }}>Export Analysis</Button>
+          <Stats />
+          <NavbarDivider />
+          <ButtonGroup>
+            <Popover2 content={
+              <Menu>
+                <MenuItem text="Save" icon="floppy-disk" disabled={true}/>
+                <MenuItem text="Download" icon="download"
+                  onClick={() => {
+                    setExportState(true);
+                  }} />
+              </Menu>
+            } placement="bottom-start">
+              <Button intent="warning" rightIcon="caret-down" icon="document" text="Export" />
+            </Popover2>
+          </ButtonGroup>
           <NavbarDivider />
 
           <Logs />
