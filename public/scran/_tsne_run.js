@@ -23,6 +23,13 @@ const scran_tsne_run = {};
         var delay = 15;
         for (; init.iterations() < args.iterations; ) {
           wasm.run_tsne(init, delay, args.iterations, buffer.ptr);
+          var xy = scran_utils_viz_child.extractXY(buffer);
+          postMessage({
+            "type": "tsne_iter",
+            "x": xy.x,
+            "y": xy.y,
+            "iteration": args.iterations
+          }, [xy.x.buffer, xy.y.buffer]);
         }
       } finally {
         init.delete();
