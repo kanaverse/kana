@@ -77,7 +77,6 @@ var runStepDimRed = async function (mode, wasm, namespace, step, message, state,
 }
 
 function runAllSteps(wasm, state, mode = "run") {
-<<<<<<< HEAD
   runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded", state,
     () => { 
       return { 
