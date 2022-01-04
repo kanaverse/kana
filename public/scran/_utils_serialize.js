@@ -44,10 +44,9 @@ const scran_utils_serialize = {};
     // Converting all other TypedArrays to normal arrays.
     contents = normalizeTypedArrays(contents);
 
-    // Converting the JSON to a string, and then a Uint8Array.
+    // Converting the JSON to a string and gzipping it into a Uint8Array.
     var str = JSON.stringify(contents);
-    const encoder = new TextEncoder();
-    const view = encoder.encode(str);
+    const view = pako.gzip(str);
 
     // Allocating a huge arrayBuffer.
     var combined = new ArrayBuffer(view.length + total_len);

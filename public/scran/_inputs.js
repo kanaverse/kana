@@ -66,11 +66,16 @@ const scran_inputs = {};
 
     var genes_buffer = getGenesBuffer();
     if (genes_buffer !== null) {
-      const tsv = d3.dsvFormat("\t");
+      var content = new Uint8Array(genes_buffer);
+      var ext = args.genes.name.split('.').pop();
+      if (ext == "gz") {
+        content = pako.ungzip(content);
+      }
 
-      // TODO: support Gzipped files, handle multiple columns.
       const dec = new TextDecoder();
-      let genes_str = dec.decode(new Uint8Array(genes_buffer));
+      let genes_str = dec.decode(content);
+
+      const tsv = d3.dsvFormat("\t");
       let parsed = tsv.parseRows(genes_str);
       
       if (parsed.length != cache.matrix.nrow()) {
