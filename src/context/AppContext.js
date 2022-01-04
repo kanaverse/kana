@@ -55,6 +55,9 @@ const AppContextProvider = ({ children }) => {
   const [qcDims, setQcDims] = useState(null);
   const [fSelDims, setFSelDims] = useState(null);
 
+  // Gene details 
+  const [genesInfo, setGenesInfo] = useState(null);
+
   // QC Data
   const [qcData, setQcData] = useState(null);
   const [qcThreshold, setQcThreshold] = useState(null);
@@ -75,7 +78,7 @@ const AppContextProvider = ({ children }) => {
   // which cluster is selected
   const [selectedCluster, setSelectedCluster] = useState(null);
   // cohen, mean scores per gene
-  const [selectedClusterSummary, setSelectedClusterSummary] = useState({});
+  const [selectedClusterSummary, setSelectedClusterSummary] = useState([]);
   // set cluster colors
   const [clusterColors, setClusterColors] = useState(null);
   // set Cluster rank-type
@@ -133,6 +136,7 @@ const AppContextProvider = ({ children }) => {
         pcaVarExp, setPcaVarExp,
         tsneData, setTsneData,
         umapData, setUmapData,
+        genesInfo, setGenesInfo,
         initDims, setInitDims,
         qcDims, setQcDims,
         qcData, setQcData,
