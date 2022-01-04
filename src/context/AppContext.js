@@ -1,4 +1,5 @@
 import React, { createContext, useEffect, useState } from "react";
+import { AppToaster } from "../components/Spinners/AppToaster";
 
 export const AppContext = createContext(null);
 
@@ -47,7 +48,7 @@ const AppContextProvider = ({ children }) => {
   const [showGame, setShowGame] = useState(false);
 
   // creates a default dataset name
-  const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()).slice(0,5));
+  const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()).slice(0, 5));
 
   // app export state 
   const [exportState, setExportState] = useState(false);
@@ -145,6 +146,10 @@ const AppContextProvider = ({ children }) => {
         },
         "msg": "not much to pass"
       });
+
+      AppToaster.show({ icon:"download", intent: "primary", message: "Exporting analysis in the background" });
+    } else {
+      inputFiles?.mtx && AppToaster.show({ icon:"download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
     }
   }, [exportState]);
 
