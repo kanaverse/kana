@@ -1,5 +1,6 @@
 importScripts("./WasmBuffer.js");
 importScripts("./HDF5Reader.js");
+importScripts("./_utils_serialize.js");
 importScripts("./_utils.js");
 importScripts("./_utils_viz_parent.js");
 importScripts("./_utils_markers.js");
@@ -206,7 +207,8 @@ onmessage = function (msg) {
       let state = {};
       runAllSteps(wasm, state, mode="serialize")
       .then(x => {
-        console.log(state);
+        var output = scran_utils_serialize.save(state);
+        console.log(output);
       });
     });
   }
