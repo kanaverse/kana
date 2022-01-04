@@ -33,7 +33,9 @@ const scran_qc_filter = {};
   }
    
   x.results = function(wasm) {
-    return {};
+    return {
+      "retained": x.fetchRetained(wasm)
+    };
   };
 
   x.serialize = function(wasm) {
