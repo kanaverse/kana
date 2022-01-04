@@ -29,41 +29,29 @@ importScripts("./_custom_markers.js");
 
 /***************************************/
 
-var runStep = function (mode, wasm, namespace, step, message, state, arg_fun = null, extra_fun = null) {
+var runStep = function(mode, wasm, namespace, step, message, args = {}, extra = null) {
   if (mode == "serialize") {
     state[step] = namespace.serialize(wasm);
   } else {
     if (mode == "run") {
-      var args;
-      if (arg_fun !== null) {
-        args = arg_fun();
-      } else {
-        args = {};
-      }
       namespace.compute(wasm, args);
     } else {
       namespace.unserialize(wasm, state[step]);
     }
     if (namespace.changed || mode == "unserialize") {
-      if (extra_fun !== null) {
-        extra_fun();
+      if (extra !== null) {
+        extra();
       }
       scran_utils.postSuccess(namespace.results(wasm), step, message);
     }
   }
 }
 
-var runStepDimRed = async function (mode, wasm, namespace, step, message, state, arg_fun) {
+var runStepDimRed = async function(mode, wasm, namespace, step, message, args) {
   if (mode == "serialize") {
     state[step] = await namespace.serialize(wasm);
   } else {
     if (mode == "run") {
-      var args;
-      if (arg_fun !== null) {
-        args = arg_fun();
-      } else {
-        args = {};
-      }
       namespace.compute(wasm, args);
     } else {
       namespace.unserialize(wasm, state[step]);
@@ -76,12 +64,8 @@ var runStepDimRed = async function (mode, wasm, namespace, step, message, state,
 }
 
 function runAllSteps(wasm, state, mode = "run") {
-  runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded", state,
-    () => { 
-      return { 
-       "files": state.files 
-      };
-    },
+  runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded", 
+    { "files": state.files },
     () => {
       var dims = scran_inputs.fetchDimensions(wasm);
       postMessage({
@@ -92,18 +76,13 @@ function runAllSteps(wasm, state, mode = "run") {
     }
   );
 
-  runStep(mode, wasm, scran_qc_metrics, "quality_control_metrics", "QC metrics computed", state);
+  runStep(mode, wasm, scran_qc_metrics, "quality_control_metrics", "QC metrics computed");
 
-  runStep(mode, wasm, scran_qc_thresholds, "quality_control_thresholds", "QC thresholds computed", state,
-    () => {
-      return {
-        "nmads": state.params.qc["qc-nmads"] 
-      };
-    }
+  runStep(mode, wasm, scran_qc_thresholds, "quality_control_thresholds", "QC thresholds computed",
+    { "nmads": state.params.qc["qc-nmads"] }
   );
 
-  runStep(mode, wasm, scran_qc_filter, "quality_control_filtered", "QC filtering completed", state, 
-    null,
+  runStep(mode, wasm, scran_qc_filter, "quality_control_filtered", "QC filtering completed", {},
     () => {
       var genes = scran_inputs.fetchGeneNames(wasm);
       var remaining = scran_qc_filter.fetchRetained(wasm);
@@ -115,88 +94,51 @@ function runAllSteps(wasm, state, mode = "run") {
     }
   );
 
-  runStep(mode, wasm, scran_normalization, "normalization", "Log-normalization completed", state);
+  runStep(mode, wasm, scran_normalization, "normalization", "Log-normalization completed");
 
-  runStep(mode, wasm, scran_model_gene_var, "feature_selection", "Variance modelling completed", state,
-    () => {
-      return {
-        "span": state.params.fSelection["fsel-span"]
-      };
-    }
+  runStep(mode, wasm, scran_model_gene_var, "feature_selection", "Variance modelling completed",
+    { "span": state.params.fSelection["fsel-span"] }
   );
 
-  runStep(mode, wasm, scran_pca, "pca", "Principal components analysis completed", state,
-    () => {
-      return {
-        "num_hvgs": state.params.pca["pca-hvg"],
-        "num_pcs": state.params.pca["pca-npc"] 
-      };
-    }
+  runStep(mode, wasm, scran_pca, "pca", "Principal components analysis completed",
+    { "num_hvgs": state.params.pca["pca-hvg"], "num_pcs": state.params.pca["pca-npc"] }
   );
 
-  runStep(mode, wasm, scran_neighbor_index, "neighbor_index", "Neighbor search index constructed", state,
-    () => {
-      return {
-        "approximate": state.params.cluster["clus-approx"] 
-      };
-    }
+  runStep(mode, wasm, scran_neighbor_index, "neighbor_index", "Neighbor search index constructed",
+    { "approximate": state.params.cluster["clus-approx"] }
   );
 
   // Special async steps - these are run separately.
-  var tsne = runStepDimRed(mode, wasm, scran_tsne_monitor, "tsne", "t-SNE completed", state,
-    () => {
-      return {
-        "perplexity": state.params.tsne["tsne-perp"],
-        "iterations": state.params.tsne["tsne-iter"]
-      };
-    }
+  var tsne = runStepDimRed(mode, wasm, scran_tsne_monitor, "tsne", "t-SNE completed", {
+    "perplexity": state.params.tsne["tsne-perp"],
+    "iterations": state.params.tsne["tsne-iter"]
+  });
+
+  var umap = runStepDimRed(mode, wasm, scran_umap_monitor, "umap", "UMAP completed", {
+    "num_epochs": state.params.umap["umap-epochs"],
+    "num_neighbors": state.params.umap["umap-nn"],
+    "min_dist": state.params.umap["umap-min_dist"]
+  });
+
+  runStep(mode, wasm, scran_snn_neighbors, "snn_find_neighbors", "Neighbor search for clustering complete",
+    { "k": state.params.cluster["clus-k"] }
   );
 
-  var umap = runStepDimRed(mode, wasm, scran_umap_monitor, "umap", "UMAP completed", state,
-    () => {
-      return {
-        "num_epochs": state.params.umap["umap-epochs"],
-        "num_neighbors": state.params.umap["umap-nn"],
-        "min_dist": state.params.umap["umap-min_dist"]
-      };
-    }
+  runStep(mode, wasm, scran_snn_graph, "snn_build_graph", "Shared nearest neighbor graph constructed",
+    { "scheme": state.params.cluster["clus-scheme"] }
   );
 
-  runStep(mode, wasm, scran_snn_neighbors, "snn_find_neighbors", "Neighbor search for clustering complete", state,
-    () => {
-      return {
-        "k": state.params.cluster["clus-k"] 
-      };
-    }
+  runStep(mode, wasm, scran_snn_cluster, "snn_cluster_graph", "Community detection from SNN graph complete",
+    { "resolution": state.params.cluster["clus-res"] }
   );
 
-  runStep(mode, wasm, scran_snn_graph, "snn_build_graph", "Shared nearest neighbor graph constructed", state,
-    () => {
-      return {
-        "scheme": state.params.cluster["clus-scheme"] 
-      };
-    }
+  runStep(mode, wasm, scran_choose_clustering, "choose_clustering", "Clustering of interest chosen",
+    { "method": state.params.cluster["clus-method"] }
   );
 
-  runStep(mode, wasm, scran_snn_cluster, "snn_cluster_graph", "Community detection from SNN graph complete", state,
-    () => {
-      return {
-        "resolution": state.params.cluster["clus-res"] 
-      };
-    }
-  );
+  runStep(mode, wasm, scran_score_markers, "marker_detection", "Marker detection complete");
 
-  runStep(mode, wasm, scran_choose_clustering, "choose_clustering", "Clustering of interest chosen", state,
-    () => {
-      return {
-        "method": state.params.cluster["clus-method"] 
-      };
-    }
-  );
-
-  runStep(mode, wasm, scran_score_markers, "marker_detection", "Marker detection complete", state);
-
-  runStep(mode, wasm, scran_custom_markers, "custom_marker_management", "Pruning of custom markers finished", state);
+  runStep(mode, wasm, scran_custom_markers, "custom_marker_management", "Pruning of custom markers finished");
 
   return Promise.all([tsne, umap]);
 }
@@ -221,16 +163,6 @@ onmessage = function (msg) {
   } else if (payload.type == "RUN") {
     loaded.then(wasm => {
       runAllSteps(wasm, payload.payload);
-    });
-  }
-  // 
-  else if(payload.type == "EXPORT") {
-    loaded.then(wasm => {
-      let state = {};
-      runAllSteps(wasm, state, mode="serialize")
-      .then(x => {
-        console.log(state);
-      });
     });
   }
   // custom events from UI
