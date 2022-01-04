@@ -14,7 +14,7 @@ const scran_utils_serialize = {};
       for (var i = 0; i < object.length; i++) {
         object[i] = normalizeTypedArrays(object[i]);
       }
-    } else if (object.constructor == Object) {
+    } else if (object instanceof Object) {
       for (const [key, element] of Object.entries(object)) {
         object[key] = normalizeTypedArrays(element);
       }

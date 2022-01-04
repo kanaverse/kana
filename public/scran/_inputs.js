@@ -193,6 +193,24 @@ const scran_inputs = {};
     return;
   }
 
+  // TODO: probably needs more testing but works with matrixmarket
+  function clone_inputs(obj) {
+    if(Array.isArray(obj)) return obj.slice(0);
+
+    let res= {};
+    for (const [key, val] of Object.entries(obj)) {
+      if (val instanceof Object) {
+        res[key] = clone_inputs(val);
+      }
+
+      if (!Array.isArray(val) && !(val instanceof Object)) {
+        res[key] = val;
+      }
+    }
+
+    return res;
+  }
+
   /** Public functions (standard) **/
   x.compute = function(wasm, args) {
     // TODO: switch to args telling us what the data type is.
@@ -220,15 +238,16 @@ const scran_inputs = {};
    */
   x.serialize = function(wasm) {
     var contents = {};
-
     if ("reloaded" in cache) {
       contents.gene_names = cache.reloaded.gene_names;
       contents.num_cells = cache.reloaded.num_cells;
-      contents.files = cache.reloaded.files;
+      
+      contents.files = clone_inputs(cache.reloaded.files)
     } else {
       contents.gene_names = cache.gene_names;
       contents.num_cells = cache.matrix.ncol();
-      contents.files = cache.files;
+      
+      contents.files = clone_inputs(cache.files)
     }
 
     return {
