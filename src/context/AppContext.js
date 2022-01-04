@@ -6,9 +6,8 @@ export const AppContext = createContext(null);
 const AppContextProvider = ({ children }) => {
   // Input State
   const [inputFiles, setInputFiles] = useState({
-    gene: null,
-    mtx: null,
-    barcode: null,
+    format: null,
+    files: null
   });
 
   // default params 
@@ -117,13 +116,11 @@ const AppContextProvider = ({ children }) => {
 
   useEffect(() => {
 
-    if (wasmInitialized && inputFiles.mtx != null) {
+    if (wasmInitialized && inputFiles.files != null) {
       window.Worker.postMessage({
         "type": "RUN",
         "payload": {
-          "files": [inputFiles.mtx,
-          inputFiles.barcode ? inputFiles.barcode[0] : [],
-          inputFiles.gene ? inputFiles.gene[0] : []], //mtx, barcode, gene
+          "files": inputFiles,
           "params": params
         },
         "msg": "not much to pass"
@@ -139,9 +136,7 @@ const AppContextProvider = ({ children }) => {
       window.Worker.postMessage({
         "type": "EXPORT",
         "payload": {
-          "files": [inputFiles.mtx,
-          inputFiles.barcode ? inputFiles.barcode[0] : [],
-          inputFiles.gene ? inputFiles.gene[0] : []], //mtx, barcode, gene
+          "files": inputFiles,
           "params": params
         },
         "msg": "not much to pass"
@@ -149,7 +144,7 @@ const AppContextProvider = ({ children }) => {
 
       AppToaster.show({ icon:"download", intent: "primary", message: "Exporting analysis in the background" });
     } else {
-      inputFiles?.mtx && AppToaster.show({ icon:"download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
+      inputFiles?.files && AppToaster.show({ icon:"download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
     }
   }, [exportState]);
 
