@@ -1,6 +1,14 @@
 const scran_utils_serialize = {};
 
 (function(x) {
+  /* Private members */
+
+  // Must be integers!
+  const FORMAT_WITH_FILES = 0;
+  const FORMAT_WITHOUT_FILES = 1;
+  const FORMAT_VERSION = 0;
+
+  /* Private functions */
   function normalizeTypedArrays(object) {
     if (Array.isArray(object)) {
       for (var i = 0; i < object.length; i++) {
@@ -19,25 +27,41 @@ const scran_utils_serialize = {};
     return object;
   }
 
+  function numberToBuffer(number) {
+    // Store as little-endian. Probably safer
+    // than trying to cast it from a Uint64Array;
+    // not sure that endianness is strictly defined.
+    var output = new Uint8Array(8);
+
+    var i = 0;
+    while (number > 0) {
+      output[i] = number % 256;
+      number = Math.floor(number / 256);
+      i++;
+    }
+
+    return output;
+  }
+
+  /* Public functions */
   x.save = function(contents) {
     // Extract out the file buffers.
     var buffered = contents.inputs.contents.files.buffered;
     var all_buffers = [];
-    var total_len = 0;
+    var offset = 0, total_len = 0;
 
     for (const [key, val] of Object.entries(buffered)) {
       if (Array.isArray(val)) {
         for (var i = 0; i < val.length; i++) {
-          var count = all_buffers.length;
           all_buffers.push(val[i]);
-          total_len += val[i].byteLength;
-          val[i] = { "count": count, "size": val[i].byteLength };
+          var cur_len = val[i].byteLength;
+          val[i] = { "offset": total_len, "size": cur_len };
+          total_len += cur_len;
         }
       } else {
-        var count = all_buffers.length;
         all_buffers.push(val);
+        buffered[key] = { "offset": total_len, "size": val.byteLength };
         total_len += val.byteLength;
-        buffered[key] = { "count": count, "size": val.byteLength };
       }
     }
 
@@ -45,16 +69,32 @@ const scran_utils_serialize = {};
     contents = normalizeTypedArrays(contents);
 
     // Converting the JSON to a string and gzipping it into a Uint8Array.
-    var str = JSON.stringify(contents);
-    const view = pako.gzip(str);
+    var json_str = JSON.stringify(contents);
+    const json_view = pako.gzip(json_str);
 
     // Allocating a huge arrayBuffer.
-    var combined = new ArrayBuffer(view.length + total_len);
+    var combined = new ArrayBuffer(24 + json_view.length + total_len);
     var combined_arr = new Uint8Array(combined);
+    offset = 0;
 
-    var offset = 0;
-    combined_arr.set(view);
-    offset += view.length;
+    let format = numberToBuffer(FORMAT_WITH_FILES);
+    combined_arr.set(format, offset); 
+    offset += format.length;
+
+    let version = numberToBuffer(FORMAT_VERSION);
+    combined_arr.set(version, offset); 
+    offset += version.length;
+
+    let json_len = numberToBuffer(json_view.length);
+    combined_arr.set(json_len, offset); 
+    offset += json_len.length;
+
+    if (offset != 24) {
+      throw "oops - accounting error in the serialization code!";
+    }
+
+    combined_arr.set(json_view, offset);
+    offset += json_view.length;
 
     for (const buf of all_buffers) {
       const tmp = new Uint8Array(buf);
