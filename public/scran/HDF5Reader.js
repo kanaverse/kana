@@ -1,8 +1,5 @@
-//import * as hdf5 from './jsfive/index.js';
-//import "./WasmBuffer.js";
 var window = {};
 importScripts("https://cdn.jsdelivr.net/gh/usnistgov/jsfive@master/dist/hdf5.js");
-
 var hdf5 = window.hdf5;
 
 function cloneIntoWasmBuffer(wasm, arr) {

@@ -4,6 +4,10 @@ importScripts("./_utils.js");
 importScripts("./_utils_viz_parent.js");
 importScripts("./_utils_markers.js");
 
+var window = {};
+importScripts("https://cdn.jsdelivr.net/gh/usnistgov/jsfive@master/dist/hdf5.js");
+var hdf5 = window.hdf5;
+
 importScripts("./_inputs.js");
 importScripts("https://cdn.jsdelivr.net/npm/d3-dsv@3");
 
