@@ -123,10 +123,8 @@ function App() {
     if (payload.type === "INIT") {
       setLoading(false);
       setWasmInitialized(true);
-    } else if (payload.type === "input_DIMS") {
-      setInitDims(payload.resp);
-    } else if (payload.type === "quality_control_filtered_DIMS") {
-      setQcDims(payload.resp);
+    } else if (payload.type === "inputs_DATA") {
+      setInitDims(`${payload.resp.dimensions.num_genes} genes, ${payload.resp.dimensions.num_cells} cells`);
     } else if (payload.type === "quality_control_metrics_DATA") {
       const { resp } = payload;
       setQcData(resp);
@@ -135,7 +133,8 @@ function App() {
       let tmp = { ...qcData };
       tmp["thresholds"] = resp;
       setQcData(tmp);
-    } else if (payload.type === "feature_selection_DIMS") {
+    } else if (payload.type === "quality_control_filtered_DATA") {
+      setQcDims(`${payload.resp.retained} cells`);
     } else if (payload.type === "feature_selection_DATA") {
       const { resp } = payload;
       setFSelectionData(resp);
