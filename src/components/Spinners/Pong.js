@@ -380,7 +380,7 @@ const Pong = () => {
 
     return (
         <div ref={container} className='pong-container'>
-            <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+            {/* <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label> */}
             <canvas></canvas>
             <p className="credit">Game Credits <a href="https://codepen.io/gdube/pen/JybxxZ" target="_blank">Pong Game</a></p>
         </div>

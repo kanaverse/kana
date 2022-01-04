@@ -2,7 +2,7 @@ import './App.css';
 import Header from "./components/Header";
 import Gallery from './components/Gallery';
 
-import { Label, Overlay, Spinner } from "@blueprintjs/core";
+import { Button, Label, Overlay, Spinner } from "@blueprintjs/core";
 
 import { useState, useEffect, useContext } from 'react';
 import { AppContext } from './context/AppContext';
@@ -205,11 +205,33 @@ function App() {
             defaultRedDims ?
               <DimPlot /> :
               showGame ?
-                <Pong /> :
                 <div style={{
+                  height: '100%',
                   width: '100%',
-                  height: '100%'
-                }}></div>
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingTop: '50px'
+                }}>
+                  <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+                  <Button onClick={() => { setShowGame(false) }}>I'm good, go back</Button>
+                  <Pong />
+                </div>
+                :
+                <div style={{
+                  height: '100%',
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingTop: '50px'
+                }}>
+                  <Spinner2 />
+                  <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+                  <Button onClick={() => { setShowGame(true) }}>Play Pong</Button>
+                </div>
           }
         </div>
         <div className="marker">
