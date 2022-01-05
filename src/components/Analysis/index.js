@@ -1,6 +1,7 @@
 import {
     Button, Classes, Dialog, Text, FileInput, NumericInput,
-    Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab
+    Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
+    InputGroup
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback, useEffect } from "react";
@@ -281,6 +282,21 @@ function AnalysisDialog({
                                                     <NumericInput
                                                         placeholder="3" value={tmpInputParams["qc"]["qc-nmads"]}
                                                         onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-nmads": nval } }) }} />
+                                                </Label>
+                                                <Label className="row-input">
+                                                    <Text className="text-100">
+                                                        <span className="row-tooltip"
+                                                            onMouseEnter={() => setShowStepHelper(2)}
+                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            Mitochondrial gene prefix
+                                                        </span>
+                                                    </Text>
+                                                    <InputGroup
+                                                        leftIcon="filter"
+                                                        onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-mito": nval?.target?.value } }) }}
+                                                        placeholder="mt-"
+                                                        value={tmpInputParams["qc"]["qc-mito"]}
+                                                    />
                                                 </Label>
                                             </div>
                                         </div>
