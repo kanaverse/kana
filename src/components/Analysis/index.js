@@ -30,9 +30,6 @@ function AnalysisDialog({
         barcode: null,
     });
 
-    let [tmpInputParams, setTmpInputParams] = useState(params);
-    let [tmpInputValid, setTmpInputValid] = useState(true);
-
     const [inputText, setInputText] = useState({
         mtx: "Choose Matrix Market file",
         gene: "Choose feature/gene annotation",
@@ -42,7 +39,6 @@ function AnalysisDialog({
     let [tmpInputParams, setTmpInputParams] = useState(params);
     let [tmpInputValid, setTmpInputValid] = useState(true);
 
-    const [tabSelected, setTabSelected] = useState("new");
     const [newImportFormat, setNewImportFormat] = useState("mtx");
     // const [hdfFormat, sethdfFormat] = useState("tenx");
 

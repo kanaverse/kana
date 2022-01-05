@@ -32,7 +32,7 @@ const AppContextProvider = ({ children }) => {
     tsne: {
       "tsne-iter": 500,
       "tsne-perp": 30,
-      "animate": true,
+      "animate": false,
     },
     umap: {
       "umap-nn": 15,
@@ -130,7 +130,7 @@ const AppContextProvider = ({ children }) => {
 
     if (wasmInitialized && inputFiles.files != null) {
       if (tabSelected === "new") {
-        window.Worker.postMessage({
+        window.scranWorker.postMessage({
           "type": "RUN",
           "payload": {
             "files": inputFiles,
@@ -140,7 +140,7 @@ const AppContextProvider = ({ children }) => {
         });
       } else if (tabSelected === "load") {
         if (loadParams !== null) {
-          window.Worker.postMessage({
+          window.scranWorker.postMessage({
             "type": "LOAD",
             "payload": {
               "files": inputFiles,
@@ -149,7 +149,7 @@ const AppContextProvider = ({ children }) => {
             "msg": "not much to pass"
           });
         } else {
-          window.Worker.postMessage({
+          window.scranWorker.postMessage({
             "type": "IMPORT",
             "payload": {
               "files": inputFiles
