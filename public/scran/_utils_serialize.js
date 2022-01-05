@@ -182,7 +182,7 @@ const scran_utils_serialize = {};
     var json_len = bufferToNumber(new Uint8Array(buffer, offset, 8));
     offset += 8;
 
-    var contents = pako.ungzip(new Uint8Array(buffer, offset, json_len));
+    var contents = pako.ungzip(new Uint8Array(buffer, offset, json_len), { "to": "string" });
     contents = JSON.parse(contents);
     contents = recoverTypedArrays(contents);
     offset += json_len;
