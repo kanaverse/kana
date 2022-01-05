@@ -32,11 +32,13 @@ const AppContextProvider = ({ children }) => {
     tsne: {
       "tsne-iter": 500,
       "tsne-perp": 30,
+      "animate": true,
     },
     umap: {
       "umap-nn": 15,
       "umap-epochs": 500,
       "umap-min_dist": 0.01,
+      "animate": false,
     },
     markerGene: {}
   });
@@ -103,6 +105,12 @@ const AppContextProvider = ({ children }) => {
   const [pcaData, setPcaData] = useState(null);
   const [pcaVarExp, setPcaVarExp] = useState(null);
 
+  // this applies to both tsne and umap
+  // is animation in progress ?
+  const [showAnimation, setShowAnimation] = useState(false);
+  // if a user manually triggers an animation (using the play button)
+  const [triggerAnimation, setTriggerAnimation] = useState(false);
+
   // TSNE
   const [tsneData, setTsneData] = useState(null);
 
@@ -121,7 +129,6 @@ const AppContextProvider = ({ children }) => {
   useEffect(() => {
 
     if (wasmInitialized && inputFiles.files != null) {
-
       if (tabSelected === "new") {
         window.Worker.postMessage({
           "type": "RUN",
@@ -210,7 +217,9 @@ const AppContextProvider = ({ children }) => {
         exportState, setExportState,
         datasetName, setDatasetName,
         tabSelected, setTabSelected,
-        loadParams, setLoadParams
+        loadParams, setLoadParams,
+        showAnimation, setShowAnimation,
+        triggerAnimation, setTriggerAnimation
       }}
     >
       {children}

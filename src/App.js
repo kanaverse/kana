@@ -38,11 +38,12 @@ function App() {
     selectedClusterSummary, setSelectedClusterSummary,
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection,
-    setSelectedCluster, setShowGame, showGame, datasetName, setExportState } = useContext(AppContext);
+    setSelectedCluster, setShowGame, showGame, datasetName, setExportState,
+    setShowAnimation, triggerAnimation, setTriggerAnimation, params } = useContext(AppContext);
 
   // initializes various things on the worker side
   useEffect(() => {
-    window.Worker.postMessage({
+    window.scranWorker.postMessage({
       "type": "INIT",
       "msg": "Initial Load"
     });
@@ -55,7 +56,7 @@ function App() {
     if (selectedCluster !== null) {
       let type = String(selectedCluster).startsWith("cs") ?
         "getMarkersForSelection" : "getMarkersForCluster";
-      window.Worker.postMessage({
+      window.scranWorker.postMessage({
         "type": type,
         "payload": {
           "cluster": selectedCluster,
@@ -72,7 +73,7 @@ function App() {
     if (customSelection !== null && Object.keys(customSelection).length > 0) {
       let csLen = `cs${Object.keys(customSelection).length}`;
       var cs = customSelection[csLen];
-      window.Worker.postMessage({
+      window.scranWorker.postMessage({
         "type": "computeCustomMarkers",
         "payload": {
           "selection": cs,
@@ -85,7 +86,7 @@ function App() {
   // Remove a custom selection from cache
   useEffect(() => {
     if (delCustomSelection !== null) {
-      window.Worker.postMessage({
+      window.scranWorker.postMessage({
         "type": "removeCustomMarkers",
         "payload": {
           "id": delCustomSelection
@@ -99,17 +100,26 @@ function App() {
   // get expression for a gene from worker
   useEffect(() => {
 
-    reqGene !== null && window.Worker.postMessage({
+    reqGene !== null && window.scranWorker.postMessage({
       "type": "getGeneExpression",
       "payload": {
         "gene": reqGene
       }
     });
-  }, [reqGene])
+  }, [reqGene]);
+
+  useEffect(() => {
+    triggerAnimation && defaultRedDims && window.scranWorker.postMessage({
+      "type": "animate" + defaultRedDims,
+      payload: {
+        params: params[defaultRedDims.toLowerCase()]
+      }
+    });
+  }, [triggerAnimation]);
 
   // callback for all responses from workers
   // all interactions are logged and shown on the UI
-  window.Worker.onmessage = (msg) => {
+  window.scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
     if (payload?.msg) {
@@ -152,6 +162,8 @@ function App() {
       const { resp } = payload;
       setTsneData(resp);
 
+      setShowAnimation(true);
+
       let tmp = [...redDims];
       tmp.push("TSNE");
       // once t-SNE is available, set this as the default display
@@ -162,14 +174,28 @@ function App() {
       setRedDims(tmp);
       // also don't show the pong game anymore
       setShowGame(false);
-    } else if (payload.type === "umap_DATA") {
+
+      // assuming the last response is _data
+      if (payload.type === "tsne_DATA") {
+        setShowAnimation(false);
+        setTriggerAnimation(false);
+      }
+    } else if (payload.type === "umap_DATA" || payload.type === "umap_iter") {
       const { resp } = payload;
       setUmapData(resp);
+
+      setShowAnimation(true);
 
       // enable UMAP selection
       let tmp = [...redDims];
       tmp.push("UMAP");
       setRedDims(tmp);
+
+      // assuming the last response is _data
+      if (payload.type === "umap_DATA") {
+        setShowAnimation(false);
+        setTriggerAnimation(false);
+      }
     } else if (payload.type === "markerGene_DATA") {
     } else if (payload.type === "setMarkersForCluster"
       || payload.type === "setMarkersForCustomSelection") {

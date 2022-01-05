@@ -30,7 +30,7 @@ const Logs = () => {
     return (
         <>
             <Button onClick={handleOpen} icon="wrench" outlined={true}
-                intent="warning">What's happening ?</Button>
+                intent="warning"></Button>
             <Drawer
                 icon="info-sign"
                 onClose={handleClose}

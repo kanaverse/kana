@@ -20,9 +20,21 @@ const scran_tsne_run = {};
         var buffer = scran_utils.allocateBuffer(wasm, num_obs * 2, "Float64Array", cache);
         wasm.randomize_tsne_start(num_obs, buffer.ptr, 42);
 
-        var delay = 15;
+        // TODO: using 75 for now
+        // in the future the user can choose a bar for speed on the UI
+        // options would be 1x, 2x, 3x
+        var delay = 75;
         for (; init.iterations() < args.iterations; ) {
           wasm.run_tsne(init, delay, args.iterations, buffer.ptr);
+          if (args.animate) {
+            var xy = scran_utils_viz_child.extractXY(buffer);
+            postMessage({
+              "type": "tsne_iter",
+              "x": xy.x,
+              "y": xy.y,
+              "iteration": init.iterations()
+            }, [xy.x.buffer, xy.y.buffer]);
+          }
         }
       } finally {
         init.delete();

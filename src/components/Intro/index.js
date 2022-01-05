@@ -29,7 +29,7 @@ function IntroDialog({
 
     return (
         <>
-            <Button onClick={handleButtonClick} icon="info-sign" intent="primary" text="Info" />
+            <Button onClick={handleButtonClick} icon="info-sign" intent="primary" text="" />
             <Dialog {...props} isOpen={isOpen} onClose={handleClose}>
                 <div className={Classes.DIALOG_BODY}>
                     <Card elevation={Elevation.ZERO}>

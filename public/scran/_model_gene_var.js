@@ -8,6 +8,17 @@ const scran_model_gene_var = {};
   /** Public members **/
   x.changed = false;
 
+  /** Private functions (standard) **/
+  function spawnStats() {
+    var model_output = cache.raw;
+    return {
+      "means": model_output.means(0).slice(),
+      "vars": model_output.variances(0).slice(),
+      "fitted": model_output.fitted(0).slice(),
+      "resids": model_output.residuals(0).slice()
+    };
+  }
+
   /** Public functions (standard) **/
   x.compute = function(wasm, args) {
     if (!scran_normalization.changed && !scran_utils.changedParameters(parameters, args)) {
@@ -28,23 +39,32 @@ const scran_model_gene_var = {};
 
   x.results = function(wasm) {
     if ("reloaded" in cache) {
-      return cache.reloaded;
-    } else {
-      var model_output = cache.raw;
       return {
-        "means": model_output.means(0).slice(),
-        "vars": model_output.variances(0).slice(),
-        "fitted": model_output.fitted(0).slice(),
-        "resids": model_output.residuals(0).slice()
+        "means": cache.reloaded.means.slice(),
+        "vars": cache.reloaded.vars.slice(),
+        "fitted": cache.reloaded.fitted.slice(),
+        "resids": cache.reloaded.resids.slice()
       };
+    } else {
+      return spawnStats();
     }
   };
 
   x.serialize = function(wasm) {
-    return {
-      "parameters": parameters,
-      "contents": x.results(wasm)
+    var output = { "parameters": parameters };
+
+    if ("reloaded" in cache) {
+      output.contents = {
+        "means": cache.reloaded.means,
+        "vars": cache.reloaded.vars,
+        "fitted": cache.reloaded.fitted,
+        "resids": cache.reloaded.resids
+      };
+    } else {
+      output.contents = spawnStats();
     };
+
+    return output;
   };
 
   x.unserialize = function(wasm, saved) {

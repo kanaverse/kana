@@ -33,7 +33,9 @@
   <script type="text/javascript">
 
     const worker = new Worker("%PUBLIC_URL%/scran/scranWorker.js");
-    window.Worker = worker;
+    window.scranWorker = worker;
+
+  </script>
 
   </script>
 </head>

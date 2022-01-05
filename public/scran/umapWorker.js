@@ -35,7 +35,7 @@ onmessage = function(msg) {
       var params = msg.data.params;
       scran_umap_init.compute(wasm, { "min_dist": params.min_dist, "num_epochs": params.num_epochs });
 
-      scran_umap_run.compute(wasm, {});
+      scran_umap_run.compute(wasm, {"animate": params.animate});
       postMessage({
         "id": id,
         "type": "umap_run",

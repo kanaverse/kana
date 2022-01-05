@@ -2,7 +2,8 @@ import { ScatterGL } from 'scatter-gl';
 import { useEffect, useRef, useContext, useState } from 'react';
 import {
     ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider,
-    Divider
+    Divider,
+    Label
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
@@ -34,12 +35,15 @@ const DimPlot = () => {
         tsneData, umapData, setPlotRedDims, clusterColors, setClusterColors,
         gene, selectedClusterSummary,
         customSelection, setCustomSelection,
-        setDelCustomSelection } = useContext(AppContext);
+        setDelCustomSelection,
+        showAnimation, setTriggerAnimation } = useContext(AppContext);
 
     // keeps track of what points were selected in lasso selections
     const [selectedPoints, setSelectedPoints] = useState(null);
     // set mode for plot
     const [plotMode, setPlotMode] = useState('PAN');
+
+    const max = Math.max(...clusterData?.clusters);
 
     // if either gene or expression changes, compute gradients and min/max
     useEffect(() => {
@@ -100,9 +104,9 @@ const DimPlot = () => {
                     },
                     styles: {
                         point: {
-                            scaleDefault: 1.75,
-                            scaleSelected: 2,
-                            scaleHover: 2,
+                            scaleDefault: 0.4,
+                            scaleSelected: 1.25,
+                            scaleHover: 1.25,
                         }
                     }
                 });
@@ -111,22 +115,28 @@ const DimPlot = () => {
                 setScatterplot(tmp_scatterplot);
             }
 
-            // if dimensions are available
-            if (plotRedDims?.plot) {
+            let data = null;
+            if (defaultRedDims === "TSNE") {
+                data = tsneData;
+            } else if (defaultRedDims === "UMAP") {
+                data = umapData;
+            }
 
-                let cluster_mappings = plotRedDims?.clusters;
+            // if dimensions are available
+            if (data) {
+
+                let cluster_mappings = clusterData?.clusters;
                 const cluster_colors = clusterColors
 
                 let points = []
-                plotRedDims?.plot.x.forEach((x, i) => {
-                    points.push([x, plotRedDims?.plot.y[i]]);
+                data.x.forEach((x, i) => {
+                    points.push([x, data.y[i]]);
                 });
 
                 let metadata = {
                     clusters: cluster_mappings
                 };
                 const dataset = new ScatterGL.Dataset(points, metadata);
-                const max = Math.max(...clusterData?.clusters);
                 tmp_scatterplot.render(dataset);
 
                 // callback for coloring cells on the plot
@@ -176,26 +186,7 @@ const DimPlot = () => {
                 });
             }
         }
-    }, [plotRedDims, gradient, clusHighlight]);
-
-    useEffect(() => {
-        changeRedDim(defaultRedDims);
-    }, [defaultRedDims])
-
-    // handler for switching dimensions
-    const changeRedDim = (x) => {
-        if (defaultRedDims === "TSNE") {
-            setPlotRedDims({
-                "plot": tsneData,
-                "clusters": clusterData?.clusters
-            });
-        } else if (defaultRedDims === "UMAP") {
-            setPlotRedDims({
-                "plot": umapData,
-                "clusters": clusterData?.clusters
-            });
-        }
-    };
+    }, [tsneData, umapData, defaultRedDims, gradient, clusHighlight]);
 
     const setInteraction = (x) => {
         if (x === "PAN") {
@@ -256,17 +247,36 @@ const DimPlot = () => {
                     <span>UMAP</span>
                 </Button>
             </ButtonGroup>
-            <ControlGroup className="top-header" fill={false} vertical={false}>
-                <Button active={plotMode == "PAN"}
-                    intent={plotMode === "PAN" ? "primary" : "none"}
-                    icon="hand-up" onClick={x => setInteraction("PAN")}>Pan</Button>
-                <Button active={plotMode == "SELECT"}
-                    intent={plotMode === "SELECT" ? "primary" : "none"}
-                    icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
-            </ControlGroup>
+            <div className="top-header">
+                <ControlGroup fill={false} vertical={false}
+                    style={{
+                        marginRight: '4px'
+                    }}>
+                    <Tooltip2 content="Interactively visualize embeddings">
+                        <Button icon="play"
+                            onClick={() => setTriggerAnimation(true)}>Animate</Button>
+                    </Tooltip2>
+                    <Tooltip2 content="Save this embedding">
+                        <Button icon="inheritance">Save</Button>
+                    </Tooltip2>
+                </ControlGroup>
+                <ControlGroup fill={false} vertical={false}>
+                    <Button active={plotMode == "PAN"}
+                        intent={plotMode === "PAN" ? "primary" : "none"}
+                        icon="hand-up" onClick={x => setInteraction("PAN")}>Pan</Button>
+                    <Button active={plotMode == "SELECT"}
+                        intent={plotMode === "SELECT" ? "primary" : "none"}
+                        icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
+                </ControlGroup>
+            </div>
+            {
+                showAnimation ?
+                    <Label className='iter'>Iteration: {defaultRedDims === "TSNE" ? tsneData?.iteration : umapData?.iteration}</Label>
+                    : ""
+            }
             <div className='dim-plot'>
                 {
-                    plotRedDims?.plot ?
+                    defaultRedDims ?
                         <div ref={container} ></div> :
                         "Choose an Embedding... or Embeddings are being computed..."
                 }
