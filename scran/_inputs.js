@@ -145,13 +145,13 @@ const scran_inputs = {};
   function loadHDF5Raw(wasm, getHDF5Buffer) {
     scran_utils.freeCache(cache.matrix);
 
-    var h5_buffers = getHDF5Buffer();
+    var h5_buffers = getHDF5Buffers();
     var files = { "type": "HDF5", "buffered": { "h5": h5_buffers } };
 
     // In theory, we could support multiple HDF5 buffers.
     cache.matrix = readMatrixFromHDF5(wasm, h5_buffers[0]);
 
-    var genes = guessGenesFromHDF5(h5_buffers[0]);
+    var genes = guessGenesFromHDF5(contents);
     if (genes === null) {
       cache.gene_names = dummyGenes(cache.matrix.nrow());
     } else {
@@ -222,11 +222,8 @@ const scran_inputs = {};
         // TODO: deserialize the saved analysis
         // loadSavedAnalysis(wasm, args.files);
         break;
-        // TODO: can parse hdf5 files by specific format
       case "hdf5":
-      case "tenx":
-      case "anndata":
-        loadHDF5(wasm, [args.files.file]);
+        loadHDF5(wasm, args.files);
         break;
       default:
         throw "unknown matrix file extension: '" + args.format + "'";
