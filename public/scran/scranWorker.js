@@ -208,7 +208,17 @@ onmessage = function (msg) {
       runAllSteps(wasm, payload.payload);
     });
   }
-  // 
+  // events specific to loading an existing kana file
+  else if (payload.type == "IMPORT") {
+    loaded.then(wasm => {
+      // TODO: import the file and send the params back
+    });
+  } else if (payload.type == "LOAD") {
+    loaded.then(wasm => {
+      // TODO: params has changed to rerun an analysis
+    });
+  }
+  // exporting an analysis
   else if (payload.type == "EXPORT") {
     loaded.then(wasm => {
       let state = {};
