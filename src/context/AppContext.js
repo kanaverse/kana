@@ -101,6 +101,7 @@ const AppContextProvider = ({ children }) => {
 
   // TSNE
   const [tsneData, setTsneData] = useState(null);
+  const [showAnimation, setShowAnimation] = useState(false);
 
   // UMAP
   const [umapData, setUmapData] = useState(null);
@@ -182,7 +183,8 @@ const AppContextProvider = ({ children }) => {
         delCustomSelection, setDelCustomSelection,
         showGame, setShowGame,
         exportState, setExportState,
-        datasetName, setDatasetName
+        datasetName, setDatasetName,
+        showAnimation, setShowAnimation
       }}
     >
       {children}
