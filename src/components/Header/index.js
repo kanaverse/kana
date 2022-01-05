@@ -47,19 +47,20 @@ const Header = () => {
 
           <AnalysisDialog
             icon="document"
-            title="Import dataset & update parameters (mouseover for more info)"
+            title="Import dataset & update parameters (mouseover for info)"
             buttonText="Start Analysis"
             includeFooter={true}
             {...state} />
           <NavbarDivider />
+
           <Tooltip2 content="Modify dataset title">
             <EditableText defaultValue={datasetName} intent="primary"
               onConfirm={(val) => { setDatasetName(val) }} />
           </Tooltip2>
-          <NavbarDivider />
 
           <Stats />
           <NavbarDivider />
+
           <ButtonGroup>
             <Popover2 content={
               <Menu>
@@ -70,7 +71,7 @@ const Header = () => {
                   }} />
               </Menu>
             } placement="bottom-start">
-              <Button intent="warning" rightIcon="caret-down" icon="document" text="Export" />
+              <Button intent="warning" rightIcon="caret-down" text="Export" />
             </Popover2>
           </ButtonGroup>
           <NavbarDivider />
