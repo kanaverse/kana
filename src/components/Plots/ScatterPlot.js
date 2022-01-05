@@ -43,6 +43,8 @@ const DimPlot = () => {
     // set mode for plot
     const [plotMode, setPlotMode] = useState('PAN');
 
+    const max = Math.max(...clusterData?.clusters);
+
     // if either gene or expression changes, compute gradients and min/max
     useEffect(() => {
         if (gene === null) {
@@ -100,35 +102,41 @@ const DimPlot = () => {
                     orbitControls: {
                         zoomSpeed: 1.25,
                     },
-                    // styles: {
-                    //     point: {
-                    //         scaleDefault: 1.75,
-                    //         scaleSelected: 2,
-                    //         scaleHover: 2,
-                    //     }
-                    // }
+                    styles: {
+                        point: {
+                            scaleDefault: 0.4,
+                            scaleSelected: 1.25,
+                            scaleHover: 1.25,
+                        }
+                    }
                 });
 
                 tmp_scatterplot.setPanMode();
                 setScatterplot(tmp_scatterplot);
             }
 
-            // if dimensions are available
-            if (plotRedDims?.plot) {
+            let data = null;
+            if (defaultRedDims === "TSNE") {
+                data = tsneData;
+            } else if (defaultRedDims === "UMAP") {
+                data = umapData;
+            }
 
-                let cluster_mappings = plotRedDims?.clusters;
+            // if dimensions are available
+            if (data) {
+
+                let cluster_mappings = clusterData?.clusters;
                 const cluster_colors = clusterColors
 
                 let points = []
-                plotRedDims?.plot.x.forEach((x, i) => {
-                    points.push([x, plotRedDims?.plot.y[i]]);
+                data.x.forEach((x, i) => {
+                    points.push([x, data.y[i]]);
                 });
 
                 let metadata = {
                     clusters: cluster_mappings
                 };
                 const dataset = new ScatterGL.Dataset(points, metadata);
-                const max = Math.max(...clusterData?.clusters);
                 tmp_scatterplot.render(dataset);
 
                 // callback for coloring cells on the plot
@@ -178,30 +186,7 @@ const DimPlot = () => {
                 });
             }
         }
-    }, [plotRedDims, gradient, clusHighlight]);
-
-    useEffect(() => {
-        changeRedDim(defaultRedDims);
-    }, [defaultRedDims]);
-
-    // handler for switching dimensions
-    const changeRedDim = () => {
-        if (defaultRedDims === "TSNE") {
-            setPlotRedDims({
-                "plot": tsneData,
-                "clusters": clusterData?.clusters
-            });
-        } else if (defaultRedDims === "UMAP") {
-            setPlotRedDims({
-                "plot": umapData,
-                "clusters": clusterData?.clusters
-            });
-        }
-    };
-
-    useEffect(() => {
-        changeRedDim();
-    }, [tsneData, umapData]);
+    }, [tsneData, umapData, defaultRedDims, gradient, clusHighlight]);
 
     const setInteraction = (x) => {
         if (x === "PAN") {
@@ -286,12 +271,12 @@ const DimPlot = () => {
             </div>
             {
                 showAnimation ?
-                    <Label className='iter'>Iteration: {plotRedDims?.plot.iteration}</Label>
+                    <Label className='iter'>Iteration: {defaultRedDims === "TSNE" ? tsneData?.iteration : umapData?.iteration}</Label>
                     : ""
             }
             <div className='dim-plot'>
                 {
-                    plotRedDims?.plot ?
+                    defaultRedDims ?
                         <div ref={container} ></div> :
                         "Choose an Embedding... or Embeddings are being computed..."
                 }
