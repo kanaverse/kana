@@ -20,21 +20,32 @@ function AnalysisDialog({
     const { inputFiles, setInputFiles,
         params, setParams, openInput } = useContext(AppContext);
 
-    let [tmpInputFiles, setTmpInputFiles] = useState({});
-    const [inputText, setInputText] = useState({});
-
+    // assuming new is the default tab
+    let [tmpInputFiles, setTmpInputFiles] = useState({
+        gene: null,
+        mtx: null,
+        barcode: null,
+    });
+    const [inputText, setInputText] = useState({
+        mtx: "Choose Matrix Market file",
+        gene: "Choose feature/gene annotation",
+        barcode: "Choose barcode annotation",
+    });
 
     let [tmpInputParams, setTmpInputParams] = useState(params);
     let [tmpInputValid, setTmpInputValid] = useState(true);
 
-
     const [tabSelected, setTabSelected] = useState("new");
+    const [newImportFormat, setNewImportFormat] = useState("mtx");
+    const [hdfFormat, sethdfFormat] = useState("tenx");
 
     function handleImport() {
         setParams(tmpInputParams);
 
         setInputFiles({
-            "format": tabSelected == "new" ? "mtx" : "kana",
+            "format": tabSelected == "new" ?
+                newImportFormat == "hdf5" ? hdfFormat : "mtx"
+                : "kana",
             "files": tmpInputFiles
         });
 
@@ -43,6 +54,21 @@ function AnalysisDialog({
 
     function handleTabInput(currTab, prevTab) {
         if (currTab === "new") {
+            handleNewImportTab(newImportFormat);
+        } else if (currTab === "load") {
+            setTmpInputFiles({
+                file: null
+            });
+
+            setInputText({
+                file: "Choose kana analysis file"
+            });
+        }
+        setTabSelected(currTab);
+    }
+
+    function handleNewImportTab(currTab, prevTab) {
+        if (currTab === "mtx") {
             setTmpInputFiles({
                 gene: null,
                 mtx: null,
@@ -54,19 +80,17 @@ function AnalysisDialog({
                 gene: "Choose feature/gene annotation",
                 barcode: "Choose barcode annotation",
             });
-
-            setTabSelected("new");
-        } else if (currTab === "load") {
+        } else if (currTab === "hdf5") {
             setTmpInputFiles({
-                file: null
+                file: null,
             });
 
             setInputText({
-                file: "Choose kana analysis file"
+                file: "Choose HDF5 file",
             });
-
-            setTabSelected("load");
         }
+
+        setNewImportFormat(currTab);
     }
 
     useEffect(() => {
@@ -134,17 +158,64 @@ function AnalysisDialog({
                                                     Load input files
                                                 </span>
                                             </H5>
-                                            <div className="row">
-                                                <Label className="row-input">
-                                                    <FileInput text={inputText.mtx} onInputChange={(msg) => { setInputText({ ...inputText, "mtx": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "mtx": msg.target.files }) }} />
-                                                </Label>
-                                                <Label className="row-input">
-                                                    <FileInput text={inputText.gene} onInputChange={(msg) => { setInputText({ ...inputText, "gene": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "gene": msg.target.files }) }} />
-                                                </Label>
-                                                <Label className="row-input">
-                                                    <FileInput text={inputText.barcode} onInputChange={(msg) => { setInputText({ ...inputText, "barcode": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "barcode": msg.target.files }) }} />
-                                                </Label>
-                                            </div>
+                                            <Tabs
+                                                animate={true}
+                                                renderActiveTabPanelOnly={true}
+                                                vertical={true}
+                                                onChange={handleNewImportTab}
+                                                defaultSelectedTabId={newImportFormat}
+                                                style={{
+                                                    padding: '10px'
+                                                }}
+                                            >
+                                                <Tab id="mtx" title="Matrix Market file" panel={
+                                                    <div className="row"
+                                                    >
+                                                        <Label className="row-input">
+                                                            <FileInput text={inputText.mtx} onInputChange={(msg) => { setInputText({ ...inputText, "mtx": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "mtx": msg.target.files }) }} />
+                                                        </Label>
+                                                        <Label className="row-input">
+                                                            <FileInput text={inputText.gene} onInputChange={(msg) => { setInputText({ ...inputText, "gene": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "gene": msg.target.files }) }} />
+                                                        </Label>
+                                                        <Label className="row-input">
+                                                            <FileInput text={inputText.barcode} onInputChange={(msg) => { setInputText({ ...inputText, "barcode": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "barcode": msg.target.files }) }} />
+                                                        </Label>
+                                                    </div>
+                                                } />
+                                                <Tab id="hdf5" title="HDF5" panel={
+                                                    <div className="row"
+                                                    >
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip">
+                                                                    Choose HDF5 file
+                                                                </span>
+                                                            </Text>
+                                                            <FileInput style={{
+                                                                marginTop: '5px'
+                                                            }}
+                                                                text={inputText.file}
+                                                                onInputChange={(msg) => {
+                                                                    setInputText({ ...inputText, "file": msg.target.files[0].name });
+                                                                    setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files })
+                                                                }} />
+                                                        </Label>
+
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip">
+                                                                    HDF5 format
+                                                                </span>
+                                                            </Text>
+                                                            <HTMLSelect onChange={(nval, val) => sethdfFormat(nval?.currentTarget.key)}>
+                                                                <option key="tenx">10x genomics</option>
+                                                                <option key="anndata">AnnData</option>
+                                                            </HTMLSelect>
+                                                        </Label>
+                                                    </div>
+                                                } />
+                                            </Tabs>
+
                                         </div>
                                     </div>
 
@@ -623,21 +694,23 @@ function AnalysisDialog({
                             </div>
                         } />
                     </Tabs>
-                </div>
+                </div >
 
-                {includeFooter ? (
-                    <div className={Classes.DIALOG_FOOTER}>
-                        <div className={Classes.DIALOG_FOOTER_ACTIONS}>
-                            <Tooltip2 content="Run Analysis">
-                                <Button disabled={!tmpInputValid} icon="function" onClick={handleImport}>Analyze</Button>
-                            </Tooltip2>
+                {
+                    includeFooter ? (
+                        <div className={Classes.DIALOG_FOOTER} >
+                            <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+                                <Tooltip2 content="Run Analysis">
+                                    <Button disabled={!tmpInputValid} icon="function" onClick={handleImport}>Analyze</Button>
+                                </Tooltip2>
+                            </div>
                         </div>
-                    </div>
-                ) : (
-                    <div style={{ margin: "0 20px" }}>
-                    </div>
-                )}
-            </Dialog>
+                    ) : (
+                        <div style={{ margin: "0 20px" }}>
+                        </div>
+                    )
+                }
+            </Dialog >
         </>
     );
 }
