@@ -18,9 +18,22 @@ const scran_umap_run = {};
 
       try {
         cache.total = init.num_epochs();
-        var delay = 15;
+        
+        // TODO: using 75 for now
+        // in the future the user can choose a bar for speed on the UI 
+        // options would be 1x, 2x, 3x
+        var delay = 75;
         for (; init.epoch() < cache.total; ) {
           wasm.run_umap(init, delay, buffer.ptr);
+          if (args.animate) {
+            var xy = scran_utils_viz_child.extractXY(buffer);
+            postMessage({
+              "type": "umap_iter",
+              "x": xy.x,
+              "y": xy.y,
+              "iteration": init.epoch()
+            }, [xy.x.buffer, xy.y.buffer]);
+          }
         }
       } finally {
         init.delete();

@@ -39,9 +39,22 @@ scran_utils_viz_parent.computeNeighbors = function(wasm, k) {
 scran_utils_viz_parent.createWorker = function(script, cache) {
   var worker = new Worker(script);
   worker.onmessage = function (msg) {
+    var type = msg.data.type;
+    if (type.endsWith("_iter")) {
+      postMessage({
+        "type": type,
+        "resp": {
+           "x": msg.data.x,
+           "y": msg.data.y,
+           "iteration": msg.data.iteration
+        }
+      }, [msg.data.x.buffer, msg.data.y.buffer]);
+      return;
+    }
+
     var id = msg.data.id;
     var fun = cache.promises[id];
-    if (msg.data.type == "error") {
+    if (type == "error") {
       fun.reject(msg.data.error);
     } else {
       fun.resolve(msg.data.data);

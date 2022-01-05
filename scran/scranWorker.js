@@ -132,7 +132,8 @@ function runAllSteps(wasm, state, mode = "run") {
     () => {
       return {
         "perplexity": state.params.tsne["tsne-perp"],
-        "iterations": state.params.tsne["tsne-iter"]
+        "iterations": state.params.tsne["tsne-iter"],
+        "animate": state.params.tsne["animate"],
       };
     }
   );
@@ -142,7 +143,8 @@ function runAllSteps(wasm, state, mode = "run") {
       return {
         "num_epochs": state.params.umap["umap-epochs"],
         "num_neighbors": state.params.umap["umap-nn"],
-        "min_dist": state.params.umap["umap-min_dist"]
+        "min_dist": state.params.umap["umap-min_dist"],
+        "animate": state.params.tsne["animate"],
       };
     }
   );
@@ -274,6 +276,34 @@ onmessage = function (msg) {
   } else if (payload.type == "removeCustomMarkers") {
     loaded.then(wasm => {
       scran_custom_markers.removeSelection(Wasm, payload.payload.id);
+    });
+  } else if (payload.type == "animateTSNE") {
+    loaded.then(wasm => {
+
+      var tsne = runStepDimRed("run", wasm, scran_tsne_monitor, "tsne", "t-SNE completed", {},
+        () => {
+          return {
+            "perplexity": payload.payload.params["tsne-perp"],
+            "iterations": payload.payload.params["tsne-iter"],
+            "animate": true,
+          }
+        });
+
+      Promise.all([tsne]);
+    });
+  } else if (payload.type == "animateUMAP") {
+    loaded.then(wasm => {
+      var umap = runStepDimRed("run", wasm, scran_umap_monitor, "umap", "UMAP completed", {},
+        () => {
+          return {
+            "num_epochs": payload.payload.params["umap-epochs"],
+            "num_neighbors": payload.payload.params["umap-nn"],
+            "min_dist": payload.payload.params["umap-min_dist"],
+            "animate": true,
+          }
+        });
+
+      return Promise.all([umap]);
     });
   } else {
     console.log("MIM:::msg type incorrect")
