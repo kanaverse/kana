@@ -420,7 +420,7 @@ const MarkerPlot = () => {
                                                 >
                                                     <Icon icon={'tint'}
                                                         color={row.index === gene ? 
-                                                            String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : ''
+                                                            String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : clusterColors[selectedCluster]
                                                             : ''}
                                                     ></Icon>
                                                 </Button>

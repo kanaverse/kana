@@ -226,10 +226,10 @@ const DimPlot = () => {
 
         const containerEl = container.current;
         if (containerEl) {
-            let elem = containerEl.querySelector("canvas");
-            // var ctx = elem.getContext('2d');
-
-            const iData = elem.toDataURL();//ctx.getImageData(0, 0, elem.width, elem.height);
+            // preserve drawing buffers is false, so render and capture state right away
+            scatterplot.renderScatterPlot();
+            const iData = scatterplot.scatterPlot.renderer.domElement.toDataURL();
+            
             let tmp = [...savedPlot];
 
             tmp.push({

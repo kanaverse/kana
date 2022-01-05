@@ -1,7 +1,8 @@
 .gallery-cont {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    /* flex-direction: row-reverse;
+    flex-wrap: wrap; */
+    flex-flow: row-reverse wrap-reverse;
     align-items: stretch;
     justify-content: space-evenly;
 }

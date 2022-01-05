@@ -16,16 +16,10 @@ const Gallery = () => {
     <>
       <div className="gallery-cont">
         {
-          savedPlot ?
-            savedPlot.map(x => {
-              return (<ImgPlot data={x}/>)
-            }) : ""
-        }
-        {
-          clusterData ?
+          qcData && qcData?.["thresholds"] ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
-              <h5># of cells per cluster</h5>
-              <ClusterBarPlot data={clusterData} />
+              <h5>QC Statistics</h5>
+              <QCPlotMgr data={qcData} />
             </Card>
             : ""
         }
@@ -38,12 +32,21 @@ const Gallery = () => {
             : ""
         }
         {
-          qcData && qcData?.["thresholds"] ?
+          clusterData ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
-              <h5>QC Statistics</h5>
-              <QCPlotMgr data={qcData} />
+              <h5># of cells per cluster</h5>
+              <ClusterBarPlot data={clusterData} />
             </Card>
             : ""
+        }
+        {
+          savedPlot ?
+            savedPlot.map((x, i) => (
+                <Card key={i} className="gallery-elem" elevation={Elevation.ONE}>
+                  <ImgPlot data={x} />
+                </Card>
+              )
+            ) : ""
         }
       </div>
     </>

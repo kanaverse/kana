@@ -32,7 +32,7 @@ const AppContextProvider = ({ children }) => {
     tsne: {
       "tsne-iter": 500,
       "tsne-perp": 30,
-      "animate": true,
+      "animate": false,
     },
     umap: {
       "umap-nn": 15,
