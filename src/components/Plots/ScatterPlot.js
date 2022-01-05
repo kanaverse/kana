@@ -2,7 +2,8 @@ import { ScatterGL } from 'scatter-gl';
 import { useEffect, useRef, useContext, useState } from 'react';
 import {
     ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider,
-    Divider
+    Divider,
+    Label
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
@@ -34,7 +35,8 @@ const DimPlot = () => {
         tsneData, umapData, setPlotRedDims, clusterColors, setClusterColors,
         gene, selectedClusterSummary,
         customSelection, setCustomSelection,
-        setDelCustomSelection } = useContext(AppContext);
+        setDelCustomSelection,
+        showAnimation } = useContext(AppContext);
 
     // keeps track of what points were selected in lasso selections
     const [selectedPoints, setSelectedPoints] = useState(null);
@@ -180,10 +182,10 @@ const DimPlot = () => {
 
     useEffect(() => {
         changeRedDim(defaultRedDims);
-    }, [defaultRedDims])
+    }, [defaultRedDims]);
 
     // handler for switching dimensions
-    const changeRedDim = (x) => {
+    const changeRedDim = () => {
         if (defaultRedDims === "TSNE") {
             setPlotRedDims({
                 "plot": tsneData,
@@ -196,6 +198,10 @@ const DimPlot = () => {
             });
         }
     };
+
+    useEffect(() => {
+        changeRedDim();
+    }, [tsneData, umapData]);
 
     const setInteraction = (x) => {
         if (x === "PAN") {
@@ -265,6 +271,11 @@ const DimPlot = () => {
                     icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
             </ControlGroup>
             <div className='dim-plot'>
+                {
+                    showAnimation ?
+                    <Label>Iteration: {plotRedDims?.plot.iteration}</Label>
+                    : ""
+                }
                 {
                     plotRedDims?.plot ?
                         <div ref={container} ></div> :
