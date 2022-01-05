@@ -35,7 +35,7 @@ onmessage = function(msg) {
       var params = msg.data.params;
       scran_tsne_init.compute(wasm, { "perplexity": params.perplexity });
 
-      scran_tsne_run.compute(wasm, { "iterations": params.iterations });
+      scran_tsne_run.compute(wasm, { "iterations": params.iterations, "animate": params.animate });
       postMessage({
         "id": id,
         "type": "tsne_run",

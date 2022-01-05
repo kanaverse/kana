@@ -39,7 +39,7 @@ function App() {
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection,
     setSelectedCluster, setShowGame, showGame, datasetName, setExportState,
-    setShowAnimation } = useContext(AppContext);
+    setShowAnimation, triggerAnimation, setTriggerAnimation, params } = useContext(AppContext);
 
   // initializes various things on the worker side
   useEffect(() => {
@@ -106,7 +106,16 @@ function App() {
         "gene": reqGene
       }
     });
-  }, [reqGene])
+  }, [reqGene]);
+
+  useEffect(() => {
+    triggerAnimation && defaultRedDims && window.Worker.postMessage({
+      "type": "animate" + defaultRedDims,
+      payload: {
+        params: params[defaultRedDims.toLowerCase()]
+      }
+    });
+  }, [triggerAnimation]);
 
   // callback for all responses from workers
   // all interactions are logged and shown on the UI
@@ -167,8 +176,10 @@ function App() {
       setShowGame(false);
 
       // assuming the last response is _data
-      if(payload.type === "tsne_DATA") setShowAnimation(false);
-    } else if (payload.type === "umap_DATA") {
+      if (payload.type === "tsne_DATA") {
+        setShowAnimation(false);
+        setTriggerAnimation(false);
+      }
       const { resp } = payload;
       setUmapData(resp);
 

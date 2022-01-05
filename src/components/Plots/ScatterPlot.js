@@ -36,7 +36,7 @@ const DimPlot = () => {
         gene, selectedClusterSummary,
         customSelection, setCustomSelection,
         setDelCustomSelection,
-        showAnimation } = useContext(AppContext);
+        showAnimation, setTriggerAnimation } = useContext(AppContext);
 
     // keeps track of what points were selected in lasso selections
     const [selectedPoints, setSelectedPoints] = useState(null);
@@ -100,13 +100,13 @@ const DimPlot = () => {
                     orbitControls: {
                         zoomSpeed: 1.25,
                     },
-                    styles: {
-                        point: {
-                            scaleDefault: 1.75,
-                            scaleSelected: 2,
-                            scaleHover: 2,
-                        }
-                    }
+                    // styles: {
+                    //     point: {
+                    //         scaleDefault: 1.75,
+                    //         scaleSelected: 2,
+                    //         scaleHover: 2,
+                    //     }
+                    // }
                 });
 
                 tmp_scatterplot.setPanMode();
@@ -262,20 +262,34 @@ const DimPlot = () => {
                     <span>UMAP</span>
                 </Button>
             </ButtonGroup>
-            <ControlGroup className="top-header" fill={false} vertical={false}>
-                <Button active={plotMode == "PAN"}
-                    intent={plotMode === "PAN" ? "primary" : "none"}
-                    icon="hand-up" onClick={x => setInteraction("PAN")}>Pan</Button>
-                <Button active={plotMode == "SELECT"}
-                    intent={plotMode === "SELECT" ? "primary" : "none"}
-                    icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
-            </ControlGroup>
-            <div className='dim-plot'>
-                {
-                    showAnimation ?
-                    <Label>Iteration: {plotRedDims?.plot.iteration}</Label>
+            <div className="top-header">
+                <ControlGroup fill={false} vertical={false}
+                    style={{
+                        marginRight: '4px'
+                    }}>
+                    <Tooltip2 content="Interactively visualize embeddings">
+                        <Button icon="play"
+                            onClick={() => setTriggerAnimation(true)}>Animate</Button>
+                    </Tooltip2>
+                    <Tooltip2 content="Save this embedding">
+                        <Button icon="inheritance">Save</Button>
+                    </Tooltip2>
+                </ControlGroup>
+                <ControlGroup fill={false} vertical={false}>
+                    <Button active={plotMode == "PAN"}
+                        intent={plotMode === "PAN" ? "primary" : "none"}
+                        icon="hand-up" onClick={x => setInteraction("PAN")}>Pan</Button>
+                    <Button active={plotMode == "SELECT"}
+                        intent={plotMode === "SELECT" ? "primary" : "none"}
+                        icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
+                </ControlGroup>
+            </div>
+            {
+                showAnimation ?
+                    <Label className='iter'>Iteration: {plotRedDims?.plot.iteration}</Label>
                     : ""
-                }
+            }
+            <div className='dim-plot'>
                 {
                     plotRedDims?.plot ?
                         <div ref={container} ></div> :
