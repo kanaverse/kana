@@ -4,23 +4,12 @@ const scran_inputs = {};
   /** Private members **/
   var cache = {};
   var parameters = {};
+  var abbreviated = {};
 
   /** Public members **/
   x.changed = false;
 
   /** Private functions (misc) **/
-  function mockFile(f) {
-    return { "name": f.name, "size": f.size };
-  }
-
-  function mockFiles(files) {
-    var mock = [];
-    for (const f of files) {
-      mock.push(mockFile(f));
-    }
-    return mock;
-  }
-
   function permuteGenes(wasm, genes) {
     var output = genes.slice();
     var buf = new WasmBuffer(wasm, cache.matrix.nrow(), "Int32Array");
@@ -46,38 +35,36 @@ const scran_inputs = {};
   }
 
   /** Private functions (MatrixMarket) **/
-  function loadMatrixMarketRaw(wasm, args, getMtxBuffers, getGenesBuffer) {
+  function loadMatrixMarketRaw(wasm, files) {
     scran_utils.freeCache(cache.matrix);
 
-    var mtx_buffers = getMtxBuffers();
-    var files = { "type": "MatrixMarket", "buffered": { "mtx": mtx_buffers } };
-
     // In theory, this section may support multiple files (e.g., for multiple samples).
-    var contents = new Uint8Array(mtx_buffers[0]);
+    var mtx_files = files.filter(x => x.type == "mtx");
+    var first_mtx = mtx_files[0];
+    var contents = new Uint8Array(first_mtx.buffer);
     var buffer = new WasmBuffer(wasm, contents.length, "Uint8Array");
     try {
       buffer.set(contents);
-      var ext = args.mtx[0].name.split('.').pop();
+      var ext = first_mtx.name.split('.').pop();
       var is_compressed = (ext == "gz");
       cache.matrix = wasm.read_matrix_market(buffer.ptr, buffer.size, is_compressed);
     } finally {
       buffer.free();
     }
 
-    var genes_buffer = getGenesBuffer();
-    if (genes_buffer !== null) {
-      var content = new Uint8Array(genes_buffer);
-      var ext = args.genes.name.split('.').pop();
+    var genes_file = files.filter(x => x.type == "genes");
+    if (genes_file.length == 1) {
+      var genes_file = genes_file[0] 
+      var content = new Uint8Array(genes_file.buffer);
+      var ext = genes_file.name.split('.').pop();
       if (ext == "gz") {
         content = pako.ungzip(content);
       }
 
       const dec = new TextDecoder();
       let genes_str = dec.decode(content);
-
       const tsv = d3.dsvFormat("\t");
       let parsed = tsv.parseRows(genes_str);
-
       if (parsed.length != cache.matrix.nrow()) {
         throw "number of matrix rows is not equal to the number of genes in '" + args.genes.name + "'";
       }
@@ -95,61 +82,57 @@ const scran_inputs = {};
     }
 
     cache.gene_names = permuteGenes(wasm, cache.gene_names);
-
-    cache.files = files;
-    delete cache.reloaded;
     return;
   }
 
-  function loadMatrixMarket(wasm, input) {
-    var mtx_files = input.mtx;
-    var mock_args = { "mtx": mockFiles(mtx_files) };
+  function loadMatrixMarket(wasm, args) {
+    var reader = new FileReaderSync();
 
-    var genes_file = input.genes;
-    var has_genes = (genes_file instanceof File);
-    if (has_genes) {
-      mock_args.genes = mockFile(genes_file);
-    }
+    // First pass computes an abbreviated version to quickly check for changes.
+    // Second pass does the actual readArrayBuffer.
+    for (var it = 0; it < 2; it++) {
+      var formatted = { "type": "MatrixMarket", "files": [] };
 
-    if (!scran_utils.changedParameters(mock_args, parameters)) {
-      x.changed = false;
-      return;
-    }
-
-    loadMatrixMarketRaw(wasm,
-      mock_args,
-      () => {
-        var reader = new FileReaderSync();
-        var output = [];
-        for (var i = 0; i < mtx_files.length; i++) {
-          output.push(reader.readAsArrayBuffer(mtx_files[i]));
-        }
-        return output;
-      },
-      () => {
-        if (has_genes) {
-          var reader = new FileReaderSync();
-          return reader.readAsArrayBuffer(genes_file);
-        } else {
-          return null;
-        }
+      var bufferFun;
+      if (it == 0) {
+        bufferFun = (f) => f.size;
+      } else {
+        bufferFun = (f) => reader.readAsArrayBuffer(f);
       }
-    );
 
-    parameters = mock_args;
-    x.changed = true;
+      for (const f of args.mtx) {
+        formatted.files.push({ "type": "mtx", "name": f.name, "buffer": bufferFun(f) });
+      }
+      var genes_file = args.genes;
+      if (genes_file instanceof File) {
+        formatted.files.push({ "type": "genes", "name": genes_file.name, "buffer": bufferFun(genes_file) });
+      }
+
+      if (it == 0) {
+        if (!scran_utils.changedParameters(abbreviated, formatted)) {
+          x.changed = false;
+          return;
+        } else {
+          abbreviated = formatted;
+          x.changed = true;
+        }
+      } else {
+        parameters = formatted;
+        loadMatrixMarketRaw(wasm, formatted.files);
+        delete cache.reloaded;
+      }
+    }
+
     return;
   }
 
   /** Private functions (HDF5) **/
-  function loadHDF5Raw(wasm, getHDF5Buffer) {
+  function loadHDF5Raw(wasm, files) {
     scran_utils.freeCache(cache.matrix);
 
-    var h5_buffers = getHDF5Buffer();
-    var files = { "type": "HDF5", "buffered": { "h5": h5_buffers } };
-
     // In theory, we could support multiple HDF5 buffers.
-    cache.matrix = readMatrixFromHDF5(wasm, h5_buffers[0]);
+    var first_file = files[0];
+    cache.matrix = readMatrixFromHDF5(wasm, first_file);
 
     var genes = guessGenesFromHDF5(h5_buffers[0]);
     if (genes === null) {
@@ -162,76 +145,63 @@ const scran_inputs = {};
       }
     }
     cache.gene_names = permuteGenes(wasm, cache.gene_names);
-
-    cache.files = files;
-    delete cache.reloaded;
     return;
   }
 
-  function loadHDF5(wasm, input) {
-    var h5_files = input[0];
-    var mock_args = { "matrix": mockFiles(h5_files) }
+  function loadHDF5(wasm, args) {
+    var reader = new FileReaderSync();
 
-    if (!scran_utils.changedParameters(mock_args, parameters)) {
-      x.changed = false;
-      return;
-    }
+    // First pass computes an abbreviated version to quickly check for changes.
+    // Second pass does the actual readArrayBuffer.
+    for (var it = 0; it < 2; it++) {
+      var formatted = { "type": "HDF5", "files": [] };
 
-    loadHDF5Raw(wasm,
-      () => {
-        var reader = new FileReaderSync();
-        var output = [];
-        for (var i = 0; i < h5_files.length; i++) {
-          output.push(reader.readAsArrayBuffer(h5_files[i]));
+      var bufferFun;
+      if (it == 0) {
+        bufferFun = (f) => f.size;
+      } else {
+        bufferFun = (f) => reader.readAsArrayBuffer(f);
+      }
+
+      for (const f of args) {
+        formatted.files.push({ "type": "h5", "name": f.name, "buffer": bufferFun(f) });
+      }
+
+      if (it == 0) {
+        if (!scran_utils.changedParameters(abbreviated, formatted)) {
+          x.changed = false;
+          return;
+        } else {
+          abbreviated = formatted;
+          x.changed = true;
         }
-        return output;
-      }
-    );
-
-    parameters = mock_args;
-    x.changed = true;
-    return;
-  }
-
-  // TODO: probably needs more testing but works with matrixmarket
-  function clone_inputs(obj) {
-    if (Array.isArray(obj)) return obj.slice(0);
-
-    let res = {};
-    for (const [key, val] of Object.entries(obj)) {
-      if (val instanceof Object) {
-        res[key] = clone_inputs(val);
-      }
-
-      if (!Array.isArray(val) && !(val instanceof Object)) {
-        res[key] = val;
+      } else {
+        parameters = formatted;
+        loadHDF5Raw(wasm, files);
+        delete cache.reloaded;
       }
     }
 
-    return res;
+    return;
   }
 
   /** Public functions (standard) **/
   x.compute = function (wasm, args) {
-    // TODO: switch to args telling us what the data type is.
     switch (args.format) {
       case "mtx":
         loadMatrixMarket(wasm, args.files);
         break;
-      case "kana":
-        // TODO: deserialize the saved analysis
-        // loadSavedAnalysis(wasm, args.files);
-        break;
-        // TODO: can parse hdf5 files by specific format
       case "hdf5":
       case "tenx":
       case "anndata":
         loadHDF5(wasm, [args.files.file]);
         break;
+      case "kana":
+        // do nothing, this is handled by unserialize.
+        break;
       default:
         throw "unknown matrix file extension: '" + args.format + "'";
     }
-
     return;
   };
 
@@ -242,26 +212,23 @@ const scran_inputs = {};
     };
   };
 
-  /* TODO: figure out whether/how to serialize entire files,
-   * or just their paths, or... Note that serialization needs
-   * to capture the arguments as well.
-   */
   x.serialize = function (wasm) {
     var contents = {};
     if ("reloaded" in cache) {
       contents.gene_names = cache.reloaded.gene_names;
       contents.num_cells = cache.reloaded.num_cells;
-
-      contents.files = clone_inputs(cache.reloaded.files)
     } else {
       contents.gene_names = cache.gene_names;
       contents.num_cells = cache.matrix.ncol();
-
-      contents.files = clone_inputs(cache.files)
     }
 
+    // Making a deep-ish clone of the parameters so that any fiddling with
+    // buffers during serialization does not compromise internal state.
+    var parameters2 = { ...parameters };
+    parameters2.files = parameters.files.map(x => { return { ...x } });
+
     return {
-      "parameters": parameters,
+      "parameters": parameters2,
       "contents": contents
     };
   };
@@ -275,16 +242,10 @@ const scran_inputs = {};
   /** Public functions (custom) **/
   x.fetchCountMatrix = function (wasm) {
     if ("reloaded" in cache) {
-      if (cache.reloaded.files.type == "MatrixMarket") {
-        loadMatrixMarketRaw(wasm,
-          parameters,
-          () => cache.reloaded.files.buffered.mtx,
-          () => cache.reloaded.files.buffered.genes
-        );
+      if (cache.reloaded.type == "MatrixMarket") {
+        loadMatrixMarketRaw(wasm, cache.reloaded.files); 
       } else {
-        loadHDF5Raw(wasm,
-          () => cache.reloaded.files.buffered.h5
-        );
+        loadHDF5Raw(wasm, cache.reloaded.files);
       }
     }
     return cache.matrix;
