@@ -38,7 +38,8 @@ function App() {
     selectedClusterSummary, setSelectedClusterSummary,
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection,
-    setSelectedCluster, setShowGame, showGame } = useContext(AppContext);
+    setSelectedCluster, setShowGame, showGame,
+    setShowAnimation } = useContext(AppContext);
 
   // initializes various things on the worker side
   useEffect(() => {
@@ -147,9 +148,11 @@ function App() {
 
       // show markers for the first cluster
       setSelectedCluster(0);
-    } else if (payload.type === "tsne_DATA") { //|| payload.type === "tsne_iter") {
+    } else if (payload.type === "tsne_DATA" || payload.type === "tsne_iter") {
       const { resp } = payload;
       setTsneData(resp);
+
+      setShowAnimation(true);
 
       let tmp = [...redDims];
       tmp.push("TSNE");
@@ -161,6 +164,9 @@ function App() {
       setRedDims(tmp);
       // also don't show the pong game anymore
       setShowGame(false);
+
+      // assuming the last response is _data
+      if(payload.type === "tsne_DATA") setShowAnimation(false);
     } else if (payload.type === "umap_DATA") {
       const { resp } = payload;
       setUmapData(resp);
