@@ -179,13 +179,22 @@ function App() {
         setShowAnimation(false);
         setTriggerAnimation(false);
       }
+    } else if (payload.type === "umap_DATA" || payload.type === "umap_iter") {
       const { resp } = payload;
       setUmapData(resp);
+
+      setShowAnimation(true);
 
       // enable UMAP selection
       let tmp = [...redDims];
       tmp.push("UMAP");
       setRedDims(tmp);
+
+      // assuming the last response is _data
+      if (payload.type === "umap_DATA") {
+        setShowAnimation(false);
+        setTriggerAnimation(false);
+      }
     } else if (payload.type === "markerGene_DATA") {
     } else if (payload.type === "setMarkersForCluster"
       || payload.type === "setMarkersForCustomSelection") {
