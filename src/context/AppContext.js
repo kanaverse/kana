@@ -166,7 +166,7 @@ const AppContextProvider = ({ children }) => {
   useEffect(() => {
 
     if (exportState) {
-      window.Worker.postMessage({
+      window.scranWorker.postMessage({
         "type": "EXPORT",
         "payload": {
           "files": inputFiles,
