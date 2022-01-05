@@ -26,6 +26,7 @@ function AnalysisDialog({
         mtx: null,
         barcode: null,
     });
+
     const [inputText, setInputText] = useState({
         mtx: "Choose Matrix Market file",
         gene: "Choose feature/gene annotation",
@@ -37,15 +38,14 @@ function AnalysisDialog({
 
     const [tabSelected, setTabSelected] = useState("new");
     const [newImportFormat, setNewImportFormat] = useState("mtx");
-    const [hdfFormat, sethdfFormat] = useState("tenx");
+    // const [hdfFormat, sethdfFormat] = useState("tenx");
 
     function handleImport() {
         setParams(tmpInputParams);
 
         setInputFiles({
             "format": tabSelected == "new" ?
-                newImportFormat == "hdf5" ? hdfFormat : "mtx"
-                : "kana",
+                newImportFormat : "kana",
             "files": tmpInputFiles
         });
 
@@ -80,13 +80,21 @@ function AnalysisDialog({
                 gene: "Choose feature/gene annotation",
                 barcode: "Choose barcode annotation",
             });
-        } else if (currTab === "hdf5") {
+        } else if (currTab === "tenx") {
             setTmpInputFiles({
                 file: null,
             });
 
             setInputText({
-                file: "Choose HDF5 file",
+                file: "Choose 10x v3 H5 file",
+            });
+        } else if (currTab === "h5ad") {
+            setTmpInputFiles({
+                file: null,
+            });
+
+            setInputText({
+                file: "Choose H5ad file",
             });
         }
 
@@ -99,29 +107,41 @@ function AnalysisDialog({
 
     useEffect(() => {
         if (tmpInputFiles) {
-            if (tabSelected === "new" && inputText?.mtx) {
-                if (
-                    tmpInputFiles?.mtx && !(inputText?.mtx.endsWith("mtx") ||
-                        inputText?.mtx.endsWith("mtx.gz") ||
-                        inputText?.mtx.endsWith("hdf5") ||
-                        inputText?.mtx.endsWith("h5")
-                    ) ||
-                    tmpInputFiles?.gene && !(inputText?.gene.endsWith("tsv") ||
-                        inputText?.gene.endsWith("tsv.gz")
-                    ) ||
-                    tmpInputFiles?.barcode && !(inputText?.barcode.endsWith("tsv") ||
-                        inputText?.barcode.endsWith("tsv.gz")
-                    )
-                ) {
-                    setTmpInputValid(false);
-                } else {
-                    setTmpInputValid(true);
+            if (tabSelected === "new") {
+                if (newImportFormat === "mtx") {
+                    if (
+                        tmpInputFiles?.mtx && !(inputText?.mtx.toLowerCase().endsWith("mtx") ||
+                            inputText?.mtx.toLowerCase().endsWith("mtx.gz")
+                        ) ||
+                        tmpInputFiles?.gene && !(inputText?.gene.toLowerCase().endsWith("tsv") ||
+                            inputText?.gene.toLowerCase().endsWith("tsv.gz")
+                        ) ||
+                        tmpInputFiles?.barcode && !(inputText?.barcode.toLowerCase().endsWith("tsv") ||
+                            inputText?.barcode.toLowerCase().endsWith("tsv.gz")
+                        )
+                    ) {
+                        setTmpInputValid(false);
+                    } else {
+                        setTmpInputValid(true);
+                    }
+                } else if (newImportFormat === "tenx" || newImportFormat === "h5ad") {
+                    if (
+                        tmpInputFiles?.file && !(
+                            inputText?.file.toLowerCase().endsWith("hdf5") ||
+                            inputText?.file.toLowerCase().endsWith("h5") ||
+                            inputText?.file.toLowerCase().endsWith("h5ad")
+                        )
+                    ) {
+                        setTmpInputValid(false);
+                    } else {
+                        setTmpInputValid(true);
+                    }
                 }
 
             } else if (tabSelected === "load" && inputText?.file) {
                 if (
-                    tmpInputFiles?.file != null && !(inputText?.file.endsWith("kana") ||
-                        inputText?.file.endsWith("kana.gz")
+                    tmpInputFiles?.file != null && !(inputText?.file.toLowerCase().endsWith("kana") ||
+                        inputText?.file.toLowerCase().endsWith("kana.gz")
                     )
                 ) {
                     setTmpInputValid(false);
@@ -149,7 +169,11 @@ function AnalysisDialog({
                         <Tab id="new" title="Import new dataset" panel={
                             <div className="inputs-container">
                                 <div className='row-input'>
-                                    <div className="col">
+                                    <div className="col"
+                                        style={{
+                                            // paddingTop: '10px',
+                                            paddingBottom: '15px'
+                                        }}>
                                         <div>
                                             <H5><Tag round={true}>1</Tag>
                                                 <span className="row-tooltip"
@@ -164,9 +188,6 @@ function AnalysisDialog({
                                                 vertical={true}
                                                 onChange={handleNewImportTab}
                                                 defaultSelectedTabId={newImportFormat}
-                                                style={{
-                                                    padding: '10px'
-                                                }}
                                             >
                                                 <Tab id="mtx" title="Matrix Market file" panel={
                                                     <div className="row"
@@ -182,13 +203,13 @@ function AnalysisDialog({
                                                         </Label>
                                                     </div>
                                                 } />
-                                                <Tab id="hdf5" title="HDF5" panel={
+                                                <Tab id="tenx" title="10x v3 H5" panel={
                                                     <div className="row"
                                                     >
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip">
-                                                                    Choose HDF5 file
+                                                                    Choose 10x V3 H5 file
                                                                 </span>
                                                             </Text>
                                                             <FileInput style={{
@@ -201,7 +222,7 @@ function AnalysisDialog({
                                                                 }} />
                                                         </Label>
 
-                                                        <Label className="row-input">
+                                                        {/* <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip">
                                                                     HDF5 format
@@ -209,8 +230,28 @@ function AnalysisDialog({
                                                             </Text>
                                                             <HTMLSelect onChange={(nval, val) => sethdfFormat(nval?.currentTarget.key)}>
                                                                 <option key="tenx">10x genomics</option>
-                                                                <option key="anndata">AnnData</option>
+                                                                <option key="h5ad">H5ad</option>
                                                             </HTMLSelect>
+                                                        </Label> */}
+                                                    </div>
+                                                } />
+                                                <Tab id="h5ad" title="H5ad" panel={
+                                                    <div className="row"
+                                                    >
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip">
+                                                                    Choose H5ad file
+                                                                </span>
+                                                            </Text>
+                                                            <FileInput style={{
+                                                                marginTop: '5px'
+                                                            }}
+                                                                text={inputText.file}
+                                                                onInputChange={(msg) => {
+                                                                    setInputText({ ...inputText, "file": msg.target.files[0].name });
+                                                                    setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files })
+                                                                }} />
                                                         </Label>
                                                     </div>
                                                 } />
@@ -487,6 +528,7 @@ function AnalysisDialog({
                                                 <ul>
                                                     <li>Matrix Market - <code>*.mtx</code> or <code>*.mtx.gz</code></li>
                                                     <li>features or genes, <code>*.tsv</code> or <code>*.tsv.gz</code></li>
+                                                    <li>HDF5 (10x or h5ad) - <code>*.h5</code> or <code>*.hdf5</code> or <code>*.h5ad</code></li>
                                                 </ul>
                                             </p>
                                         </Callout>
