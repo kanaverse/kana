@@ -125,7 +125,7 @@ const AppContextProvider = ({ children }) => {
   useEffect(() => {
 
     if (wasmInitialized && inputFiles.files != null) {
-      window.Worker.postMessage({
+      window.scranWorker.postMessage({
         "type": "RUN",
         "payload": {
           "files": inputFiles,
