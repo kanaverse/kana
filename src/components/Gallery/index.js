@@ -7,13 +7,20 @@ import { Card, Elevation } from "@blueprintjs/core";
 import QCPlotMgr from "../Plots/QCPlotMgr";
 
 import './Gallery.css';
+import ImgPlot from "../Plots/ImgPlot";
 
 const Gallery = () => {
-  const { pcaVarExp, qcData, clusterData } = useContext(AppContext);
+  const { pcaVarExp, qcData, clusterData, savedPlot } = useContext(AppContext);
 
   return (
     <>
       <div className="gallery-cont">
+        {
+          savedPlot ?
+            savedPlot.map(x => {
+              return (<ImgPlot data={x}/>)
+            }) : ""
+        }
         {
           clusterData ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>

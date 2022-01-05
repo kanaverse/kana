@@ -36,7 +36,8 @@ const DimPlot = () => {
         gene, selectedClusterSummary,
         customSelection, setCustomSelection,
         setDelCustomSelection,
-        showAnimation, setTriggerAnimation } = useContext(AppContext);
+        showAnimation, setTriggerAnimation,
+        savedPlot, setSavedPlot, selectedCluster } = useContext(AppContext);
 
     // keeps track of what points were selected in lasso selections
     const [selectedPoints, setSelectedPoints] = useState(null);
@@ -104,7 +105,7 @@ const DimPlot = () => {
                     },
                     styles: {
                         point: {
-                            scaleDefault: 0.4,
+                            scaleDefault: 1,
                             scaleSelected: 1.25,
                             scaleHover: 1.25,
                         }
@@ -220,6 +221,31 @@ const DimPlot = () => {
         scatterplot.select(null);
     }
 
+    function handleSaveEmbedding() {
+        console.log("handleSaveEmbedding");
+
+        const containerEl = container.current;
+        if (containerEl) {
+            let elem = containerEl.querySelector("canvas");
+            // var ctx = elem.getContext('2d');
+
+            const iData = elem.toDataURL();//ctx.getImageData(0, 0, elem.width, elem.height);
+            let tmp = [...savedPlot];
+
+            tmp.push({
+                "image": iData,
+                "config": {
+                    "cluster": selectedCluster,
+                    "gene": gene,
+                    "highlight": clusHighlight,
+                    "embedding": defaultRedDims
+                }
+            });
+
+            setSavedPlot(tmp);
+        }
+    }
+
     return (
         <div className="scatter-plot">
             <ButtonGroup style={{ minWidth: 75, minHeight: 150 }}
@@ -257,7 +283,8 @@ const DimPlot = () => {
                             onClick={() => setTriggerAnimation(true)}>Animate</Button>
                     </Tooltip2>
                     <Tooltip2 content="Save this embedding">
-                        <Button icon="inheritance">Save</Button>
+                        <Button icon="inheritance"
+                            onClick={handleSaveEmbedding}>Save</Button>
                     </Tooltip2>
                 </ControlGroup>
                 <ControlGroup fill={false} vertical={false}>
