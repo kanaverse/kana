@@ -207,19 +207,18 @@ onmessage = function (msg) {
     loaded.then(wasm => {
       runAllSteps(wasm, payload.payload);
     });
-  }
   // events specific to loading an existing kana file
-  else if (payload.type == "IMPORT") {
-    loaded.then(wasm => {
-      // TODO: import the file and send the params back
-    });
   } else if (payload.type == "LOAD") {
     loaded.then(wasm => {
-      // TODO: params has changed to rerun an analysis
+      const reader = new FileReaderSync();
+      var f = payload.payload.files.files.file[0];
+      var contents = scran_utils_serialize.load(reader.readAsArrayBuffer(f));
+      console.log(contents);
+      runAllSteps(wasm, contents);
+      // TODO: import the file and send the params back
     });
-  }
   // exporting an analysis
-  else if (payload.type == "EXPORT") {
+  } else if (payload.type == "EXPORT") {
     loaded.then(wasm => {
       let state = {};
       runAllSteps(wasm, state, mode = "serialize")
