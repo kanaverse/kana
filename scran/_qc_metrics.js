@@ -13,38 +13,11 @@ const scran_qc_metrics = {};
     scran_utils.freeCache(cache.raw);
     var mat = scran_inputs.fetchCountMatrix();
 
-    // TODO: add more choices.
+    // Testing:
     var nsubsets = 1;
     var subsets = new WasmBuffer(wasm, mat.nrow() * nsubsets, "Uint8Array");
     try {
       subsets.fill(0);
-
-      /** TODO: better systematic way of guessing Ensembl vs symbol. 
-       * Currently I have a look at the first 1000 genes and see who wins.
-       **/
-      var names = scran_inputs.fetchGeneNames(wasm);
-      var is_ens = 0;
-      for (var i = 0; i < 1000 && i < names.length; i++) {
-        if (names[i].startsWith("ENS") && names[i].match("[0-9]{11}$")) {
-          is_ens++;
-        } else {
-          is_ens--;
-        }
-      }
-
-      var mito_targets;
-      if (is_ens >= 0) {
-        mito_targets = mito.ensembl;      
-      } else {
-        mito_targets = mito.symbol;
-      }
-
-      names.forEach((x, i) => {
-        if (mito_targets.has(x)) {
-          subsets[i] = 1;
-        }
-      });
-
       cache.raw = wasm.per_cell_qc_metrics(mat, nsubsets, subsets.ptr);
     } finally {
       subsets.free();
