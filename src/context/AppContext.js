@@ -45,9 +45,13 @@ const AppContextProvider = ({ children }) => {
   const [openInput, setOpenInput] = useState(false);
   // show in-app game ?
   const [showGame, setShowGame] = useState(false);
+  // which tab is selected ? defaults to new
+  const [tabSelected, setTabSelected] = useState("new");
+  // params from worker for stored analysis (kana file)
+  const [loadParams, setLoadParams] = useState(null);
 
   // creates a default dataset name
-  const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()).slice(0, 5));
+  const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()).slice(0, 8));
 
   // app export state 
   const [exportState, setExportState] = useState(false);
@@ -117,14 +121,36 @@ const AppContextProvider = ({ children }) => {
   useEffect(() => {
 
     if (wasmInitialized && inputFiles.files != null) {
-      window.Worker.postMessage({
-        "type": "RUN",
-        "payload": {
-          "files": inputFiles,
-          "params": params
-        },
-        "msg": "not much to pass"
-      });
+
+      if (tabSelected === "new") {
+        window.Worker.postMessage({
+          "type": "RUN",
+          "payload": {
+            "files": inputFiles,
+            "params": params
+          },
+          "msg": "not much to pass"
+        });
+      } else if (tabSelected === "load") {
+        if (loadParams !== null) {
+          window.Worker.postMessage({
+            "type": "LOAD",
+            "payload": {
+              "files": inputFiles,
+              "params": params
+            },
+            "msg": "not much to pass"
+          });
+        } else {
+          window.Worker.postMessage({
+            "type": "IMPORT",
+            "payload": {
+              "files": inputFiles
+            },
+            "msg": "not much to pass"
+          });
+        }
+      }
 
       // setShowGame(true);
     }
@@ -182,7 +208,9 @@ const AppContextProvider = ({ children }) => {
         delCustomSelection, setDelCustomSelection,
         showGame, setShowGame,
         exportState, setExportState,
-        datasetName, setDatasetName
+        datasetName, setDatasetName,
+        tabSelected, setTabSelected,
+        loadParams, setLoadParams
       }}
     >
       {children}
