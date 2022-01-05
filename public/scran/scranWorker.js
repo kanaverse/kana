@@ -29,7 +29,7 @@ importScripts("./_custom_markers.js");
 
 /***************************************/
 
-var runStep = function(mode, wasm, namespace, step, message, args = {}, extra = null) {
+var runStep = function (mode, wasm, namespace, step, message, args = {}, extra = null) {
   if (mode == "serialize") {
     state[step] = namespace.serialize(wasm);
   } else {
@@ -47,7 +47,7 @@ var runStep = function(mode, wasm, namespace, step, message, args = {}, extra = 
   }
 }
 
-var runStepDimRed = async function(mode, wasm, namespace, step, message, args) {
+var runStepDimRed = async function (mode, wasm, namespace, step, message, args) {
   if (mode == "serialize") {
     state[step] = await namespace.serialize(wasm);
   } else {
@@ -64,7 +64,7 @@ var runStepDimRed = async function(mode, wasm, namespace, step, message, args) {
 }
 
 function runAllSteps(wasm, state, mode = "run") {
-  runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded", 
+  runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded",
     { "files": state.files }
   );
 
@@ -93,13 +93,15 @@ function runAllSteps(wasm, state, mode = "run") {
   // Special async steps - these are run separately.
   var tsne = runStepDimRed(mode, wasm, scran_tsne_monitor, "tsne", "t-SNE completed", {
     "perplexity": state.params.tsne["tsne-perp"],
-    "iterations": state.params.tsne["tsne-iter"]
+    "iterations": state.params.tsne["tsne-iter"],
+    "animate": state.params.tsne["animate"],
   });
 
   var umap = runStepDimRed(mode, wasm, scran_umap_monitor, "umap", "UMAP completed", {
     "num_epochs": state.params.umap["umap-epochs"],
     "num_neighbors": state.params.umap["umap-nn"],
-    "min_dist": state.params.umap["umap-min_dist"]
+    "min_dist": state.params.umap["umap-min_dist"],
+    "animate": state.params.umap["animate"],
   });
 
   runStep(mode, wasm, scran_snn_neighbors, "snn_find_neighbors", "Neighbor search for clustering complete",
@@ -208,6 +210,28 @@ onmessage = function (msg) {
   } else if (payload.type == "removeCustomMarkers") {
     loaded.then(wasm => {
       scran_custom_markers.removeSelection(Wasm, payload.payload.id);
+    });
+  } else if (payload.type == "animateTSNE") {
+    loaded.then(wasm => {
+
+      var tsne = runStepDimRed("run", wasm, scran_tsne_monitor, "tsne", "t-SNE completed", {
+        "perplexity": payload.payload.params["tsne-perp"],
+        "iterations": payload.payload.params["tsne-iter"],
+        "animate": true,
+      });
+      
+      Promise.all([tsne]);
+    });
+  } else if (payload.type == "animateUMAP") {
+    loaded.then(wasm => {
+      var umap = runStepDimRed("run", wasm, scran_umap_monitor, "umap", "UMAP completed", {
+        "num_epochs": payload.payload.params["umap-epochs"],
+        "num_neighbors": payload.payload.params["umap-nn"],
+        "min_dist": payload.payload.params["umap-min_dist"],
+        "animate": true,
+      });
+
+      return Promise.all([umap]);
     });
   } else {
     console.log("MIM:::msg type incorrect")
