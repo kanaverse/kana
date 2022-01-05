@@ -7,18 +7,19 @@ import { Card, Elevation } from "@blueprintjs/core";
 import QCPlotMgr from "../Plots/QCPlotMgr";
 
 import './Gallery.css';
+import ImgPlot from "../Plots/ImgPlot";
 
 const Gallery = () => {
-  const { pcaVarExp, qcData, clusterData } = useContext(AppContext);
+  const { pcaVarExp, qcData, clusterData, savedPlot } = useContext(AppContext);
 
   return (
     <>
       <div className="gallery-cont">
         {
-          clusterData ?
+          qcData && qcData?.["thresholds"] ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
-              <h5># of cells per cluster</h5>
-              <ClusterBarPlot data={clusterData} />
+              <h5>QC Statistics</h5>
+              <QCPlotMgr data={qcData} />
             </Card>
             : ""
         }
@@ -31,12 +32,21 @@ const Gallery = () => {
             : ""
         }
         {
-          qcData && qcData?.["thresholds"] ?
+          clusterData ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
-              <h5>QC Statistics</h5>
-              <QCPlotMgr data={qcData} />
+              <h5># of cells per cluster</h5>
+              <ClusterBarPlot data={clusterData} />
             </Card>
             : ""
+        }
+        {
+          savedPlot ?
+            savedPlot.map((x, i) => (
+                <Card key={i} className="gallery-elem" elevation={Elevation.ONE}>
+                  <ImgPlot data={x} />
+                </Card>
+              )
+            ) : ""
         }
       </div>
     </>

@@ -32,7 +32,7 @@ const AppContextProvider = ({ children }) => {
     tsne: {
       "tsne-iter": 500,
       "tsne-perp": 30,
-      "animate": true,
+      "animate": false,
     },
     umap: {
       "umap-nn": 15,
@@ -122,6 +122,9 @@ const AppContextProvider = ({ children }) => {
   // Logs
   const [logs, setLogs] = useState([]);
 
+  // ImageData user saves while exploring
+  const [savedPlot, setSavedPlot] = useState([]);
+
   useEffect(() => {
 
     if (wasmInitialized && inputFiles.files != null) {
@@ -192,7 +195,8 @@ const AppContextProvider = ({ children }) => {
         exportState, setExportState,
         datasetName, setDatasetName,
         showAnimation, setShowAnimation,
-        triggerAnimation, setTriggerAnimation
+        triggerAnimation, setTriggerAnimation,
+        savedPlot, setSavedPlot
       }}
     >
       {children}

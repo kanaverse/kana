@@ -1,0 +1,17 @@
+.imgplot-container {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+}
+
+.imgplot-save {
+    position: absolute;
+    z-index: 2;
+    top: 40%;
+    display: none;
+    left: 40%;
+}
+
+.imgplot-container:hover .imgplot-save{ 
+	display: block;
+}
