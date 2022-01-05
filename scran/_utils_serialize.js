@@ -30,7 +30,7 @@ const scran_utils_serialize = {};
   function recoverTypedArrays(object) {
     if (Array.isArray(object)) {
       for (var i = 0; i < object.length; i++) {
-        object[i] = unnormalizeTypedArrays(object[i]);
+        object[i] = recoverTypedArrays(object[i]);
       }
     } else if (object instanceof Object) {
       if ("_TypedArray_class" in object) {
@@ -76,7 +76,7 @@ const scran_utils_serialize = {};
         object.set(vals);
       } else {
         for (const [key, element] of Object.entries(object)) {
-          object[key] = unnormalizeTypedArrays(element);
+          object[key] = recoverTypedArrays(element);
         }
       }
     } 
