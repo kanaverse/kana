@@ -161,38 +161,38 @@ function App() {
     } else if (payload.type === "tsne_DATA" || payload.type === "tsne_iter") {
       const { resp } = payload;
       setTsneData(resp);
-
       setShowAnimation(true);
-
-      let tmp = [...redDims];
-      tmp.push("TSNE");
-      // once t-SNE is available, set this as the default display
-      if (!defaultRedDims) {
-        setDefaultRedDims("TSNE");
-      }
-
-      setRedDims(tmp);
-      // also don't show the pong game anymore
-      setShowGame(false);
 
       // assuming the last response is _data
       if (payload.type === "tsne_DATA") {
+
+        let tmp = [...redDims];
+        tmp.push("TSNE");
+        // once t-SNE is available, set this as the default display
+        if (!defaultRedDims) {
+          setDefaultRedDims("TSNE");
+        }
+  
+        setRedDims(tmp);
+        // also don't show the pong game anymore
+        setShowGame(false);
+  
         setShowAnimation(false);
         setTriggerAnimation(false);
       }
     } else if (payload.type === "umap_DATA" || payload.type === "umap_iter") {
       const { resp } = payload;
       setUmapData(resp);
-
       setShowAnimation(true);
-
-      // enable UMAP selection
-      let tmp = [...redDims];
-      tmp.push("UMAP");
-      setRedDims(tmp);
 
       // assuming the last response is _data
       if (payload.type === "umap_DATA") {
+
+        // enable UMAP selection
+        let tmp = [...redDims];
+        tmp.push("UMAP");
+        setRedDims(tmp);
+  
         setShowAnimation(false);
         setTriggerAnimation(false);
       }

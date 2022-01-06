@@ -1,5 +1,5 @@
 import { ScatterGL } from 'scatter-gl';
-import { useEffect, useRef, useContext, useState } from 'react';
+import React, { useEffect, useRef, useContext, useState } from 'react';
 import {
     ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider,
     Divider,
@@ -30,6 +30,8 @@ const DimPlot = () => {
     const [sliderMinMax, setSliderMinMax] = useState(exprMinMax);
     // gradient scale
     const [gradient, setGradient] = useState(null);
+    // first render ?
+    const [renderCount, setRenderCount] = useState(true);
 
     const { plotRedDims, redDims, defaultRedDims, setDefaultRedDims, clusterData,
         tsneData, umapData, setPlotRedDims, clusterColors, setClusterColors,
@@ -138,7 +140,13 @@ const DimPlot = () => {
                     clusters: cluster_mappings
                 };
                 const dataset = new ScatterGL.Dataset(points, metadata);
-                tmp_scatterplot.render(dataset);
+
+                if (renderCount) {
+                    tmp_scatterplot.render(dataset);
+                    setRenderCount(false);
+                } else {
+                    tmp_scatterplot.updateDataset(dataset);
+                }
 
                 // callback for coloring cells on the plot
                 // by default chooses the cluster assigned color for the plot
@@ -461,4 +469,4 @@ const DimPlot = () => {
     );
 };
 
-export default DimPlot;
+export default React.memo(DimPlot);
