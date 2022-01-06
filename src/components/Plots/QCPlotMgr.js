@@ -18,8 +18,9 @@ const QCPlotMgr = (props) => {
                             qcData?.["ranges"]?.[x].map((x) => Math.log2(x + 1)) :
                             qcData?.["ranges"]?.[x].map((x) => x * 100),
                         "label": x,
+                        "transform": x !== "proportion" ? "log" : "perc",
                         "showLabel": x !== "proportion" ? 
-                        x + " (log)" : x + " (%)",
+                        x: x,
                         "rdata": x !== "proportion" ? 
                             qcData?.["data"]?.[x].map((x) => Math.log2(x + 1)) :
                             qcData?.["data"]?.[x].map((x) => x * 100)
