@@ -27,6 +27,62 @@ const scran_utils_serialize = {};
     return object;
   }
 
+  function recoverTypedArrays(object) {
+    if (Array.isArray(object)) {
+      for (var i = 0; i < object.length; i++) {
+        object[i] = recoverTypedArrays(object[i]);
+      }
+    } else if (object instanceof Object) {
+      if ("_TypedArray_class" in object) {
+        var cls = object[["_TypedArray_class"]];
+        var vals = object[["_TypedArray_values"]];
+        switch (cls) {
+          case "Uint8Array":
+            object = new Uint8Array(vals.length);
+            break;
+          case "Int8Array":
+            object = new Int8Array(vals.length);
+            break;
+          case "Uint8Array":
+            object = new Uint8Array(vals.length);
+            break;
+          case "Uint16Array":
+            object = new Uint16Array(vals.length);
+            break;
+          case "Int16Array":
+            object = new Int16Array(vals.length);
+            break;
+          case "Uint32Array":
+            object = new Uint32Array(vals.length);
+            break;
+          case "Int32Array":
+            object = new Int32Array(vals.length);
+            break;
+          case "Uint64Array":
+            object = new Uint64Array(vals.length);
+            break;
+          case "Int64Array":
+            object = new Int64Array(vals.length);
+            break;
+          case "Float32Array":
+            object = new Float32Array(vals.length);
+            break;
+          case "Float64Array":
+            object = new Float64Array(vals.length);
+            break;
+          default:
+            throw "unrecognized TypedArray class '" + cls;
+        }
+        object.set(vals);
+      } else {
+        for (const [key, element] of Object.entries(object)) {
+          object[key] = recoverTypedArrays(element);
+        }
+      }
+    } 
+    return object;
+  }
+
   function numberToBuffer(number) {
     // Store as little-endian. Probably safer
     // than trying to cast it from a Uint64Array;
@@ -40,6 +96,16 @@ const scran_utils_serialize = {};
       i++;
     }
 
+    return output;
+  }
+
+  function bufferToNumber(buffer) {
+    var output = 0;
+    var multiplier = 1;
+    for (const x of buffer) {
+      output += multiplier * x;
+      multiplier *= 256;
+    }
     return output;
   }
 
@@ -95,6 +161,34 @@ const scran_utils_serialize = {};
     }
     
     return combined;
+  };
+
+  x.load = function(buffer) {
+    var offset = 0;
+    var format = bufferToNumber(new Uint8Array(buffer, offset, 8));
+    offset += 8;
+
+    var version = bufferToNumber(new Uint8Array(buffer, offset, 8));
+    offset += 8;
+
+    var json_len = bufferToNumber(new Uint8Array(buffer, offset, 8));
+    offset += 8;
+
+    var contents = pako.ungzip(new Uint8Array(buffer, offset, json_len), { "to": "string" });
+    contents = JSON.parse(contents);
+    contents = recoverTypedArrays(contents);
+    offset += json_len;
+
+    var buffered = contents.inputs.parameters.files;
+    buffered.forEach((x, i) => {
+      var details = buffered[i].buffer;
+      var target = new Uint8Array(buffer, offset + details.offset, details.size);
+      var tmp = new ArrayBuffer(details.size);
+      (new Uint8Arrray(tmp)).set(target);
+      buffered[i].buffer = tmp;
+    });
+ 
+    return contents;
   };
 
 })(scran_utils_serialize);

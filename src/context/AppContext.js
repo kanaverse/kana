@@ -47,9 +47,13 @@ const AppContextProvider = ({ children }) => {
   const [openInput, setOpenInput] = useState(false);
   // show in-app game ?
   const [showGame, setShowGame] = useState(false);
+  // which tab is selected ? defaults to new
+  const [tabSelected, setTabSelected] = useState("new");
+  // params from worker for stored analysis (kana file)
+  const [loadParams, setLoadParams] = useState(null);
 
   // creates a default dataset name
-  const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()).slice(0, 5));
+  const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()).slice(0, 8));
 
   // app export state 
   const [exportState, setExportState] = useState(false);
@@ -128,14 +132,35 @@ const AppContextProvider = ({ children }) => {
   useEffect(() => {
 
     if (wasmInitialized && inputFiles.files != null) {
-      window.scranWorker.postMessage({
-        "type": "RUN",
-        "payload": {
-          "files": inputFiles,
-          "params": params
-        },
-        "msg": "not much to pass"
-      });
+      if (tabSelected === "new") {
+        window.scranWorker.postMessage({
+          "type": "RUN",
+          "payload": {
+            "files": inputFiles,
+            "params": params
+          },
+          "msg": "not much to pass"
+        });
+      } else if (tabSelected === "load") {
+        if (loadParams !== null) {
+          window.scranWorker.postMessage({
+            "type": "LOAD",
+            "payload": {
+              "files": inputFiles,
+              "params": params
+            },
+            "msg": "not much to pass"
+          });
+        } else {
+          window.scranWorker.postMessage({
+            "type": "IMPORT",
+            "payload": {
+              "files": inputFiles
+            },
+            "msg": "not much to pass"
+          });
+        }
+      }
 
       // setShowGame(true);
     }
@@ -144,7 +169,7 @@ const AppContextProvider = ({ children }) => {
   useEffect(() => {
 
     if (exportState) {
-      window.Worker.postMessage({
+      window.scranWorker.postMessage({
         "type": "EXPORT",
         "payload": {
           "files": inputFiles,
@@ -194,6 +219,8 @@ const AppContextProvider = ({ children }) => {
         showGame, setShowGame,
         exportState, setExportState,
         datasetName, setDatasetName,
+        tabSelected, setTabSelected,
+        loadParams, setLoadParams,
         showAnimation, setShowAnimation,
         triggerAnimation, setTriggerAnimation,
         savedPlot, setSavedPlot
