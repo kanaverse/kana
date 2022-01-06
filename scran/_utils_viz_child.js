@@ -1,5 +1,16 @@
 const scran_utils_viz_child = {};
 
+scran_utils_viz_child.chooseDelay = function(animate) {
+  if (animate) {
+    // TODO: using 75 for now
+    // in the future the user can choose a bar for speed on the UI
+    // options would be 1x, 2x, 3x
+    return 75;
+  } else {
+    return 1000000; // effectively no delay.
+  }
+};
+
 scran_utils_viz_child.recreateNeighbors = function(wasm, neighbors) {
   var output = null;
   var rbuf = null;
