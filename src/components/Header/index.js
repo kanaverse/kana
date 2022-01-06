@@ -32,7 +32,7 @@ const Header = () => {
     shouldReturnFocusOnClose: true,
   });
 
-  const { setExportState, datasetName, setDatasetName } = useContext(AppContext);
+  const { setExportState, datasetName, setDatasetName, setIndexedDBState } = useContext(AppContext);
 
   return (
     <>
@@ -64,7 +64,10 @@ const Header = () => {
           <ButtonGroup>
             <Popover2 content={
               <Menu>
-                <MenuItem text="Save" icon="floppy-disk" disabled={true} />
+                <MenuItem text="Save" icon="floppy-disk"
+                  onClick={() => {
+                    setIndexedDBState(true);
+                  }} />
                 <MenuItem text="Download" icon="download"
                   onClick={() => {
                     setExportState(true);
