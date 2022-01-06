@@ -56,7 +56,7 @@ const scran_custom_markers = {};
   x.unserialize = function(wasm, saved) {
     parameters = saved.parameters;
 
-    for (const [key, val] of saved.contents) {
+    for (const [key, val] of Object.entries(saved.contents)) {
       cache.results[key] = { "reloaded": val };
     }
     return;

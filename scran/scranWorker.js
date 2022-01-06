@@ -32,160 +32,351 @@ importScripts("./_custom_markers.js");
 
 /***************************************/
 
-var runStep = function (mode, wasm, namespace, step, message, state, arg_fun = null, extra_fun = null) {
-  if (mode == "serialize") {
-    state[step] = namespace.serialize(wasm);
+function runAllSteps(wasm, mode = "run", state = null) {
+  var response;
+  if (mode === "serialize") {
+    response = {};
   } else {
-    if (mode == "run") {
-      var args;
-      if (arg_fun !== null) {
-        args = arg_fun();
-      } else {
-        args = {};
-      }
-      namespace.compute(wasm, args);
-    } else {
-      namespace.unserialize(wasm, state[step]);
+    if (state == null) {
+      throw "'state' must be supplied if 'mode' is not 'serialize'";
     }
+    if (mode === "unserialize") {
+      response = { "params": {} };
+    }
+  }
+
+  // Creating helper functions.
+  var postSuccess = function(namespace, step, message) {
     if (namespace.changed || mode == "unserialize") {
-      if (extra_fun !== null) {
-        extra_fun();
-      }
       scran_utils.postSuccess(namespace.results(wasm), step, message);
     }
   }
-}
 
-var runStepDimRed = async function (mode, wasm, namespace, step, message, state, arg_fun) {
-  if (mode == "serialize") {
-    state[step] = await namespace.serialize(wasm);
-  } else {
-    if (mode == "run") {
-      var args;
-      if (arg_fun !== null) {
-        args = arg_fun();
-      } else {
-        args = {};
-      }
-      namespace.compute(wasm, args);
-    } else {
-      namespace.unserialize(wasm, state[step]);
-    }
+  var postSuccessAsync = function(namespace, step, message) {
     if (namespace.changed || mode == "unserialize") {
-      var res = await namespace.results(wasm);
-      scran_utils.postSuccess(res, step, message);
+      namespace.results(wasm)
+      .then(res => {
+         scran_utils.postSuccess(res, step, message);
+      });
     }
   }
-}
 
-function runAllSteps(wasm, state, mode = "run") {
-  runStep(mode, wasm, scran_inputs, "inputs", "Count matrix loaded", state,
-    () => {
-      return {
-        "format": state.files.format,
-        "files": state.files.files
-      };
+  var addToObject = function(object, property, value) {
+    if (property in object) {
+      object[property] = { ...object[property], ...value };
+    } else {
+      object[property] = value;
     }
-  );
+  }
 
-  runStep(mode, wasm, scran_qc_metrics, "quality_control_metrics", "QC metrics computed", state);
-
-  runStep(mode, wasm, scran_qc_thresholds, "quality_control_thresholds", "QC thresholds computed", state,
-    () => {
-      return {
-        "nmads": state.params.qc["qc-nmads"]
-      };
+  // Running through all steps.
+  {
+    let step = "inputs";
+    if (mode === "serialize") {
+      response[step] = scran_inputs.serialize(wasm)
+    } else {
+      if (mode == "run") {
+        scran_inputs.compute(wasm, {
+          "format": state.files.format,
+          "files": state.files.files
+        });
+      } else {
+        scran_inputs.unserialize(wasm, state[step]);
+        response["files"] = {
+          "format": "kana",
+          "files": []
+        };
+      }
+      postSuccess(scran_inputs, step, "Count matrix loaded");
     }
-  );
+  }
 
-  runStep(mode, wasm, scran_qc_filter, "quality_control_filtered", "QC filtering completed", {});
-
-  runStep(mode, wasm, scran_normalization, "normalization", "Log-normalization completed", state);
-
-  runStep(mode, wasm, scran_model_gene_var, "feature_selection", "Variance modelling completed", state,
-    () => {
-      return {
-        "span": state.params.fSelection["fsel-span"]
-      };
+  {
+    let step = "quality_control_metrics";
+    if (mode === "serialize") {
+      response[step] = scran_qc_metrics.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_qc_metrics.compute(wasm, {});
+      } else {
+        scran_qc_metrics.unserialize(wasm, state[step]);
+      }
+      postSuccess(scran_qc_metrics, step, "QC metrics computed");
     }
-  );
+  }
 
-  runStep(mode, wasm, scran_pca, "pca", "Principal components analysis completed", state,
-    () => {
-      return {
-        "num_hvgs": state.params.pca["pca-hvg"],
-        "num_pcs": state.params.pca["pca-npc"]
-      };
+  {
+    let step = "quality_control_thresholds";
+    if (mode === "serialize") {
+      response[step] = scran_qc_thresholds.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_qc_thresholds.compute(wasm, {
+          "nmads": state.params.qc["qc-nmads"]
+        });
+      } else {
+        scran_qc_thresholds.unserialize(wasm, state[step]);
+        response["params"]["qc"] = {
+          "qc-nmads": state[step].parameters.nmads
+        };
+      }
+      postSuccess(scran_qc_thresholds, step, "QC thresholds computed");
     }
-  );
+  }
 
-  runStep(mode, wasm, scran_neighbor_index, "neighbor_index", "Neighbor search index constructed", state,
-    () => {
-      return {
-        "approximate": state.params.cluster["clus-approx"]
-      };
+  {
+    let step = "quality_control_filtered";
+    if (mode == "serialize") {
+      response[step] = scran_qc_filter.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_qc_filter.compute(wasm, {});
+      } else {
+        scran_qc_filter.unserialize(wasm, state[step]);
+      }
+      postSuccess(scran_qc_filter, step, "QC filtering completed");
     }
-  );
+  }
 
-  // Special async steps - these are run separately.
-  var tsne = runStepDimRed(mode, wasm, scran_tsne_monitor, "tsne", "t-SNE completed", state,
-    () => {
-      return {
-        "perplexity": state.params.tsne["tsne-perp"],
-        "iterations": state.params.tsne["tsne-iter"],
-        "animate": state.params.tsne["animate"],
-      };
+  {
+    let step = "normalization";
+    if (mode == "serialize") {
+      response[step] = scran_normalization.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_normalization.compute(wasm, {});
+      } else {
+        scran_normalization.unserialize(wasm, state[step]);
+      }
+      postSuccess(scran_normalization, step, "Log-normalization completed");
     }
-  );
+  }
 
-  var umap = runStepDimRed(mode, wasm, scran_umap_monitor, "umap", "UMAP completed", state,
-    () => {
-      return {
-        "num_epochs": state.params.umap["umap-epochs"],
-        "num_neighbors": state.params.umap["umap-nn"],
-        "min_dist": state.params.umap["umap-min_dist"],
-        "animate": state.params.tsne["animate"],
-      };
+  {
+    let step = "feature_selection";
+    if (mode == "serialize") {
+      response[step] = scran_model_gene_var.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_model_gene_var.compute(wasm, {
+          "span": state.params.fSelection["fsel-span"]
+        });
+      } else {
+        scran_model_gene_var.unserialize(wasm, state[step]);
+        response["params"]["fSelection"] = {
+          "fsel-span": state[step].parameters.span
+        };
+      }
+      postSuccess(scran_model_gene_var, step, "Variance modelling completed");
     }
-  );
+  }
 
-  runStep(mode, wasm, scran_snn_neighbors, "snn_find_neighbors", "Neighbor search for clustering complete", state,
-    () => {
-      return {
-        "k": state.params.cluster["clus-k"]
-      };
+  {
+    let step = "pca";
+    if (mode == "serialize") {
+      response[step] = scran_pca.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_pca.compute(wasm, {
+          "num_hvgs": state.params.pca["pca-hvg"],
+          "num_pcs": state.params.pca["pca-npc"]
+        });
+      } else {
+        scran_pca.unserialize(wasm, state[step]);
+        response["params"]["pca"] = {
+          "pca-hvg": state[step].parameters.num_hvgs,
+          "pca-npc": state[step].parameters.num_pcs
+        };
+      }
+      postSuccess(scran_pca, step, "Principal components analysis completed");
     }
-  );
+  }
 
-  runStep(mode, wasm, scran_snn_graph, "snn_build_graph", "Shared nearest neighbor graph constructed", state,
-    () => {
-      return {
-        "scheme": state.params.cluster["clus-scheme"]
-      };
+  {
+    let step = "neighbor_index";
+    if (mode == "serialize") {
+      response[step] = scran_neighbor_index.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_neighbor_index.compute(wasm, {
+          "approximate": state.params.cluster["clus-approx"]
+        });
+      } else {
+        scran_neighbor_index.unserialize(wasm, state[step]);
+        addToObject(response["params"], "cluster", {
+          "clus-approx": state[step].parameters.approximate
+        });
+      }
+      postSuccess(scran_neighbor_index, step, "Neighbor search index constructed");
     }
-  );
+  }
 
-  runStep(mode, wasm, scran_snn_cluster, "snn_cluster_graph", "Community detection from SNN graph complete", state,
-    () => {
-      return {
-        "resolution": state.params.cluster["clus-res"]
-      };
+  // Need to handle async promises in responses here.
+  var tsne;
+  {
+    let step = "tsne";
+    if (mode == "serialize") {
+      tsne = scran_tsne_monitor.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_tsne_monitor.compute(wasm, {
+          "perplexity": state.params.tsne["tsne-perp"],
+          "iterations": state.params.tsne["tsne-iter"],
+          "animate": state.params.tsne["animate"]
+        });
+      } else {
+        scran_tsne_monitor.unserialize(wasm, state[step]);
+        addToObject(response["params"], "tsne", {
+          "tsne-perp": state[step].parameters.perplexity,
+          "tsne-iter": state[step].parameters.iterations,
+          "animate": state[step].parameters.animate
+        });
+      }
+      postSuccessAsync(scran_tsne_monitor, step, "t-SNE completed");
     }
-  );
+  }
 
-  runStep(mode, wasm, scran_choose_clustering, "choose_clustering", "Clustering of interest chosen", state,
-    () => {
-      return {
-        "method": state.params.cluster["clus-method"]
-      };
+  var umap;
+  {
+    let step = "umap";
+    if (mode == "serialize") {
+      umap = scran_umap_monitor.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_umap_monitor.compute(wasm, {
+          "num_epochs": state.params.umap["umap-epochs"],
+          "num_neighbors": state.params.umap["umap-nn"],
+          "min_dist": state.params.umap["umap-min_dist"],
+          "animate": state.params.tsne["animate"]
+        });
+      } else {
+        scran_umap_monitor.unserialize(wasm, state[step]);
+        addToObject(response["params"], "umap", {
+          "num_epochs": state[step].parameters.num_epochs,
+          "num_neighbors": state[step].parameters.num_neighbors,
+          "min_dist": state[step].parameters.min_dist,
+          "animate": state[step].parameters.animate
+        });
+      }
+      postSuccessAsync(scran_umap_monitor, step, "UMAP completed");
     }
-  );
+  }
 
-  runStep(mode, wasm, scran_score_markers, "marker_detection", "Marker detection complete", state);
+  // Back to normal programming.
+  {
+    let step = "snn_find_neighbors";
+    if (mode == "serialize") {
+      response[step] = scran_snn_neighbors.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_snn_neighbors.compute(wasm, {
+          "k": state.params.cluster["clus-k"]
+        });
+      } else {
+        scran_snn_neighbors.unserialize(wasm, state[step]);
+        addToObject(response["params"], "cluster", {
+          "clus-k": state[step].parameters.k
+        });
+      }
+      postSuccess(scran_snn_neighbors, step, "Shared nearest neighbor search completed");
+    }
+  }
 
-  runStep(mode, wasm, scran_custom_markers, "custom_marker_management", "Pruning of custom markers finished", state);
+  {
+    let step = "snn_build_graph";
+    if (mode == "serialize") {
+      response[step] = scran_snn_graph.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_snn_graph.compute(wasm, {
+          "scheme": state.params.cluster["clus-scheme"]
+        });
+      } else {
+        scran_snn_graph.unserialize(wasm, state[step]);
+        addToObject(response["params"], "cluster", {
+          "clus-scheme": state[step].parameters.scheme
+        });
+      }
+      postSuccess(scran_snn_graph, step, "Shared nearest neighbor graph constructed");
+    }
+  }
 
-  return Promise.all([tsne, umap]);
+  {
+    let step = "snn_cluster_graph";
+    if (mode == "serialize") {
+      response[step] = scran_snn_cluster.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_snn_cluster.compute(wasm, {
+          "resolution": state.params.cluster["clus-res"]
+        });
+      } else {
+        scran_snn_cluster.unserialize(wasm, state[step]);
+        addToObject(response["params"], "cluster", {
+          "clus-res": state[step].parameters.resolution
+        });
+      }
+      postSuccess(scran_snn_cluster, step, "Community detection from SNN graph complete");
+    }
+  }
+
+  {
+    let step = "choose_clustering";
+    if (mode == "serialize") {
+      response[step] = scran_choose_clustering.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_choose_clustering.compute(wasm, {
+          "method": state.params.cluster["clus-method"]
+        });
+      } else {
+        scran_choose_clustering.unserialize(wasm, state[step]);
+        addToObject(response["params"], "cluster", {
+          "clus-method": state[step].parameters.method
+        });
+      }
+      postSuccess(scran_choose_clustering, step, "Clustering of interest chosen");
+    }
+  }
+
+  {
+    let step = "marker_detection";
+    if (mode == "serialize") {
+      response[step] = scran_score_markers.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_score_markers.compute(wasm, {});
+      } else {
+        scran_score_markers.unserialize(wasm, state[step]);
+      }
+      postSuccess(scran_score_markers, step, "Marker detection complete");
+    }
+  }
+
+  {
+    let step = "custom_marker_management";
+    if (mode == "serialize") {
+      response[step] = scran_custom_markers.serialize(wasm);
+    } else {
+      if (mode == "run") {
+        scran_custom_markers.compute(wasm, {});
+      } else {
+        scran_custom_markers.unserialize(wasm, state[step]);
+      }
+      postSuccess(scran_custom_markers, step, "Pruning of custom markers finished");
+    }
+  }
+
+  if (mode == "serialize") {
+    return Promise.all([tsne, umap])
+    .then(done => {
+      response.tsne = done[0];
+      response.umap = done[1];
+      return response;
+    });
+  } else {
+    return response;
+  }
 }
 
 /***************************************/
@@ -207,7 +398,7 @@ onmessage = function (msg) {
     })
   } else if (payload.type == "RUN") {
     loaded.then(wasm => {
-      runAllSteps(wasm, payload.payload);
+      runAllSteps(wasm, "run", payload.payload);
     });
   // events specific to loading an existing kana file
   } else if (payload.type == "LOAD") {
@@ -215,24 +406,25 @@ onmessage = function (msg) {
       const reader = new FileReaderSync();
       var f = payload.payload.files.files.file[0];
       var contents = scran_utils_serialize.load(reader.readAsArrayBuffer(f));
-      console.log(contents);
-      runAllSteps(wasm, contents);
-      // TODO: import the file and send the params back
+      var response = runAllSteps(wasm, "unserialize", contents);
+      postMessage({
+        type: "loadedParameters",
+        resp: response
+      });
     });
   // exporting an analysis
   } else if (payload.type == "EXPORT") {
     loaded.then(wasm => {
-      let state = {};
-      runAllSteps(wasm, state, mode = "serialize")
-        .then(x => {
-          var output = scran_utils_serialize.save(state);
-          console.log(output.byteLength);
-          postMessage({
-            type: "exportState",
-            resp: output,
-            msg: "Success: application state exported"
-          }, [output]);
-        });
+      runAllSteps(wasm, "serialize")
+      .then(state => {
+        var output = scran_utils_serialize.save(state);
+        console.log(output.byteLength);
+        postMessage({
+          type: "exportState",
+          resp: output,
+          msg: "Success: application state exported"
+        }, [output]);
+      });
     });
   }
   // custom events from UI

@@ -14,15 +14,17 @@ const scran_utils_serialize = {};
       for (var i = 0; i < object.length; i++) {
         object[i] = normalizeTypedArrays(object[i]);
       }
-    } else if (object instanceof Object) {
-      for (const [key, element] of Object.entries(object)) {
-        object[key] = normalizeTypedArrays(element);
-      }
     } else if (ArrayBuffer.isView(object)) {
       object = { 
         "_TypedArray_class": object.constructor.name, 
         "_TypedArray_values": Array.from(object) 
       };
+    } else if (object instanceof Object) {
+      // This MUST be after the previous clause, as otherwise
+      // a TypedArray is an object and is incorrectly handled. 
+      for (const [key, element] of Object.entries(object)) {
+        object[key] = normalizeTypedArrays(element);
+      }
     }
     return object;
   }
@@ -184,7 +186,7 @@ const scran_utils_serialize = {};
       var details = buffered[i].buffer;
       var target = new Uint8Array(buffer, offset + details.offset, details.size);
       var tmp = new ArrayBuffer(details.size);
-      (new Uint8Arrray(tmp)).set(target);
+      (new Uint8Array(tmp)).set(target);
       buffered[i].buffer = tmp;
     });
  
