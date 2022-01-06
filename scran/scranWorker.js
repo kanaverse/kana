@@ -485,7 +485,7 @@ onmessage = function (msg) {
         // Making sure to set it back to its final state.
         scran_tsne_monitor.results(wasm)
         .then(res => {
-          scran_utils.postSuccess(res, "tsne", message);
+          scran_utils.postSuccess(res, "tsne", "Resending t-SNE coordinates");
         });
       });
     });
@@ -496,7 +496,7 @@ onmessage = function (msg) {
         // Making sure to set it back to its final state.
         scran_umap_monitor.results(wasm)
         .then(res => {
-          scran_utils.postSuccess(res, "umap", message);
+          scran_utils.postSuccess(res, "umap", "Resending UMAP coordinates");
         });
       });
     });
