@@ -1,10 +1,8 @@
-import { useEffect, useRef, useContext } from "react";
+import { useEffect, useRef } from "react";
 import * as d3 from 'd3';
-import { AppContext } from "../../context/AppContext";
 
 const StackedHistogram = (props) => {
     const container = useRef();
-    const {selectedCluster } = useContext(AppContext);
 
     useEffect(() => {
 
@@ -40,14 +38,14 @@ const StackedHistogram = (props) => {
                 `translate(${margin.left},${margin.top})`);
 
         const x = d3.scaleLinear()
-            .domain([0, Math.max(...data)])
-            .range([0, width])
-            .nice();
+            .domain(d3.extent(data))
+            .range([0, width]);
 
         svg.append("g")
             .attr("transform", `translate(0, ${height/2})`)
             .call(d3.axisBottom(x)
-                .ticks(5));
+                .ticks(5)
+                .tickValues(d3.extent(data)));
 
         const histogram = d3.bin()
             .value((d) => { return d; })
@@ -90,6 +88,7 @@ const StackedHistogram = (props) => {
 
         // svg.append("circle").attr("cx", width - 50).attr("cy", 5).attr("r", 3).style("fill", "#D3D3D3")
         // svg.append("circle").attr("cx", width - 50).attr("cy", 15).attr("r", 3).style("fill", color)
+        
         svg.append("text").attr("x", width - 20).attr("y", y(-0.5)).text("other cells")
             .style("font-size", "10px").attr("alignment-baseline", "middle");
         svg.append("text").attr("x", width - 20).attr("y", y(0.5)).text(clusterlabel)

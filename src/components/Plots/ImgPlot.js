@@ -66,7 +66,7 @@ const ImgPlot = (props) => {
                     //     type: "text/plain"
                     // });
                     tmpLink.href = data?.image;
-                    tmpLink.download = `${title}.png`;
+                    tmpLink.download = `${title.replace("⊃", "").split(" ").join("_")}.png`;
                     tmpLink.click();
                 }}>Save</Button>
             <canvas className="imgplot-canvas" width={propwidth} height={propheight} ref={container}></canvas>
