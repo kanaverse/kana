@@ -29,7 +29,7 @@
 }
 
 .marker-footer {
-    margin-top: 10px;
+    padding-top: 5px;
     display: grid;
     grid-template-columns: auto;
     grid-template-rows: 25px repeat(4, auto);
@@ -44,21 +44,36 @@
 .marker-filter-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: start;
     justify-content: center;
     position: relative;
+    width: 100%;
+    min-height: 35px;
+    margin-top: 2px;
 }
 
 .marker-filter-container-tag {
     position: absolute;
-    top: 20%;
+    top: 5px;
     right: 20px;
     /* font-size: 10px; */
 }
 
-.marker-filter-container > Histogram {
-    position: absolute;
+.marker-slider-container {
+    position: relative;
 }
+
+.marker-filter-gradient {
+    position: absolute;
+    width: 315px;
+    margin: 0 15px 0 15px;
+    opacity: 0.8;
+}
+
+
+/* .marker-filter-container > Histogram {
+    position: absolute;
+} */
 
 .row-card {
     padding: 2px;
@@ -86,11 +101,10 @@
 }
 
 .marker-filter-slider {
-    margin: 0 5px 0 5px;
+    margin: 0 15px 0 15px;
     /* width: 100%; */
     width: 315px;
     position: absolute;
-    top: 60%;
     z-index: 1;
     font-size: 8px;
 }
