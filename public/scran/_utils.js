@@ -89,3 +89,32 @@ scran_utils.postSuccess = function(info, step, message) {
     msg: "Success: " + message
   }, transferable);
 };
+
+/* A deep copy function that may not copy TypedArrays,
+ * under the assumption that they are already cloned. */
+scran_utils.simpleDeepCopy = function(x, ignoreTypedArrays = true) {
+  if (Array.isArray(x)) {
+    var y = x.slice();
+    for (var i = 0; i < x.length; i++) {
+      y[i] = scran_utils.deepCopy(x[i]);
+    }
+    return y;
+  } else if (ArrayBuffer.isView(x)) {
+    if (ignoreTypedArrays) {
+      return x;
+    } else {
+      return x.slice();
+    }
+  } else if (x instanceof Object) {
+    var y = { ...x };
+    for (const [key, val] of y) {
+      y[key] = scran_utils.deepCopy(val);
+    }
+    return y;
+  }
+  return x;
+}
+
+
+
+
