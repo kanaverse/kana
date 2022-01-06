@@ -247,7 +247,7 @@ function runAllSteps(wasm, mode = "run", state = null) {
           "num_epochs": state.params.umap["umap-epochs"],
           "num_neighbors": state.params.umap["umap-nn"],
           "min_dist": state.params.umap["umap-min_dist"],
-          "animate": state.params.tsne["animate"]
+          "animate": state.params.umap["animate"]
         });
       } else {
         scran_umap_monitor.unserialize(wasm, state[step]);
@@ -479,26 +479,16 @@ onmessage = function (msg) {
       scran_custom_markers.removeSelection(Wasm, payload.payload.id);
     });
   } else if (payload.type == "animateTSNE") {
-    loaded.then(wasm => {
-      scran_tsne_monitor.animate(wasm)
-      .then(x => {
-        // Making sure to set it back to its final state.
-        scran_tsne_monitor.results(wasm)
-        .then(res => {
-          scran_utils.postSuccess(res, "tsne", "Resending t-SNE coordinates");
-        });
-      });
+    loaded.then(async (wasm) => {
+      await scran_tsne_monitor.animate(wasm);
+      var res = await scran_tsne_monitor.results(wasm);
+      scran_utils.postSuccess(res, "tsne", "Resending t-SNE coordinates");
     });
   } else if (payload.type == "animateUMAP") {
-    loaded.then(wasm => {
-      scran_umap_monitor.animate(wasm)
-      .then(x => {
-        // Making sure to set it back to its final state.
-        scran_umap_monitor.results(wasm)
-        .then(res => {
-          scran_utils.postSuccess(res, "umap", "Resending UMAP coordinates");
-        });
-      });
+    loaded.then(async (wasm) => {
+      await scran_umap_monitor.animate(wasm);
+      var res = await scran_umap_monitor.results(wasm);
+      scran_utils.postSuccess(res, "umap", "Resending UMAP coordinates");
     });
   } else {
     console.log("MIM:::msg type incorrect")
