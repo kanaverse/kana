@@ -7,26 +7,18 @@ const ClusterBarPlot = (props) => {
 
     let data = props?.data?.clusters;
 
-    const { setClusterColors } = useContext(AppContext);
-    const [tmpColors, setTmpColors] = useState(null);
+    const { clusterColors, setClusterColors } = useContext(AppContext);
 
     useEffect(() => {
-        let cluster_count = Object.keys(x).length;
+        let cluster_count = Math.max(...data) + 1;
         let cluster_colors = null;
         if (cluster_count > Object.keys(palette).length) {
             cluster_colors = randomColor({ luminosity: 'dark', count: cluster_count + 1 });
         } else {
             cluster_colors = palette[cluster_count.toString()];
         }
-        setTmpColors(cluster_colors);
+        setClusterColors(cluster_colors);
     }, []);
-
-    useEffect(() => {
-        setClusterColors(tmpColors);
-    }, [tmpColors]);
-
-    if (!data) return "";
-
 
     const palette = {
         1: ['#1b9e77'],
@@ -125,7 +117,7 @@ const ClusterBarPlot = (props) => {
     });
 
     return (
-        tmpColors && <BarPlot data={chart_data} color={tmpColors} />
+        clusterColors && <BarPlot data={chart_data} color={clusterColors} />
     );
 };
 
