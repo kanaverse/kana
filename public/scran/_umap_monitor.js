@@ -9,7 +9,7 @@ const scran_umap_monitor = {};
   /** Public members **/
   x.changed = false;
 
-  /** Public functions **/
+  /** Public functions (standard) **/
   x.compute = function(wasm, args) {
     if (!scran_neighbor_index.changed && !scran_utils.changedParameters(parameters, args)) {
       x.changed = false;
@@ -52,5 +52,10 @@ const scran_umap_monitor = {};
     cache.reloaded = saved.contents;
     return;
   };
+
+  /** Public functions (custom) **/
+  x.animate = function(wasm) {
+    return scran_utils_viz_parent.sendTask(worker, { "cmd": "RERUN" }, cache);
+  }
   
 })(scran_umap_monitor);

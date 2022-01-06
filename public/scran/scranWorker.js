@@ -480,31 +480,25 @@ onmessage = function (msg) {
     });
   } else if (payload.type == "animateTSNE") {
     loaded.then(wasm => {
-
-      var tsne = runStepDimRed("run", wasm, scran_tsne_monitor, "tsne", "t-SNE completed", {},
-        () => {
-          return {
-            "perplexity": payload.payload.params["tsne-perp"],
-            "iterations": payload.payload.params["tsne-iter"],
-            "animate": true,
-          }
+      scran_tsne_monitor.animate(wasm)
+      .then(x => {
+        // Making sure to set it back to its final state.
+        scran_tsne_monitor.results(wasm)
+        .then(res => {
+          scran_utils.postSuccess(res, "tsne", "Resending t-SNE coordinates");
         });
-
-      Promise.all([tsne]);
+      });
     });
   } else if (payload.type == "animateUMAP") {
     loaded.then(wasm => {
-      var umap = runStepDimRed("run", wasm, scran_umap_monitor, "umap", "UMAP completed", {},
-        () => {
-          return {
-            "num_epochs": payload.payload.params["umap-epochs"],
-            "num_neighbors": payload.payload.params["umap-nn"],
-            "min_dist": payload.payload.params["umap-min_dist"],
-            "animate": true,
-          }
+      scran_umap_monitor.animate(wasm)
+      .then(x => {
+        // Making sure to set it back to its final state.
+        scran_umap_monitor.results(wasm)
+        .then(res => {
+          scran_utils.postSuccess(res, "umap", "Resending UMAP coordinates");
         });
-
-      return Promise.all([umap]);
+      });
     });
   } else {
     console.log("MIM:::msg type incorrect")
