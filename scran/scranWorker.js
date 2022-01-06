@@ -29,6 +29,7 @@ importScripts("./_tsne_monitor.js");
 importScripts("./_umap_monitor.js");
 importScripts("./_score_markers.js");
 importScripts("./_custom_markers.js");
+importScripts("./KanaDBHandler.js");
 
 /***************************************/
 
@@ -46,22 +47,22 @@ function runAllSteps(wasm, mode = "run", state = null) {
   }
 
   // Creating helper functions.
-  var postSuccess = function(namespace, step, message) {
+  var postSuccess = function (namespace, step, message) {
     if (namespace.changed || mode == "unserialize") {
       scran_utils.postSuccess(namespace.results(wasm), step, message);
     }
   }
 
-  var postSuccessAsync = function(namespace, step, message) {
+  var postSuccessAsync = function (namespace, step, message) {
     if (namespace.changed || mode == "unserialize") {
       namespace.results(wasm)
-      .then(res => {
-         scran_utils.postSuccess(res, step, message);
-      });
+        .then(res => {
+          scran_utils.postSuccess(res, step, message);
+        });
     }
   }
 
-  var addToObject = function(object, property, value) {
+  var addToObject = function (object, property, value) {
     if (property in object) {
       object[property] = { ...object[property], ...value };
     } else {
@@ -369,11 +370,11 @@ function runAllSteps(wasm, mode = "run", state = null) {
 
   if (mode == "serialize") {
     return Promise.all([tsne, umap])
-    .then(done => {
-      response.tsne = done[0];
-      response.umap = done[1];
-      return response;
-    });
+      .then(done => {
+        response.tsne = done[0];
+        response.umap = done[1];
+        return response;
+      });
   } else {
     return response;
   }
@@ -383,7 +384,6 @@ function runAllSteps(wasm, mode = "run", state = null) {
 
 var loaded;
 onmessage = function (msg) {
-  var self = this;
 
   const payload = msg.data;
   if (payload.type == "INIT") {
@@ -395,36 +395,79 @@ onmessage = function (msg) {
         type: payload.type,
         msg: `Success: ScranJS/WASM initialized`
       });
-    })
+
+      kana_db.init();
+    });
   } else if (payload.type == "RUN") {
     loaded.then(wasm => {
       runAllSteps(wasm, "run", payload.payload);
     });
-  // events specific to loading an existing kana file
+    // events specific to loading an existing kana file
   } else if (payload.type == "LOAD") {
     loaded.then(wasm => {
-      const reader = new FileReaderSync();
-      var f = payload.payload.files.files.file[0];
-      var contents = scran_utils_serialize.load(reader.readAsArrayBuffer(f));
-      var response = runAllSteps(wasm, "unserialize", contents);
-      postMessage({
-        type: "loadedParameters",
-        resp: response
-      });
+      if (payload.payload.files.format == "kana") {
+        const reader = new FileReaderSync();
+        var f = payload.payload.files.files.file[0];
+        var contents = scran_utils_serialize.load(reader.readAsArrayBuffer(f));
+        var response = runAllSteps(wasm, "unserialize", contents);
+        postMessage({
+          type: "loadedParameters",
+          resp: response
+        });
+      } else if (payload.payload.files.format == "kanadb"){
+        let client = kana_db.getClient();
+
+        let req = client.transaction(["analysis"], "readonly")
+          .objectStore("analysis").get(payload.payload.files.files.file);
+
+        req.onerror = function (event) {
+          postMessage({
+            type: "KanaDB_ERROR",
+            msg: `Fail: Cannot load analysis: ${payload.payload.files.files.file}!!`
+          });
+        };
+
+        req.onsuccess = function (event) {
+          var contents = scran_utils_serialize.load(event.target.result.payload);
+          var response = runAllSteps(wasm, "unserialize", contents);
+          postMessage({
+            type: "loadedParameters",
+            resp: response
+          });
+        };
+      }
     });
-  // exporting an analysis
+    // exporting an analysis
   } else if (payload.type == "EXPORT") {
     loaded.then(wasm => {
       runAllSteps(wasm, "serialize")
-      .then(state => {
-        var output = scran_utils_serialize.save(state);
-        console.log(output.byteLength);
-        postMessage({
-          type: "exportState",
-          resp: output,
-          msg: "Success: application state exported"
-        }, [output]);
-      });
+        .then(state => {
+          var output = scran_utils_serialize.save(state);
+          postMessage({
+            type: "exportState",
+            resp: output,
+            msg: "Success: application state exported"
+          }, [output]);
+        });
+    });
+  }
+  // save analysis to inbrowser indexedDB 
+  else if (payload.type == "SAVEKDB") {
+    loaded.then(wasm => {
+      runAllSteps(wasm, "serialize")
+        .then(state => {
+          var output = scran_utils_serialize.save(state);
+          kana_db.save({
+            id: payload.payload.id,
+            payload: output
+          });
+        });
+    });
+  }
+  // remove a saved analysis
+  else if (payload.type == "REMOVEKDB") {
+    loaded.then(wasm => {
+      kana_db.remove(payload.payload.id);
     });
   }
   // custom events from UI
