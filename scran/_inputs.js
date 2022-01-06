@@ -242,10 +242,10 @@ const scran_inputs = {};
   /** Public functions (custom) **/
   x.fetchCountMatrix = function (wasm) {
     if ("reloaded" in cache) {
-      if (cache.reloaded.type == "MatrixMarket") {
-        loadMatrixMarketRaw(wasm, cache.reloaded.files); 
+      if (parameters.type == "MatrixMarket") {
+        loadMatrixMarketRaw(wasm, parameters.files); 
       } else {
-        loadHDF5Raw(wasm, cache.reloaded.files);
+        loadHDF5Raw(wasm, parameters.files);
       }
     }
     return cache.matrix;
