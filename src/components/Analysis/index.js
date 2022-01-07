@@ -1,6 +1,7 @@
 import {
     Button, Classes, Dialog, Text, FileInput, NumericInput,
-    Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab
+    Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
+    RadioGroup, Radio, Icon
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback, useEffect } from "react";
@@ -21,7 +22,9 @@ function AnalysisDialog({
     const { inputFiles, setInputFiles,
         params, setParams, openInput,
         tabSelected, setTabSelected,
-        loadParams, setLoadParams } = useContext(AppContext);
+        loadParams, kanaIDBRecs,
+        setLoadParamsFor, loadParamsFor,
+        setDeletekdb, setDatasetName } = useContext(AppContext);
 
     // assuming new is the default tab
     let [tmpInputFiles, setTmpInputFiles] = useState({
@@ -36,23 +39,37 @@ function AnalysisDialog({
         barcode: "Choose barcode annotation",
     });
 
-    let [tmpInputParams, setTmpInputParams] = useState(params);
     let [tmpInputValid, setTmpInputValid] = useState(true);
 
     const [newImportFormat, setNewImportFormat] = useState("mtx");
+    const [loadImportFormat, setLoadImportFormat] = useState("kana");
     // const [hdfFormat, sethdfFormat] = useState("tenx");
+
+    let [tmpInputParams, setTmpInputParams] = useState(tabSelected == "new" ? params : loadParams);
 
     function handleImport() {
         setParams(tmpInputParams);
 
-        if (tabSelected === "load") {
-            setLoadParams(tmpInputParams);
+        if (tabSelected == "load") {
+            if (loadImportFormat === "kanadb") {
+                setDatasetName(tmpInputFiles?.file);
+            } else {
+                setDatasetName(tmpInputFiles?.file?.[0]?.name.split(".")[0]);
+            }
         }
+
+        // if (tabSelected === "load") {
+        //     // setLoadParams(tmpInputParams);
+        // }
         setInputFiles({
             "format": tabSelected == "new" ?
-                newImportFormat : "kana",
-            "files": tmpInputFiles
+                newImportFormat : loadImportFormat,
+            "files": tmpInputFiles,
+            "reset" : tabSelected == "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file
         });
+
+        setLoadParamsFor(tabSelected == "new" ?
+            newImportFormat : loadImportFormat);
 
         handleClose();
     }
@@ -61,17 +78,7 @@ function AnalysisDialog({
         if (currTab === "new") {
             handleNewImportTab(newImportFormat);
         } else if (currTab === "load") {
-            setTmpInputFiles({
-                file: null
-            });
 
-            setInputText({
-                file: "Choose kana analysis file"
-            });
-          
-            if (loadParams) {
-                setTmpInputParams(loadParams);
-            }
         }
         setTabSelected(currTab);
     }
@@ -107,14 +114,54 @@ function AnalysisDialog({
                 file: "Choose H5ad file",
             });
         }
-      
+
         setTmpInputParams(params);
         setNewImportFormat(currTab);
+    }
+
+    function handleLoadImportTab(currTab, prevTab) {
+        if (currTab === "kana") {
+            setTmpInputFiles({
+                file: null
+            });
+
+            setInputText({
+                file: "Choose kana analysis file"
+            });
+
+
+        } else if (currTab === "kanadb") {
+            setTmpInputFiles({
+                file: null
+            });
+
+            setTmpInputValid(true);
+        }
+
+        if (loadParams) {
+            setTmpInputParams(loadParams);
+        }
+        setLoadImportFormat(currTab);
     }
 
     useEffect(() => {
         openInput && setIsOpen(true);
     }, [openInput]);
+
+    useEffect(() => {
+        if (loadParams && tabSelected == "load") {
+            setTmpInputParams(loadParams);
+        }
+    }, [loadParams]);
+
+    useEffect(() => {
+        if (tabSelected == "load" && loadImportFormat == "kanadb"
+            && tmpInputFiles?.file == null && kanaIDBRecs) {
+            setTmpInputFiles({
+                file: kanaIDBRecs[0]
+            });
+        }
+    }, [kanaIDBRecs, loadImportFormat]);
 
     useEffect(() => {
         if (tmpInputFiles) {
@@ -150,7 +197,7 @@ function AnalysisDialog({
                 }
 
             } else if (tabSelected === "load" && inputText?.file) {
-                if (
+                if ( loadImportFormat === "kana" &&
                     tmpInputFiles?.file != null && !(inputText?.file.toLowerCase().endsWith("kana") ||
                         inputText?.file.toLowerCase().endsWith("kana.gz")
                     )
@@ -715,22 +762,91 @@ function AnalysisDialog({
                             <div className="inputs-container">
                                 <div className='row-input'>
                                     <div className="col">
-                                        <div>
-                                            <H5><Tag round={true}>1</Tag>
-                                                <span className="row-tooltip">
-                                                    Load analysis file
-                                                </span>
-                                            </H5>
-                                            <div className="row">
-                                                <Label className="row-input">
-                                                    <FileInput text={inputText.file} onInputChange={(msg) => { setInputText({ ...inputText, "file": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files }) }} />
-                                                </Label>
-                                            </div>
-                                        </div>
+                                        <Tabs
+                                            animate={true}
+                                            renderActiveTabPanelOnly={true}
+                                            vertical={true}
+                                            onChange={handleLoadImportTab}
+                                            defaultSelectedTabId={loadImportFormat}
+                                        >
+                                            <Tab id="kana" title="Load Analysis file" panel={
+                                                <div>
+                                                    <H5><Tag round={true}>1</Tag>
+                                                        <span className="row-tooltip">
+                                                            Load saved analysis file
+                                                        </span>
+                                                    </H5>
+                                                    <div className="row">
+                                                        <Label className="row-input">
+                                                            <FileInput text={inputText.file} onInputChange={(msg) => { setInputText({ ...inputText, "file": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files }) }} />
+                                                        </Label>
+                                                    </div>
+                                                </div>
+                                            } />
+                                            {<Tab id="kanadb" title="Load from database" panel={
+                                                <div>
+                                                    <H5><Tag round={true}>1</Tag>
+                                                        <span className="row-tooltip">
+                                                            Load analysis file
+                                                        </span>
+                                                    </H5>
+                                                    {
+                                                        kanaIDBRecs ?
+                                                            <div className="row">
+                                                                {/* <HTMLSelect
+                                                                    onChange={(x) => {
+                                                                        setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value })
+                                                                    }}>
+                                                                    {
+                                                                        kanaIDBRecs.map((x, i) => (
+                                                                            <option key={i}>{x}</option>
+                                                                        ))
+                                                                    }
+                                                                </HTMLSelect> */}
+                                                                <RadioGroup
+                                                                    label="Choose an anlaysis"
+                                                                    onChange={(x) => {
+                                                                        setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value });
+                                                                        setTmpInputValid(true);
+                                                                    }}
+                                                                    selectedValue={tmpInputFiles?.file}
+                                                                >
+                                                                    {
+                                                                        kanaIDBRecs.map((x, i) => {
+                                                                            return (
+                                                                                <Radio key={i} style={{
+                                                                                    display: "flex",
+                                                                                    flexDirection: "row",
+                                                                                    alignItems: "center"
+                                                                                }}
+                                                                                    label={x} value={x} >
+                                                                                    <Icon icon="trash" size="10"
+                                                                                        style={{
+                                                                                            alignSelf: 'baseline',
+                                                                                            paddingTop: '4px',
+                                                                                            paddingLeft: '5px',
+                                                                                        }}
+                                                                                        onClick={() => {
+                                                                                            setDeletekdb(x);
+                                                                                        }}></Icon>
+                                                                                </Radio>
+                                                                            )
+                                                                        })
+                                                                    }
+                                                                </RadioGroup>
+                                                            </div> :
+                                                            <div className="row">
+                                                                <Label>No saved analysis found in the browser!!</Label>
+                                                            </div>
+                                                    }
+                                                </div>} />
+                                            }
+                                        </Tabs>
                                     </div>
 
                                     {
-                                        loadParams ?
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>2</Tag>
@@ -760,7 +876,8 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams ?
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>3</Tag>
@@ -790,7 +907,8 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams ?
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>4</Tag>
@@ -832,7 +950,8 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams ?
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>5</Tag>
@@ -913,7 +1032,8 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams ?
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>6</Tag>
@@ -955,7 +1075,8 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams ?
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>7</Tag>
@@ -1010,7 +1131,7 @@ function AnalysisDialog({
                                 </div>
                                 <div className='row-input-tooltips'>
                                     {
-                                        !tmpInputValid &&
+                                        !tmpInputValid && 
                                         <Callout intent="danger"
                                             title="Incorrect file format"
                                             style={{
@@ -1025,7 +1146,7 @@ function AnalysisDialog({
                                 </div>
                             </div>
                         } />
-                    </Tabs>
+                    </Tabs >
                 </div >
 
                 {

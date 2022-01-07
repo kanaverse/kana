@@ -49,14 +49,24 @@ const AppContextProvider = ({ children }) => {
   const [showGame, setShowGame] = useState(false);
   // which tab is selected ? defaults to new
   const [tabSelected, setTabSelected] = useState("new");
+  // saved analysis in the browser's indexeddb
+  const [kanaIDBRecs, setKanaIDBRecs] = useState(null);
+    // delete rec in database
+  const [deletekdb, setDeletekdb] = useState(null);
   // params from worker for stored analysis (kana file)
   const [loadParams, setLoadParams] = useState(null);
+  // kana file or db ?
+  const [loadParamsFor, setLoadParamsFor] = useState(null);
 
   // creates a default dataset name
   const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()).slice(0, 8));
 
-  // app export state 
+  // app export state - .kana file
   const [exportState, setExportState] = useState(false);
+  // app export state - store to indexedDB
+  const [indexedDBState, setIndexedDBState] = useState(false);
+  // app export state - store to indexedDB
+  const [initLoadState, setInitLoadState] = useState(false);
 
   // wasm state and error 
   const [wasmInitialized, setWasmInitialized] = useState(false);
@@ -131,7 +141,7 @@ const AppContextProvider = ({ children }) => {
 
   useEffect(() => {
 
-    if (wasmInitialized && inputFiles.files != null) {
+    if (wasmInitialized && inputFiles.files != null && !initLoadState) {
       if (tabSelected === "new") {
         window.scranWorker.postMessage({
           "type": "RUN",
@@ -142,26 +152,26 @@ const AppContextProvider = ({ children }) => {
           "msg": "not much to pass"
         });
       } else if (tabSelected === "load") {
-        if (loadParams !== null) {
+        if (loadParams == null ||  inputFiles?.reset) {
           window.scranWorker.postMessage({
             "type": "LOAD",
+            "payload": {
+              "files": inputFiles
+            },
+            "msg": "not much to pass"
+          });
+        } else {
+          window.scranWorker.postMessage({
+            "type": "RUN",
             "payload": {
               "files": inputFiles,
               "params": params
             },
             "msg": "not much to pass"
           });
-        } else {
-          window.scranWorker.postMessage({
-            "type": "IMPORT",
-            "payload": {
-              "files": inputFiles
-            },
-            "msg": "not much to pass"
-          });
         }
+        setInitLoadState(true);
       }
-
       // setShowGame(true);
     }
   }, [inputFiles, params, wasmInitialized]);
@@ -183,6 +193,40 @@ const AppContextProvider = ({ children }) => {
       inputFiles?.files && AppToaster.show({ icon:"download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
     }
   }, [exportState]);
+
+  useEffect(() => {
+
+    if (indexedDBState) {
+      window.scranWorker.postMessage({
+        "type": "SAVEKDB",
+        "payload": {
+          "files": inputFiles,
+          "params": params,
+          "id": datasetName,
+        },
+        "msg": "not much to pass"
+      });
+
+      AppToaster.show({ icon:"floppy-disk", intent: "primary", message: "Saving analysis in the background. Note: analysis is saved within the browser!!" });
+    } else {
+      inputFiles?.files && AppToaster.show({ icon:"floppy-disk", intent: "primary", message: "Analysis saved!" });
+    }
+  }, [indexedDBState]);
+
+  useEffect(() => {
+
+    if (deletekdb) {
+      window.scranWorker.postMessage({
+        "type": "REMOVEKDB",
+        "payload": {
+          "id": deletekdb,
+        },
+        "msg": "not much to pass"
+      });
+
+      AppToaster.show({ icon:"floppy-disk", intent: "danger", message: "Deleting Analysis in the background" });
+    }
+  }, [deletekdb]);
 
   return (
     <AppContext.Provider
@@ -223,7 +267,12 @@ const AppContextProvider = ({ children }) => {
         loadParams, setLoadParams,
         showAnimation, setShowAnimation,
         triggerAnimation, setTriggerAnimation,
-        savedPlot, setSavedPlot
+        savedPlot, setSavedPlot,
+        indexedDBState, setIndexedDBState,
+        kanaIDBRecs, setKanaIDBRecs,
+        initLoadState, setInitLoadState,
+        loadParamsFor, setLoadParamsFor,
+        deletekdb, setDeletekdb
       }}
     >
       {children}
