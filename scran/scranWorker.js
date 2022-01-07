@@ -101,7 +101,10 @@ function runAllSteps(wasm, mode = "run", state = null) {
       response[step] = scran_qc_metrics.serialize(wasm);
     } else {
       if (mode == "run") {
-        scran_qc_metrics.compute(wasm, {});
+        scran_qc_metrics.compute(wasm, {
+          "usemitodefault": state.params.qc["qc-usemitodefault"],
+          "mito": state.params.qc["qc-mito"]
+        });
       } else {
         scran_qc_metrics.unserialize(wasm, state[step]);
       }
