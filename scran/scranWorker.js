@@ -32,6 +32,8 @@ importScripts("./_score_markers.js");
 importScripts("./_custom_markers.js");
 importScripts("./KanaDBHandler.js");
 
+importScripts("./mito.js");
+
 /***************************************/
 
 function runAllSteps(wasm, mode = "run", state = null) {
