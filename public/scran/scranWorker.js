@@ -395,15 +395,17 @@ onmessage = function (msg) {
         type: payload.type,
         msg: `Success: ScranJS/WASM initialized`
       });
-
-      kana_db.init();
     });
+
+    kana_db.initialize().then(postMessage);
+
   } else if (payload.type == "RUN") {
     loaded.then(wasm => {
       runAllSteps(wasm, "run", payload.payload);
     });
-    // events specific to loading an existing kana file
-  } else if (payload.type == "LOAD") {
+
+/**************** LOADING EXISTING ANALYSES *******************/
+  } else if (payload.type == "LOAD") { 
     loaded.then(wasm => {
       if (payload.payload.files.format == "kana") {
         const reader = new FileReaderSync();
@@ -415,30 +417,26 @@ onmessage = function (msg) {
           resp: response
         });
       } else if (payload.payload.files.format == "kanadb"){
-        let client = kana_db.getClient();
-
-        let req = client.transaction(["analysis"], "readonly")
-          .objectStore("analysis").get(payload.payload.files.files.file);
-
-        req.onerror = function (event) {
-          postMessage({
-            type: "KanaDB_ERROR",
-            msg: `Fail: Cannot load analysis: ${payload.payload.files.files.file}!!`
-          });
-        };
-
-        req.onsuccess = function (event) {
-          var contents = scran_utils_serialize.load(event.target.result.payload);
-          var response = runAllSteps(wasm, "unserialize", contents);
-          postMessage({
-            type: "loadedParameters",
-            resp: response
-          });
-        };
+        kana_db.loadAnalysis(payload.payload.files.files.file)
+        .then(res => {
+          if (res == null) {
+            postMessage({
+              type: "KanaDB_ERROR",
+              msg: `Fail: Cannot load analysis: ${payload.payload.files.files.file}!!`
+            });
+          } else {
+            var contents = scran_utils_serialize.load(res);
+            var response = runAllSteps(wasm, "unserialize", contents);
+            postMessage({
+              type: "loadedParameters",
+              resp: response
+            });
+          }
+        });
       }
     });
-    // exporting an analysis
-  } else if (payload.type == "EXPORT") {
+
+  } else if (payload.type == "EXPORT") { // exporting an analysis
     loaded.then(wasm => {
       runAllSteps(wasm, "serialize")
         .then(state => {
@@ -450,28 +448,25 @@ onmessage = function (msg) {
           }, [output]);
         });
     });
-  }
-  // save analysis to inbrowser indexedDB 
-  else if (payload.type == "SAVEKDB") {
+
+  } else if (payload.type == "SAVEKDB") { // save analysis to inbrowser indexedDB 
     loaded.then(wasm => {
-      runAllSteps(wasm, "serialize")
-        .then(state => {
-          var output = scran_utils_serialize.save(state);
-          kana_db.save({
-            id: payload.payload.id,
-            payload: output
-          });
-        });
-    });
-  }
-  // remove a saved analysis
-  else if (payload.type == "REMOVEKDB") {
+      return runAllSteps(wasm, "serialize");
+    })
+    .then(state => {
+      var output = scran_utils_serialize.save(state);
+      return kana_db.saveAnalysis(payload.payload.id, output);
+    })
+    .then(postMessage);
+
+  } else if (payload.type == "REMOVEKDB") { // remove a saved analysis
     loaded.then(wasm => {
-      kana_db.remove(payload.payload.id);
-    });
-  }
-  // custom events from UI
-  else if (payload.type == "getMarkersForCluster") {
+      return kana_db.removeAnalysis(payload.payload.id);
+    })
+    .then(postMessage);
+
+/**************** OTHER EVENTS FROM UI *******************/
+  } else if (payload.type == "getMarkersForCluster") { 
     loaded.then(wasm => {
       let cluster = payload.payload.cluster;
       let rank_type = payload.payload.rank_type;
@@ -485,6 +480,7 @@ onmessage = function (msg) {
         msg: "Success: GET_MARKER_GENE done"
       }, transferrable);
     });
+
   } else if (payload.type == "getGeneExpression") {
     loaded.then(wasm => {
       let row_idx = payload.payload.gene;
@@ -498,6 +494,7 @@ onmessage = function (msg) {
         msg: "Success: GET_GENE_EXPRESSION done"
       }, [vec.buffer]);
     });
+
   } else if (payload.type == "computeCustomMarkers") {
     loaded.then(wasm => {
       scran_custom_markers.addSelection(wasm, payload.payload.id, payload.payload.selection);
@@ -506,6 +503,7 @@ onmessage = function (msg) {
         msg: "Success: COMPUTE_CUSTOM_MARKERS done"
       });
     });
+
   } else if (payload.type == "getMarkersForSelection") {
     loaded.then(wasm => {
       var resp = scran_custom_markers.fetchResults(wasm, payload.payload.cluster, payload.payload.rank_type);
@@ -517,22 +515,26 @@ onmessage = function (msg) {
         msg: "Success: GET_MARKER_GENE done"
       }, transferrable);
     });
+
   } else if (payload.type == "removeCustomMarkers") {
     loaded.then(wasm => {
       scran_custom_markers.removeSelection(Wasm, payload.payload.id);
     });
+
   } else if (payload.type == "animateTSNE") {
     loaded.then(async (wasm) => {
       await scran_tsne_monitor.animate(wasm);
       var res = await scran_tsne_monitor.results(wasm);
       scran_utils.postSuccess(res, "tsne", "Resending t-SNE coordinates");
     });
+
   } else if (payload.type == "animateUMAP") {
     loaded.then(async (wasm) => {
       await scran_umap_monitor.animate(wasm);
       var res = await scran_umap_monitor.results(wasm);
       scran_utils.postSuccess(res, "umap", "Resending UMAP coordinates");
     });
+
   } else {
     console.log("MIM:::msg type incorrect")
   }
