@@ -122,9 +122,10 @@ const scran_utils_serialize = {};
     if (mode == "full") {
       format_type = FORMAT_EMBEDDED_FILES;
       buffered.forEach((x, i) => {
-        all_buffers.push(x.buffer);
-        buffered[i].buffer = { "offset": total_len, "size": x.buffer.byteLength };
-        total_len += x.buffer.byteLength;
+        var val = x.buffer;
+        all_buffers.push(val);
+        buffered[i].buffer = { "offset": total_len, "size": val.byteLength };
+        total_len += val.byteLength;
       });
 
     } else if (mode == "KanaDB") {
