@@ -51,6 +51,8 @@ const AppContextProvider = ({ children }) => {
   const [tabSelected, setTabSelected] = useState("new");
   // saved analysis in the browser's indexeddb
   const [kanaIDBRecs, setKanaIDBRecs] = useState(null);
+    // delete rec in database
+  const [deletekdb, setDeletekdb] = useState(null);
   // params from worker for stored analysis (kana file)
   const [loadParams, setLoadParams] = useState(null);
   // kana file or db ?
@@ -211,6 +213,21 @@ const AppContextProvider = ({ children }) => {
     }
   }, [indexedDBState]);
 
+  useEffect(() => {
+
+    if (deletekdb) {
+      window.scranWorker.postMessage({
+        "type": "REMOVEKDB",
+        "payload": {
+          "id": deletekdb,
+        },
+        "msg": "not much to pass"
+      });
+
+      AppToaster.show({ icon:"floppy-disk", intent: "danger", message: "Deleting Analysis in the background" });
+    }
+  }, [deletekdb]);
+
   return (
     <AppContext.Provider
       value={{
@@ -254,7 +271,8 @@ const AppContextProvider = ({ children }) => {
         indexedDBState, setIndexedDBState,
         kanaIDBRecs, setKanaIDBRecs,
         initLoadState, setInitLoadState,
-        loadParamsFor, setLoadParamsFor
+        loadParamsFor, setLoadParamsFor,
+        deletekdb, setDeletekdb
       }}
     >
       {children}

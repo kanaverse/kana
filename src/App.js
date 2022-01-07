@@ -139,6 +139,7 @@ function App() {
       if (resp.length > 0) {
         setKanaIDBRecs(resp);
       }
+      setIndexedDBState(false);
     } else if (payload.type === "inputs_DATA") {
       setInitDims(`${payload.resp.dimensions.num_genes} genes, ${payload.resp.dimensions.num_cells} cells`);
       setGenesInfo(payload.resp.gene_names);

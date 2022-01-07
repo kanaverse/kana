@@ -1,6 +1,7 @@
 import {
     Button, Classes, Dialog, Text, FileInput, NumericInput,
-    Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab
+    Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
+    RadioGroup, Radio, Icon
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback, useEffect } from "react";
@@ -22,7 +23,8 @@ function AnalysisDialog({
         params, setParams, openInput,
         tabSelected, setTabSelected,
         loadParams, kanaIDBRecs,
-        setLoadParamsFor, loadParamsFor } = useContext(AppContext);
+        setLoadParamsFor, loadParamsFor,
+        setDeletekdb, deletekdb } = useContext(AppContext);
 
     // assuming new is the default tab
     let [tmpInputFiles, setTmpInputFiles] = useState({
@@ -42,7 +44,7 @@ function AnalysisDialog({
     const [newImportFormat, setNewImportFormat] = useState("mtx");
     const [loadImportFormat, setLoadImportFormat] = useState("kana");
     // const [hdfFormat, sethdfFormat] = useState("tenx");
-    
+
     let [tmpInputParams, setTmpInputParams] = useState(tabSelected == "new" ? params : loadParams);
 
     function handleImport() {
@@ -780,7 +782,7 @@ function AnalysisDialog({
                                                     {
                                                         kanaIDBRecs ?
                                                             <div className="row">
-                                                                <HTMLSelect
+                                                                {/* <HTMLSelect
                                                                     onChange={(x) => {
                                                                         setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value })
                                                                     }}>
@@ -789,7 +791,37 @@ function AnalysisDialog({
                                                                             <option key={i}>{x}</option>
                                                                         ))
                                                                     }
-                                                                </HTMLSelect>
+                                                                </HTMLSelect> */}
+                                                                <RadioGroup
+                                                                    label="Choose an anlaysis"
+                                                                    onChange={(x) => {
+                                                                        setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value })
+                                                                    }}
+                                                                    selectedValue={tmpInputFiles?.file}
+                                                                >
+                                                                    {
+                                                                        kanaIDBRecs.map((x, i) => {
+                                                                            return (
+                                                                                <Radio key={i} style={{
+                                                                                    display: "flex",
+                                                                                    flexDirection: "row",
+                                                                                    alignItems: "center"
+                                                                                }}
+                                                                                    label={x} value={x} >
+                                                                                    <Icon icon="trash" size="10"
+                                                                                        style={{
+                                                                                            alignSelf: 'baseline',
+                                                                                            paddingTop: '4px',
+                                                                                            paddingLeft: '5px',
+                                                                                        }}
+                                                                                        onClick={() => {
+                                                                                            setDeletekdb(x);
+                                                                                        }}></Icon>
+                                                                                </Radio>
+                                                                            )
+                                                                        })
+                                                                    }
+                                                                </RadioGroup>
                                                             </div> :
                                                             <div className="row">
                                                                 <Label>No saved analysis found in the browser!!</Label>
@@ -1096,7 +1128,7 @@ function AnalysisDialog({
                                 </div>
                             </div>
                         } />
-                    </Tabs>
+                    </Tabs >
                 </div >
 
                 {
