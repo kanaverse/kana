@@ -12,6 +12,7 @@ var hdf5 = window.hdf5;
 importScripts("https://cdn.jsdelivr.net/pako/1.0.3/pako.min.js");
 var pako = window.pako;
 importScripts("https://cdn.jsdelivr.net/npm/d3-dsv@3");
+importScripts("https://cdn.jsdelivr.net/npm/hash-wasm@4/dist/md5.umd.min.js");
 
 importScripts("./_inputs.js");
 importScripts("./_qc_metrics.js");

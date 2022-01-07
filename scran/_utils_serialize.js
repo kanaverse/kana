@@ -131,11 +131,16 @@ const scran_utils_serialize = {};
       // Saving the files to IndexedDB instead. 'all_buffers' now holds a promise
       // indicating whether all of these things were saved properly.
       format_type = FORMAT_EXTERNAL_KANADB;
-      buffered.forEach((x, i) => {
-        let id = x.type + "_" + x.name + "_" + x.buffer.byteLength ; /* TODO: add MD5 sum */
-        all_buffers.push(kana_db.saveFile(id, x.buffer).then(ok => ok ? id : null));
-        buffered[i].buffer = id;
-      });
+      for (const x of buffered) {
+        var md5 = await hashwasm.md5(new Uint8Array(x.buffer));
+        var id = x.type + "_" + x.name + "_" + x.buffer.byteLength + "_" + md5;
+        var ok = await kana_db.saveFile(id, x.buffer);
+        if (!ok) {
+          throw "failed to save file '" + id + "' to KanaDB";
+        }
+        x.buffer = id;
+        all_buffers.push(id);
+      }
 
     } else {
         throw "unsupported mode " + mode;
@@ -181,13 +186,7 @@ const scran_utils_serialize = {};
       return combined;
 
     } else if (mode == "KanaDB") {
-      var file_ids = await Promise.all(all_buffers);
-      for (const x of file_ids) {
-        if (x === null) {
-          throw "failed to save files to KanaDB";
-        }
-      }
-      return { "file_ids": file_ids, "state": combined };
+      return { "file_ids": all_buffers, "state": combined };
 
     } else {
       throw "unsupported mode " + mode;
