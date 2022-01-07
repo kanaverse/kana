@@ -345,11 +345,11 @@ function AnalysisDialog({
                                                             Use default mitochondrial list ?
                                                         </span>
                                                     </Text>
-                                                    <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-mitodefault"]}
+                                                    <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-usemitodefault"]}
                                                         innerLabelChecked="yes" innerLabel="no"
-                                                        onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-mitodefault": e.target.checked } }) }} />
+                                                        onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-usemitodefault": e.target.checked } }) }} />
                                                 </Label>
-                                                {!tmpInputParams["qc"]["qc-mitodefault"] && <Label className="row-input">
+                                                {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
                                                             onMouseEnter={() => setShowStepHelper(2)}>
@@ -878,11 +878,11 @@ function AnalysisDialog({
                                                             Use default mitochondrial list ?
                                                         </span>
                                                     </Text>
-                                                    <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-mitodefault"]}
+                                                    <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-usemitodefault"]}
                                                         innerLabelChecked="yes" innerLabel="no"
-                                                        onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-mitodefault": e.target.checked } }) }} />
+                                                        onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-usemitodefault": e.target.checked } }) }} />
                                                 </Label>
-                                                {!tmpInputParams["qc"]["qc-mitodefault"] && <Label className="row-input">
+                                                {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
                                                             onMouseEnter={() => setShowStepHelper(2)}>
