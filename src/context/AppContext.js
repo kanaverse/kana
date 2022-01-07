@@ -70,6 +70,8 @@ const AppContextProvider = ({ children }) => {
 
   // Gene details 
   const [genesInfo, setGenesInfo] = useState(null);
+  // default column to show in markers table
+  const [geneColSel, setGeneColSel] = useState("id");
 
   // QC Data
   const [qcData, setQcData] = useState(null);
@@ -223,7 +225,8 @@ const AppContextProvider = ({ children }) => {
         loadParams, setLoadParams,
         showAnimation, setShowAnimation,
         triggerAnimation, setTriggerAnimation,
-        savedPlot, setSavedPlot
+        savedPlot, setSavedPlot,
+        geneColSel, setGeneColSel
       }}
     >
       {children}

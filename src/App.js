@@ -39,7 +39,8 @@ function App() {
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection,
     setSelectedCluster, setShowGame, showGame, datasetName, setExportState,
-    setShowAnimation, triggerAnimation, setTriggerAnimation, params } = useContext(AppContext);
+    setShowAnimation, triggerAnimation, setTriggerAnimation, params,
+    setGeneColSel } = useContext(AppContext);
 
   // initializes various things on the worker side
   useEffect(() => {
@@ -135,7 +136,9 @@ function App() {
       setWasmInitialized(true);
     } else if (payload.type === "inputs_DATA") {
       setInitDims(`${payload.resp.dimensions.num_genes} genes, ${payload.resp.dimensions.num_cells} cells`);
-      setGenesInfo(payload.resp.gene_names); 
+      setGenesInfo(payload.resp.genes); 
+
+      setGeneColSel(Object.keys(payload.resp.genes)[0]);
     } else if (payload.type === "quality_control_metrics_DATA") {
       const { resp } = payload;
       setQcData(resp);

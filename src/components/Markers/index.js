@@ -22,7 +22,7 @@ const MarkerPlot = () => {
         genesInfo, clusterData, selectedClusterSummary, setSelectedClusterSummary,
         selectedCluster, setSelectedCluster, setClusterRank,
         setReqGene, clusterColors, gene, setGene,
-        customSelection } = useContext(AppContext);
+        customSelection, geneColSel, setGeneColSel } = useContext(AppContext);
 
     // what cluster is selected
     const [clusSel, setClusSel] = useState(null);
@@ -118,7 +118,7 @@ const MarkerPlot = () => {
 
         if (!searchInput || searchInput === "") return sortedRows;
 
-        sortedRows = sortedRows.filter((x) => genesInfo[x.row].toLowerCase().indexOf(searchInput.toLowerCase()) !== -1);
+        sortedRows = sortedRows.filter((x) => genesInfo[geneColSel][x.row].toLowerCase().indexOf(searchInput.toLowerCase()) !== -1);
         return sortedRows;
     }, [prosRecords, searchInput, markerFilter]);
 
@@ -231,7 +231,16 @@ const MarkerPlot = () => {
                                 },
                                 Header: () => {
                                     return (<div className='row-container row-header'>
-                                        <span>Gene</span>
+                                        <span>
+                                            <HTMLSelect large={false} minimal={true} defaultValue={geneColSel}
+                                                onChange={(nval, val) => setGeneColSel(nval?.currentTarget?.value)}>
+                                                {
+                                                    Object.keys(genesInfo).map((x, i) => (
+                                                        <option key={i}>{x}</option>
+                                                    ))
+                                                }
+                                            </HTMLSelect>
+                                        </span>
                                         <span>Log-FC</span>
                                         <span>Δ-detected</span>
                                         <span>Expression &nbsp;
@@ -253,7 +262,7 @@ const MarkerPlot = () => {
                                 return (
                                     <div>
                                         <div className='row-container'>
-                                            <span>{genesInfo[row.row]}</span>
+                                            <span>{genesInfo[geneColSel][row.row]}</span>
                                             {
                                                 <Popover2
                                                     popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
@@ -271,7 +280,7 @@ const MarkerPlot = () => {
                                                             <table>
                                                                 <tr>
                                                                     <td></td>
-                                                                    <th scope="col">{genesInfo[row.row]}</th>
+                                                                    <th scope="col">{genesInfo[geneColSel][row.row]}</th>
                                                                     <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
@@ -317,7 +326,7 @@ const MarkerPlot = () => {
                                                             <table>
                                                                 <tr>
                                                                     <td></td>
-                                                                    <th scope="col">{genesInfo[row.row]}</th>
+                                                                    <th scope="col">{genesInfo[geneColSel][row.row]}</th>
                                                                     <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
@@ -362,7 +371,7 @@ const MarkerPlot = () => {
                                                             <table>
                                                                 <tr>
                                                                     <td></td>
-                                                                    <th scope="col">{genesInfo[row.row]}</th>
+                                                                    <th scope="col">{genesInfo[geneColSel][row.row]}</th>
                                                                     <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
