@@ -397,7 +397,21 @@ onmessage = function (msg) {
       });
     });
 
-    kana_db.initialize().then(postMessage);
+    kana_db.initialize()
+    .then(result => {
+      if (result !== null) {
+        postMessage({
+          type: "KanaDB_store",
+          resp: result,
+          msg: "Success"
+        });
+      } else {
+        postMessage({
+          type: "KanaDB_ERROR",
+          msg: `Fail: Cannot initialize DB`
+        });
+      }
+    });
 
   } else if (payload.type == "RUN") {
     loaded.then(wasm => {
@@ -406,64 +420,88 @@ onmessage = function (msg) {
 
 /**************** LOADING EXISTING ANALYSES *******************/
   } else if (payload.type == "LOAD") { 
-    loaded.then(wasm => {
-      if (payload.payload.files.format == "kana") {
-        const reader = new FileReaderSync();
-        var f = payload.payload.files.files.file[0];
-        var contents = scran_utils_serialize.load(reader.readAsArrayBuffer(f));
+    if (payload.payload.files.format == "kana") {
+      const reader = new FileReaderSync();
+      var f = payload.payload.files.files.file[0];
+      var contents = scran_utils_serialize.load(reader.readAsArrayBuffer(f));
+      loaded.then(wasm => {
         var response = runAllSteps(wasm, "unserialize", contents);
         postMessage({
           type: "loadedParameters",
           resp: response
         });
-      } else if (payload.payload.files.format == "kanadb"){
-        kana_db.loadAnalysis(payload.payload.files.files.file)
-        .then(res => {
-          if (res == null) {
-            postMessage({
-              type: "KanaDB_ERROR",
-              msg: `Fail: Cannot load analysis: ${payload.payload.files.files.file}!!`
+      });
+
+    } else if (payload.payload.files.format == "kanadb"){
+      var id = payload.payload.files.files.file;
+      kana_db.loadAnalysis(id)
+      .then(res => {
+        if (res == null) {
+          postMessage({
+            type: "KanaDB_ERROR",
+            msg: `Fail: cannot load analysis ID '${id}'`
+          });
+        } else {
+          scran_utils_serialize.load(res)
+          .then(contents => {
+            loaded.then(wasm => runAllSteps(wasm, "unserialize", contents))
+            .then(response => {
+              postMessage({
+                type: "loadedParameters",
+                resp: response
+              });
             });
-          } else {
-            var contents = scran_utils_serialize.load(res);
-            var response = runAllSteps(wasm, "unserialize", contents);
-            postMessage({
-              type: "loadedParameters",
-              resp: response
-            });
-          }
+          });
+        }
+      });
+    }
+
+  } else if (payload.type == "EXPORT") { // exporting an analysis
+    loaded.then(wasm => runAllSteps(wasm, "serialize"))
+    .then(state => scran_utils_serialize.save(state, "full"))
+    .then(output => {
+      postMessage({
+        type: "exportState",
+        resp: output,
+        msg: "Success: application state exported"
+      }, [output]);
+    });
+
+  } else if (payload.type == "SAVEKDB") { // save analysis to inbrowser indexedDB 
+    var id = payload.payload.id;
+    loaded.then(wasm => runAllSteps(wasm, "serialize"))
+    .then(state => scran_utils_serialize.save(state, "KanaDB"))
+    .then(output => kana_db.saveAnalysis(id, output.state, output.file_ids))
+    .then(ok => {
+      if (ok) { 
+        postMessage({
+            type: "KanaDB",
+            msg: `Success: Saved analysis to cache (${id})`
+        });
+      } else {
+        postMessage({
+          type: "KanaDB_ERROR",
+          msg: `Fail: Cannot save analysis to cache (${id})`
         });
       }
     });
 
-  } else if (payload.type == "EXPORT") { // exporting an analysis
-    loaded.then(wasm => {
-      runAllSteps(wasm, "serialize")
-        .then(state => {
-          var output = scran_utils_serialize.save(state);
-          postMessage({
-            type: "exportState",
-            resp: output,
-            msg: "Success: application state exported"
-          }, [output]);
-        });
-    });
-
-  } else if (payload.type == "SAVEKDB") { // save analysis to inbrowser indexedDB 
-    loaded.then(wasm => {
-      return runAllSteps(wasm, "serialize");
-    })
-    .then(state => {
-      var output = scran_utils_serialize.save(state);
-      return kana_db.saveAnalysis(payload.payload.id, output);
-    })
-    .then(postMessage);
-
   } else if (payload.type == "REMOVEKDB") { // remove a saved analysis
-    loaded.then(wasm => {
-      return kana_db.removeAnalysis(payload.payload.id);
-    })
-    .then(postMessage);
+    var id = payload.payload.id;
+    kana_db.removeAnalysis(id)
+    .then(ok => {
+      if (ok) {
+        postMessage({
+          type: "KanaDB",
+          msg: `Success: Removed file from cache (${id})`
+        });
+      } else {
+        postMessage({
+          type: "KanaDB_ERROR",
+          msg: `fail: cannot remove file from cache (${id})`
+        });
+      }
+    });
 
 /**************** OTHER EVENTS FROM UI *******************/
   } else if (payload.type == "getMarkersForCluster") { 

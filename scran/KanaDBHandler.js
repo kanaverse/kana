@@ -13,31 +13,27 @@ var kana_db = {};
             kanaDB.onupgradeneeded = (e) => {
                 var kanaDBClient = e.target.result;
                 kanaDBClient.createObjectStore("analysis", { keyPath: 'id' });
+                kanaDBClient.createObjectStore("analysis_files", { keyPath: 'id' });
                 kanaDBClient.createObjectStore("file", { keyPath: 'id' });
                 kanaDBClient.createObjectStore("file_ref_count", { keyPath: 'id' });
             };
     
             // Send existing stored analyses, if available.
             kanaDB.onsuccess = () => {
-                var kanaDBClient = kanaDB.result; 
-                var allAnalysis = kanaDBClient
+                var allAnalysis = kanaDB.result
                     .transaction(["analysis"], "readonly")
                     .objectStore("analysis").getAllKeys();
     
                 allAnalysis.onsuccess = function () {
-                    resolve({
-                        type: "KanaDB_store",
-                        resp: allAnalysis.result,
-                        msg: "Success"
-                    });
-                }
+                    resolve(allAnalysis.result);
+                };
+                allAnalysis.onerror = function() {
+                    resolve(null);
+                };
             };
     
             kanaDB.onerror = () => {
-                resolve({
-                    type: "KanaDB_ERROR",
-                    msg: `Fail: Cannot initialize DB`
-                });
+                resolve(null);
             };
         });
 
@@ -49,7 +45,11 @@ var kana_db = {};
         return new Promise(resolve => {
             let request = store.get(id);
             request.onsuccess = function() {
-                resolve(request.result.payload);
+                if (request.result !== undefined) {
+                    resolve(request.result.payload);
+                } else {
+                    resolve(null);
+                }
             };
             request.onerror = function() {
                 resolve(null);
@@ -57,15 +57,15 @@ var kana_db = {};
         });
     }
 
-    async function hasContent(id, store) {
-        return new Promise(resolve => {
-            let request = store.count(id);
-            request.onSuccess = function() {
-                resolve(request.result > 0);
-            };
-            request.onError = function() {
-                resolve(false);
-            };
+    function allOK(promises) {
+        return Promise.allSettled(promises)
+        .then(vals => {
+            for (const x of vals) {
+                if (!x) {
+                    return false;
+                }
+            }
+            return true;
         });
     }
 
@@ -76,9 +76,9 @@ var kana_db = {};
         let file_store = trans.objectStore("file");
         let ref_store = trans.objectStore("file_ref_count");
 
-        var refcount = 0;
-        if (await hasContent(id, ref_store)) {
-            refcount = await loadContent(id, ref_store);
+        var refcount = await loadContent(id, ref_store);
+        if (refcount === null) {
+            refcount = 0;
         }
         refcount++;
 
@@ -102,45 +102,36 @@ var kana_db = {};
             };
         });
 
-        return Promise.allSettled([data_saving, ref_saving])
-        .then(vals => {
-            var fail = false;
-            for (const x of vals) {
-                if (!x) {
-                    return {
-                        type: "KanaDB_ERROR",
-                        msg: `Fail: Cannot save file to cache (${id})`
-                    };
-                }
-            }
-            return { 
-                type: "KanaDB",
-                msg: `Success: Saved file to cache (${id})`
-            };
-        });
+        return allOK([data_saving, ref_saving])
     };
 
-    x.saveAnalysis = async function(id, state) {
+    x.saveAnalysis = async function(id, state, files) {
         await init;
-        let analysis_store = kanaDB.result
-            .transaction(["analysis"], "readwrite")
-            .objectStore("analysis");
+        let trans = kanaDB.result.transaction(["analysis", "analysis_files"], "readwrite")
+        let analysis_store = trans.objectStore("analysis");
+        let file_id_store = trans.objectStore("analysis_files");
 
-        return new Promise(resolve => {
+        var data_saving = new Promise(resolve => {
             var putrequest = analysis_store.put({ "id": id, "payload": state });
             putrequest.onsuccess = function (event) {
-                resolve({
-                    type: "KanaDB",
-                    msg: `Success: Saved analysis to cache (${id})`
-                });
+                resolve(true);
             };
             putrequest.onerror = function (event) {
-                resolve({
-                    type: "KanaDB_ERROR",
-                    msg: `Fail: Cannot save analysis to cache (${id})`
-                });
+                resolve(false);
             };
         });
+
+        var id_saving = new Promise(resolve => {
+            var putrequest = file_id_store.put({ "id": id, "payload": files });
+            putrequest.onsuccess = function (event) {
+                resolve(true);
+            };
+            putrequest.onerror = function (event) {
+                resolve(false);
+            };
+        });
+
+        return allOK([data_saving, id_saving])
     };
 
     /** Functions to load content **/
@@ -168,8 +159,7 @@ var kana_db = {};
         let ref_store = trans.objectStore("file_ref_count");
 
         var promises = [];
-        var rid = refCount(id);
-        var refcount = await loadContent(rid, file_ref_count);
+        var refcount = await loadContent(id, file_ref_count);
         refcount--;
 
         if (refcount == 0) {
@@ -183,7 +173,7 @@ var kana_db = {};
                 };
             }));
             promises.push(new Promise(resolve => {
-                let request = ref_store.remove(rid);
+                let request = ref_store.remove(id);
                 request.onerror = function (event) {
                     resolve(false);
                 };
@@ -193,55 +183,54 @@ var kana_db = {};
             }))
         } else {
             promises.push(new Promise(resolve => {
-                let request = ref_store.put({ "id": rid, "payload": refcount })
-                request.onerror = function (event) {
-                    resolve(false);
-                };
+                let request = ref_store.put({ "id": id, "payload": refcount })
                 request.onsuccess = function(event) {
                     resolve(true);
+                };
+                request.onerror = function (event) {
+                    resolve(false);
                 };
             }));
         }
 
-        return Promise.allSettled(promises)
-        .then(vals => {
-            var fail = false;
-            for (const x of vals) {
-                if (!x) {
-                    return {
-                        type: "KanaDB_ERROR",
-                        msg: `Fail: Cannot remove file from cache (${id})`
-                    };
-                }
-            }
-            return { 
-                type: "KanaDB",
-                msg: `Success: Removed file from cache (${id})`
-            };
-        });
+        return allOK(promises);
     };
 
     x.removeAnalysis = async function removeFile(id) {
         await init;
-        let analysis_store = kanaDB.result
-            .transaction(["analysis"], "readwrite")
-            .objectStore("analysis");
+        let trans = kanaDB.result.transaction(["analysis", "analysis_files"], "readwrite")
+        let analysis_store = trans.objectStore("analysis");
+        let file_id_store = trans.objectStore("analysis_files");
 
-        return new Promise(resolve => {
-            var putrequest = analysis_store.remove(id);
-            putrequest.onsuccess = function (event) {
-                resolve({
-                    type: "KanaDB",
-                    msg: `Success: Removed analysis from cache (${id})`
-                });
+        var promises = [];
+
+        promises.push(new Promise(resolve => {
+            let request = analysis_store.remove(id);
+            request.onsuccess = function(event) {
+                resolve(true);
             };
-            putrequest.onerror = function (event) {
-                resolve({
-                    type: "KanaDB_ERROR",
-                    msg: `Fail: Cannot remove analysis from cache (${id})`
-                });
+            request.onerror = function (event) {
+                resolve(false);
             };
-        });
+        }));
+
+        // Removing all files as well.
+        var files = await loadContent(id, file_id_store);
+        for (const x of files) {
+            promises.push(x.removeFile(id));
+        }
+       
+        promises.push(new Promise(resolve => {
+            let request = file_id_store.remove(id);
+            request.onsuccess = function(event) {
+                resolve(true);
+            };
+            request.onerror = function (event) {
+                resolve(false);
+            };
+        }));
+
+        return allOK(promises);
     };
 
 })(kana_db);
