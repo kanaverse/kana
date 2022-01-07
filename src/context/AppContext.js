@@ -80,6 +80,8 @@ const AppContextProvider = ({ children }) => {
 
   // Gene details 
   const [genesInfo, setGenesInfo] = useState(null);
+  // default column to show in markers table
+  const [geneColSel, setGeneColSel] = useState("id");
 
   // QC Data
   const [qcData, setQcData] = useState(null);
@@ -268,6 +270,7 @@ const AppContextProvider = ({ children }) => {
         showAnimation, setShowAnimation,
         triggerAnimation, setTriggerAnimation,
         savedPlot, setSavedPlot,
+        geneColSel, setGeneColSel,
         indexedDBState, setIndexedDBState,
         kanaIDBRecs, setKanaIDBRecs,
         initLoadState, setInitLoadState,
