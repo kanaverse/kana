@@ -470,10 +470,11 @@ onmessage = function (msg) {
     loaded.then(async (wasm) => {
       var state = await runAllSteps(wasm, "serialize");
       var output = await scran_utils_serialize.save(state, "KanaDB");
-      var ok = await kana_db.saveAnalysis(id, output.state, output.file_ids);
-      if (ok) { 
+      var result = await kana_db.saveAnalysis(id, output.state, output.file_ids);
+      if (result) { 
         postMessage({
-            type: "KanaDB",
+            type: "KanaDB_store",
+            resp: result,
             msg: `Success: Saved analysis to cache (${id})`
         });
       } else {
@@ -487,10 +488,11 @@ onmessage = function (msg) {
   } else if (payload.type == "REMOVEKDB") { // remove a saved analysis
     var id = payload.payload.id;
     kana_db.removeAnalysis(id)
-    .then(ok => {
-      if (ok) {
+    .then(result => {
+      if (result !== null) {
         postMessage({
-          type: "KanaDB",
+          type: "KanaDB_store",
+          resp: result,
           msg: `Success: Removed file from cache (${id})`
         });
       } else {

@@ -5,11 +5,11 @@ var kana_db = {};
     var kanaDB;
     var init = null;
 
-    x.initialize = function() {
+    x.initialize = function () {
         init = new Promise(resolve => {
             // initialize database on worker creation
             kanaDB = indexedDB.open("KanaDB");
-    
+
             kanaDB.onupgradeneeded = (e) => {
                 var kanaDBClient = e.target.result;
                 kanaDBClient.createObjectStore("analysis", { keyPath: 'id' });
@@ -17,21 +17,12 @@ var kana_db = {};
                 kanaDBClient.createObjectStore("file", { keyPath: 'id' });
                 kanaDBClient.createObjectStore("file_ref_count", { keyPath: 'id' });
             };
-    
+
             // Send existing stored analyses, if available.
             kanaDB.onsuccess = () => {
-                var allAnalysis = kanaDB.result
-                    .transaction(["analysis"], "readonly")
-                    .objectStore("analysis").getAllKeys();
-    
-                allAnalysis.onsuccess = function () {
-                    resolve(allAnalysis.result);
-                };
-                allAnalysis.onerror = function() {
-                    resolve(null);
-                };
+                getRecords(resolve);
             };
-    
+
             kanaDB.onerror = () => {
                 resolve(null);
             };
@@ -40,18 +31,31 @@ var kana_db = {};
         return init;
     };
 
+    function getRecords(resolve) {
+        var allAnalysis = kanaDB.result
+            .transaction(["analysis"], "readonly")
+            .objectStore("analysis").getAllKeys();
+
+        allAnalysis.onsuccess = function () {
+            resolve(allAnalysis.result);
+        };
+        allAnalysis.onerror = function () {
+            resolve(null);
+        };
+    }
+
     /** Helper functions **/
     async function loadContent(id, store) {
         return new Promise(resolve => {
             let request = store.get(id);
-            request.onsuccess = function() {
+            request.onsuccess = function () {
                 if (request.result !== undefined) {
                     resolve(request.result.payload);
                 } else {
                     resolve(null);
                 }
             };
-            request.onerror = function() {
+            request.onerror = function () {
                 resolve(null);
             };
         });
@@ -59,18 +63,18 @@ var kana_db = {};
 
     function allOK(promises) {
         return Promise.allSettled(promises)
-        .then(vals => {
-            for (const x of vals) {
-                if (!x) {
-                    return false;
+            .then(vals => {
+                for (const x of vals) {
+                    if (!x) {
+                        return false;
+                    }
                 }
-            }
-            return true;
-        });
+                return true;
+            });
     }
 
     /** Functions to save content **/
-    x.saveFile = async function(id, buffer) {
+    x.saveFile = async function (id, buffer) {
         await init;
         let trans = kanaDB.result.transaction(["file", "file_ref_count"], "readwrite");
         let file_store = trans.objectStore("file");
@@ -105,7 +109,7 @@ var kana_db = {};
         return allOK([data_saving, ref_saving])
     };
 
-    x.saveAnalysis = async function(id, state, files) {
+    x.saveAnalysis = async function (id, state, files) {
         await init;
         let trans = kanaDB.result.transaction(["analysis", "analysis_files"], "readwrite")
         let analysis_store = trans.objectStore("analysis");
@@ -114,7 +118,7 @@ var kana_db = {};
         var data_saving = new Promise(resolve => {
             var putrequest = analysis_store.put({ "id": id, "payload": state });
             putrequest.onsuccess = function (event) {
-                resolve(true);
+                getRecords(resolve);
             };
             putrequest.onerror = function (event) {
                 resolve(false);
@@ -135,7 +139,7 @@ var kana_db = {};
     };
 
     /** Functions to load content **/
-    x.loadFile = async function(id) {
+    x.loadFile = async function (id) {
         await init;
         let file_store = kanaDB.result
             .transaction(["file"], "readonly")
@@ -143,7 +147,7 @@ var kana_db = {};
         return loadContent(id, file_store);
     };
 
-    x.loadAnalysis = async function(id) {
+    x.loadAnalysis = async function (id) {
         await init;
         let analysis_store = kanaDB.result
             .transaction(["analysis"], "readonly")
@@ -168,23 +172,23 @@ var kana_db = {};
                 request.onerror = function (event) {
                     resolve(false);
                 };
-                request.onsuccess = function(event) {
+                request.onsuccess = function (event) {
                     resolve(true);
                 };
             }));
             promises.push(new Promise(resolve => {
-                let request = ref_store.remove(id);
+                let request = ref_store.delete(id);
                 request.onerror = function (event) {
                     resolve(false);
                 };
-                request.onsuccess = function(event) {
+                request.onsuccess = function (event) {
                     resolve(true);
                 };
             }))
         } else {
             promises.push(new Promise(resolve => {
                 let request = ref_store.put({ "id": id, "payload": refcount })
-                request.onsuccess = function(event) {
+                request.onsuccess = function (event) {
                     resolve(true);
                 };
                 request.onerror = function (event) {
@@ -205,9 +209,9 @@ var kana_db = {};
         var promises = [];
 
         promises.push(new Promise(resolve => {
-            let request = analysis_store.remove(id);
-            request.onsuccess = function(event) {
-                resolve(true);
+            let request = analysis_store.delete(id);
+            request.onsuccess = function (event) {
+                getRecords(resolve);
             };
             request.onerror = function (event) {
                 resolve(false);
@@ -216,13 +220,13 @@ var kana_db = {};
 
         // Removing all files as well.
         var files = await loadContent(id, file_id_store);
-        for (const x of files) {
-            promises.push(x.removeFile(id));
+        for (const f of files) {
+            promises.push(x.removeFile(f));
         }
-       
+
         promises.push(new Promise(resolve => {
-            let request = file_id_store.remove(id);
-            request.onsuccess = function(event) {
+            let request = file_id_store.delete(id);
+            request.onsuccess = function (event) {
                 resolve(true);
             };
             request.onerror = function (event) {
