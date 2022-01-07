@@ -14,6 +14,7 @@ var kana_db = {};
                 var kanaDBClient = e.target.result;
                 kanaDBClient.createObjectStore("analysis", { keyPath: 'id' });
                 kanaDBClient.createObjectStore("file", { keyPath: 'id' });
+                kanaDBClient.createObjectStore("file_ref_count", { keyPath: 'id' });
             };
     
             // Send existing stored analyses, if available.
@@ -44,11 +45,11 @@ var kana_db = {};
     };
 
     /** Helper functions **/
-    async function loadContent(id, targetStore, name = "payload") {
+    async function loadContent(id, store) {
         return new Promise(resolve => {
-            let request = targetStore.get(id);
+            let request = store.get(id);
             request.onsuccess = function() {
-                resolve(request.result[name]);
+                resolve(request.result.payload);
             };
             request.onerror = function() {
                 resolve(null);
@@ -56,9 +57,9 @@ var kana_db = {};
         });
     }
 
-    async function hasContent(id, targetStore) {
+    async function hasContent(id, store) {
         return new Promise(resolve => {
-            let request = targetStore.count(id);
+            let request = store.count(id);
             request.onSuccess = function() {
                 resolve(request.result > 0);
             };
@@ -68,26 +69,21 @@ var kana_db = {};
         });
     }
 
-    function refCountId(id) {
-        return id + "@nref";
-    }
-
     /** Functions to save content **/
     x.saveFile = async function(id, buffer) {
         await init;
-        var kanaDBClient = kanaDB.result;
-        let targetStore = kanaDBClient
-            .transaction(["file"], "readwrite")
-            .objectStore("file");
+        let trans = kanaDB.result.transaction(["file", "file_ref_count"], "readwrite");
+        let file_store = trans.objectStore("file");
+        let ref_store = trans.objectStore("file_ref_count");
 
-        var rid = refCountId(id), refcount = 0;
-        if (hasContent(id, targetStore)) {
-            refcount = loadContent(rid, targetStore, "count");
+        var refcount = 0;
+        if (await hasContent(id, ref_store)) {
+            refcount = await loadContent(id, ref_store);
         }
         refcount++;
 
         var data_saving = new Promise(resolve => {
-            var putrequest = targetStore.put({ "id": id, "payload": buffer });
+            var putrequest = file_store.put({ "id": id, "payload": buffer });
             putrequest.onsuccess = function (event) {
                 resolve(true);
             };
@@ -97,7 +93,7 @@ var kana_db = {};
         });
 
         var ref_saving = new Promise(resolve => {
-            var putrequest = targetStore.put({ "id": rid, "count": refcount });
+            var putrequest = ref_store.put({ "id": id, "payload": refcount });
             putrequest.onsuccess = function (event) {
                 resolve(true);
             };
@@ -126,13 +122,12 @@ var kana_db = {};
 
     x.saveAnalysis = async function(id, state) {
         await init;
-        var kanaDBClient = kanaDB.result;
-        let targetStore = kanaDBClient
+        let analysis_store = kanaDB.result
             .transaction(["analysis"], "readwrite")
             .objectStore("analysis");
 
         return new Promise(resolve => {
-            var putrequest = targetStore.put({ "id": id, "payload": payload });
+            var putrequest = analysis_store.put({ "id": id, "payload": state });
             putrequest.onsuccess = function (event) {
                 resolve({
                     type: "KanaDB",
@@ -151,37 +146,35 @@ var kana_db = {};
     /** Functions to load content **/
     x.loadFile = async function(id) {
         await init;
-        var kanaDBClient = kanaDB.result;
-        let targetStore = kanaDBClient
+        let file_store = kanaDB.result
             .transaction(["file"], "readonly")
             .objectStore("file");
-        return loadContent(id, targetStore);
+        return loadContent(id, file_store);
     };
 
     x.loadAnalysis = async function(id) {
         await init;
-        var kanaDBClient = kanaDB.result;
-        let targetStore = kanaDBClient
+        let analysis_store = kanaDB.result
             .transaction(["analysis"], "readonly")
             .objectStore("analysis");
-        return loadContent(id, targetStore);
+        return loadContent(id, analysis_store);
     };
 
     /** Functions to load content **/
     x.removeFile = async function removeFile(id) {
         await init;
-        var kanaDBClient = kanaDB.result;
-        let targetStore = kanaDBClient
-            .transaction(["file"], "readwrite")
-            .objectStore("file");
+        let trans = kanaDB.result.transaction(["file", "file_ref_count"], "readwrite");
+        let file_store = trans.objectStore("file");
+        let ref_store = trans.objectStore("file_ref_count");
 
         var promises = [];
         var rid = refCount(id);
-        var refcount = loadContent(rid, targetStore, "count") - 1;
+        var refcount = await loadContent(rid, file_ref_count);
+        refcount--;
 
         if (refcount == 0) {
             promises.push(new Promise(resolve => {
-                let request = targetStore.remove(id);
+                let request = file_store.remove(id);
                 request.onerror = function (event) {
                     resolve(false);
                 };
@@ -190,7 +183,7 @@ var kana_db = {};
                 };
             }));
             promises.push(new Promise(resolve => {
-                let request = targetStore.remove(rid);
+                let request = ref_store.remove(rid);
                 request.onerror = function (event) {
                     resolve(false);
                 };
@@ -200,7 +193,7 @@ var kana_db = {};
             }))
         } else {
             promises.push(new Promise(resolve => {
-                let request = targetStore.put({ "id": rid, "count": refcount })
+                let request = ref_store.put({ "id": rid, "payload": refcount })
                 request.onerror = function (event) {
                     resolve(false);
                 };
@@ -230,13 +223,12 @@ var kana_db = {};
 
     x.removeAnalysis = async function removeFile(id) {
         await init;
-        var kanaDBClient = kanaDB.result;
-        let targetStore = kanaDBClient
+        let analysis_store = kanaDB.result
             .transaction(["analysis"], "readwrite")
             .objectStore("analysis");
 
         return new Promise(resolve => {
-            var putrequest = targetStore.remove(id);
+            var putrequest = analysis_store.remove(id);
             putrequest.onsuccess = function (event) {
                 resolve({
                     type: "KanaDB",
