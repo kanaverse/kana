@@ -24,7 +24,7 @@ function AnalysisDialog({
         tabSelected, setTabSelected,
         loadParams, kanaIDBRecs,
         setLoadParamsFor, loadParamsFor,
-        setDeletekdb, deletekdb } = useContext(AppContext);
+        setDeletekdb, setDatasetName } = useContext(AppContext);
 
     // assuming new is the default tab
     let [tmpInputFiles, setTmpInputFiles] = useState({
@@ -50,13 +50,22 @@ function AnalysisDialog({
     function handleImport() {
         setParams(tmpInputParams);
 
+        if (tabSelected == "load") {
+            if (loadImportFormat === "kanadb") {
+                setDatasetName(tmpInputFiles?.file);
+            } else {
+                setDatasetName(tmpInputFiles?.file?.[0]?.name.split(".")[0]);
+            }
+        }
+
         // if (tabSelected === "load") {
         //     // setLoadParams(tmpInputParams);
         // }
         setInputFiles({
             "format": tabSelected == "new" ?
                 newImportFormat : loadImportFormat,
-            "files": tmpInputFiles
+            "files": tmpInputFiles,
+            "reset" : tabSelected == "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file
         });
 
         setLoadParamsFor(tabSelected == "new" ?
@@ -125,6 +134,8 @@ function AnalysisDialog({
             setTmpInputFiles({
                 file: null
             });
+
+            setTmpInputValid(true);
         }
 
         if (loadParams) {
@@ -186,7 +197,7 @@ function AnalysisDialog({
                 }
 
             } else if (tabSelected === "load" && inputText?.file) {
-                if (
+                if ( loadImportFormat === "kana" &&
                     tmpInputFiles?.file != null && !(inputText?.file.toLowerCase().endsWith("kana") ||
                         inputText?.file.toLowerCase().endsWith("kana.gz")
                     )
@@ -795,7 +806,8 @@ function AnalysisDialog({
                                                                 <RadioGroup
                                                                     label="Choose an anlaysis"
                                                                     onChange={(x) => {
-                                                                        setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value })
+                                                                        setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value });
+                                                                        setTmpInputValid(true);
                                                                     }}
                                                                     selectedValue={tmpInputFiles?.file}
                                                                 >
@@ -833,7 +845,8 @@ function AnalysisDialog({
                                     </div>
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat ?
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>2</Tag>
@@ -863,7 +876,8 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat ?
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>3</Tag>
@@ -893,7 +907,8 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat ?
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>4</Tag>
@@ -935,7 +950,8 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat ?
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>5</Tag>
@@ -1016,7 +1032,8 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat ?
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>6</Tag>
@@ -1058,7 +1075,8 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat ?
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>7</Tag>
@@ -1113,7 +1131,7 @@ function AnalysisDialog({
                                 </div>
                                 <div className='row-input-tooltips'>
                                     {
-                                        !tmpInputValid &&
+                                        !tmpInputValid && 
                                         <Callout intent="danger"
                                             title="Incorrect file format"
                                             style={{

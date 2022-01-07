@@ -54,7 +54,7 @@ const Header = () => {
           <NavbarDivider />
 
           <Tooltip2 content="Modify dataset title">
-            <EditableText defaultValue={datasetName} intent="primary"
+            <EditableText value={datasetName} intent="primary"
               onConfirm={(val) => { setDatasetName(val) }} />
           </Tooltip2>
 

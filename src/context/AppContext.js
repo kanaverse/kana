@@ -152,7 +152,7 @@ const AppContextProvider = ({ children }) => {
           "msg": "not much to pass"
         });
       } else if (tabSelected === "load") {
-        if (loadParams == null) {
+        if (loadParams == null ||  inputFiles?.reset) {
           window.scranWorker.postMessage({
             "type": "LOAD",
             "payload": {
