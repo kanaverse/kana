@@ -14,6 +14,7 @@ const AppContextProvider = ({ children }) => {
   const [params, setParams] = useState({
     qc: {
       "qc-nmads": 3,
+      "qc-mitodefault": true,
       "qc-mito": "mt-"
     },
     fSelection: {
