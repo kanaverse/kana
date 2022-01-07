@@ -39,7 +39,11 @@ const ViolinPlotBasic = (props) => {
             .domain(props?.range)
             .range([height, 0]).nice();
 
-        svg.append("g").call(d3.axisLeft(y));
+        svg.append("g").call(
+            d3.axisLeft(y)
+                .tickFormat(function (d) {
+                    return props?.transform === "log" ? d3.format(".2s")(Math.pow(2, d)) : d3.format(".2s")(d * 100);
+                }));
 
         var x = d3.scaleBand()
             .range([0, width])
@@ -50,9 +54,9 @@ const ViolinPlotBasic = (props) => {
             .attr("transform", "translate(0," + height + ")")
             .call(d3.axisBottom(x))
 
-        var histogram = d3.histogram()
+        var histogram = d3.bin()
             .domain(y.domain())
-            .thresholds(y.ticks(20))
+            .thresholds(y.ticks(10))
             .value(d => d)
 
         let bins = histogram(data);
@@ -60,7 +64,7 @@ const ViolinPlotBasic = (props) => {
 
         var xNum = d3.scaleLinear()
             .range([0, x.bandwidth()])
-            .domain([-max_bin, max_bin]);
+            .domain([-1, 1]);
 
         svg
             .selectAll("violins")
@@ -73,10 +77,10 @@ const ViolinPlotBasic = (props) => {
             .style("stroke", "none")
             .style("fill", color)
             .attr("d", d3.area()
-                .x0((d) => { return (xNum(-d.length)) })
-                .x1((d) => { return (xNum(d.length)) })
+                .x0((d) => { return (xNum(-d.length / max_bin)) })
+                .x1((d) => { return (xNum(d.length / max_bin)) })
                 .y((d) => { return (y(d.x0)) })
-                .curve(d3.curveCatmullRom)
+                .curve(d3.curveBasis)
             );
 
         svg

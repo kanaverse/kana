@@ -60,7 +60,7 @@ const scran_qc_metrics = {};
       var qc_output = cache.reloaded;
       data.sums = qc_output.sums.slice();
       data.detected = qc_output.detected.slice();
-      data.proportion = qc_output.subset_proportions[0].slice();
+      data.proportion = qc_output.proportion.slice();
     } else {
       var qc_output = cache.raw;
       data.sums = qc_output.sums().slice();

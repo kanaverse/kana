@@ -1,7 +1,7 @@
 import {
     Button, Classes, Dialog, Text, FileInput, NumericInput,
     Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
-    InputGroup
+    InputGroup, RadioGroup, Radio, Icon
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback, useEffect } from "react";
@@ -18,8 +18,13 @@ function AnalysisDialog({
     const [showStepHelper, setShowStepHelper] = useState(1);
     const handleButtonClick = useCallback(() => setIsOpen(!isOpen), [isOpen]);
     const handleClose = useCallback(() => setIsOpen(false), []);
+
     const { inputFiles, setInputFiles,
-        params, setParams, openInput } = useContext(AppContext);
+        params, setParams, openInput,
+        tabSelected, setTabSelected,
+        loadParams, kanaIDBRecs,
+        setLoadParamsFor, loadParamsFor,
+        setDeletekdb, setDatasetName } = useContext(AppContext);
 
     // assuming new is the default tab
     let [tmpInputFiles, setTmpInputFiles] = useState({
@@ -34,21 +39,37 @@ function AnalysisDialog({
         barcode: "Choose barcode annotation",
     });
 
-    let [tmpInputParams, setTmpInputParams] = useState(params);
     let [tmpInputValid, setTmpInputValid] = useState(true);
 
-    const [tabSelected, setTabSelected] = useState("new");
     const [newImportFormat, setNewImportFormat] = useState("mtx");
+    const [loadImportFormat, setLoadImportFormat] = useState("kana");
     // const [hdfFormat, sethdfFormat] = useState("tenx");
+
+    let [tmpInputParams, setTmpInputParams] = useState(tabSelected == "new" ? params : loadParams);
 
     function handleImport() {
         setParams(tmpInputParams);
 
+        if (tabSelected == "load") {
+            if (loadImportFormat === "kanadb") {
+                setDatasetName(tmpInputFiles?.file);
+            } else {
+                setDatasetName(tmpInputFiles?.file?.[0]?.name.split(".")[0]);
+            }
+        }
+
+        // if (tabSelected === "load") {
+        //     // setLoadParams(tmpInputParams);
+        // }
         setInputFiles({
             "format": tabSelected == "new" ?
-                newImportFormat : "kana",
-            "files": tmpInputFiles
+                newImportFormat : loadImportFormat,
+            "files": tmpInputFiles,
+            "reset" : tabSelected == "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file
         });
+
+        setLoadParamsFor(tabSelected == "new" ?
+            newImportFormat : loadImportFormat);
 
         handleClose();
     }
@@ -57,13 +78,7 @@ function AnalysisDialog({
         if (currTab === "new") {
             handleNewImportTab(newImportFormat);
         } else if (currTab === "load") {
-            setTmpInputFiles({
-                file: null
-            });
 
-            setInputText({
-                file: "Choose kana analysis file"
-            });
         }
         setTabSelected(currTab);
     }
@@ -82,6 +97,7 @@ function AnalysisDialog({
                 barcode: "Choose barcode annotation",
             });
         } else if (currTab === "tenx") {
+
             setTmpInputFiles({
                 file: null,
             });
@@ -99,12 +115,53 @@ function AnalysisDialog({
             });
         }
 
+        setTmpInputParams(params);
         setNewImportFormat(currTab);
+    }
+
+    function handleLoadImportTab(currTab, prevTab) {
+        if (currTab === "kana") {
+            setTmpInputFiles({
+                file: null
+            });
+
+            setInputText({
+                file: "Choose kana analysis file"
+            });
+
+
+        } else if (currTab === "kanadb") {
+            setTmpInputFiles({
+                file: null
+            });
+
+            setTmpInputValid(true);
+        }
+
+        if (loadParams) {
+            setTmpInputParams(loadParams);
+        }
+        setLoadImportFormat(currTab);
     }
 
     useEffect(() => {
         openInput && setIsOpen(true);
     }, [openInput]);
+
+    useEffect(() => {
+        if (loadParams && tabSelected == "load") {
+            setTmpInputParams(loadParams);
+        }
+    }, [loadParams]);
+
+    useEffect(() => {
+        if (tabSelected == "load" && loadImportFormat == "kanadb"
+            && tmpInputFiles?.file == null && kanaIDBRecs) {
+            setTmpInputFiles({
+                file: kanaIDBRecs[0]
+            });
+        }
+    }, [kanaIDBRecs, loadImportFormat]);
 
     useEffect(() => {
         if (tmpInputFiles) {
@@ -140,7 +197,7 @@ function AnalysisDialog({
                 }
 
             } else if (tabSelected === "load" && inputText?.file) {
-                if (
+                if ( loadImportFormat === "kana" &&
                     tmpInputFiles?.file != null && !(inputText?.file.toLowerCase().endsWith("kana") ||
                         inputText?.file.toLowerCase().endsWith("kana.gz")
                     )
@@ -716,27 +773,380 @@ function AnalysisDialog({
                                 </div>
                             </div>
                         } />
-                        <Tab id="load" title="Load saved analysis" disabled={true} panel={
+                        <Tab id="load" title="Load saved analysis" panel={
                             <div className="inputs-container">
                                 <div className='row-input'>
                                     <div className="col">
-                                        <div>
-                                            <H5><Tag round={true}>1</Tag>
-                                                <span className="row-tooltip">
-                                                    Load analysis file
-                                                </span>
-                                            </H5>
-                                            <div className="row">
-                                                <Label className="row-input">
-                                                    <FileInput text={inputText.file} onInputChange={(msg) => { setInputText({ ...inputText, "file": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files }) }} />
-                                                </Label>
-                                            </div>
-                                        </div>
+                                        <Tabs
+                                            animate={true}
+                                            renderActiveTabPanelOnly={true}
+                                            vertical={true}
+                                            onChange={handleLoadImportTab}
+                                            defaultSelectedTabId={loadImportFormat}
+                                        >
+                                            <Tab id="kana" title="Load Analysis file" panel={
+                                                <div>
+                                                    <H5><Tag round={true}>1</Tag>
+                                                        <span className="row-tooltip">
+                                                            Load saved analysis file
+                                                        </span>
+                                                    </H5>
+                                                    <div className="row">
+                                                        <Label className="row-input">
+                                                            <FileInput text={inputText.file} onInputChange={(msg) => { setInputText({ ...inputText, "file": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files }) }} />
+                                                        </Label>
+                                                    </div>
+                                                </div>
+                                            } />
+                                            {<Tab id="kanadb" title="Load from database" panel={
+                                                <div>
+                                                    <H5><Tag round={true}>1</Tag>
+                                                        <span className="row-tooltip">
+                                                            Load analysis file
+                                                        </span>
+                                                    </H5>
+                                                    {
+                                                        kanaIDBRecs ?
+                                                            <div className="row">
+                                                                {/* <HTMLSelect
+                                                                    onChange={(x) => {
+                                                                        setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value })
+                                                                    }}>
+                                                                    {
+                                                                        kanaIDBRecs.map((x, i) => (
+                                                                            <option key={i}>{x}</option>
+                                                                        ))
+                                                                    }
+                                                                </HTMLSelect> */}
+                                                                <RadioGroup
+                                                                    label="Choose an anlaysis"
+                                                                    onChange={(x) => {
+                                                                        setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value });
+                                                                        setTmpInputValid(true);
+                                                                    }}
+                                                                    selectedValue={tmpInputFiles?.file}
+                                                                >
+                                                                    {
+                                                                        kanaIDBRecs.map((x, i) => {
+                                                                            return (
+                                                                                <Radio key={i} style={{
+                                                                                    display: "flex",
+                                                                                    flexDirection: "row",
+                                                                                    alignItems: "center"
+                                                                                }}
+                                                                                    label={x} value={x} >
+                                                                                    <Icon icon="trash" size="10"
+                                                                                        style={{
+                                                                                            alignSelf: 'baseline',
+                                                                                            paddingTop: '4px',
+                                                                                            paddingLeft: '5px',
+                                                                                        }}
+                                                                                        onClick={() => {
+                                                                                            setDeletekdb(x);
+                                                                                        }}></Icon>
+                                                                                </Radio>
+                                                                            )
+                                                                        })
+                                                                    }
+                                                                </RadioGroup>
+                                                            </div> :
+                                                            <div className="row">
+                                                                <Label>No saved analysis found in the browser!!</Label>
+                                                            </div>
+                                                    }
+                                                </div>} />
+                                            }
+                                        </Tabs>
                                     </div>
+
+                                    {
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                            <div className="col">
+                                                <div>
+                                                    <H5><Tag round={true}>2</Tag>
+                                                        <span className="row-tooltip"
+                                                            onMouseEnter={() => setShowStepHelper(2)}
+                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            Quality control
+                                                        </span>
+                                                    </H5>
+                                                    <div className="row">
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(2)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Number of MADs
+                                                                </span>
+                                                            </Text>
+                                                            <NumericInput
+                                                                placeholder="3" value={tmpInputParams["qc"]["qc-nmads"]}
+                                                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-nmads": nval } }) }} />
+                                                        </Label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            : ""
+                                    }
+
+                                    {
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                            <div className="col">
+                                                <div>
+                                                    <H5><Tag round={true}>3</Tag>
+                                                        <span className="row-tooltip"
+                                                            onMouseEnter={() => setShowStepHelper(3)}
+                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            Feature Selection
+                                                        </span>
+                                                    </H5>
+                                                    <div className="row">
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(3)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Lowess span
+                                                                </span>
+                                                            </Text>
+                                                            <NumericInput
+                                                                placeholder="0.3" value={tmpInputParams["fSelection"]["fsel-span"]}
+                                                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "fSelection": { ...tmpInputParams["fSelection"], "fsel-span": nval } }) }} />
+                                                        </Label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            : ""
+                                    }
+
+                                    {
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                            <div className="col">
+                                                <div>
+                                                    <H5><Tag round={true}>4</Tag>
+                                                        <span className="row-tooltip"
+                                                            onMouseEnter={() => setShowStepHelper(4)}
+                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            Principal components analysis
+                                                        </span>
+                                                    </H5>
+                                                    <div className="row">
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(4)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Number of HVGs
+                                                                </span>
+                                                            </Text>
+                                                            <NumericInput
+                                                                placeholder="2500" value={tmpInputParams["pca"]["pca-hvg"]}
+                                                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-hvg": nval } }) }} />
+                                                        </Label>
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(4)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Number of PCs
+                                                                </span>
+                                                            </Text>
+                                                            <NumericInput
+                                                                placeholder="25" value={tmpInputParams["pca"]["pca-npc"]}
+                                                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-npc": nval } }) }} />
+                                                        </Label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            : ""
+                                    }
+
+                                    {
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                            <div className="col">
+                                                <div>
+                                                    <H5><Tag round={true}>5</Tag>
+                                                        <span className="row-tooltip"
+                                                            onMouseEnter={() => setShowStepHelper(5)}
+                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            Clustering
+                                                        </span>
+                                                    </H5>
+                                                    <div className="row">
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(5)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Method
+                                                                </span>
+                                                            </Text>
+                                                            <HTMLSelect defaultValue={tmpInputParams["cluster"]["clus-method"]}>
+                                                                <option>{tmpInputParams["cluster"]["clus-method"]}</option>
+                                                            </HTMLSelect>
+                                                        </Label>
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(5)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Number of neighbors
+                                                                </span>
+                                                            </Text>
+                                                            <NumericInput
+                                                                placeholder="10" value={tmpInputParams["cluster"]["clus-k"]}
+                                                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-k": nval } }) }} />
+                                                        </Label>
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(5)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Use ANN
+                                                                </span>
+                                                            </Text>
+                                                            <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["cluster"]["clus-approx"]}
+                                                                innerLabelChecked="true" innerLabel="false"
+                                                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-approx": e.target.checked } }) }} />
+                                                        </Label>
+
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(5)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Weighting scheme
+                                                                </span>
+                                                            </Text>
+                                                            <HTMLSelect onChange={(nval, val) => setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-scheme": parseInt(nval?.currentTarget?.value) } })}>
+                                                                <option key="0">Rank</option>
+                                                                <option key="1">Number</option>
+                                                                <option key="2">Jaccard</option>
+                                                            </HTMLSelect>
+                                                        </Label>
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(5)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Resolution
+                                                                </span>
+                                                            </Text>
+                                                            <NumericInput
+                                                                placeholder="0.5" value={tmpInputParams["cluster"]["clus-res"]}
+                                                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-res": nval } }) }} />
+                                                        </Label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            : ""
+                                    }
+
+                                    {
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                            <div className="col">
+                                                <div>
+                                                    <H5><Tag round={true}>6</Tag>
+                                                        <span className="row-tooltip"
+                                                            onMouseEnter={() => setShowStepHelper(6)}
+                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            t-SNE
+                                                        </span>
+                                                    </H5>
+                                                    <div className="row">
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(6)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Perplexity
+                                                                </span>
+                                                            </Text>
+                                                            <NumericInput
+                                                                placeholder="30" value={tmpInputParams["tsne"]["tsne-perp"]}
+                                                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "tsne": { ...tmpInputParams["tsne"], "tsne-perp": nval } }) }} />
+                                                        </Label>
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(6)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Iterations
+                                                                </span>
+                                                            </Text>
+                                                            <NumericInput
+                                                                placeholder="500" value={tmpInputParams["tsne"]["tsne-iter"]}
+                                                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "tsne": { ...tmpInputParams["tsne"], "tsne-iter": nval } }) }} />
+                                                        </Label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            : ""
+                                    }
+
+                                    {
+                                        loadParams && loadParamsFor == loadImportFormat 
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                            <div className="col">
+                                                <div>
+                                                    <H5><Tag round={true}>7</Tag>
+                                                        <span className="row-tooltip"
+                                                            onMouseEnter={() => setShowStepHelper(7)}
+                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            UMAP
+                                                        </span>
+                                                    </H5>
+                                                    <div className="row">
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(7)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Number of neighbors
+                                                                </span>
+                                                            </Text>
+                                                            <NumericInput
+                                                                placeholder="15" value={tmpInputParams["umap"]["umap-nn"]}
+                                                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-nn": nval } }) }} />
+                                                        </Label>
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(7)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Minimum distance
+                                                                </span>
+                                                            </Text>
+                                                            <NumericInput
+                                                                placeholder="0.01" value={tmpInputParams["umap"]["umap-min_dist"]}
+                                                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-min_dist": nval } }) }} />
+                                                        </Label>
+                                                        <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(7)}
+                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    Epochs
+                                                                </span>
+                                                            </Text>
+                                                            <NumericInput
+                                                                placeholder="500" value={tmpInputParams["umap"]["umap-epoch"]}
+                                                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-epoch": nval } }) }} />
+                                                        </Label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            : ""
+                                    }
                                 </div>
                                 <div className='row-input-tooltips'>
                                     {
-                                        !tmpInputValid &&
+                                        !tmpInputValid && 
                                         <Callout intent="danger"
                                             title="Incorrect file format"
                                             style={{
@@ -751,7 +1161,7 @@ function AnalysisDialog({
                                 </div>
                             </div>
                         } />
-                    </Tabs>
+                    </Tabs >
                 </div >
 
                 {

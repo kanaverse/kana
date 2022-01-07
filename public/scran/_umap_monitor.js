@@ -9,24 +9,32 @@ const scran_umap_monitor = {};
   /** Public members **/
   x.changed = false;
 
-  /** Public functions **/
+  /** Private functions **/
+  function core(wasm, args, reneighbor) {
+    if (worker == null) {
+      worker = scran_utils_viz_parent.createWorker("./umapWorker.js", cache);
+      cache.initialized = scran_utils_viz_parent.initializeWorker(worker, cache);
+    }
+
+    var nn_out = null;
+    if (reneighbor()) {
+      nn_out = scran_utils_viz_parent.computeNeighbors(wasm, args.num_neighbors);
+    }
+
+    cache.run = cache.initialized.then(x => scran_utils_viz_parent.runWithNeighbors(worker, args, nn_out, cache));
+    return;
+  }
+
+  /** Public functions (standard) **/
   x.compute = function(wasm, args) {
     if (!scran_neighbor_index.changed && !scran_utils.changedParameters(parameters, args)) {
       x.changed = false;
       return;
     }
 
-    if (worker == null) {
-      worker = scran_utils_viz_parent.createWorker("./umapWorker.js", cache);
-      cache.initialized = scran_utils_viz_parent.initializeWorker(worker, cache);
-    }
-   
-    var nn_out = null;
-    if (scran_neighbor_index.changed || scran_utils.changedParameters(parameters.num_neighbors, args.num_neighbors)) {
-      nn_out = scran_utils_viz_parent.computeNeighbors(wasm, args.num_neighbors);
-    }
-
-    cache.run = cache.initialized.then(x => scran_utils_viz_parent.runWithNeighbors(worker, args, nn_out, cache));
+    core(wasm, args, () => {
+      return scran_neighbor_index.changed || scran_utils.changedParameters(parameters.num_neighbors, args.num_neighbors);
+    });
 
     parameters = args;
     delete cache.reloaded;
@@ -52,5 +60,25 @@ const scran_umap_monitor = {};
     cache.reloaded = saved.contents;
     return;
   };
+
+  /** Public functions (custom) **/
+  x.animate = function(wasm) {
+    if ("reloaded" in cache) {
+      var param_copy = { ...parameters };
+      param_copy.animate = true;
+      core(wasm, param_copy, ()=>true);
+      delete cache.reloaded;
+
+      // Mimicking the response from the re-run.
+      return cache.run.then(contents => { 
+        return {
+          "type": "umap_rerun",
+          "data": { "status": "SUCCESS" }
+        };
+      });
+    } else {
+      return scran_utils_viz_parent.sendTask(worker, { "cmd": "RERUN" }, cache);
+    }
+  }
   
 })(scran_umap_monitor);

@@ -9,25 +9,33 @@ const scran_tsne_monitor = {};
   /** Public members **/
   x.changed = false;
 
-  /** Public functions **/
+  /** Private functions **/
+  function core(wasm, args, reneighbor) {
+    if (worker == null) {
+      worker = scran_utils_viz_parent.createWorker("./tsneWorker.js", cache);
+      cache.initialized = scran_utils_viz_parent.initializeWorker(worker, cache);
+    }
+
+    var nn_out = null;
+    if (reneighbor()) {
+      var k = wasm.perplexity_to_k(args.perplexity);
+      nn_out = scran_utils_viz_parent.computeNeighbors(wasm, k);
+    }
+
+    cache.run = cache.initialized.then(x => scran_utils_viz_parent.runWithNeighbors(worker, args, nn_out, cache));
+    return;
+  }
+
+  /** Public functions (standard) **/
   x.compute = function(wasm, args) {
     if (!scran_neighbor_index.changed && !scran_utils.changedParameters(parameters, args)) {
       x.changed = false;
       return;
     }
 
-    if (worker == null) {
-      worker = scran_utils_viz_parent.createWorker("./tsneWorker.js", cache);
-      cache.initialized = scran_utils_viz_parent.initializeWorker(worker, cache);
-    }
-   
-    var nn_out = null;
-    if (scran_neighbor_index.changed || scran_utils.changedParameters(parameters.perplexity, args.perplexity)) {
-      var k = wasm.perplexity_to_k(args.perplexity);
-      nn_out = scran_utils_viz_parent.computeNeighbors(wasm, k);
-    }
-
-    cache.run = cache.initialized.then(x => scran_utils_viz_parent.runWithNeighbors(worker, args, nn_out, cache));
+    core(wasm, args, () => {
+      return scran_neighbor_index.changed || scran_utils.changedParameters(parameters.perplexity, args.perplexity);
+    });
 
     parameters = args;
     delete cache.reloaded;
@@ -53,5 +61,25 @@ const scran_tsne_monitor = {};
     cache.reloaded = saved.contents;
     return;
   };
+
+  /** Public functions (custom) **/
+  x.animate = function(wasm) {
+    if ("reloaded" in cache) {
+      var param_copy = { ...parameters };
+      param_copy.animate = true;
+      core(wasm, param_copy, ()=>true);
+      delete cache.reloaded;
+
+      // Mimicking the response from the re-run.
+      return cache.run.then(contents => { 
+        return {
+          "type": "tsne_rerun",
+          "data": { "status": "SUCCESS" }
+        };
+      });
+    } else {
+      return scran_utils_viz_parent.sendTask(worker, { "cmd": "RERUN" }, cache);
+    }
+  }
   
 })(scran_tsne_monitor);

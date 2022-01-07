@@ -1,5 +1,5 @@
 import { ScatterGL } from 'scatter-gl';
-import { useEffect, useRef, useContext, useState } from 'react';
+import React, { useEffect, useRef, useContext, useState } from 'react';
 import {
     ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider,
     Divider,
@@ -30,13 +30,16 @@ const DimPlot = () => {
     const [sliderMinMax, setSliderMinMax] = useState(exprMinMax);
     // gradient scale
     const [gradient, setGradient] = useState(null);
+    // first render ?
+    const [renderCount, setRenderCount] = useState(true);
 
     const { plotRedDims, redDims, defaultRedDims, setDefaultRedDims, clusterData,
         tsneData, umapData, setPlotRedDims, clusterColors, setClusterColors,
         gene, selectedClusterSummary,
         customSelection, setCustomSelection,
         setDelCustomSelection,
-        showAnimation, setTriggerAnimation } = useContext(AppContext);
+        showAnimation, setTriggerAnimation,
+        savedPlot, setSavedPlot, selectedCluster } = useContext(AppContext);
 
     // keeps track of what points were selected in lasso selections
     const [selectedPoints, setSelectedPoints] = useState(null);
@@ -104,7 +107,7 @@ const DimPlot = () => {
                     },
                     styles: {
                         point: {
-                            scaleDefault: 0.4,
+                            scaleDefault: 1,
                             scaleSelected: 1.25,
                             scaleHover: 1.25,
                         }
@@ -137,7 +140,13 @@ const DimPlot = () => {
                     clusters: cluster_mappings
                 };
                 const dataset = new ScatterGL.Dataset(points, metadata);
-                tmp_scatterplot.render(dataset);
+
+                if (renderCount) {
+                    tmp_scatterplot.render(dataset);
+                    setRenderCount(false);
+                } else {
+                    tmp_scatterplot.updateDataset(dataset);
+                }
 
                 // callback for coloring cells on the plot
                 // by default chooses the cluster assigned color for the plot
@@ -220,6 +229,31 @@ const DimPlot = () => {
         scatterplot.select(null);
     }
 
+    function handleSaveEmbedding() {
+        console.log("handleSaveEmbedding");
+
+        const containerEl = container.current;
+        if (containerEl) {
+            // preserve drawing buffers is false, so render and capture state right away
+            scatterplot.renderScatterPlot();
+            const iData = scatterplot.scatterPlot.renderer.domElement.toDataURL();
+            
+            let tmp = [...savedPlot];
+
+            tmp.push({
+                "image": iData,
+                "config": {
+                    "cluster": selectedCluster,
+                    "gene": gene,
+                    "highlight": clusHighlight,
+                    "embedding": defaultRedDims
+                }
+            });
+
+            setSavedPlot(tmp);
+        }
+    }
+
     return (
         <div className="scatter-plot">
             <ButtonGroup style={{ minWidth: 75, minHeight: 150 }}
@@ -257,7 +291,8 @@ const DimPlot = () => {
                             onClick={() => setTriggerAnimation(true)}>Animate</Button>
                     </Tooltip2>
                     <Tooltip2 content="Save this embedding">
-                        <Button icon="inheritance">Save</Button>
+                        <Button icon="inheritance"
+                            onClick={handleSaveEmbedding}>Save</Button>
                     </Tooltip2>
                 </ControlGroup>
                 <ControlGroup fill={false} vertical={false}>
@@ -434,4 +469,4 @@ const DimPlot = () => {
     );
 };
 
-export default DimPlot;
+export default React.memo(DimPlot);

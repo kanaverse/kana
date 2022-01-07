@@ -11,19 +11,20 @@ const scran_inputs = {};
 
   /** Private functions (misc) **/
   function permuteGenes(wasm, genes) {
-    var output = genes.slice();
     var buf = new WasmBuffer(wasm, cache.matrix.nrow(), "Int32Array");
     try {
       cache.matrix.permutation(buf.ptr);
-
-      var perm = buf.array();
-      for (var i = 0; i < perm.length; i++) {
-        output[perm[i]] = genes[i];
+      let perm = buf.array();
+      for (const [key, val] of Object.entries(genes)) {
+        let copy = val.slice();
+        for (var i = 0; i < perm.length; i++) {
+          copy[perm[i]] = val[i];
+        }
+        genes[key] = copy;
       }
     } finally {
       buf.free();
     }
-    return output;
   }
 
   function dummyGenes(nrows) {
@@ -31,7 +32,7 @@ const scran_inputs = {};
     for (let i = 0; i < nrows; i++) {
       genes.push(`Gene ${i + 1}`);
     }
-    return genes;
+    return { "id": genes };
   }
 
   /** Private functions (MatrixMarket) **/
@@ -75,13 +76,13 @@ const scran_inputs = {};
         symb.push(x[1]);
       });
 
-      cache.gene_names = ids;
+      cache.genes = { "id": ids, "symbol": symb };
       files.buffered.genes = genes_buffer;
     } else {
-      cache.gene_names = dummyGenes(cache.matrix.nrow());
+      cache.genes = dummyGenes(cache.matrix.nrow());
     }
 
-    cache.gene_names = permuteGenes(wasm, cache.gene_names);
+    permuteGenes(wasm, cache.genes);
     return;
   }
 
@@ -132,19 +133,16 @@ const scran_inputs = {};
 
     // In theory, we could support multiple HDF5 buffers.
     var first_file = files[0];
-    cache.matrix = readMatrixFromHDF5(wasm, first_file);
+    cache.matrix = readMatrixFromHDF5(wasm, first_file.buffer);
 
-    var genes = guessGenesFromHDF5(h5_buffers[0]);
+    var genes = guessGenesFromHDF5(first_file.buffer);
     if (genes === null) {
-      cache.gene_names = dummyGenes(cache.matrix.nrow());
+      cache.genes = dummyGenes(cache.matrix.nrow());
     } else {
-      /** TODO: handle multiple names properly. **/
-      for (const [key, val] of Object.entries(genes)) {
-        cache.gene_names = val;
-        break;
-      }
+      cache.genes = genes;
     }
-    cache.gene_names = permuteGenes(wasm, cache.gene_names);
+    
+    permuteGenes(wasm, cache.genes);
     return;
   }
 
@@ -163,7 +161,7 @@ const scran_inputs = {};
         bufferFun = (f) => reader.readAsArrayBuffer(f);
       }
 
-      for (const f of args) {
+      for (const f of args.file) {
         formatted.files.push({ "type": "h5", "name": f.name, "buffer": bufferFun(f) });
       }
 
@@ -177,7 +175,7 @@ const scran_inputs = {};
         }
       } else {
         parameters = formatted;
-        loadHDF5Raw(wasm, files);
+        loadHDF5Raw(wasm, formatted.files);
         delete cache.reloaded;
       }
     }
@@ -193,8 +191,8 @@ const scran_inputs = {};
         break;
       case "hdf5":
       case "tenx":
-      case "anndata":
-        loadHDF5(wasm, [args.files.file]);
+      case "h5ad":
+        loadHDF5(wasm, args.files);
         break;
       case "kana":
         // do nothing, this is handled by unserialize.
@@ -206,19 +204,22 @@ const scran_inputs = {};
   };
 
   x.results = function (wasm) {
-    return {
-      "gene_names": x.fetchGeneNames(wasm),
-      "dimensions": x.fetchDimensions(wasm)
-    };
+    var output = { "dimensions": x.fetchDimensions(wasm) }
+    if ("reloaded" in cache) {
+      output.genes = { ...cache.reloaded.genes };
+    } else {
+      output.genes = { ...cache.genes };
+    }
+    return output;
   };
 
   x.serialize = function (wasm) {
     var contents = {};
     if ("reloaded" in cache) {
-      contents.gene_names = cache.reloaded.gene_names;
+      contents.genes = { ...cache.reloaded.genes };
       contents.num_cells = cache.reloaded.num_cells;
     } else {
-      contents.gene_names = cache.gene_names;
+      contents.genes = { ...cache.genes };
       contents.num_cells = cache.matrix.ncol();
     }
 
@@ -242,27 +243,22 @@ const scran_inputs = {};
   /** Public functions (custom) **/
   x.fetchCountMatrix = function (wasm) {
     if ("reloaded" in cache) {
-      if (cache.reloaded.type == "MatrixMarket") {
-        loadMatrixMarketRaw(wasm, cache.reloaded.files); 
+      if (parameters.type == "MatrixMarket") {
+        loadMatrixMarketRaw(wasm, parameters.files); 
       } else {
-        loadHDF5Raw(wasm, cache.reloaded.files);
+        loadHDF5Raw(wasm, parameters.files);
       }
     }
     return cache.matrix;
   };
 
-  x.fetchGeneNames = function (wasm) {
-    if ("reloaded" in cache) {
-      return cache.reloaded.gene_names;
-    } else {
-      return cache.gene_names;
-    }
-  }
-
   x.fetchDimensions = function (wasm) {
     if ("reloaded" in cache) {
       return {
-        "num_genes": cache.reloaded.gene_names.length,
+        // This should contain at least one element,
+        // and all of them should have the same length,
+        // so indexing by the first element is safe.
+        "num_genes": Object.values(cache.reloaded.genes)[0].length,
         "num_cells": cache.reloaded.num_cells
       };
     } else {

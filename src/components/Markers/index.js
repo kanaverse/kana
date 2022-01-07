@@ -18,11 +18,11 @@ import './markers.css';
 
 const MarkerPlot = () => {
 
-    const { 
+    const {
         genesInfo, clusterData, selectedClusterSummary, setSelectedClusterSummary,
         selectedCluster, setSelectedCluster, setClusterRank,
         setReqGene, clusterColors, gene, setGene,
-        customSelection } = useContext(AppContext);
+        customSelection, geneColSel, setGeneColSel } = useContext(AppContext);
 
     // what cluster is selected
     const [clusSel, setClusSel] = useState(null);
@@ -98,6 +98,11 @@ const MarkerPlot = () => {
 
         let sortedRows = [...trecs];
 
+        setMarkerFilter({
+            "lfc": [0, parseFloat(tlfcsval.toFixed(2))],
+            "delta": [0, parseFloat(tdeltaval.toFixed(2))]
+        });
+
         setProsRecords(sortedRows);
 
     }, [selectedClusterSummary]);
@@ -118,7 +123,7 @@ const MarkerPlot = () => {
 
         if (!searchInput || searchInput === "") return sortedRows;
 
-        sortedRows = sortedRows.filter((x) => genesInfo[x.row].toLowerCase().indexOf(searchInput.toLowerCase()) !== -1);
+        sortedRows = sortedRows.filter((x) => genesInfo[geneColSel][x.row].toLowerCase().indexOf(searchInput.toLowerCase()) !== -1);
         return sortedRows;
     }, [prosRecords, searchInput, markerFilter]);
 
@@ -144,8 +149,8 @@ const MarkerPlot = () => {
     // hook for figure out this vs other cells for stacked histograms
     useEffect(() => {
         var clusArray = [];
-        if(String(selectedCluster).startsWith("cs")) {
-            clusterData?.clusters?.forEach((x,i) => customSelection[selectedCluster].includes(i) ? clusArray.push(1) : clusArray.push(0));
+        if (String(selectedCluster).startsWith("cs")) {
+            clusterData?.clusters?.forEach((x, i) => customSelection[selectedCluster].includes(i) ? clusArray.push(1) : clusArray.push(0));
         } else {
             clusterData?.clusters?.forEach(x => x === selectedCluster ? clusArray.push(1) : clusArray.push(0));
         }
@@ -231,7 +236,16 @@ const MarkerPlot = () => {
                                 },
                                 Header: () => {
                                     return (<div className='row-container row-header'>
-                                        <span>Gene</span>
+                                        <span>
+                                            <HTMLSelect large={false} minimal={true} defaultValue={geneColSel}
+                                                onChange={(nval, val) => setGeneColSel(nval?.currentTarget?.value)}>
+                                                {
+                                                    Object.keys(genesInfo).map((x, i) => (
+                                                        <option key={i}>{x}</option>
+                                                    ))
+                                                }
+                                            </HTMLSelect>
+                                        </span>
                                         <span>Log-FC</span>
                                         <span>Δ-detected</span>
                                         <span>Expression &nbsp;
@@ -253,7 +267,7 @@ const MarkerPlot = () => {
                                 return (
                                     <div>
                                         <div className='row-container'>
-                                            <span>{genesInfo[row.row]}</span>
+                                            <span>{genesInfo[geneColSel][row.row]}</span>
                                             {
                                                 <Popover2
                                                     popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
@@ -271,7 +285,7 @@ const MarkerPlot = () => {
                                                             <table>
                                                                 <tr>
                                                                     <td></td>
-                                                                    <th scope="col">{genesInfo[row.row]}</th>
+                                                                    <th scope="col">{genesInfo[geneColSel][row.row]}</th>
                                                                     <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
@@ -317,7 +331,7 @@ const MarkerPlot = () => {
                                                             <table>
                                                                 <tr>
                                                                     <td></td>
-                                                                    <th scope="col">{genesInfo[row.row]}</th>
+                                                                    <th scope="col">{genesInfo[geneColSel][row.row]}</th>
                                                                     <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
@@ -362,7 +376,7 @@ const MarkerPlot = () => {
                                                             <table>
                                                                 <tr>
                                                                     <td></td>
-                                                                    <th scope="col">{genesInfo[row.row]}</th>
+                                                                    <th scope="col">{genesInfo[geneColSel][row.row]}</th>
                                                                     <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
@@ -419,8 +433,8 @@ const MarkerPlot = () => {
                                                     }}
                                                 >
                                                     <Icon icon={'tint'}
-                                                        color={row.index === gene ? 
-                                                            String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : ''
+                                                        color={row.index === gene ?
+                                                            String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : clusterColors[selectedCluster]
                                                             : ''}
                                                     ></Icon>
                                                 </Button>
@@ -430,6 +444,7 @@ const MarkerPlot = () => {
                                             {/* <Histogram data={rowExpr} color={clusterColors[selectedCluster]} /> */}
                                             {rowExpr && <StackedHistogram data={rowExpr}
                                                 color={String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : clusterColors[selectedCluster]}
+                                                clusterlabel={String(selectedCluster).startsWith("cs") ? `Custom Selection ${selectedCluster}` : `Cluster ${parseInt(selectedCluster + 1)}`}
                                                 clusters={clusArrayStacked} />}
                                         </Collapse>
                                     </div>
@@ -441,62 +456,102 @@ const MarkerPlot = () => {
 
                             <div className='marker-filter-container'>
                                 <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Log-FC</Tag>
-                                <Histogram data={lfcs} height={35} color="#F5498B" />
-                                <div className='marker-filter-slider'>
-                                    {lfcMinMax && <RangeSlider
-                                        min={lfcMinMax[0]}
-                                        max={lfcMinMax[1]}
-                                        stepSize={parseFloat((Math.abs(lfcMinMax[1] - lfcMinMax[0]) / 20).toFixed(2))}
-                                        onChange={(val) => handleMarkerFilter(val, "lfc")}
-                                        value={markerFilter?.["lfc"] ? markerFilter?.["lfc"] : lfcMinMax}
-                                        vertical={false}
-                                    />}
-                                </div>
+                                {/* <Histogram data={lfcs} height={35} minmax={lfcMinMax}/> */}
+                                {lfcMinMax &&
+                                    <div className='marker-slider-container'>
+                                        <div className='marker-filter-gradient'>
+                                            <div
+                                                style={{
+                                                    backgroundImage: `linear-gradient(to right, blue 33%, yellow 50%, red 100%)`,
+                                                    width: '100%', height: '5px',
+                                                }}></div>&nbsp;
+                                        </div>
+                                        <RangeSlider
+                                            className='marker-filter-slider'
+                                            min={lfcMinMax[0]}
+                                            max={lfcMinMax[1]}
+                                            labelValues={lfcMinMax}
+                                            stepSize={parseFloat((Math.abs(lfcMinMax[1] - lfcMinMax[0]) / 20).toFixed(2))}
+                                            onChange={(val) => handleMarkerFilter(val, "lfc")}
+                                            value={markerFilter?.["lfc"] ? markerFilter?.["lfc"] : [0, lfcMinMax[1]]}
+                                            vertical={false}
+                                        />
+                                    </div>}
                             </div>
 
                             <div className='marker-filter-container'>
                                 <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Δ-detected</Tag>
-                                <Histogram data={deltas} height={35} color="#4580E6" />
-                                <div className='marker-filter-slider'>
-                                    {deltaMinMax && <RangeSlider
-                                        min={deltaMinMax[0]}
-                                        max={deltaMinMax[1]}
-                                        stepSize={parseFloat((Math.abs(deltaMinMax[1] - deltaMinMax[0]) / 20).toFixed(2))}
-                                        onChange={(val) => handleMarkerFilter(val, "delta")}
-                                        value={markerFilter?.["delta"] ? markerFilter?.["delta"] : deltaMinMax}
-                                        vertical={false}
-                                    />}
-                                </div>
+                                {/* <Histogram data={deltas} height={35} color="#4580E6" minmax={deltaMinMax} /> */}
+                                {deltaMinMax &&
+                                    <div className='marker-slider-container'>
+                                        <div className='marker-filter-gradient'>
+                                            <div
+                                                style={{
+                                                    backgroundImage: `linear-gradient(to right, blue 33%, yellow 50%, red 100%)`,
+                                                    width: '100%', height: '5px',
+                                                }}></div>&nbsp;
+                                        </div>
+                                        <RangeSlider
+                                            className='marker-filter-slider'
+                                            min={deltaMinMax[0]}
+                                            max={deltaMinMax[1]}
+                                            labelValues={deltaMinMax}
+                                            stepSize={parseFloat((Math.abs(deltaMinMax[1] - deltaMinMax[0]) / 20).toFixed(2))}
+                                            onChange={(val) => handleMarkerFilter(val, "delta")}
+                                            value={markerFilter?.["delta"] ? markerFilter?.["delta"] : [0, deltaMinMax[1]]}
+                                            vertical={false}
+                                        />
+                                    </div>}
                             </div>
 
                             <div className='marker-filter-container'>
                                 <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Mean</Tag>
-                                <Histogram data={means} height={35} />
-                                <div className='marker-filter-slider'>
-                                    {meanMinMax && <RangeSlider
-                                        min={meanMinMax[0]}
-                                        max={meanMinMax[1]}
-                                        stepSize={parseFloat((Math.abs(meanMinMax[1] - meanMinMax[0]) / 20).toFixed(2))}
-                                        onChange={(val) => handleMarkerFilter(val, "mean")}
-                                        value={markerFilter?.["mean"] ? markerFilter?.["mean"] : meanMinMax}
-                                        vertical={false}
-                                    />}
-                                </div>
+                                {/* <Histogram data={means} height={35} minmax={meanMinMax} /> */}
+                                {meanMinMax &&
+                                    <div className='marker-slider-container'>
+                                        <div className='marker-filter-gradient'>
+                                            <div
+                                                style={{
+                                                    backgroundImage: `linear-gradient(to right, #F5F8FA, #2965CC)`,
+                                                    width: '100%', height: '5px',
+                                                }}></div>&nbsp;
+                                        </div>
+                                        <RangeSlider
+                                            className='marker-filter-slider'
+                                            min={meanMinMax[0]}
+                                            max={meanMinMax[1]}
+                                            labelValues={meanMinMax}
+                                            stepSize={parseFloat((Math.abs(meanMinMax[1] - meanMinMax[0]) / 20).toFixed(2))}
+                                            onChange={(val) => handleMarkerFilter(val, "mean")}
+                                            value={markerFilter?.["mean"] ? markerFilter?.["mean"] : meanMinMax}
+                                            vertical={false}
+                                        />
+                                    </div>}
                             </div>
 
                             <div className='marker-filter-container'>
                                 <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Detected</Tag>
-                                <Histogram data={detects} height={35} />
-                                <div className='marker-filter-slider'>
-                                    {detectedMinMax && <RangeSlider
-                                        min={detectedMinMax[0]}
-                                        max={detectedMinMax[1]}
-                                        stepSize={parseFloat((Math.abs(detectedMinMax[1] - detectedMinMax[0]) / 20).toFixed(2))}
-                                        onChange={(val) => handleMarkerFilter(val, "detected")}
-                                        value={markerFilter?.["detected"] ? markerFilter?.["detected"] : detectedMinMax}
-                                        vertical={false}
-                                    />}
-                                </div>
+                                {/* <Histogram data={detects} height={35} minmax={detectedMinMax} /> */}
+                                {detectedMinMax &&
+                                    <div className='marker-slider-container'>
+                                        {/* <div className='marker-filter-gradient'>
+                                            <div
+                                                style={{
+                                                    backgroundImage: `linear-gradient(to right, yellow 33%, red 50%, blue 100%)`,
+                                                    width: '100%', height: '5px',
+                                                }}></div>&nbsp;
+                                        </div> */}
+                                        <RangeSlider
+                                            className='marker-filter-slider'
+                                            min={detectedMinMax[0]}
+                                            max={detectedMinMax[1]}
+                                            labelValues={detectedMinMax}
+                                            stepSize={parseFloat((Math.abs(detectedMinMax[1] - detectedMinMax[0]) / 20).toFixed(2))}
+                                            onChange={(val) => handleMarkerFilter(val, "detected")}
+                                            value={markerFilter?.["detected"] ? markerFilter?.["detected"] : detectedMinMax}
+                                            vertical={false}
+                                        />
+                                    </div>}
                             </div>
                         </div>
                     </div>

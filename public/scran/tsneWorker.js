@@ -2,9 +2,35 @@ importScripts("./WasmBuffer.js");
 importScripts("./_utils.js");
 importScripts("./_utils_viz_child.js");
 
-importScripts("./_viz_neighbors.js");
-importScripts("./_tsne_init.js");
-importScripts("./_tsne_run.js");
+var cache = {};
+var init_changed = false;
+var init_parameters = {};
+var run_parameters = {};
+
+function rerun(wasm, animate, iterations) {
+  var num_obs = cache.init.num_obs(); 
+  var buffer = scran_utils.allocateBuffer(wasm, num_obs * 2, "Float64Array", cache);
+  wasm.randomize_tsne_start(num_obs, buffer.ptr, 42);
+
+  var delay = scran_utils_viz_child.chooseDelay(animate);
+  var current_status = cache.init.deepcopy();
+  try {
+    for (; current_status.iterations() < iterations; ) {
+      wasm.run_tsne(current_status, delay, iterations, buffer.ptr);
+      if (animate) {
+        var xy = scran_utils_viz_child.extractXY(buffer);
+        postMessage({
+          "type": "tsne_iter",
+          "x": xy.x,
+          "y": xy.y,
+          "iteration": current_status.iterations()
+        }, [xy.x.buffer, xy.y.buffer]);
+      }
+    }
+  } finally {
+    current_status.delete();
+  }
+}
 
 var loaded;
 onmessage = function(msg) {
@@ -30,12 +56,32 @@ onmessage = function(msg) {
 
   } else if (msg.data.cmd == "RUN") {
     loaded.then(wasm => {
-      scran_viz_neighbors.compute(wasm, msg.data);
+      var new_neighbors;
+      if ("neighbors" in msg.data) {
+        scran_utils.freeCache(cache.neighbors);
+        cache.neighbors = scran_utils_viz_child.recreateNeighbors(wasm, msg.data.neighbors);
+        new_neighbors = true;
+      } else {
+        new_neighbors = false;
+      }
 
-      var params = msg.data.params;
-      scran_tsne_init.compute(wasm, { "perplexity": params.perplexity });
+      var init_args = { "perplexity": msg.data.params.perplexity };
+      if (!new_neighbors && !scran_utils.changedParameters(init_args, init_parameters)) {
+        init_changed = false;
+      } else {
+        scran_utils.freeCache(cache.init);
+        cache.init = wasm.initialize_tsne(cache.neighbors, init_args.perplexity);
+        init_parameters = init_args;
+        init_changed = true;
+      }
 
-      scran_tsne_run.compute(wasm, { "iterations": params.iterations, "animate": params.animate });
+      // Nothing downstream depends on the run results, so we don't set any changed flag.
+      var run_args = { "iterations": msg.data.params.iterations };
+      if (init_changed || scran_utils.changedParameters(run_args, run_parameters)) {
+        rerun(wasm, msg.data.params.animate, run_args.iterations);
+        run_parameters = run_args;
+      }
+
       postMessage({
         "id": id,
         "type": "tsne_run",
@@ -50,9 +96,33 @@ onmessage = function(msg) {
       });
     });
 
+  } else if (msg.data.cmd == "RERUN") {
+    loaded.then(wasm => {
+      rerun(wasm, true, run_parameters.iterations);
+
+      postMessage({
+        "id": id,
+        "type": "tsne_rerun",
+        "data": { "status": "SUCCESS" }
+      });
+    })
+    .catch(error => {
+      postMessage({ 
+        "id": id,
+        "type": "error",
+        "error": error
+      });
+    });
+
   } else if (msg.data.cmd == "FETCH") {
     loaded.then(wasm => {
-      var info = scran_tsne_run.fetchResults(wasm) 
+      var xy = scran_utils_viz_child.extractXY(cache.buffer);
+      var info = {
+        "x": xy.x,
+        "y": xy.y,
+        "iterations": run_parameters.iterations
+      };
+
       var transfer = [];
       scran_utils.extractBuffers(info, transfer);
       postMessage({

@@ -32,7 +32,7 @@ const Header = () => {
     shouldReturnFocusOnClose: true,
   });
 
-  const { setExportState, datasetName, setDatasetName } = useContext(AppContext);
+  const { setExportState, datasetName, setDatasetName, setIndexedDBState } = useContext(AppContext);
 
   return (
     <>
@@ -54,7 +54,7 @@ const Header = () => {
           <NavbarDivider />
 
           <Tooltip2 content="Modify dataset title">
-            <EditableText defaultValue={datasetName} intent="primary"
+            <EditableText value={datasetName} intent="primary"
               onConfirm={(val) => { setDatasetName(val) }} />
           </Tooltip2>
 
@@ -64,7 +64,10 @@ const Header = () => {
           <ButtonGroup>
             <Popover2 content={
               <Menu>
-                <MenuItem text="Save" icon="floppy-disk" disabled={true} />
+                <MenuItem text="Save" icon="floppy-disk"
+                  onClick={() => {
+                    setIndexedDBState(true);
+                  }} />
                 <MenuItem text="Download" icon="download"
                   onClick={() => {
                     setExportState(true);

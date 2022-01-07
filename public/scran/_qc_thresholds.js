@@ -44,7 +44,7 @@ const scran_qc_thresholds = {};
   };
 
   x.serialize = function(wasm) {
-    var contents = x.results();
+    var contents = x.results(wasm);
     if ("reloaded" in cache) {
       contents.discards = cache.reloaded.discards;
     } else {
@@ -56,7 +56,7 @@ const scran_qc_thresholds = {};
     };
   };
 
-  x.unserialize = function(saved) {
+  x.unserialize = function(wasm, saved) {
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
     return;

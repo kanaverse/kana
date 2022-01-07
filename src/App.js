@@ -4,7 +4,7 @@ import Gallery from './components/Gallery';
 
 import { Button, Label, Overlay, Spinner } from "@blueprintjs/core";
 
-import { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { AppContext } from './context/AppContext';
 
 import DimPlot from './components/Plots/ScatterPlot.js';
@@ -39,7 +39,9 @@ function App() {
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection,
     setSelectedCluster, setShowGame, showGame, datasetName, setExportState,
-    setShowAnimation, triggerAnimation, setTriggerAnimation, params } = useContext(AppContext);
+    setShowAnimation, triggerAnimation, setTriggerAnimation, params,
+    setGeneColSel, setKanaIDBRecs, setLoadParams,
+    setInitLoadState, setIndexedDBState } = useContext(AppContext);
 
   // initializes various things on the worker side
   useEffect(() => {
@@ -133,9 +135,16 @@ function App() {
     if (payload.type === "INIT") {
       setLoading(false);
       setWasmInitialized(true);
+    } else if (payload.type === "KanaDB_store") {
+      const { resp } = payload;
+      if (resp.length > 0) {
+        setKanaIDBRecs(resp);
+      }
+      setIndexedDBState(false);
     } else if (payload.type === "inputs_DATA") {
       setInitDims(`${payload.resp.dimensions.num_genes} genes, ${payload.resp.dimensions.num_cells} cells`);
-      setGenesInfo(payload.resp.gene_names); 
+      setGenesInfo(payload.resp.genes);
+      setGeneColSel(Object.keys(payload.resp.genes)[0]);
     } else if (payload.type === "quality_control_metrics_DATA") {
       const { resp } = payload;
       setQcData(resp);
@@ -161,38 +170,38 @@ function App() {
     } else if (payload.type === "tsne_DATA" || payload.type === "tsne_iter") {
       const { resp } = payload;
       setTsneData(resp);
-
       setShowAnimation(true);
-
-      let tmp = [...redDims];
-      tmp.push("TSNE");
-      // once t-SNE is available, set this as the default display
-      if (!defaultRedDims) {
-        setDefaultRedDims("TSNE");
-      }
-
-      setRedDims(tmp);
-      // also don't show the pong game anymore
-      setShowGame(false);
 
       // assuming the last response is _data
       if (payload.type === "tsne_DATA") {
+
+        let tmp = [...redDims];
+        tmp.push("TSNE");
+        // once t-SNE is available, set this as the default display
+        if (!defaultRedDims) {
+          setDefaultRedDims("TSNE");
+        }
+
+        setRedDims(tmp);
+        // also don't show the pong game anymore
+        setShowGame(false);
+
         setShowAnimation(false);
         setTriggerAnimation(false);
       }
     } else if (payload.type === "umap_DATA" || payload.type === "umap_iter") {
       const { resp } = payload;
       setUmapData(resp);
-
       setShowAnimation(true);
-
-      // enable UMAP selection
-      let tmp = [...redDims];
-      tmp.push("UMAP");
-      setRedDims(tmp);
 
       // assuming the last response is _data
       if (payload.type === "umap_DATA") {
+
+        // enable UMAP selection
+        let tmp = [...redDims];
+        tmp.push("UMAP");
+        setRedDims(tmp);
+
         setShowAnimation(false);
         setTriggerAnimation(false);
       }
@@ -236,6 +245,15 @@ function App() {
       tmpLink.click();
 
       setExportState(false);
+    } else if (payload.type === "KanaDB") {
+      setIndexedDBState(false);
+    } else if (payload.type === "loadedParameters") {
+      const { resp } = payload;
+      setLoadParams(resp.params);
+
+      setTimeout(() => {
+        setInitLoadState(false);
+      }, 1000);
     }
   }
 
@@ -309,4 +327,4 @@ function App() {
   );
 }
 
-export default App;
+export default React.memo(App);
