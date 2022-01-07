@@ -424,8 +424,8 @@ onmessage = function (msg) {
     if (payload.payload.files.format == "kana") {
       const reader = new FileReaderSync();
       var f = payload.payload.files.files.file[0];
-      var contents = scran_utils_serialize.load(reader.readAsArrayBuffer(f));
-      loaded.then(wasm => {
+      loaded.then(async (wasm) => {
+        var contents = await scran_utils_serialize.load(reader.readAsArrayBuffer(f));
         var response = runAllSteps(wasm, "unserialize", contents);
         postMessage({
           type: "loadedParameters",
