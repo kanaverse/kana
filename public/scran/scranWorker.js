@@ -436,31 +436,28 @@ onmessage = function (msg) {
     } else if (payload.payload.files.format == "kanadb"){
       var id = payload.payload.files.files.file;
       kana_db.loadAnalysis(id)
-      .then(res => {
+      .then(async (res) => {
         if (res == null) {
           postMessage({
             type: "KanaDB_ERROR",
             msg: `Fail: cannot load analysis ID '${id}'`
           });
         } else {
-          scran_utils_serialize.load(res)
-          .then(contents => {
-            loaded.then(wasm => runAllSteps(wasm, "unserialize", contents))
-            .then(response => {
-              postMessage({
-                type: "loadedParameters",
-                resp: response
-              });
-            });
+          var wasm = await loaded;
+          var contents = await scran_utils_serialize.load(res);
+          var response = await runAllSteps(wasm, "unserialize", contents);
+          postMessage({
+            type: "loadedParameters",
+            resp: response
           });
         }
       });
     }
 
   } else if (payload.type == "EXPORT") { // exporting an analysis
-    loaded.then(wasm => runAllSteps(wasm, "serialize"))
-    .then(state => scran_utils_serialize.save(state, "full"))
-    .then(output => {
+    loaded.then(async (wasm) => {
+      var state = await runAllSteps(wasm, "serialize");
+      var output = await scran_utils_serialize.save(state, "full");
       postMessage({
         type: "exportState",
         resp: output,
@@ -470,10 +467,10 @@ onmessage = function (msg) {
 
   } else if (payload.type == "SAVEKDB") { // save analysis to inbrowser indexedDB 
     var id = payload.payload.id;
-    loaded.then(wasm => runAllSteps(wasm, "serialize"))
-    .then(state => scran_utils_serialize.save(state, "KanaDB"))
-    .then(output => kana_db.saveAnalysis(id, output.state, output.file_ids))
-    .then(ok => {
+    loaded.then(async (wasm) => {
+      var state = await runAllSteps(wasm, "serialize");
+      var output = await scran_utils_serialize.save(state, "KanaDB");
+      var ok = await kana_db.saveAnalysis(id, output.state, output.file_ids);
       if (ok) { 
         postMessage({
             type: "KanaDB",
