@@ -133,9 +133,9 @@ const scran_inputs = {};
 
     // In theory, we could support multiple HDF5 buffers.
     var first_file = files[0];
-    cache.matrix = readMatrixFromHDF5(wasm, first_file);
+    cache.matrix = readMatrixFromHDF5(wasm, first_file.buffer);
 
-    var genes = guessGenesFromHDF5(h5_buffers[0]);
+    var genes = guessGenesFromHDF5(first_file.buffer);
     if (genes === null) {
       cache.genes = dummyGenes(cache.matrix.nrow());
     } else {
@@ -161,7 +161,7 @@ const scran_inputs = {};
         bufferFun = (f) => reader.readAsArrayBuffer(f);
       }
 
-      for (const f of args) {
+      for (const f of args.file) {
         formatted.files.push({ "type": "h5", "name": f.name, "buffer": bufferFun(f) });
       }
 
@@ -175,7 +175,7 @@ const scran_inputs = {};
         }
       } else {
         parameters = formatted;
-        loadHDF5Raw(wasm, files);
+        loadHDF5Raw(wasm, formatted.files);
         delete cache.reloaded;
       }
     }
@@ -191,8 +191,8 @@ const scran_inputs = {};
         break;
       case "hdf5":
       case "tenx":
-      case "anndata":
-        loadHDF5(wasm, [args.files.file]);
+      case "h5ad":
+        loadHDF5(wasm, args.files);
         break;
       case "kana":
         // do nothing, this is handled by unserialize.
@@ -243,10 +243,10 @@ const scran_inputs = {};
   /** Public functions (custom) **/
   x.fetchCountMatrix = function (wasm) {
     if ("reloaded" in cache) {
-      if (cache.reloaded.type == "MatrixMarket") {
-        loadMatrixMarketRaw(wasm, cache.reloaded.files); 
+      if (parameters.type == "MatrixMarket") {
+        loadMatrixMarketRaw(wasm, parameters.files); 
       } else {
-        loadHDF5Raw(wasm, cache.reloaded.files);
+        loadHDF5Raw(wasm, parameters.files);
       }
     }
     return cache.matrix;

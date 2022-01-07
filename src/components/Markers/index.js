@@ -98,6 +98,11 @@ const MarkerPlot = () => {
 
         let sortedRows = [...trecs];
 
+        setMarkerFilter({
+            "lfc": [0, parseFloat(tlfcsval.toFixed(2))],
+            "delta": [0, parseFloat(tdeltaval.toFixed(2))]
+        });
+
         setProsRecords(sortedRows);
 
     }, [selectedClusterSummary]);
@@ -457,7 +462,7 @@ const MarkerPlot = () => {
                                         <div className='marker-filter-gradient'>
                                             <div
                                                 style={{
-                                                    backgroundImage: `linear-gradient(to right, yellow 33%, red 50%, blue 100%)`,
+                                                    backgroundImage: `linear-gradient(to right, blue 33%, yellow 50%, red 100%)`,
                                                     width: '100%', height: '5px',
                                                 }}></div>&nbsp;
                                         </div>
@@ -482,7 +487,7 @@ const MarkerPlot = () => {
                                         <div className='marker-filter-gradient'>
                                             <div
                                                 style={{
-                                                    backgroundImage: `linear-gradient(to right, yellow 33%, red 50%, blue 100%)`,
+                                                    backgroundImage: `linear-gradient(to right, blue 33%, yellow 50%, red 100%)`,
                                                     width: '100%', height: '5px',
                                                 }}></div>&nbsp;
                                         </div>
@@ -504,13 +509,13 @@ const MarkerPlot = () => {
                                 {/* <Histogram data={means} height={35} minmax={meanMinMax} /> */}
                                 {meanMinMax &&
                                     <div className='marker-slider-container'>
-                                        {/* <div className='marker-filter-gradient'>
+                                        <div className='marker-filter-gradient'>
                                             <div
                                                 style={{
-                                                    backgroundImage: `linear-gradient(to right, yellow 33%, red 50%, blue 100%)`,
+                                                    backgroundImage: `linear-gradient(to right, #F5F8FA, #2965CC)`,
                                                     width: '100%', height: '5px',
                                                 }}></div>&nbsp;
-                                        </div> */}
+                                        </div>
                                         <RangeSlider
                                             className='marker-filter-slider'
                                             min={meanMinMax[0]}
