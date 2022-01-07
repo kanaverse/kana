@@ -97,7 +97,6 @@ onmessage = function(msg) {
     });
 
   } else if (msg.data.cmd == "RERUN") {
-    console.log(msg.data);
     loaded.then(wasm => {
       rerun(wasm, true, run_parameters.iterations);
 

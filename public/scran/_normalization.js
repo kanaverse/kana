@@ -76,8 +76,9 @@ const scran_normalization = {};
   };
 
   x.fetchExpression = function(wasm, index) {
-    var buffer = scran_utils.allocateBuffer(wasm, cache.matrix.ncol(), "Float64Array", cache); // re-using the buffer.
-    cache.matrix.row(index, buffer.ptr)
+    var mat = x.fetchNormalizedMatrix(wasm);
+    var buffer = scran_utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", cache); // re-using the buffer.
+    mat.row(index, buffer.ptr)
     return buffer.array().slice();    
   };
 })(scran_normalization);
