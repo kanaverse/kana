@@ -55,8 +55,8 @@
 .marker-filter-container-tag {
     position: absolute;
     top: 5px;
-    right: 20px;
-    /* font-size: 10px; */
+    left: 10px;
+    font-size: 10px;
 }
 
 .marker-slider-container {

@@ -3,7 +3,8 @@ import React, { useEffect, useRef, useContext, useState } from 'react';
 import {
     ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider,
     Divider,
-    Label
+    Label,
+    Tag
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
@@ -33,13 +34,14 @@ const DimPlot = () => {
     // first render ?
     const [renderCount, setRenderCount] = useState(true);
 
-    const { plotRedDims, redDims, defaultRedDims, setDefaultRedDims, clusterData,
-        tsneData, umapData, setPlotRedDims, clusterColors, setClusterColors,
-        gene, selectedClusterSummary,
+    const { redDims, defaultRedDims, setDefaultRedDims, clusterData,
+        tsneData, umapData, clusterColors, setClusterColors,
+        gene, setGene, selectedClusterSummary,
         customSelection, setCustomSelection,
         setDelCustomSelection,
         showAnimation, setTriggerAnimation,
-        savedPlot, setSavedPlot, selectedCluster } = useContext(AppContext);
+        savedPlot, setSavedPlot, selectedCluster,
+        genesInfo, geneColSel } = useContext(AppContext);
 
     // keeps track of what points were selected in lasso selections
     const [selectedPoints, setSelectedPoints] = useState(null);
@@ -438,7 +440,11 @@ const DimPlot = () => {
                         <div className='right-sidebar-slider'>
                             <Divider />
                             <Callout>
-                                <span>Customize Gradient &nbsp;
+                                <span>Gradient for <Tag 
+                                minimal={true}
+                                intent='primary' onRemove={() => {
+                                    setGene(null);
+                                }}>{genesInfo[geneColSel][gene]}</Tag>&nbsp;
                                     <Tooltip2 content="Use the slider to adjust the color gradient of the plot. Useful when data is skewed
                                 by either a few lowly or highly expressed cells" openOnTargetFocus={false}>
                                         <Icon icon="help"></Icon>
@@ -446,19 +452,20 @@ const DimPlot = () => {
                                 </span>
                                 <div className='dim-slider-container'>
                                     <div className='dim-slider-gradient'>
-                                        <span>{Math.round(exprMinMax[0])}</span>&nbsp;
+                                        {/* <span>{Math.round(exprMinMax[0])}</span>&nbsp; */}
                                         <div
                                             style={{
                                                 backgroundImage: `linear-gradient(to right, #F5F8FA ${(sliderMinMax[0] - exprMinMax[0]) * 100 / (exprMinMax[1] - exprMinMax[0])}%, ${((sliderMinMax[1] + sliderMinMax[0] - (2 * exprMinMax[0]))) * 100 / (2 * (exprMinMax[1] - exprMinMax[0]))}%, #2965CC ${(100 - (exprMinMax[1] - sliderMinMax[1]) * 100 / (exprMinMax[1] - exprMinMax[0]))}%)`,
                                                 width: '175px', height: '15px',
                                             }}></div>&nbsp;
-                                        <span>{Math.round(exprMinMax[1])}</span>
+                                        {/* <span>{Math.round(exprMinMax[1])}</span> */}
                                     </div>
                                     <div className='dim-range-slider'>
                                         <RangeSlider
                                             min={Math.round(exprMinMax[0])}
                                             max={Math.round(exprMinMax[1])}
                                             stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 25}
+                                            labelValues={[Math.round(exprMinMax[0]), Math.round(exprMinMax[1])]}
                                             onChange={(range) => { setSliderMinMax(range) }}
                                             value={[Math.round(sliderMinMax[0]), Math.round(sliderMinMax[1])]}
                                             vertical={false}
