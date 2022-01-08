@@ -34,6 +34,10 @@ const BarPlot = (props) => {
             width = propwidth - margin.left - margin.right,
             height = 200 - margin.top - margin.bottom;
 
+        if (containerEl.querySelector("svg")) {
+            containerEl.querySelector("svg").innerHTML = "";
+        }
+
         const svg = d3.select(containerEl)
             .append("svg")
             .attr("width", width + margin.left + margin.right)
@@ -75,13 +79,13 @@ const BarPlot = (props) => {
                 }
                 return color;
             })
-    }, []);
+    }, [props?.data]);
 
     return (
         <div className="imgplot-container">
             <Button small={true} className="imgplot-save" icon="download"
                 onClick={() => {
-                    saveSVG(d3.select(container.current.querySelector("svg")).node(), 
+                    saveSVG(d3.select(container.current.querySelector("svg")).node(),
                         2 * 325, 2 * 200, props?.filename);
                 }}>Download</Button>
             <div ref={container}></div>

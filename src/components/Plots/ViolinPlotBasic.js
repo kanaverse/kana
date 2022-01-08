@@ -109,7 +109,7 @@ const ViolinPlotBasic = (props) => {
                 lines.attr("stroke", "Orange");
                 lines.attr("stroke-width", "5");
             });
-    }, []);
+    }, [props]);
 
     return (
         <div className="imgplot-container">
