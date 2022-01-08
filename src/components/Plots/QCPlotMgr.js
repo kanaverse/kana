@@ -28,7 +28,8 @@ const QCPlotMgr = (props) => {
                     }
                     return (
                         <div key={x}>
-                            <ViolinPlotBasic {...props2} />
+                            <ViolinPlotBasic 
+                                filename={props?.title + "_" + x + ".png"} {...props2} />
                         </div>)
                 })
             }

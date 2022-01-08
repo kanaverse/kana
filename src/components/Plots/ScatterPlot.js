@@ -9,7 +9,7 @@ import {
 import { Tooltip2 } from "@blueprintjs/popover2";
 
 import { AppContext } from '../../context/AppContext';
-import getMinMax from './utils';
+import {getMinMax} from './utils';
 
 import Rainbow from './rainbowvis';
 import { randomColor } from 'randomcolor';

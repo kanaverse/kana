@@ -7,7 +7,7 @@ const ClusterBarPlot = (props) => {
 
     let data = props?.data?.clusters;
 
-    const { clusterColors, setClusterColors } = useContext(AppContext);
+    const { clusterColors, setClusterColors, datasetName } = useContext(AppContext);
 
     useEffect(() => {
         let cluster_count = Math.max(...data) + 1;
@@ -117,7 +117,7 @@ const ClusterBarPlot = (props) => {
     });
 
     return (
-        clusterColors && <BarPlot data={chart_data} color={clusterColors} />
+        clusterColors && <BarPlot filename={datasetName.split(" ").join("_") + "_clusters.png"} data={chart_data} color={clusterColors} />
     );
 };
 

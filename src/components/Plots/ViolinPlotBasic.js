@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import * as d3 from 'd3';
+import { saveSVG } from './utils.js';
+import { Button } from "@blueprintjs/core";
 
 const ViolinPlotBasic = (props) => {
     const container = useRef();
@@ -42,7 +44,7 @@ const ViolinPlotBasic = (props) => {
         svg.append("g").call(
             d3.axisLeft(y)
                 .tickFormat(function (d) {
-                    return props?.transform === "log" ? d3.format(".2s")(Math.pow(2, d)) : d3.format(".2s")(d * 100);
+                    return d3.format(props?.transform)(d);
                 }));
 
         var x = d3.scaleBand()
@@ -109,7 +111,14 @@ const ViolinPlotBasic = (props) => {
     }, []);
 
     return (
-        <div ref={container}></div>
+        <div className="imgplot-container">
+            <Button small={true} className="imgplot-save" icon="download"
+                onClick={() => {
+                    saveSVG(d3.select(container.current.querySelector("svg")).node(),
+                        2 * 325, 2 * 200, props?.filename);
+                }}>Download</Button>
+            <div ref={container}></div>
+        </div>
     );
 };
 

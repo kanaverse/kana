@@ -10,7 +10,8 @@ import './Gallery.css';
 import ImgPlot from "../Plots/ImgPlot";
 
 const Gallery = () => {
-  const { pcaVarExp, qcData, clusterData, savedPlot } = useContext(AppContext);
+  const { pcaVarExp, qcData, clusterData, savedPlot,
+    datasetName } = useContext(AppContext);
 
   return (
     <>
@@ -19,7 +20,7 @@ const Gallery = () => {
           qcData && qcData?.["thresholds"] ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
               <h5>QC Statistics</h5>
-              <QCPlotMgr data={qcData} />
+              <QCPlotMgr title={datasetName.split(" ").join("_")} data={qcData} />
             </Card>
             : ""
         }
@@ -27,7 +28,7 @@ const Gallery = () => {
           pcaVarExp ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
               <h5>PCA (% variance explained)</h5>
-              <PCABarPlot pca={pcaVarExp} />
+              <PCABarPlot title={datasetName.split(" ").join("_")} pca={pcaVarExp} />
             </Card>
             : ""
         }
@@ -42,10 +43,10 @@ const Gallery = () => {
         {
           savedPlot ?
             savedPlot.map((x, i) => (
-                <Card key={i} className="gallery-elem" elevation={Elevation.ONE}>
-                  <ImgPlot data={x} />
-                </Card>
-              )
+              <Card key={i} className="gallery-elem" elevation={Elevation.ONE}>
+                <ImgPlot data={x} />
+              </Card>
+            )
             ) : ""
         }
       </div>

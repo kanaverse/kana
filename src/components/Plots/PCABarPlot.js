@@ -16,7 +16,7 @@ const PCABarPlot = (props) => {
     });
 
     return (
-        <BarPlot data={chart_data} />
+        <BarPlot filename={props?.title + "_pca.png"} data={chart_data} />
     );
 };
 
