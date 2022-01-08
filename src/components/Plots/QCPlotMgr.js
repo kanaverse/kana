@@ -1,5 +1,6 @@
 import ViolinPlotBasic from './ViolinPlotBasic';
 import './QCPlots.css';
+import React from 'react';
 
 // shows the QC plots for sums, detected and proportion
 // transforms data to a log scale or %
@@ -35,4 +36,4 @@ const QCPlotMgr = (props) => {
     );
 };
 
-export default QCPlotMgr;
+export default React.memo(QCPlotMgr);

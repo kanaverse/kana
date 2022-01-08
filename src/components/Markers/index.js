@@ -561,4 +561,4 @@ const MarkerPlot = () => {
     );
 };
 
-export default MarkerPlot;
+export default React.memo(MarkerPlot);

@@ -1,5 +1,5 @@
 import { randomColor } from 'randomcolor';
-import { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
 import BarPlot from './BarPlot';
 
@@ -121,4 +121,4 @@ const ClusterBarPlot = (props) => {
     );
 };
 
-export default ClusterBarPlot;
+export default React.memo(ClusterBarPlot);

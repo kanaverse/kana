@@ -1,4 +1,5 @@
 import BarPlot from './BarPlot';
+import React from 'react';
 
 const PCABarPlot = (props) => {
 
@@ -19,4 +20,4 @@ const PCABarPlot = (props) => {
     );
 };
 
-export default PCABarPlot;
+export default React.memo(PCABarPlot);

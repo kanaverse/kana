@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import * as d3 from 'd3';
 
 const ViolinPlotBasic = (props) => {
@@ -113,4 +113,4 @@ const ViolinPlotBasic = (props) => {
     );
 };
 
-export default ViolinPlotBasic;
+export default React.memo(ViolinPlotBasic);

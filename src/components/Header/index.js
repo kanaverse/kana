@@ -13,7 +13,7 @@ import {
 
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 
-import { useContext, useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import AnalysisDialog from '../Analysis';
 import Stats from '../Stats';
@@ -94,4 +94,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default React.memo(Header);

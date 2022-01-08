@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import * as d3 from 'd3';
 
 // a typical d3 bar plot
@@ -80,4 +80,4 @@ const BarPlot = (props) => {
     );
 };
 
-export default BarPlot;
+export default React.memo(BarPlot);

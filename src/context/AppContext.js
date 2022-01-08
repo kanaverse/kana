@@ -283,4 +283,4 @@ const AppContextProvider = ({ children }) => {
   );
 };
 
-export default AppContextProvider;
+export default React.memo(AppContextProvider);
