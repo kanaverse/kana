@@ -32,8 +32,6 @@ importScripts("./_score_markers.js");
 importScripts("./_custom_markers.js");
 importScripts("./KanaDBHandler.js");
 
-importScripts("./mito.js");
-
 /***************************************/
 
 function runAllSteps(wasm, mode = "run", state = null) {
@@ -101,16 +99,9 @@ function runAllSteps(wasm, mode = "run", state = null) {
       response[step] = scran_qc_metrics.serialize(wasm);
     } else {
       if (mode == "run") {
-        scran_qc_metrics.compute(wasm, {
-          "use_mito_default": state.params.qc["qc-usemitodefault"],
-          "mito_prefix": state.params.qc["qc-mito"]
-        });
+        scran_qc_metrics.compute(wasm, {});
       } else {
         scran_qc_metrics.unserialize(wasm, state[step]);
-        addToObject(response["params"], "qc", {
-          "qc-usemitodefault": state[step].parameters.use_mito_default,
-          "qc-mito": state[step].parameters.mito_prefix
-        });
       }
       postSuccess(scran_qc_metrics, step, "QC metrics computed");
     }
@@ -127,9 +118,9 @@ function runAllSteps(wasm, mode = "run", state = null) {
         });
       } else {
         scran_qc_thresholds.unserialize(wasm, state[step]);
-        addToObject(response["params"], "qc", {
+        response["params"]["qc"] = {
           "qc-nmads": state[step].parameters.nmads
-        });
+        };
       }
       postSuccess(scran_qc_thresholds, step, "QC thresholds computed");
     }
@@ -174,9 +165,9 @@ function runAllSteps(wasm, mode = "run", state = null) {
         });
       } else {
         scran_model_gene_var.unserialize(wasm, state[step]);
-        addToObject(response["params"], "fSelection", {
+        response["params"]["fSelection"] = {
           "fsel-span": state[step].parameters.span
-        });
+        };
       }
       postSuccess(scran_model_gene_var, step, "Variance modelling completed");
     }
@@ -194,10 +185,10 @@ function runAllSteps(wasm, mode = "run", state = null) {
         });
       } else {
         scran_pca.unserialize(wasm, state[step]);
-        addToObject(response["params"], "pca", {
+        response["params"]["pca"] = {
           "pca-hvg": state[step].parameters.num_hvgs,
           "pca-npc": state[step].parameters.num_pcs
-        });
+        };
       }
       postSuccess(scran_pca, step, "Principal components analysis completed");
     }
