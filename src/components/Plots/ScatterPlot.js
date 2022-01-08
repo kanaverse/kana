@@ -197,13 +197,13 @@ const DimPlot = () => {
         }
     }, [tsneData, umapData, defaultRedDims, gradient, clusHighlight]);
 
-    const setInteraction = (x) => {
-        if (x === "PAN") {
-            scatterplot.setPanMode();
-            setPlotMode("PAN");
-        } else if (x === "SELECT") {
+    const setInteraction = (x) => {        
+        if (x === "SELECT") {
             scatterplot.setSelectMode();
             setPlotMode("SELECT");
+        } else {
+            scatterplot.setPanMode();
+            setPlotMode("PAN");
         }
     }
 
@@ -268,7 +268,7 @@ const DimPlot = () => {
                     onClick={() => setDefaultRedDims("TSNE")}
                     intent={defaultRedDims === "TSNE" ? "primary" : ""}
                 >
-                    <Icon icon="database"></Icon>
+                    <Icon icon="heatmap"></Icon>
                     <br />
                     <span>TSNE</span>
                 </Button>
@@ -277,8 +277,15 @@ const DimPlot = () => {
                     onClick={() => setDefaultRedDims("UMAP")}
                     intent={defaultRedDims === "UMAP" ? "primary" : ""}
                 >
-                    <Icon icon="database"></Icon><br />
+                    <Icon icon="heatmap"></Icon><br />
                     <span>UMAP</span>
+                </Button>
+                <Button className='dim-button'
+                    disabled={true}
+                >
+                    <Icon icon="heat-grid"></Icon>
+                    <br />
+                    <span>HEATMAP (coming soon)</span>
                 </Button>
             </ButtonGroup>
             <div className="top-header">
