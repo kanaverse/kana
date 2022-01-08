@@ -55,8 +55,8 @@
 .marker-filter-container-tag {
     position: absolute;
     top: 5px;
-    right: 20px;
-    /* font-size: 10px; */
+    left: 10px;
+    font-size: 10px;
 }
 
 .marker-slider-container {
@@ -113,4 +113,13 @@
     display: flex;
     align-items: center;
     justify-content: space-evenly;
+}
+
+.marker-gene-title {
+    overflow-wrap: break-word;
+}
+
+.marker-gene-title-selected {
+    font-style: italic;
+    font-weight: bold;
 }

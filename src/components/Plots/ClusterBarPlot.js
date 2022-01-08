@@ -5,11 +5,15 @@ import BarPlot from './BarPlot';
 
 const ClusterBarPlot = (props) => {
 
-    let data = props?.data?.clusters;
+    const [chartData, setChartData] = useState(null);
 
-    const { clusterColors, setClusterColors } = useContext(AppContext);
+    const { clusterColors, setClusterColors, datasetName } = useContext(AppContext);
 
     useEffect(() => {
+        let data = props?.data?.clusters;
+
+        if (!data) return;
+        
         let cluster_count = Math.max(...data) + 1;
         let cluster_colors = null;
         if (cluster_count > Object.keys(palette).length) {
@@ -18,7 +22,27 @@ const ClusterBarPlot = (props) => {
             cluster_colors = palette[cluster_count.toString()];
         }
         setClusterColors(cluster_colors);
-    }, []);
+
+        let x = {};
+        for (var i = 0; i < data?.length; i++) {
+            var clus = data[i];
+            if ("CLUS_" + clus in x) {
+                x["CLUS_" + clus]++;
+            } else {
+                x["CLUS_" + clus] = 0;
+            }
+        }
+    
+        let chart_data = [];
+        Object.values(x)?.forEach((z, i) => {
+            chart_data.push({
+                key: i + 1,
+                value: z
+            });
+        });
+
+        setChartData(chart_data);
+    }, [props?.data]);
 
     const palette = {
         1: ['#1b9e77'],
@@ -98,26 +122,8 @@ const ClusterBarPlot = (props) => {
         ],
     };
 
-    let x = {};
-    for (var i = 0; i < data?.length; i++) {
-        var clus = data[i];
-        if ("CLUS_" + clus in x) {
-            x["CLUS_" + clus]++;
-        } else {
-            x["CLUS_" + clus] = 0;
-        }
-    }
-
-    let chart_data = [];
-    Object.values(x)?.forEach((z, i) => {
-        chart_data.push({
-            key: i + 1,
-            value: z
-        });
-    });
-
     return (
-        clusterColors && <BarPlot data={chart_data} color={clusterColors} />
+        clusterColors && <BarPlot filename={datasetName.split(" ").join("_") + "_clusters.png"} data={chartData} color={clusterColors} />
     );
 };
 

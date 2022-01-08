@@ -1,7 +1,8 @@
 import {
     Button, Classes, Dialog, Text, FileInput, NumericInput,
     Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
-    InputGroup, RadioGroup, Radio, Icon
+    RadioGroup, Radio, Icon, Position,
+    InputGroup
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback, useEffect } from "react";
@@ -199,8 +200,7 @@ function AnalysisDialog({
 
             } else if (tabSelected === "load" && inputText?.file) {
                 if (loadImportFormat === "kana" &&
-                    tmpInputFiles?.file != null && !(inputText?.file.toLowerCase().endsWith("kana") ||
-                        inputText?.file.toLowerCase().endsWith("kana.gz")
+                    tmpInputFiles?.file != null && !(inputText?.file.toLowerCase().endsWith("kana")
                     )
                 ) {
                     setTmpInputValid(false);
@@ -213,11 +213,12 @@ function AnalysisDialog({
 
     return (
         <>
-            <Button onClick={handleButtonClick} icon="social-media" intent="primary" text={buttonText} />
+            <Tooltip2 content="Start new analysis or modify parameters" position={Position.BOTTOM}>
+                <Button onClick={handleButtonClick} icon="social-media" intent="primary" text={buttonText} />
+            </Tooltip2>
             <Dialog className="analysis-dialog" {...props} isOpen={isOpen} onClose={handleClose}>
 
                 <div className={Classes.DIALOG_BODY}>
-
                     <Tabs
                         animate={true}
                         renderActiveTabPanelOnly={true}
@@ -586,13 +587,12 @@ function AnalysisDialog({
                                             style={{
                                                 marginBottom: '10px'
                                             }}>
-                                            <p>Upload files that in one of these formats;
-                                                <ul>
-                                                    <li>Matrix Market - <code>*.mtx</code> or <code>*.mtx.gz</code></li>
-                                                    <li>features or genes, <code>*.tsv</code> or <code>*.tsv.gz</code></li>
-                                                    <li>HDF5 (10x or h5ad) - <code>*.h5</code> or <code>*.hdf5</code> or <code>*.h5ad</code></li>
-                                                </ul>
-                                            </p>
+                                            <p>Upload files that in one of these formats;</p>
+                                            <ul>
+                                                <li>Matrix Market - <code>*.mtx</code> or <code>*.mtx.gz</code></li>
+                                                <li>features or genes, <code>*.tsv</code> or <code>*.tsv.gz</code></li>
+                                                <li>HDF5 (10x or h5ad) - <code>*.h5</code> or <code>*.hdf5</code> or <code>*.h5ad</code></li>
+                                            </ul>
                                         </Callout>
                                     }
                                     {showStepHelper == 1 &&
@@ -1150,7 +1150,7 @@ function AnalysisDialog({
                                     }
                                     <Callout intent="primary">
                                         Import a saved analysis from <strong>kana</strong>. These files
-                                        are gzipped and are stored as <strong><code>*.kana.gz</code></strong>.
+                                        are stored as <strong><code>*.kana</code></strong>.
                                     </Callout>
 
                                     {showStepHelper == 1 &&

@@ -241,7 +241,7 @@ function App() {
         type: "text/plain"
       });
       tmpLink.href = URL.createObjectURL(fileNew);
-      tmpLink.download = datasetName.split(' ').join('_') + ".kana.gz";
+      tmpLink.download = datasetName.split(' ').join('_') + ".kana";
       tmpLink.click();
 
       setExportState(false);

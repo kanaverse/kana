@@ -8,7 +8,8 @@ import {
   ButtonGroup,
   Menu,
   MenuItem,
-  EditableText
+  EditableText,
+  Position
 } from "@blueprintjs/core";
 
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
@@ -28,7 +29,7 @@ const Header = () => {
     autoFocus: true,
     canEscapeKeyClose: true,
     canOutsideClickClose: false,
-    enforceFocus: true,
+    enforceFocus: false,
     shouldReturnFocusOnClose: true,
   });
 
@@ -51,9 +52,10 @@ const Header = () => {
             buttonText="Start Analysis"
             includeFooter={true}
             {...state} />
+
           <NavbarDivider />
 
-          <Tooltip2 content="Modify dataset title">
+          <Tooltip2 content="Modify dataset title" position={Position.BOTTOM}>
             <EditableText value={datasetName} intent="primary"
               onConfirm={(val) => { setDatasetName(val) }} />
           </Tooltip2>
@@ -61,25 +63,29 @@ const Header = () => {
           <Stats />
           <NavbarDivider />
 
-          <ButtonGroup>
-            <Popover2 content={
-              <Menu>
-                <MenuItem text="Save" icon="floppy-disk"
-                  onClick={() => {
-                    setIndexedDBState(true);
-                  }} />
-                <MenuItem text="Download" icon="download"
-                  onClick={() => {
-                    setExportState(true);
-                  }} />
-              </Menu>
-            } placement="bottom-start">
-              <Button intent="warning" rightIcon="caret-down" text="Export" />
-            </Popover2>
-          </ButtonGroup>
+          <Tooltip2 content="Save Analysis" position={Position.BOTTOM}>
+            <ButtonGroup>
+              <Popover2 content={
+                <Menu>
+                  <MenuItem text="Save" icon="floppy-disk"
+                    onClick={() => {
+                      setIndexedDBState(true);
+                    }} />
+                  <MenuItem text="Download" icon="download"
+                    onClick={() => {
+                      setExportState(true);
+                    }} />
+                </Menu>
+              } placement="bottom-start">
+                <Button intent="warning" rightIcon="caret-down" text="Export" />
+              </Popover2>
+            </ButtonGroup>
+          </Tooltip2>
           <NavbarDivider />
 
-          <Logs />
+          <Tooltip2 content="Whats happening ?" position={Position.BOTTOM}>
+            <Logs />
+          </Tooltip2>
           <NavbarDivider />
 
           <IntroDialog

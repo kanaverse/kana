@@ -3,17 +3,19 @@ import React, { useEffect, useRef, useContext, useState } from 'react';
 import {
     ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider,
     Divider,
-    Label
+    Label,
+    Tag
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
 import { AppContext } from '../../context/AppContext';
-import getMinMax from './utils';
+import {getMinMax} from './utils';
 
 import Rainbow from './rainbowvis';
 import { randomColor } from 'randomcolor';
 
 import "./ScatterPlot.css";
+import { AppToaster } from "../Spinners/AppToaster";
 
 const DimPlot = () => {
     const container = useRef();
@@ -33,13 +35,14 @@ const DimPlot = () => {
     // first render ?
     const [renderCount, setRenderCount] = useState(true);
 
-    const { plotRedDims, redDims, defaultRedDims, setDefaultRedDims, clusterData,
-        tsneData, umapData, setPlotRedDims, clusterColors, setClusterColors,
-        gene, selectedClusterSummary,
+    const { redDims, defaultRedDims, setDefaultRedDims, clusterData,
+        tsneData, umapData, clusterColors, setClusterColors,
+        gene, setGene, selectedClusterSummary,
         customSelection, setCustomSelection,
         setDelCustomSelection,
         showAnimation, setTriggerAnimation,
-        savedPlot, setSavedPlot, selectedCluster } = useContext(AppContext);
+        savedPlot, setSavedPlot, selectedCluster,
+        genesInfo, geneColSel } = useContext(AppContext);
 
     // keeps track of what points were selected in lasso selections
     const [selectedPoints, setSelectedPoints] = useState(null);
@@ -61,10 +64,15 @@ const DimPlot = () => {
             let tmpgradient = new Rainbow();
             tmpgradient.setSpectrum('#F5F8FA', "#2965CC");
             tmpgradient.setNumberRange(0, val);
-            setShowGradient(true);
+            if (exprMinMax[0] !== exprMinMax[1]) {
+                setShowGradient(true);
+                setSliderMinMax([0, val]);
+                setExprMinMax([0, val]);
+            } else {
+                setShowGradient(false);
+                AppToaster.show({icon:"warning-sign", intent: "warning", message: `${genesInfo[geneColSel][selectedClusterSummary?.[gene]?.row]} is not expressed in any cell (mean = 0)`})
+            }
             setGradient(tmpgradient);
-            setSliderMinMax([0, val]);
-            setExprMinMax([0, val]);
         }
     }, [selectedClusterSummary?.[gene]?.expr], gene);
 
@@ -197,13 +205,13 @@ const DimPlot = () => {
         }
     }, [tsneData, umapData, defaultRedDims, gradient, clusHighlight]);
 
-    const setInteraction = (x) => {
-        if (x === "PAN") {
-            scatterplot.setPanMode();
-            setPlotMode("PAN");
-        } else if (x === "SELECT") {
+    const setInteraction = (x) => {        
+        if (x === "SELECT") {
             scatterplot.setSelectMode();
             setPlotMode("SELECT");
+        } else {
+            scatterplot.setPanMode();
+            setPlotMode("PAN");
         }
     }
 
@@ -268,17 +276,24 @@ const DimPlot = () => {
                     onClick={() => setDefaultRedDims("TSNE")}
                     intent={defaultRedDims === "TSNE" ? "primary" : ""}
                 >
-                    <Icon icon="database"></Icon>
+                    <Icon icon="heatmap"></Icon>
                     <br />
-                    <span>TSNE</span>
+                    <span>t-SNE</span>
                 </Button>
                 <Button className='dim-button'
                     disabled={redDims.indexOf("UMAP") === -1}
                     onClick={() => setDefaultRedDims("UMAP")}
                     intent={defaultRedDims === "UMAP" ? "primary" : ""}
                 >
-                    <Icon icon="database"></Icon><br />
+                    <Icon icon="heatmap"></Icon><br />
                     <span>UMAP</span>
+                </Button>
+                <Button className='dim-button'
+                    disabled={true}
+                >
+                    <Icon icon="heat-grid"></Icon>
+                    <br />
+                    <span>HEATMAP (coming soon)</span>
                 </Button>
             </ButtonGroup>
             <div className="top-header">
@@ -431,7 +446,11 @@ const DimPlot = () => {
                         <div className='right-sidebar-slider'>
                             <Divider />
                             <Callout>
-                                <span>Customize Gradient &nbsp;
+                                <span>Gradient for <Tag 
+                                minimal={true}
+                                intent='primary' onRemove={() => {
+                                    setGene(null);
+                                }}>{genesInfo[geneColSel][selectedClusterSummary?.[gene]?.row]}</Tag>&nbsp;
                                     <Tooltip2 content="Use the slider to adjust the color gradient of the plot. Useful when data is skewed
                                 by either a few lowly or highly expressed cells" openOnTargetFocus={false}>
                                         <Icon icon="help"></Icon>
@@ -439,19 +458,20 @@ const DimPlot = () => {
                                 </span>
                                 <div className='dim-slider-container'>
                                     <div className='dim-slider-gradient'>
-                                        <span>{Math.round(exprMinMax[0])}</span>&nbsp;
+                                        {/* <span>{Math.round(exprMinMax[0])}</span>&nbsp; */}
                                         <div
                                             style={{
                                                 backgroundImage: `linear-gradient(to right, #F5F8FA ${(sliderMinMax[0] - exprMinMax[0]) * 100 / (exprMinMax[1] - exprMinMax[0])}%, ${((sliderMinMax[1] + sliderMinMax[0] - (2 * exprMinMax[0]))) * 100 / (2 * (exprMinMax[1] - exprMinMax[0]))}%, #2965CC ${(100 - (exprMinMax[1] - sliderMinMax[1]) * 100 / (exprMinMax[1] - exprMinMax[0]))}%)`,
                                                 width: '175px', height: '15px',
                                             }}></div>&nbsp;
-                                        <span>{Math.round(exprMinMax[1])}</span>
+                                        {/* <span>{Math.round(exprMinMax[1])}</span> */}
                                     </div>
                                     <div className='dim-range-slider'>
                                         <RangeSlider
                                             min={Math.round(exprMinMax[0])}
                                             max={Math.round(exprMinMax[1])}
-                                            stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 25}
+                                            stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 10}
+                                            labelValues={[Math.round(exprMinMax[0]), Math.round(exprMinMax[1])]}
                                             onChange={(range) => { setSliderMinMax(range) }}
                                             value={[Math.round(sliderMinMax[0]), Math.round(sliderMinMax[1])]}
                                             vertical={false}
