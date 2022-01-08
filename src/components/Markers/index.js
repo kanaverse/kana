@@ -267,7 +267,7 @@ const MarkerPlot = () => {
                                 return (
                                     <div>
                                         <div className='row-container'>
-                                            <span>{genesInfo[geneColSel][row.row]}</span>
+                                            <span className='marker-gene-title'>{genesInfo[geneColSel][row.row]}</span>
                                             {
                                                 <Popover2
                                                     popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
