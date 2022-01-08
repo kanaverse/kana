@@ -246,11 +246,23 @@ const MarkerPlot = () => {
                                                 }
                                             </HTMLSelect>
                                         </span>
-                                        <span>Log-FC</span>
-                                        <span>Δ-detected</span>
+                                        <span>Log-FC &nbsp;
+                                            <Tooltip2 content="Log fold change" openOnTargetFocus={false}>
+                                                <Icon style={{
+                                                    marginBottom: '1px'
+                                                }} size={8} icon="help"></Icon>
+                                            </Tooltip2></span>
+                                        <span>Δ-detected &nbsp;
+                                            <Tooltip2 content="delta detected" openOnTargetFocus={false}>
+                                                <Icon style={{
+                                                    marginBottom: '1px'
+                                                }} size={8} icon="help"></Icon>
+                                            </Tooltip2></span>
                                         <span>Expression &nbsp;
-                                            <Tooltip2 content="bar represents the mean expression of the gene and the color gradient represents detected." openOnTargetFocus={false}>
-                                                <Icon size={12} icon="help"></Icon>
+                                            <Tooltip2 content="Bar represents the mean expression of the gene and the color gradient represents detected." openOnTargetFocus={false}>
+                                                <Icon style={{
+                                                    marginBottom: '1px'
+                                                }} size={8} icon="help"></Icon>
                                             </Tooltip2>
                                         </span>
                                         <span></span>
