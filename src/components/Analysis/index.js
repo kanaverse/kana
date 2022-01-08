@@ -597,11 +597,20 @@ function AnalysisDialog({
                                     }
                                     {showStepHelper == 1 &&
                                         <Callout intent="primary">
-                                            <p>We currently support files in the Cellranger format -
-                                                namely, a Matrix Market file containing the count matrix.
-                                                We also recommend supplying the feature annotation
-                                                (<code>features.tsv.gz</code> or <code>genes.tsv.gz</code>).
-                                                Users may also provide a TSV file containing the barcode annotations, if any.
+                                            <p>We currently support several common file formats for single-cell RNA-seq count data.</p>
+                                            <p><strong>A count matrix in the Matrix Market (<code>*.mtx</code>) format.</strong>
+                                            This file may be Gzip-compressed, in which case we expect it to have a <code>*.mtx.gz</code> extension.
+                                            We assume that the count matrix has already been filtered to remove empty droplets.
+                                            We also recommend supplying the feature annotation as an additional TSV file with gene identifiers and symbols -
+                                            this is usually called <code>features.tsv.gz</code> or <code>genes.tsv</code> in the output of processing pipelines like Cellranger.
+                                            </p>
+                                            <p><strong>A count matrix in the 10X HDF5 (<code>*.h5</code>) format.</strong>
+                                            We assume that the count matrix has already been filtered to remove empty droplets.
+                                            This is usually called something like <code>filtered_feature_bc_matrix.h5</code> in the output of processing pipelines like Cellranger.
+                                            </p>
+                                            <p><strong>A count matrix in the H5AD (<code>*.h5ad</code>) format.</strong>
+                                            We assume that the count matrix is stored in the <code>X</code> group.
+                                            We will also try to guess which field in the <code>obs</code> annotation contains gene symbols.
                                             </p>
                                         </Callout>
                                     }
