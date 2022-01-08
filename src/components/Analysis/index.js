@@ -1139,7 +1139,7 @@ function AnalysisDialog({
                                                                 </span>
                                                             </Text>
                                                             <NumericInput
-                                                                placeholder="500" value={tmpInputParams["umap"]["umap-epoch"]}
+                                                                placeholder="500" value={tmpInputParams["umap"]["umap-epochs"]}
                                                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-epoch": nval } }) }} />
                                                         </Label>
                                                     </div>

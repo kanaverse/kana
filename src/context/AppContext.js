@@ -21,8 +21,8 @@ const AppContextProvider = ({ children }) => {
       "fsel-span": 0.3
     },
     pca: {
-      "pca-npc": 5,
-      "pca-hvg": 4000,
+      "pca-npc": 25,
+      "pca-hvg": 2500,
     },
     cluster: {
       "clus-k": 10,
