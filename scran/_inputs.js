@@ -104,7 +104,7 @@ const scran_inputs = {};
         formatted.files.push({ "type": "mtx", "name": f.name, "buffer": bufferFun(f) });
       }
 
-      if (args.gene.length !== null) {
+      if (args.gene !== null) {
         if (args.gene.length !== 1) {
           throw "expected no more than one gene file";
         }
