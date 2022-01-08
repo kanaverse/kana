@@ -91,9 +91,19 @@ const StackedHistogram = (props) => {
         
         svg.append("text").attr("x", width - 20).attr("y", y(-0.5)).text("other cells")
             .style("font-size", "10px").attr("alignment-baseline", "middle");
-        svg.append("text").attr("x", width - 20).attr("y", y(0.5)).text(clusterlabel)
+        
+        if (clusterlabel.startsWith("Custom")) {
+            let text = clusterlabel.split(" ");
+            text.forEach((t, i) => {
+                svg.append("text").attr("x", width - 20).attr("y", y(0.7 - (i * 0.17))).text(t)
+                .style("font-size", "10px").attr("alignment-baseline", "middle")
+                .style("fill", color);
+            });
+        } else {
+            svg.append("text").attr("x", width - 20).attr("y", y(0.5)).text(clusterlabel)
             .style("font-size", "10px").attr("alignment-baseline", "middle")
             .style("fill", color);
+        }
     }, []);
 
     return (
