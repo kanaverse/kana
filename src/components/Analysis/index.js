@@ -200,8 +200,7 @@ function AnalysisDialog({
 
             } else if (tabSelected === "load" && inputText?.file) {
                 if (loadImportFormat === "kana" &&
-                    tmpInputFiles?.file != null && !(inputText?.file.toLowerCase().endsWith("kana") ||
-                        inputText?.file.toLowerCase().endsWith("kana.gz")
+                    tmpInputFiles?.file != null && !(inputText?.file.toLowerCase().endsWith("kana")
                     )
                 ) {
                     setTmpInputValid(false);
@@ -1151,7 +1150,7 @@ function AnalysisDialog({
                                     }
                                     <Callout intent="primary">
                                         Import a saved analysis from <strong>kana</strong>. These files
-                                        are gzipped and are stored as <strong><code>*.kana.gz</code></strong>.
+                                        are stored as <strong><code>*.kana</code></strong>.
                                     </Callout>
 
                                     {showStepHelper == 1 &&
