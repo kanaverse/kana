@@ -118,3 +118,8 @@
 .marker-gene-title {
     overflow-wrap: break-word;
 }
+
+.marker-gene-title-selected {
+    font-style: italic;
+    font-weight: bold;
+}

@@ -267,7 +267,12 @@ const MarkerPlot = () => {
                                 return (
                                     <div>
                                         <div className='row-container'>
-                                            <span className='marker-gene-title'>{genesInfo[geneColSel][row.row]}</span>
+                                            <span style={{
+                                                color: row.index === gene ?
+                                                    String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : clusterColors[selectedCluster]
+                                                    : 'black'
+                                            }}
+                                                className={row.index === gene ? 'marker-gene-title-selected' : 'marker-gene-title'}>{genesInfo[geneColSel][row.row]}</span>
                                             {
                                                 <Popover2
                                                     popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
