@@ -249,7 +249,7 @@ const MarkerPlot = () => {
                                         <span>Log-FC</span>
                                         <span>Δ-detected</span>
                                         <span>Expression &nbsp;
-                                            <Tooltip2 content="bar represents the mean expression of the gene and the color gradient represents detected." openOnTargetFocus={false}>
+                                            <Tooltip2 content="The intensity of color represents the mean expression of the gene in this cluster, while the length of the bar represents the percentage of cells in which expression is detected." openOnTargetFocus={false}>
                                                 <Icon size={12} icon="help"></Icon>
                                             </Tooltip2>
                                         </span>
