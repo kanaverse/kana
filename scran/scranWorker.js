@@ -32,8 +32,6 @@ importScripts("./_score_markers.js");
 importScripts("./_custom_markers.js");
 importScripts("./KanaDBHandler.js");
 
-importScripts("./mito.js");
-
 /***************************************/
 
 function runAllSteps(wasm, mode = "run", state = null) {
@@ -101,10 +99,7 @@ function runAllSteps(wasm, mode = "run", state = null) {
       response[step] = scran_qc_metrics.serialize(wasm);
     } else {
       if (mode == "run") {
-        scran_qc_metrics.compute(wasm, {
-          "usemitodefault": state.params.qc["qc-usemitodefault"],
-          "mito": state.params.qc["qc-mito"]
-        });
+        scran_qc_metrics.compute(wasm, {});
       } else {
         scran_qc_metrics.unserialize(wasm, state[step]);
       }
