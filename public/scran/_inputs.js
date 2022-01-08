@@ -67,7 +67,7 @@ const scran_inputs = {};
       const tsv = d3.dsvFormat("\t");
       let parsed = tsv.parseRows(genes_str);
       if (parsed.length != cache.matrix.nrow()) {
-        throw "number of matrix rows is not equal to the number of genes in '" + args.genes.name + "'";
+        throw "number of matrix rows is not equal to the number of genes in '" + genes_file.name + "'";
       }
 
       var ids = [], symb = [];
@@ -77,7 +77,6 @@ const scran_inputs = {};
       });
 
       cache.genes = { "id": ids, "symbol": symb };
-      files.buffered.genes = genes_buffer;
     } else {
       cache.genes = dummyGenes(cache.matrix.nrow());
     }
@@ -104,8 +103,12 @@ const scran_inputs = {};
       for (const f of args.mtx) {
         formatted.files.push({ "type": "mtx", "name": f.name, "buffer": bufferFun(f) });
       }
-      var genes_file = args.genes;
-      if (genes_file instanceof File) {
+
+      if (args.gene.length !== null) {
+        if (args.gene.length !== 1) {
+          throw "expected no more than one gene file";
+        }
+        var genes_file = args.gene[0];
         formatted.files.push({ "type": "genes", "name": genes_file.name, "buffer": bufferFun(genes_file) });
       }
 
@@ -268,4 +271,12 @@ const scran_inputs = {};
       };
     }
   }
+
+  x.fetchGenes = function() {
+    if ("reloaded" in cache) {
+      return cache.reloaded.genes;
+    } else {
+      return cache.genes;
+    }
+  };
 })(scran_inputs);

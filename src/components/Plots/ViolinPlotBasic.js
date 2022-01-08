@@ -37,12 +37,13 @@ const ViolinPlotBasic = (props) => {
 
         var y = d3.scaleLinear()
             .domain(props?.range)
-            .range([height, 0]).nice();
+            .range([height, 0])
+            .nice();
 
         svg.append("g").call(
             d3.axisLeft(y)
                 .tickFormat(function (d) {
-                    return props?.transform === "log" ? d3.format(".2s")(Math.pow(2, d)) : d3.format(".2s")(d * 100);
+                    return  d3.format(props?.transform)(d);
                 }));
 
         var x = d3.scaleBand()
@@ -56,8 +57,8 @@ const ViolinPlotBasic = (props) => {
 
         var histogram = d3.bin()
             .domain(y.domain())
-            .thresholds(y.ticks(10))
-            .value(d => d)
+            .thresholds(y.ticks(40))
+            .value(d => d);
 
         let bins = histogram(data);
         var max_bin = d3.max(bins, (d) => { return d.length; })
@@ -80,7 +81,7 @@ const ViolinPlotBasic = (props) => {
                 .x0((d) => { return (xNum(-d.length / max_bin)) })
                 .x1((d) => { return (xNum(d.length / max_bin)) })
                 .y((d) => { return (y(d.x0)) })
-                .curve(d3.curveBasis)
+                .curve(d3.curveCatmullRom)
             );
 
         svg

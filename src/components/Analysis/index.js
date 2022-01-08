@@ -1,7 +1,7 @@
 import {
     Button, Classes, Dialog, Text, FileInput, NumericInput,
     Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
-    RadioGroup, Radio, Icon
+    InputGroup, RadioGroup, Radio, Icon
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback, useEffect } from "react";
@@ -65,7 +65,7 @@ function AnalysisDialog({
             "format": tabSelected == "new" ?
                 newImportFormat : loadImportFormat,
             "files": tmpInputFiles,
-            "reset" : tabSelected == "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file
+            "reset": tabSelected == "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file
         });
 
         setLoadParamsFor(tabSelected == "new" ?
@@ -81,6 +81,7 @@ function AnalysisDialog({
 
         }
         setTabSelected(currTab);
+        setShowStepHelper(0);
     }
 
     function handleNewImportTab(currTab, prevTab) {
@@ -197,7 +198,7 @@ function AnalysisDialog({
                 }
 
             } else if (tabSelected === "load" && inputText?.file) {
-                if ( loadImportFormat === "kana" &&
+                if (loadImportFormat === "kana" &&
                     tmpInputFiles?.file != null && !(inputText?.file.toLowerCase().endsWith("kana") ||
                         inputText?.file.toLowerCase().endsWith("kana.gz")
                     )
@@ -235,8 +236,7 @@ function AnalysisDialog({
                                         <div>
                                             <H5><Tag round={true}>1</Tag>
                                                 <span className="row-tooltip"
-                                                    onMouseEnter={() => setShowStepHelper(1)}
-                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                    onMouseEnter={() => setShowStepHelper(1)}>
                                                     Load input files
                                                 </span>
                                             </H5>
@@ -322,8 +322,7 @@ function AnalysisDialog({
                                         <div>
                                             <H5><Tag round={true}>2</Tag>
                                                 <span className="row-tooltip"
-                                                    onMouseEnter={() => setShowStepHelper(2)}
-                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                    onMouseEnter={() => setShowStepHelper(2)}>
                                                     Quality control
                                                 </span>
                                             </H5>
@@ -331,8 +330,7 @@ function AnalysisDialog({
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(2)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(2)}>
                                                             Number of MADs
                                                         </span>
                                                     </Text>
@@ -340,6 +338,31 @@ function AnalysisDialog({
                                                         placeholder="3" value={tmpInputParams["qc"]["qc-nmads"]}
                                                         onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-nmads": nval } }) }} />
                                                 </Label>
+                                                <Label className="row-input">
+                                                    <Text className="text-100">
+                                                        <span className="row-tooltip"
+                                                            onMouseEnter={() => setShowStepHelper(2)}>
+                                                            Use default mitochondrial list ?
+                                                        </span>
+                                                    </Text>
+                                                    <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-usemitodefault"]}
+                                                        innerLabelChecked="yes" innerLabel="no"
+                                                        onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-usemitodefault": e.target.checked } }) }} />
+                                                </Label>
+                                                {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
+                                                    <Text className="text-100">
+                                                        <span className="row-tooltip"
+                                                            onMouseEnter={() => setShowStepHelper(2)}>
+                                                            Mitochondrial gene prefix
+                                                        </span>
+                                                    </Text>
+                                                    <InputGroup
+                                                        leftIcon="filter"
+                                                        onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-mito": nval?.target?.value } }) }}
+                                                        placeholder="mt-"
+                                                        value={tmpInputParams["qc"]["qc-mito"]}
+                                                    />
+                                                </Label>}
                                             </div>
                                         </div>
                                     </div>
@@ -348,8 +371,7 @@ function AnalysisDialog({
                                         <div>
                                             <H5><Tag round={true}>3</Tag>
                                                 <span className="row-tooltip"
-                                                    onMouseEnter={() => setShowStepHelper(3)}
-                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                    onMouseEnter={() => setShowStepHelper(3)}>
                                                     Feature Selection
                                                 </span>
                                             </H5>
@@ -357,8 +379,7 @@ function AnalysisDialog({
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(3)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(3)}>
                                                             Lowess span
                                                         </span>
                                                     </Text>
@@ -374,8 +395,7 @@ function AnalysisDialog({
                                         <div>
                                             <H5><Tag round={true}>4</Tag>
                                                 <span className="row-tooltip"
-                                                    onMouseEnter={() => setShowStepHelper(4)}
-                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                    onMouseEnter={() => setShowStepHelper(4)}>
                                                     Principal components analysis
                                                 </span>
                                             </H5>
@@ -383,8 +403,7 @@ function AnalysisDialog({
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(4)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(4)}>
                                                             Number of HVGs
                                                         </span>
                                                     </Text>
@@ -395,8 +414,7 @@ function AnalysisDialog({
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(4)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(4)}>
                                                             Number of PCs
                                                         </span>
                                                     </Text>
@@ -412,8 +430,7 @@ function AnalysisDialog({
                                         <div>
                                             <H5><Tag round={true}>5</Tag>
                                                 <span className="row-tooltip"
-                                                    onMouseEnter={() => setShowStepHelper(5)}
-                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                    onMouseEnter={() => setShowStepHelper(5)}>
                                                     Clustering
                                                 </span>
                                             </H5>
@@ -421,8 +438,7 @@ function AnalysisDialog({
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(5)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(5)}>
                                                             Method
                                                         </span>
                                                     </Text>
@@ -433,8 +449,7 @@ function AnalysisDialog({
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(5)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(5)}>
                                                             Number of neighbors
                                                         </span>
                                                     </Text>
@@ -445,21 +460,18 @@ function AnalysisDialog({
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(5)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(5)}>
                                                             Use ANN
                                                         </span>
                                                     </Text>
                                                     <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["cluster"]["clus-approx"]}
-                                                        innerLabelChecked="true" innerLabel="false"
+                                                        innerLabelChecked="yes" innerLabel="no"
                                                         onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-approx": e.target.checked } }) }} />
                                                 </Label>
-
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(5)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(5)}>
                                                             Weighting scheme
                                                         </span>
                                                     </Text>
@@ -472,8 +484,7 @@ function AnalysisDialog({
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(5)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(5)}>
                                                             Resolution
                                                         </span>
                                                     </Text>
@@ -489,8 +500,7 @@ function AnalysisDialog({
                                         <div>
                                             <H5><Tag round={true}>6</Tag>
                                                 <span className="row-tooltip"
-                                                    onMouseEnter={() => setShowStepHelper(6)}
-                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                    onMouseEnter={() => setShowStepHelper(6)}>
                                                     t-SNE
                                                 </span>
                                             </H5>
@@ -498,8 +508,7 @@ function AnalysisDialog({
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(6)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(6)}>
                                                             Perplexity
                                                         </span>
                                                     </Text>
@@ -510,8 +519,7 @@ function AnalysisDialog({
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(6)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(6)}>
                                                             Iterations
                                                         </span>
                                                     </Text>
@@ -527,8 +535,7 @@ function AnalysisDialog({
                                         <div>
                                             <H5><Tag round={true}>7</Tag>
                                                 <span className="row-tooltip"
-                                                    onMouseEnter={() => setShowStepHelper(7)}
-                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                    onMouseEnter={() => setShowStepHelper(7)}>
                                                     UMAP
                                                 </span>
                                             </H5>
@@ -536,8 +543,7 @@ function AnalysisDialog({
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(7)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(7)}>
                                                             Number of neighbors
                                                         </span>
                                                     </Text>
@@ -548,8 +554,7 @@ function AnalysisDialog({
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(7)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(7)}>
                                                             Minimum distance
                                                         </span>
                                                     </Text>
@@ -560,8 +565,7 @@ function AnalysisDialog({
                                                 <Label className="row-input">
                                                     <Text className="text-100">
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(7)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(7)}>
                                                             Epochs
                                                         </span>
                                                     </Text>
@@ -731,7 +735,7 @@ function AnalysisDialog({
                                         </Callout>
                                     }
                                     {showStepHelper == 7 &&
-                                        <Callout title="Visually important content" intent="primary">
+                                        <Callout intent="primary">
                                             <p>
                                                 Create a UMAP plot to visualize cells in two dimensions.
                                                 Like the t-SNE, this aims to map cells from a high-dimensional
@@ -845,14 +849,13 @@ function AnalysisDialog({
                                     </div>
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat 
-                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                        loadParams && loadParamsFor == loadImportFormat
+                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>2</Tag>
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(2)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(2)}>
                                                             Quality control
                                                         </span>
                                                     </H5>
@@ -860,8 +863,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(2)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(2)}>
                                                                     Number of MADs
                                                                 </span>
                                                             </Text>
@@ -869,6 +871,31 @@ function AnalysisDialog({
                                                                 placeholder="3" value={tmpInputParams["qc"]["qc-nmads"]}
                                                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-nmads": nval } }) }} />
                                                         </Label>
+                                                        <Label className="row-input">
+                                                    <Text className="text-100">
+                                                        <span className="row-tooltip"
+                                                            onMouseEnter={() => setShowStepHelper(2)}>
+                                                            Use default mitochondrial list ?
+                                                        </span>
+                                                    </Text>
+                                                    <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-usemitodefault"]}
+                                                        innerLabelChecked="yes" innerLabel="no"
+                                                        onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-usemitodefault": e.target.checked } }) }} />
+                                                </Label>
+                                                {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
+                                                    <Text className="text-100">
+                                                        <span className="row-tooltip"
+                                                            onMouseEnter={() => setShowStepHelper(2)}>
+                                                            Mitochondrial gene prefix
+                                                        </span>
+                                                    </Text>
+                                                    <InputGroup
+                                                        leftIcon="filter"
+                                                        onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-mito": nval?.target?.value } }) }}
+                                                        placeholder="mt-"
+                                                        value={tmpInputParams["qc"]["qc-mito"]}
+                                                    />
+                                                </Label>}
                                                     </div>
                                                 </div>
                                             </div>
@@ -876,14 +903,13 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat 
-                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                        loadParams && loadParamsFor == loadImportFormat
+                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>3</Tag>
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(3)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(3)}>
                                                             Feature Selection
                                                         </span>
                                                     </H5>
@@ -891,8 +917,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(3)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(3)}>
                                                                     Lowess span
                                                                 </span>
                                                             </Text>
@@ -907,14 +932,13 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat 
-                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                        loadParams && loadParamsFor == loadImportFormat
+                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>4</Tag>
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(4)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(4)}>
                                                             Principal components analysis
                                                         </span>
                                                     </H5>
@@ -922,8 +946,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(4)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(4)}>
                                                                     Number of HVGs
                                                                 </span>
                                                             </Text>
@@ -934,8 +957,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(4)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(4)}>
                                                                     Number of PCs
                                                                 </span>
                                                             </Text>
@@ -950,14 +972,13 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat 
-                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                        loadParams && loadParamsFor == loadImportFormat
+                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>5</Tag>
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(5)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(5)}>
                                                             Clustering
                                                         </span>
                                                     </H5>
@@ -965,8 +986,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(5)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(5)}>
                                                                     Method
                                                                 </span>
                                                             </Text>
@@ -977,8 +997,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(5)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(5)}>
                                                                     Number of neighbors
                                                                 </span>
                                                             </Text>
@@ -989,8 +1008,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(5)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(5)}>
                                                                     Use ANN
                                                                 </span>
                                                             </Text>
@@ -1002,8 +1020,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(5)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(5)}>
                                                                     Weighting scheme
                                                                 </span>
                                                             </Text>
@@ -1016,8 +1033,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(5)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(5)}>
                                                                     Resolution
                                                                 </span>
                                                             </Text>
@@ -1032,14 +1048,13 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat 
-                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                        loadParams && loadParamsFor == loadImportFormat
+                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>6</Tag>
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(6)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(6)}>
                                                             t-SNE
                                                         </span>
                                                     </H5>
@@ -1047,8 +1062,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(6)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(6)}>
                                                                     Perplexity
                                                                 </span>
                                                             </Text>
@@ -1059,8 +1073,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(6)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(6)}>
                                                                     Iterations
                                                                 </span>
                                                             </Text>
@@ -1075,14 +1088,13 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat 
-                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                        loadParams && loadParamsFor == loadImportFormat
+                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
                                                     <H5><Tag round={true}>7</Tag>
                                                         <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(7)}
-                                                            onMouseLeave={() => setShowStepHelper(null)}>
+                                                            onMouseEnter={() => setShowStepHelper(7)}>
                                                             UMAP
                                                         </span>
                                                     </H5>
@@ -1090,8 +1102,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(7)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(7)}>
                                                                     Number of neighbors
                                                                 </span>
                                                             </Text>
@@ -1102,8 +1113,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(7)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(7)}>
                                                                     Minimum distance
                                                                 </span>
                                                             </Text>
@@ -1114,8 +1124,7 @@ function AnalysisDialog({
                                                         <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className="row-tooltip"
-                                                                    onMouseEnter={() => setShowStepHelper(7)}
-                                                                    onMouseLeave={() => setShowStepHelper(null)}>
+                                                                    onMouseEnter={() => setShowStepHelper(7)}>
                                                                     Epochs
                                                                 </span>
                                                             </Text>
@@ -1131,7 +1140,7 @@ function AnalysisDialog({
                                 </div>
                                 <div className='row-input-tooltips'>
                                     {
-                                        !tmpInputValid && 
+                                        !tmpInputValid &&
                                         <Callout intent="danger"
                                             title="Incorrect file format"
                                             style={{
@@ -1143,6 +1152,171 @@ function AnalysisDialog({
                                         Import a saved analysis from <strong>kana</strong>. These files
                                         are gzipped and are stored as <strong><code>*.kana.gz</code></strong>.
                                     </Callout>
+
+                                    {showStepHelper == 1 &&
+                                        <Callout intent="primary">
+                                            <p>We currently support files in the Cellranger format -
+                                                namely, a Matrix Market file containing the count matrix.
+                                                We also recommend supplying the feature annotation
+                                                (<code>features.tsv.gz</code> or <code>genes.tsv.gz</code>).
+                                                Users may also provide a TSV file containing the barcode annotations, if any.
+                                            </p>
+                                        </Callout>
+                                    }
+                                    {showStepHelper == 2 &&
+                                        <Callout intent="primary">
+                                            <p>At this step, we compute per-cell quality control (QC)
+                                                metrics such as the total count per cell, the total number
+                                                of detected features and (if the feature annotation is supplied)
+                                                the mitochondrial proportion in each cell.
+                                            </p>
+                                            <p>We remove low-quality
+                                                cells based on these metrics - specifically, cells with low total
+                                                counts/number of detected features or high mitochondrial proportions
+                                                are filtered out.
+                                            </p>
+                                            <p>We use an outlier-based approach to define the
+                                                filter threshold under the assumption that most cells in the
+                                                dataset are of acceptable quality.
+                                            </p>
+                                            <p>
+                                                <strong>Number of MADs</strong>:
+                                                Number of median absolute deviations (MADs) from the median,
+                                                used to define a filter threshold in the appropriate direction
+                                                for each QC metric. Increasing this value will reduce the stringency
+                                                of the filtering.
+                                            </p>
+                                        </Callout>
+                                    }
+                                    {showStepHelper == 3 &&
+                                        <Callout intent="primary">
+                                            <p>
+                                                Identify highly variable genes while accounting
+                                                for the mean-variance relationship. We do so by
+                                                fitting a mean-dependent trend to the variances,
+                                                computed from the log-transformed normalized expression
+                                                values. The residuals from the trend are then used to
+                                                rank highly variable genes.
+                                            </p>
+                                            <p>
+                                                <strong>Lowess span</strong>:
+                                                The span of the LOWESS smoother for fitting the mean-variance trend.
+                                                Larger values increase the smoothness of the global trend at the
+                                                cost of decreasing sensitivity to local variations.
+                                            </p>
+                                        </Callout>
+                                    }
+                                    {showStepHelper == 4 &&
+                                        <Callout intent="primary">
+                                            <p>
+                                                Perform a principal components analysis (PCA)
+                                                to obtain per-cell coordinates in a low-dimensional space.
+                                                This is used to compact the data for faster downstream computation,
+                                                as well as to remove uninteresting high-dimensional noise.
+                                            </p>
+                                            <p>
+                                                <strong>Number of HVGs</strong>:
+                                                Number of highly variable genes to use to perform the PCA. Larger values
+                                                will capture more biological signal at the cost of increasing
+                                                noise and computational work.
+                                            </p>
+                                            <p>
+                                                <strong>Number of PCs</strong>:
+                                                Number of principal components with the highest variance
+                                                to retain in downstream analyses. Larger values will capture
+                                                more biological signal at the cost of increasing noise and
+                                                computational work.
+                                            </p>
+                                        </Callout>
+                                    }
+                                    {showStepHelper == 5 &&
+                                        <Callout intent="primary">
+                                            <p>
+                                                Cluster cells into discrete groupings based on their
+                                                relative similarity in the low-dimensional space.
+                                                The set of clusters serve as a summary of the cellular
+                                                heterogeneity in the population, allowing us to easily
+                                                perform further characterization on subpopulations of
+                                                interest.
+                                            </p>
+                                            <p>
+                                                <strong>Method</strong>:
+                                                Clustering algorithm to use. Currently, we use multi-level
+                                                community detection on an shared nearest neighbor (SNN)
+                                                graph where cells are the nodes and edges are created
+                                                between neighboring cells.
+                                            </p>
+                                            <p>
+                                                <strong>Number of neighbors</strong>:
+                                                Number of neighbors to use to construct the shared
+                                                nearest neighbor graph. Larger values result in broader clusters.
+                                            </p>
+                                            <p>
+                                                <strong>Use ANN ?</strong>:
+                                                Use an approximate method to speed up the nearest neighbor search.
+                                                This sacrifices some accuracy for speed in larger datasets.
+                                            </p>
+                                            <p>
+                                                <strong>Weighting scheme</strong>:
+                                                Weighting scheme to use for the edges of the shared nearest neighbor graph.
+                                                The Rank approach derives a weight from the rank of the closest shared neighbor;
+                                                the Number approach uses the number of shared neighbors; and the Jaccard approach
+                                                uses the Jaccard index of the neighbor sets.
+                                            </p>
+                                            <p>
+                                                <strong>Resolution</strong>:
+                                                Resolution parameter for the multi-level clustering, used to adjust
+                                                the modularity calculation during community optimization.
+                                                Larger values yield more fine-grained clusters.
+                                            </p>
+                                        </Callout>
+                                    }
+                                    {showStepHelper == 6 &&
+                                        <Callout intent="primary">
+                                            <p>
+                                                Create a t-SNE plot to visualize cells in two dimensions, because our
+                                                feeble human minds cannot interpret high-dimensional spaces.
+                                                Cells that were neighbors in the original space are kept close
+                                                together in the 2D embedding, while dissimilar cells are placed
+                                                (arbitrarily) far away.
+                                            </p>
+                                            <p>
+                                                <strong>Perplexity</strong>:
+                                                Perplexity parameter, which determines the size of the neighborhood of each cell.
+                                                Larger values will favor preservation of global structure in the 2D embedding.
+                                            </p>
+                                            <p>
+                                                <strong>Iterations</strong>:
+                                                Number of t-SNE iterations. Doesn't usually have much of an effect if
+                                                you leave it as it is.
+                                            </p>
+                                        </Callout>
+                                    }
+                                    {showStepHelper == 7 &&
+                                        <Callout intent="primary">
+                                            <p>
+                                                Create a UMAP plot to visualize cells in two dimensions.
+                                                Like the t-SNE, this aims to map cells from a high-dimensional
+                                                space into a 2D embedding, where neighboring cells are kept close
+                                                together and dissimilar cells are placed far apart.
+                                            </p>
+                                            <p>
+                                                <strong>Number of neighbors</strong>:
+                                                Number of neighbors to use when defining the size of the local neighborhood.
+                                                Larger values will favor preservation of global structure.
+                                            </p>
+                                            <p>
+                                                <strong>Minimum distance</strong>:
+                                                Minimum distance between points. Smaller values result in more tightly
+                                                packed embedding and favor local structure.
+                                            </p>
+                                            <p>
+                                                <strong>Epochs</strong>:
+                                                Number of epochs to use for convergence. This doesn't really
+                                                change all too much.
+                                            </p>
+                                        </Callout>
+                                    }
                                 </div>
                             </div>
                         } />

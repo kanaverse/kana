@@ -13,7 +13,9 @@ const AppContextProvider = ({ children }) => {
   // default params 
   const [params, setParams] = useState({
     qc: {
-      "qc-nmads": 3
+      "qc-nmads": 3,
+      "qc-usemitodefault": true,
+      "qc-mito": "mt-"
     },
     fSelection: {
       "fsel-span": 0.3
