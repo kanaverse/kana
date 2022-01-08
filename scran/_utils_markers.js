@@ -38,63 +38,68 @@ scran_utils_markers.fetchGroupResults = function(wasm, results, reloaded, rank_t
   }
   var use_reloaded = (reloaded !== undefined);
 
-  // Choosing the ranking statistic. Do NOT do any Wasm allocations
-  // until 'ranking' is fully consumed!
-  var ranking;
-  if (use_reloaded) {
-    var summary = "mean";
-    if (rank_type.match(/-min$/)) {
-        summary = "min";
-    } else if (rank_type.match(/-min-rank$/)) {
-        summary = "min-rank";
-    }
-
-    var effect;
-    if (rank_type.match(/^cohen-/)) {
-      effect = "cohen";
-    } else if (rank_type.match(/^auc-/)) {
-      effect = "auc";
-    } else if (rank_type.match(/^lfc-/)) {
-      effect = "lfc";
-    } else if (rank_type.match(/^delta-d-/)) {
-      effect = "delta_detected";
+  var ordering;
+  {
+    // Choosing the ranking statistic. Do NOT do any Wasm allocations
+    // until 'ranking' is fully consumed!
+    let ranking;
+    let increasing = false;
+  
+    if (use_reloaded) {
+      let summary = "mean";
+      if (rank_type.match(/-min$/)) {
+          summary = "min";
+      } else if (rank_type.match(/-min-rank$/)) {
+          increasing = true;
+          summary = "min-rank";
+      }
+  
+      let effect;
+      if (rank_type.match(/^cohen-/)) {
+        effect = "cohen";
+      } else if (rank_type.match(/^auc-/)) {
+        effect = "auc";
+      } else if (rank_type.match(/^lfc-/)) {
+        effect = "lfc";
+      } else if (rank_type.match(/^delta-d-/)) {
+        effect = "delta_detected";
+      } else {
+        throw "unknown rank type '" + rank_type + "'";
+      }
+  
+      ranking = reloaded[group][effect][summary];
     } else {
-      throw "unknown rank type '" + rank_type + "'";
+      let index = 1;
+      if (rank_type.match(/-min$/)) {
+          index = 0;
+      } else if (rank_type.match(/-min-rank$/)) {
+          increasing = true;
+          index = 4;
+      }
+  
+      if (rank_type.match(/^cohen-/)) {
+        ranking = results.cohen(group, index);
+      } else if (rank_type.match(/^auc-/)) {
+        ranking = results.auc(group, index);
+      } else if (rank_type.match(/^lfc-/)) {
+        ranking = results.lfc(group, index);
+      } else if (rank_type.match(/^delta-d-/)) {
+        ranking = results.delta_detected(group, index);
+      } else {
+        throw "unknown rank type '" + rank_type + "'";
+      }
     }
-
-    ranking = reloaded[group][effect][summary];
-  } else {
-    var index = 1;
-    var increasing = false;
-    if (rank_type.match(/-min$/)) {
-        index = 0;
-    } else if (rank_type.match(/-min-rank$/)) {
-        increasing = true;
-        index = 4;
+  
+    // Computing the ordering based on the ranking statistic.
+    ordering = new Int32Array(ranking.length);
+    for (var i = 0; i < ordering.length; i++) {
+        ordering[i] = i;
     }
-
-    if (rank_type.match(/^cohen-/)) {
-      ranking = results.cohen(group, index);
-    } else if (rank_type.match(/^auc-/)) {
-      ranking = results.auc(group, index);
-    } else if (rank_type.match(/^lfc-/)) {
-      ranking = results.lfc(group, index);
-    } else if (rank_type.match(/^delta-d-/)) {
-      ranking = results.delta_detected(group, index);
+    if (increasing) {
+        ordering.sort((f, s) => (ranking[f] - ranking[s]));
     } else {
-      throw "unknown rank type '" + rank_type + "'";
+        ordering.sort((f, s) => (ranking[s] - ranking[f]));
     }
-  }
-
-  // Computing the ordering based on the ranking statistic.
-  var ordering = new Int32Array(ranking.length);
-  for (var i = 0; i < ordering.length; i++) {
-      ordering[i] = i;
-  }
-  if (increasing) {
-      ordering.sort((f, s) => (ranking[f] - ranking[s]));
-  } else {
-      ordering.sort((f, s) => (ranking[s] - ranking[f]));
   }
 
   // Apply that ordering to each statistic of interest.
