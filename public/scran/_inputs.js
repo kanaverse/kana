@@ -67,7 +67,7 @@ const scran_inputs = {};
       const tsv = d3.dsvFormat("\t");
       let parsed = tsv.parseRows(genes_str);
       if (parsed.length != cache.matrix.nrow()) {
-        throw "number of matrix rows is not equal to the number of genes in '" + args.genes.name + "'";
+        throw "number of matrix rows is not equal to the number of genes in '" + genes_file.name + "'";
       }
 
       var ids = [], symb = [];
