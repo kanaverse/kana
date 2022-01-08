@@ -259,7 +259,7 @@ const MarkerPlot = () => {
                                                 }} size={8} icon="help"></Icon>
                                             </Tooltip2></span>
                                         <span>Expression &nbsp;
-                                            <Tooltip2 content="Bar represents the mean expression of the gene and the color gradient represents detected." openOnTargetFocus={false}>
+                                            <Tooltip2 content="="The intensity of color represents the mean expression of the gene in this cluster, while the length of the bar represents the percentage of cells in which any expression is detected." openOnTargetFocus={false}>
                                                 <Icon style={{
                                                     marginBottom: '1px'
                                                 }} size={8} icon="help"></Icon>
