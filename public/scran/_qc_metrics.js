@@ -19,22 +19,23 @@ const scran_qc_metrics = {};
     try {
       subsets.fill(0);
 
-      /** TODO: better systematic way of guessing Ensembl vs symbol. 
-       * Currently I have a look at the first 1000 genes and see who wins.
-       **/
-      var output = scran_inputs.results().genes;
-      for (const col in output) {
-        output[col].forEach((x, i) => {
-          if (args.usemitodefault) {
-            if (mito.symbol.has(x[i]) || mito.ensembl.has(x[i])) {
-              subsets[i] = 1;
+      var gene_info = scran_inputs.fetchGenes();
+      var sub_arr = subsets.array();
+      for (const [key, val] of Object.entries(gene_info)) {
+        if (args.use_mito_default) {
+          val.forEach((x, i) => {
+            if (mito.symbol.has(x) || mito.ensembl.has(x)) {
+              sub_arr[i] = 1;
             }
-          } else {
-            if(x[i].toLowerCase().startsWith(args.mito.toLowerCase())) {
-              subsets[i] = 1;
+          });
+        } else {
+          var lower_mito = args.mito_prefix.toLowerCase();
+          val.forEach((x, i) => {
+            if(x.toLowerCase().startsWith(lower_mito)) {
+              sub_arr[i] = 1;
             }
-          }
-        });
+          });
+        }
       }
 
       cache.raw = wasm.per_cell_qc_metrics(mat, nsubsets, subsets.ptr);

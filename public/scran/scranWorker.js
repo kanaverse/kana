@@ -102,11 +102,15 @@ function runAllSteps(wasm, mode = "run", state = null) {
     } else {
       if (mode == "run") {
         scran_qc_metrics.compute(wasm, {
-          "usemitodefault": state.params.qc["qc-usemitodefault"],
-          "mito": state.params.qc["qc-mito"]
+          "use_mito_default": state.params.qc["qc-usemitodefault"],
+          "mito_prefix": state.params.qc["qc-mito"]
         });
       } else {
         scran_qc_metrics.unserialize(wasm, state[step]);
+        addToObject(response["params"], "qc", {
+          "qc-usemitodefault": state[step].parameters.use_mito_default,
+          "qc-mito": state[step].parameters.mito_prefix
+        });
       }
       postSuccess(scran_qc_metrics, step, "QC metrics computed");
     }
@@ -123,9 +127,9 @@ function runAllSteps(wasm, mode = "run", state = null) {
         });
       } else {
         scran_qc_thresholds.unserialize(wasm, state[step]);
-        response["params"]["qc"] = {
+        addToObject(response["params"], "qc", {
           "qc-nmads": state[step].parameters.nmads
-        };
+        });
       }
       postSuccess(scran_qc_thresholds, step, "QC thresholds computed");
     }
@@ -170,9 +174,9 @@ function runAllSteps(wasm, mode = "run", state = null) {
         });
       } else {
         scran_model_gene_var.unserialize(wasm, state[step]);
-        response["params"]["fSelection"] = {
+        addToObject(response["params"], "fSelection", {
           "fsel-span": state[step].parameters.span
-        };
+        });
       }
       postSuccess(scran_model_gene_var, step, "Variance modelling completed");
     }
@@ -190,10 +194,10 @@ function runAllSteps(wasm, mode = "run", state = null) {
         });
       } else {
         scran_pca.unserialize(wasm, state[step]);
-        response["params"]["pca"] = {
+        addToObject(response["params"], "pca", {
           "pca-hvg": state[step].parameters.num_hvgs,
           "pca-npc": state[step].parameters.num_pcs
-        };
+        });
       }
       postSuccess(scran_pca, step, "Principal components analysis completed");
     }
