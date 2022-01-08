@@ -1,7 +1,7 @@
 import {
     Button, Classes, Dialog, Text, FileInput, NumericInput,
     Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
-    RadioGroup, Radio, Icon
+    RadioGroup, Radio, Icon, Position
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback, useEffect } from "react";
@@ -212,11 +212,12 @@ function AnalysisDialog({
 
     return (
         <>
-            <Button onClick={handleButtonClick} icon="social-media" intent="primary" text={buttonText} />
+            <Tooltip2 content="Start new analysis or modify parameters" position={Position.BOTTOM}>
+                <Button onClick={handleButtonClick} icon="social-media" intent="primary" text={buttonText} />
+            </Tooltip2>
             <Dialog className="analysis-dialog" {...props} isOpen={isOpen} onClose={handleClose}>
 
                 <div className={Classes.DIALOG_BODY}>
-
                     <Tabs
                         animate={true}
                         renderActiveTabPanelOnly={true}

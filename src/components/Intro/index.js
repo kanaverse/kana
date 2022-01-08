@@ -1,5 +1,5 @@
 import {
-    Button, Classes, Dialog, H5, Card, Elevation
+    Button, Classes, Dialog, H5, Card, Elevation, Position
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback } from "react";
@@ -29,7 +29,9 @@ function IntroDialog({
 
     return (
         <>
+            <Tooltip2 content="App Info" position={Position.BOTTOM}>
             <Button onClick={handleButtonClick} icon="info-sign" intent="primary" text="" />
+            </Tooltip2>
             <Dialog {...props} isOpen={isOpen} onClose={handleClose}>
                 <div className={Classes.DIALOG_BODY}>
                     <Card elevation={Elevation.ZERO}>

@@ -270,7 +270,7 @@ const DimPlot = () => {
                 >
                     <Icon icon="heatmap"></Icon>
                     <br />
-                    <span>TSNE</span>
+                    <span>t-SNE</span>
                 </Button>
                 <Button className='dim-button'
                     disabled={redDims.indexOf("UMAP") === -1}
