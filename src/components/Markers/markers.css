@@ -114,3 +114,7 @@
     align-items: center;
     justify-content: space-evenly;
 }
+
+.marker-gene-title {
+    overflow-wrap: break-word;
+}
