@@ -69,7 +69,8 @@ const DimPlot = () => {
                 setSliderMinMax([0, val]);
                 setExprMinMax([0, val]);
             } else {
-                AppToaster.show({icon:"warning-sign", intent: "warning", message: `${genesInfo[geneColSel][gene]} is not expressed in any cell (mean = 0)`})
+                setShowGradient(false);
+                AppToaster.show({icon:"warning-sign", intent: "warning", message: `${genesInfo[geneColSel][selectedClusterSummary?.[gene]?.row]} is not expressed in any cell (mean = 0)`})
             }
             setGradient(tmpgradient);
         }
@@ -449,7 +450,7 @@ const DimPlot = () => {
                                 minimal={true}
                                 intent='primary' onRemove={() => {
                                     setGene(null);
-                                }}>{genesInfo[geneColSel][gene]}</Tag>&nbsp;
+                                }}>{genesInfo[geneColSel][selectedClusterSummary?.[gene]?.row]}</Tag>&nbsp;
                                     <Tooltip2 content="Use the slider to adjust the color gradient of the plot. Useful when data is skewed
                                 by either a few lowly or highly expressed cells" openOnTargetFocus={false}>
                                         <Icon icon="help"></Icon>
