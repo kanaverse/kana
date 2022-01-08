@@ -15,6 +15,7 @@ import Rainbow from './rainbowvis';
 import { randomColor } from 'randomcolor';
 
 import "./ScatterPlot.css";
+import { AppToaster } from "../Spinners/AppToaster";
 
 const DimPlot = () => {
     const container = useRef();
@@ -63,10 +64,14 @@ const DimPlot = () => {
             let tmpgradient = new Rainbow();
             tmpgradient.setSpectrum('#F5F8FA', "#2965CC");
             tmpgradient.setNumberRange(0, val);
-            setShowGradient(true);
+            if (exprMinMax[0] !== exprMinMax[1]) {
+                setShowGradient(true);
+                setSliderMinMax([0, val]);
+                setExprMinMax([0, val]);
+            } else {
+                AppToaster.show({icon:"warning-sign", intent: "warning", message: `${genesInfo[geneColSel][gene]} is not expressed in any cell (mean = 0)`})
+            }
             setGradient(tmpgradient);
-            setSliderMinMax([0, val]);
-            setExprMinMax([0, val]);
         }
     }, [selectedClusterSummary?.[gene]?.expr], gene);
 
@@ -464,7 +469,7 @@ const DimPlot = () => {
                                         <RangeSlider
                                             min={Math.round(exprMinMax[0])}
                                             max={Math.round(exprMinMax[1])}
-                                            stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 25}
+                                            stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 10}
                                             labelValues={[Math.round(exprMinMax[0]), Math.round(exprMinMax[1])]}
                                             onChange={(range) => { setSliderMinMax(range) }}
                                             value={[Math.round(sliderMinMax[0]), Math.round(sliderMinMax[1])]}
