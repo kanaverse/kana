@@ -19,10 +19,11 @@ const QCPlotMgr = (props) => {
                 ["sums", "detected", "proportion"].map(x => {
                     const props2 = {
                         "threshold": qcData?.["thresholds"]?.[x],
-                        "range": [qcData?.["ranges"]?.[x][0] == 0 ? -0.1 : qcData?.["ranges"]?.[x][0], qcData?.["ranges"]?.[x][1]],
+                        "range": qcData?.["ranges"]?.[x],
                         "label": x,
                         "transform": x === "proportion" ? ".2" : ".2s",
                         "showLabel": x,
+                        "dataTransform": x === "proportion" ? null : "log",
                         "rdata": qcData?.["data"]?.[x]
                     }
                     return (

@@ -22,6 +22,16 @@ const ViolinPlotBasic = (props) => {
 
         if (!data) return "";
 
+        let transform = props?.dataTransform;
+        let range = props?.range;
+        let threshold = props?.threshold;
+
+        if (transform === "log") {
+            data = data.map(x => Math.log2(x+1));
+            range = range.map(x => Math.log2(x+1));
+            threshold = Math.log2(threshold + 1);
+        }
+
         let containerEl = container.current;
         containerEl.innerHTML = "";
 
@@ -38,14 +48,14 @@ const ViolinPlotBasic = (props) => {
                 `translate(${margin.left},${margin.top})`);
 
         var y = d3.scaleLinear()
-            .domain(props?.range)
+            .domain(range)
             .range([height, 0])
             .nice();
 
         svg.append("g").call(
             d3.axisLeft(y)
                 .tickFormat(function (d) {
-                    return d3.format(props?.transform)(d);
+                    return transform === "log" ? d3.format(props?.transform)(Math.pow(2, d)) : d3.format(props?.transform)(d);
                 }));
 
         var x = d3.scaleBand()
@@ -59,7 +69,7 @@ const ViolinPlotBasic = (props) => {
 
         var histogram = d3.bin()
             .domain(y.domain())
-            .thresholds(y.ticks(40))
+            .thresholds(transform === "log" ? y.ticks(10): y.ticks(40))
             .value(d => d);
 
         let bins = histogram(data);
@@ -83,12 +93,12 @@ const ViolinPlotBasic = (props) => {
                 .x0((d) => { return (xNum(-d.length / max_bin)) })
                 .x1((d) => { return (xNum(d.length / max_bin)) })
                 .y((d) => { return (y(d.x0)) })
-                .curve(d3.curveCatmullRom)
+                .curve(transform === "log" ? d3.curveBasis : d3.curveCatmullRom)
             );
 
         svg
             .selectAll("threshold")
-            .data([props?.threshold])
+            .data([threshold])
             .enter()
             .append("line")
             .attr("transform", () => { return ("translate(" + x(props?.label) + " ,0)") })
