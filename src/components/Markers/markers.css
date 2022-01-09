@@ -1,6 +1,6 @@
 .marker-container {
     display: flex;
-    padding: 10px;
+    padding: 5px;
     flex-direction: column;
 }
 
@@ -89,13 +89,13 @@
 
 .row-container {
     display: grid;
-    grid-template-columns: 25% 15% 15% 25% 20%;
+    grid-template-columns: 25% 15% 18% 25% 17%;
     gap: 2px;
     align-items: center;
 }
 
 .row-header {
-    font-size: 10px;
+    font-size: 9px;
     text-align: center;
     align-items: center;
 }
