@@ -316,7 +316,7 @@ const DimPlot = (props) => {
                     <Tooltip2 content="Interactively visualize embeddings">
                         <Button icon="play"
                             onClick={() => {
-                                setShowAnimation(true); 
+                                setShowAnimation(true);
                                 setTriggerAnimation(true)
                             }}>Animate</Button>
                     </Tooltip2>
@@ -336,7 +336,7 @@ const DimPlot = (props) => {
             </div>
             {
                 showAnimation ?
-                    <Label className='iter'>Iteration: {defaultRedDims === "TSNE" ? tsneData?.iteration : umapData?.iteration}</Label>
+                    <Label className='iter'>Iteration: {props?.animateData?.iteration}</Label>
                     : ""
             }
             <div className='dim-plot'>
@@ -373,9 +373,9 @@ const DimPlot = (props) => {
                                 (Object.keys(customSelection).length > 0 || (selectedPoints && selectedPoints.length > 0)) ?
                                     <Callout title="CUSTOM SELECTIONS">
                                         <div
-                                           style={{
-                                           paddingTop: '5px'
-                                        }}>
+                                            style={{
+                                                paddingTop: '5px'
+                                            }}>
                                             <ul>
                                                 {Object.keys(customSelection)?.map((x, i) => {
                                                     return (<li key={x}
@@ -394,7 +394,6 @@ const DimPlot = (props) => {
                                                                 onClick={() => {
                                                                     if (x === clusHighlight) {
                                                                         setClusHighlight(null);
- 
                                                                     } else {
                                                                         setClusHighlight(x);
                                                                     }
@@ -410,13 +409,13 @@ const DimPlot = (props) => {
                                                                     let tmpSel = { ...customSelection };
                                                                     delete tmpSel[x];
                                                                     setCustomSelection(tmpSel);
- 
+
                                                                     let tmpcolors = [...clusterColors];
                                                                     tmpcolors = tmpcolors.slice(0, tmpcolors.length - 1);
                                                                     setClusterColors(tmpcolors);
- 
+
                                                                     setDelCustomSelection(x);
- 
+
                                                                     if (clusHighlight === x) {
                                                                         setClusHighlight(null);
                                                                     }
@@ -451,7 +450,6 @@ const DimPlot = (props) => {
                     }
                     {showGradient ?
                         <div className='right-sidebar-slider'>
-                            <Divider />
                             <Callout>
                                 <span>Gradient for <Tag
                                     minimal={true}

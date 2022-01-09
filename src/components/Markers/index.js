@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
 import {
-    Button, H4, H5, Icon, Collapse, InputGroup,
+    Button, H4, H5, Icon, Collapse, InputGroup, Text,
     RangeSlider, Tag, HTMLSelect, Classes, Card, Elevation
 } from "@blueprintjs/core";
 import { Popover2 } from "@blueprintjs/popover2";
@@ -623,10 +623,10 @@ const MarkerPlot = () => {
                                     </Card>
                                 }
                             >
-                                <text style={{
+                                <Text style={{
                                     textDecoration: "underline",
                                     cursor: "help"
-                                }}>Filter Markers</text>
+                                }}>Filter Markers</Text>
                             </Popover2>
                             </H5>
 
