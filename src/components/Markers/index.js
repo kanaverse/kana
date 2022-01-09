@@ -174,56 +174,35 @@ const MarkerPlot = () => {
         }
     };
 
-    const get_marker_description = () => {
-        return (
-            <>
-                <p>Choose the effect size and summary statistic to use for ranking markers. For each gene, effect sizes are computed by pairwise comparisons between clusters:</p>
-                <ul>
-                    <li><strong><em>Cohen's d</em></strong> is the ratio of the log-fold change to the average standard deviation between two clusters.</li>
-                    <li>The area under the curve (<strong><em>AUC</em></strong>) is the probability that a randomly chosen observation from one cluster is greater than a randomly chosen observation from another cluster.</li>
-                    <li>The log-fold change (<strong><em>lfc</em></strong>) is the difference in the mean log-expression between two clusters.</li>
-                    <li>The <strong><em>Δ-detected</em></strong> is the difference in the detected proportions between two clusters.</li>
-                </ul>
-                <p>For each cluster, the effect sizes from the comparisons to all other clusters are summarized into a single statistic for ranking purposes:</p>
-                <ul>
-                    <li><strong><em>mean</em></strong> uses the mean effect sizes from all pairwise comparisons. This generally provides a good compromise between exclusitivity and robustness.</li>
-                    <li><strong><em>min</em></strong> uses the minimum effect size from all pairwise comparisons. This promotes markers that are exclusively expressed in the chosen cluster, but will perform poorly if no such genes exist.</li>
-                    <li><strong><em>min-rank</em></strong> ranks genes according to their best rank in each of the individual pairwise comparisons. This is the most robust as the combination of top-ranked genes will always be able to distinguish the chosen cluster from the other clusters, but may not give high rankings to exclusive genes.</li>
-                </ul>
-            </>
-        )
-    }
-
     return (
         <div className='marker-container'>
-            <H4>Marker Genes
-                <Popover2
-                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
-                    hasBackdrop={false}
-                    interactionKind="hover"
-                    placement='left'
-                    hoverOpenDelay={500}
-                    modifiers={{
-                        arrow: { enabled: true },
-                        flip: { enabled: true },
-                        preventOverflow: { enabled: true },
-                    }}
-                    content={
-                        <Card style={{
-                            width: '450px'
-                        }} elevation={Elevation.ZERO}
-                        >
-                            <H5>Explore markers for various clusters</H5>
-                            {get_marker_description()}
-                        </Card>
-                    }
-                >
-                    <Icon style={{
-                        marginBottom: '4px',
-                        marginLeft: '5px'
-                    }} size={12} icon="help"></Icon>
-                </Popover2>
-            </H4>
+            <Popover2
+                popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                hasBackdrop={false}
+                interactionKind="hover"
+                placement='left'
+                hoverOpenDelay={500}
+                modifiers={{
+                    arrow: { enabled: true },
+                    flip: { enabled: true },
+                    preventOverflow: { enabled: true },
+                }}
+                content={
+                    <Card style={{
+                        width: '450px'
+                    }} elevation={Elevation.ZERO}
+                    >
+                    This panel shows the marker genes that are upregulated in the cluster of interest compared to some or all of the other clusters.
+                    Hopefully, this allows us to assign some kind of biological meaning to each cluster based on the functions of the top markers.
+                    Several ranking schemes are available depending on how we quantify the strength of the upregulation.
+                    </Card>
+                }
+            >
+                <H4 style={{
+                    textDecoration: "underline",
+                    cursor: "help"
+                }}>Marker Genes</H4>
+            </Popover2>
             {
                 clusSel ?
                     <HTMLSelect
@@ -259,13 +238,16 @@ const MarkerPlot = () => {
                                 type={"text"}
                                 onChange={(e) => setSearchInput(e.target.value)}
                             />
-                            <span>
+                            <span style={{
+                                textDecoration: "underline",
+                                cursor: "help"
+                            }}>
                                 <Popover2
                                     popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
                                     hasBackdrop={false}
                                     interactionKind="hover"
                                     placement='left'
-                                    hoverOpenDelay={500}
+                                    hoverOpenDelay={50}
                                     modifiers={{
                                         arrow: { enabled: true },
                                         flip: { enabled: true },
@@ -276,7 +258,19 @@ const MarkerPlot = () => {
                                             width: '450px'
                                         }} elevation={Elevation.ZERO}
                                         >
-                                            {get_marker_description()}
+                                            <p>Choose the effect size and summary statistic to use for ranking markers. For each gene, effect sizes are computed by pairwise comparisons between clusters:</p>
+                                            <ul>
+                                                <li><strong><em>Cohen's d</em></strong> is the ratio of the log-fold change to the average standard deviation between two clusters.</li>
+                                                <li>The area under the curve (<strong><em>AUC</em></strong>) is the probability that a randomly chosen observation from one cluster is greater than a randomly chosen observation from another cluster.</li>
+                                                <li>The log-fold change (<strong><em>lfc</em></strong>) is the difference in the mean log-expression between two clusters.</li>
+                                                <li>The <strong><em>Δ-detected</em></strong> is the difference in the detected proportions between two clusters.</li>
+                                            </ul>
+                                            <p>For each cluster, the effect sizes from the comparisons to all other clusters are summarized into a single statistic for ranking purposes:</p>
+                                            <ul>
+                                                <li><strong><em>mean</em></strong> uses the mean effect sizes from all pairwise comparisons. This generally provides a good compromise between exclusitivity and robustness.</li>
+                                                <li><strong><em>min</em></strong> uses the minimum effect size from all pairwise comparisons. This promotes markers that are exclusively expressed in the chosen cluster, but will perform poorly if no such genes exist.</li>
+                                                <li><strong><em>min-rank</em></strong> ranks genes according to their best rank in each of the individual pairwise comparisons. This is the most robust as the combination of top-ranked genes will always be able to distinguish the chosen cluster from the other clusters, but may not give high rankings to exclusive genes.</li>
+                                            </ul>
                                         </Card>
                                     }
                                 >
@@ -324,79 +318,84 @@ const MarkerPlot = () => {
                                                 }
                                             </HTMLSelect>
                                         </span>
-                                        <span>Log-FC &nbsp;
-                                            <Popover2
-                                                popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
-                                                hasBackdrop={false}
-                                                interactionKind="hover"
-                                                placement='auto'
-                                                hoverOpenDelay={500}
-                                                modifiers={{
-                                                    arrow: { enabled: true },
-                                                    flip: { enabled: true },
-                                                    preventOverflow: { enabled: true },
-                                                }}
-                                                content={
-                                                    <Card style={{
-                                                        width: '250px'
-                                                    }} elevation={Elevation.ZERO}>
-                                                        <p>Log-fold change in expression between cells inside and outside the cluster.</p><p>
-                                                            Use the color scale below to apply a filter on this statistic.</p></Card>
-                                                }>
-                                                <Icon style={{
-                                                    marginBottom: '1px'
-                                                }} size={8} icon="help"></Icon>
-                                            </Popover2></span>
-                                        <span>Δ-detected &nbsp;
-                                            <Popover2
-                                                popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
-                                                hasBackdrop={false}
-                                                interactionKind="hover"
-                                                placement='auto'
-                                                hoverOpenDelay={500}
-                                                modifiers={{
-                                                    arrow: { enabled: true },
-                                                    flip: { enabled: true },
-                                                    preventOverflow: { enabled: true },
-                                                }}
-                                                content={
-                                                    <Card style={{
-                                                        width: '250px'
-                                                    }} elevation={Elevation.ZERO}>
-                                                        <p>
-                                                            Difference in the proportion of detected genes inside and outside the cluster. </p><p>
-                                                            Use the color scale below to apply a filter on this statistic.
-                                                        </p>
-                                                    </Card>}>
-                                                <Icon style={{
-                                                    marginBottom: '1px'
-                                                }} size={8} icon="help"></Icon>
-                                            </Popover2></span>
-                                        <span>Expression &nbsp;
-                                            <Popover2
-                                                popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
-                                                hasBackdrop={false}
-                                                interactionKind="hover"
-                                                placement='auto'
-                                                hoverOpenDelay={500}
-                                                modifiers={{
-                                                    arrow: { enabled: true },
-                                                    flip: { enabled: true },
-                                                    preventOverflow: { enabled: true },
-                                                }}
-                                                content={
-                                                    <Card style={{
-                                                        width: '250px'
-                                                    }} elevation={Elevation.ZERO}>
-                                                        <p>The intensity of color represents the mean expression of the gene in this cluster,
-                                                            while the length of the bar represents the percentage of cells in which any expression is detected.
-                                                        </p>
-                                                    </Card>}>
-                                                <Icon style={{
-                                                    marginBottom: '1px'
-                                                }} size={8} icon="help"></Icon>
-                                            </Popover2>
-                                        </span>
+                                        <Popover2
+                                            popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                            hasBackdrop={false}
+                                            interactionKind="hover"
+                                            placement='auto'
+                                            hoverOpenDelay={50}
+                                            modifiers={{
+                                                arrow: { enabled: true },
+                                                flip: { enabled: true },
+                                                preventOverflow: { enabled: true },
+                                            }}
+                                            content={
+                                                <Card style={{
+                                                    width: '250px'
+                                                }} elevation={Elevation.ZERO}>
+                                                    <p>Log-fold change in mean expression between cells inside and outside the cluster.</p><p>
+                                                        Use the color scale below to apply a filter on this statistic.</p></Card>
+                                            }>
+                                            <span style={{
+                                                textDecoration: "underline",
+                                                cursor: "help"
+                                            }}>
+                                            Log-FC
+                                            </span>
+                                        </Popover2>
+                                        <Popover2
+                                            popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                            hasBackdrop={false}
+                                            interactionKind="hover"
+                                            placement='auto'
+                                            hoverOpenDelay={50}
+                                            modifiers={{
+                                                arrow: { enabled: true },
+                                                flip: { enabled: true },
+                                                preventOverflow: { enabled: true },
+                                            }}
+                                            content={
+                                                <Card style={{
+                                                    width: '250px'
+                                                }} elevation={Elevation.ZERO}>
+                                                    <p>
+                                                        Difference in the proportion of detected genes inside and outside the cluster. </p><p>
+                                                        Use the color scale below to apply a filter on this statistic.
+                                                    </p>
+                                                </Card>}>
+                                            <span style={{
+                                                textDecoration: "underline",
+                                                cursor: "help"
+                                            }}>
+                                            Δ-detected
+                                            </span>
+                                        </Popover2>
+                                        <Popover2
+                                            popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                            hasBackdrop={false}
+                                            interactionKind="hover"
+                                            placement='auto'
+                                            hoverOpenDelay={50}
+                                            modifiers={{
+                                                arrow: { enabled: true },
+                                                flip: { enabled: true },
+                                                preventOverflow: { enabled: true },
+                                            }}
+                                            content={
+                                                <Card style={{
+                                                    width: '250px'
+                                                }} elevation={Elevation.ZERO}>
+                                                    <p>The intensity of color represents the mean expression of the gene in this cluster,
+                                                        while the length of the bar represents the percentage of cells in which any expression is detected.
+                                                    </p>
+                                                </Card>}>
+                                            <span style={{
+                                                textDecoration: "underline",
+                                                cursor: "help"
+                                            }}>
+                                                Expression
+                                            </span>
+                                        </Popover2>
                                     </div>)
                                 }
                             }}
@@ -600,7 +599,36 @@ const MarkerPlot = () => {
                             }}
                         />
                         <div className='marker-footer'>
-                            <H5 className='marker-footer-title'>Filter Markers</H5>
+                            <H5>
+                            <Popover2
+                                popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                hasBackdrop={false}
+                                interactionKind="hover"
+                                placement='left'
+                                hoverOpenDelay={500}
+                                modifiers={{
+                                    arrow: { enabled: true },
+                                    flip: { enabled: true },
+                                    preventOverflow: { enabled: true },
+                                }}
+                                content={
+                                    <Card style={{
+                                        width: '450px'
+                                    }} elevation={Elevation.ZERO}
+                                    >
+                                    Filter the set of marker genes according to various statistics.
+                                    For example, this can be used to apply a minimum threshold on the log-fold change or Δ-detected, to focus on genes with strong upregulation;
+                                    or to apply a maximum threshold on the expression, to remove constitutively expressed genes. 
+                                    Note that this does not change the relative ordering in the table above.
+                                    </Card>
+                                }
+                            >
+                                <text style={{
+                                    textDecoration: "underline",
+                                    cursor: "help"
+                                }}>Filter Markers</text>
+                            </Popover2>
+                            </H5>
 
                             <div className='marker-filter-container'>
                                 <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Log-FC</Tag>
