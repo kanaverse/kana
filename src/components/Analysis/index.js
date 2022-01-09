@@ -213,9 +213,13 @@ function AnalysisDialog({
 
     function parseKanaDate(x) {
         try {
-            let kstamp = x.replace("kana-", "");
-            return String(new Date(kstamp * 1000)).replace("Invalid Date", "");
-            // easier solution was to replace invalid dates
+            let kstamp = Number(x.replace("kana-", ""));
+            if (isNaN(kstamp)) {
+                return "Invalid Date";
+            } else {
+                let d = new Date(kstamp);
+                return d.toDateString() + ", " + d.toLocaleTimeString(); 
+            }
         } catch (error) {
             return "";
         }
