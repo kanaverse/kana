@@ -223,7 +223,7 @@ function AnalysisDialog({
 
     return (
         <>
-            <Tooltip2 content="Start new analysis or modify parameters" position={Position.BOTTOM}>
+            <Tooltip2 content="Start a new analysis or modify the parameters for an existing analysis." position={Position.BOTTOM}>
                 <Button onClick={handleButtonClick} icon="social-media" intent="primary" text={buttonText} />
             </Tooltip2>
             <Dialog className="analysis-dialog" {...props} isOpen={isOpen} onClose={handleClose}>
