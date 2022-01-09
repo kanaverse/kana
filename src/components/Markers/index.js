@@ -560,8 +560,10 @@ const MarkerPlot = () => {
                                                         var gindex = selectedClusterIndex[row.gene];
                                                         tmp[gindex].expanded = !tmp[gindex].expanded;
                                                         setSelectedClusterSummary(tmp);
-                                                        if (!rowExpr) {
+                                                        if (!rowExpr && tmp[gindex].expanded) {
                                                             setReqGene(row.gene);
+                                                        } else {
+                                                            setReqGene(null);
                                                         }
                                                     }}
                                                 >
