@@ -249,13 +249,13 @@ const MarkerPlot = () => {
                                             </HTMLSelect>
                                         </span>
                                         <span>Log-FC &nbsp;
-                                            <Tooltip2 content="Log fold change" openOnTargetFocus={false}>
+                                            <Tooltip2 content="Log-fold change in expression between cells inside and outside the cluster. Use the color scale below to apply a filter on this statistic." openOnTargetFocus={false}>
                                                 <Icon style={{
                                                     marginBottom: '1px'
                                                 }} size={8} icon="help"></Icon>
                                             </Tooltip2></span>
                                         <span>Δ-detected &nbsp;
-                                            <Tooltip2 content="delta detected" openOnTargetFocus={false}>
+                                            <Tooltip2 content="Difference in the proportion of detected genes inside and outside the cluster. Use the color scale below to apply a filter on this statistic." openOnTargetFocus={false}>
                                                 <Icon style={{
                                                     marginBottom: '1px'
                                                 }} size={8} icon="help"></Icon>
