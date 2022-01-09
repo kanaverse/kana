@@ -9,7 +9,7 @@ import {
 import { Tooltip2 } from "@blueprintjs/popover2";
 
 import { AppContext } from '../../context/AppContext';
-import {getMinMax} from './utils';
+import { getMinMax } from './utils';
 
 import Rainbow from './rainbowvis';
 import { randomColor } from 'randomcolor';
@@ -17,7 +17,7 @@ import { randomColor } from 'randomcolor';
 import "./ScatterPlot.css";
 import { AppToaster } from "../Spinners/AppToaster";
 
-const DimPlot = () => {
+const DimPlot = (props) => {
     const container = useRef();
 
     // ref to the plot object
@@ -37,9 +37,9 @@ const DimPlot = () => {
 
     const { redDims, defaultRedDims, setDefaultRedDims, clusterData,
         tsneData, umapData, clusterColors, setClusterColors,
-        gene, setGene, selectedClusterSummary,
+        gene, setGene, selectedClusterIndex, selectedClusterSummary,
         customSelection, setCustomSelection,
-        setDelCustomSelection,
+        setDelCustomSelection, setShowAnimation,
         showAnimation, setTriggerAnimation,
         savedPlot, setSavedPlot, selectedCluster,
         genesInfo, geneColSel } = useContext(AppContext);
@@ -58,8 +58,11 @@ const DimPlot = () => {
             setGradient(null);
         }
 
-        if (selectedClusterSummary?.[gene]?.expr) {
-            let exprMinMax = getMinMax(selectedClusterSummary?.[gene]?.expr);
+        let index = selectedClusterIndex?.[gene];
+        let expr = selectedClusterSummary?.[index]?.expr;
+
+        if (expr) {
+            let exprMinMax = getMinMax(expr);
             let val = exprMinMax[1] === 0 ? 0.01 : exprMinMax[1];
             let tmpgradient = new Rainbow();
             tmpgradient.setSpectrum('#F5F8FA', "#2965CC");
@@ -70,11 +73,11 @@ const DimPlot = () => {
                 setExprMinMax([0, val]);
             } else {
                 setShowGradient(false);
-                AppToaster.show({icon:"warning-sign", intent: "warning", message: `${genesInfo[geneColSel][selectedClusterSummary?.[gene]?.row]} is not expressed in any cell (mean = 0)`})
+                AppToaster.show({ icon: "warning-sign", intent: "warning", message: `${genesInfo[geneColSel][gene]} is not expressed in any cell (mean = 0)` })
             }
             setGradient(tmpgradient);
         }
-    }, [selectedClusterSummary?.[gene]?.expr], gene);
+    }, [selectedClusterIndex?.[gene], selectedClusterSummary?.[selectedClusterIndex?.[gene]]?.expr], gene);
 
     // hook to also react when user changes the slider
     useEffect(() => {
@@ -127,10 +130,15 @@ const DimPlot = () => {
             }
 
             let data = null;
-            if (defaultRedDims === "TSNE") {
-                data = tsneData;
-            } else if (defaultRedDims === "UMAP") {
-                data = umapData;
+
+            if (showAnimation) {
+                data = props?.animateData;
+            } else {
+                if (defaultRedDims === "TSNE") {
+                    data = tsneData;
+                } else if (defaultRedDims === "UMAP") {
+                    data = umapData;
+                }
             }
 
             // if dimensions are available
@@ -179,19 +187,23 @@ const DimPlot = () => {
                         }
                     }
 
-                    if (gene !== null && Array.isArray(selectedClusterSummary?.[gene]?.expr)) {
+                    if (gene !== null) {
+                        let index = selectedClusterIndex?.[gene];
+                        let expr = selectedClusterSummary?.[index]?.expr;
 
-                        return "#" + gradient.colorAt(selectedClusterSummary?.[gene]?.expr?.[i]);
-                        // if we want per cell gradient 
-                        // let colorGradients = cluster_colors.map(x => {
-                        //     var gradient = new Rainbow();
-                        //     gradient.setSpectrum('#D3D3D3', x);
-                        //     let val = exprMinMax[1] === 0 ? 0.01 : exprMinMax[1];
-                        //     gradient.setNumberRange(0, val);
-                        //     return gradient;
-                        // });
+                        if (Array.isArray(expr)) {
+                            return "#" + gradient.colorAt(expr?.[i]);
+                            // if we want per cell gradient 
+                            // let colorGradients = cluster_colors.map(x => {
+                            //     var gradient = new Rainbow();
+                            //     gradient.setSpectrum('#D3D3D3', x);
+                            //     let val = exprMinMax[1] === 0 ? 0.01 : exprMinMax[1];
+                            //     gradient.setNumberRange(0, val);
+                            //     return gradient;
+                            // });
 
-                        // return "#" + colorGradients[cluster_mappings[i]].colorAt(selectedClusterSummary?.[gene]?.expr?.[i])
+                            // return "#" + colorGradients[cluster_mappings[i]].colorAt(selectedClusterSummary?.[gene]?.expr?.[i])
+                        }
                     }
 
                     if (clusHighlight != null && String(clusHighlight).startsWith("cs")) {
@@ -203,9 +215,9 @@ const DimPlot = () => {
                 });
             }
         }
-    }, [tsneData, umapData, defaultRedDims, gradient, clusHighlight]);
+    }, [tsneData, umapData, props?.animateData, defaultRedDims, gradient, clusHighlight]);
 
-    const setInteraction = (x) => {        
+    const setInteraction = (x) => {
         if (x === "SELECT") {
             scatterplot.setSelectMode();
             setPlotMode("SELECT");
@@ -245,7 +257,7 @@ const DimPlot = () => {
             // preserve drawing buffers is false, so render and capture state right away
             scatterplot.renderScatterPlot();
             const iData = scatterplot.scatterPlot.renderer.domElement.toDataURL();
-            
+
             let tmp = [...savedPlot];
 
             tmp.push({
@@ -303,7 +315,10 @@ const DimPlot = () => {
                     }}>
                     <Tooltip2 content="Interactively visualize embeddings">
                         <Button icon="play"
-                            onClick={() => setTriggerAnimation(true)}>Animate</Button>
+                            onClick={() => {
+                                setShowAnimation(true); 
+                                setTriggerAnimation(true)
+                            }}>Animate</Button>
                     </Tooltip2>
                     <Tooltip2 content="Save this embedding">
                         <Button icon="inheritance"
@@ -446,11 +461,11 @@ const DimPlot = () => {
                         <div className='right-sidebar-slider'>
                             <Divider />
                             <Callout>
-                                <span>Gradient for <Tag 
-                                minimal={true}
-                                intent='primary' onRemove={() => {
-                                    setGene(null);
-                                }}>{genesInfo[geneColSel][selectedClusterSummary?.[gene]?.row]}</Tag>&nbsp;
+                                <span>Gradient for <Tag
+                                    minimal={true}
+                                    intent='primary' onRemove={() => {
+                                        setGene(null);
+                                    }}>{genesInfo[geneColSel][gene]}</Tag>&nbsp;
                                     <Tooltip2 content="Use the slider to adjust the color gradient of the plot. Useful when data is skewed
                                 by either a few lowly or highly expressed cells" openOnTargetFocus={false}>
                                         <Icon icon="help"></Icon>

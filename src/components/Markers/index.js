@@ -123,7 +123,7 @@ const MarkerPlot = () => {
 
         if (!searchInput || searchInput === "") return sortedRows;
 
-        sortedRows = sortedRows.filter((x) => genesInfo[geneColSel][x.row].toLowerCase().indexOf(searchInput.toLowerCase()) !== -1);
+        sortedRows = sortedRows.filter((x) => genesInfo[geneColSel][x.gene].toLowerCase().indexOf(searchInput.toLowerCase()) !== -1);
         return sortedRows;
     }, [prosRecords, searchInput, markerFilter]);
 
@@ -268,11 +268,11 @@ const MarkerPlot = () => {
                                     <div>
                                         <div className='row-container'>
                                             <span style={{
-                                                color: row.index === gene ?
+                                                color: row.gene === gene ?
                                                     String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : clusterColors[selectedCluster]
                                                     : 'black'
                                             }}
-                                                className={row.index === gene ? 'marker-gene-title-selected' : 'marker-gene-title'}>{genesInfo[geneColSel][row.row]}</span>
+                                                className={row.gene === gene ? 'marker-gene-title-selected' : 'marker-gene-title'}>{genesInfo[geneColSel][row.gene]}</span>
                                             {
                                                 <Popover2
                                                     popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
@@ -290,7 +290,7 @@ const MarkerPlot = () => {
                                                             <table>
                                                                 <tr>
                                                                     <td></td>
-                                                                    <th scope="col">{genesInfo[geneColSel][row.row]}</th>
+                                                                    <th scope="col">{genesInfo[geneColSel][row.gene]}</th>
                                                                     <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
@@ -336,7 +336,7 @@ const MarkerPlot = () => {
                                                             <table>
                                                                 <tr>
                                                                     <td></td>
-                                                                    <th scope="col">{genesInfo[geneColSel][row.row]}</th>
+                                                                    <th scope="col">{genesInfo[geneColSel][row.gene]}</th>
                                                                     <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
@@ -381,7 +381,7 @@ const MarkerPlot = () => {
                                                             <table>
                                                                 <tr>
                                                                     <td></td>
-                                                                    <th scope="col">{genesInfo[geneColSel][row.row]}</th>
+                                                                    <th scope="col">{genesInfo[geneColSel][row.gene]}</th>
                                                                     <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
@@ -416,10 +416,10 @@ const MarkerPlot = () => {
                                                     className='row-action'
                                                     onClick={() => {
                                                         let tmp = [...selectedClusterSummary];
-                                                        tmp[row.index].expanded = !tmp[row.index].expanded;
+                                                        tmp[index].expanded = !tmp[index].expanded;
                                                         setSelectedClusterSummary(tmp);
                                                         if (!rowExpr) {
-                                                            setReqGene(row.row);
+                                                            setReqGene(row.gene);
                                                         }
                                                     }}
                                                 >
@@ -427,18 +427,18 @@ const MarkerPlot = () => {
                                                 <Button small={true} fill={false}
                                                     className='row-action'
                                                     onClick={() => {
-                                                        if (row.index === gene) {
+                                                        if (row.gene === gene) {
                                                             setGene(null);
                                                         } else {
-                                                            setGene(row.index);
+                                                            setGene(row.gene);
                                                             if (!rowExpr) {
-                                                                setReqGene(row.row);
+                                                                setReqGene(row.gene);
                                                             }
                                                         }
                                                     }}
                                                 >
                                                     <Icon icon={'tint'}
-                                                        color={row.index === gene ?
+                                                        color={row.gene === gene ?
                                                             String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : clusterColors[selectedCluster]
                                                             : ''}
                                                     ></Icon>

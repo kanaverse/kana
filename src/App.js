@@ -19,6 +19,8 @@ function App() {
 
   // show loading screen ?
   const [loading, setLoading] = useState(true);
+  // use local state for tsne/umap animation
+  const [animateData, setAnimateData] = useState(null);
   // props for dialogs
   const loadingProps = {
     autoFocus: true,
@@ -36,6 +38,7 @@ function App() {
     setUmapData, setPcaVarExp, logs, setLogs,
     selectedCluster, clusterRank,
     selectedClusterSummary, setSelectedClusterSummary,
+    selectedClusterIndex, setSelectedClusterIndex,
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection,
     setSelectedCluster, setShowGame, showGame, datasetName, setExportState,
@@ -167,53 +170,47 @@ function App() {
 
       // show markers for the first cluster
       setSelectedCluster(0);
-    } else if (payload.type === "tsne_DATA" || payload.type === "tsne_iter") {
+    } else if (payload.type === "tsne_DATA") {
       const { resp } = payload;
       setTsneData(resp);
-      setShowAnimation(true);
 
-      // assuming the last response is _data
-      if (payload.type === "tsne_DATA") {
-
-        let tmp = [...redDims];
-        tmp.push("TSNE");
-        // once t-SNE is available, set this as the default display
-        if (!defaultRedDims) {
-          setDefaultRedDims("TSNE");
-        }
-
-        setRedDims(tmp);
-        // also don't show the pong game anymore
-        setShowGame(false);
-
-        setShowAnimation(false);
-        setTriggerAnimation(false);
+      let tmp = [...redDims];
+      tmp.push("TSNE");
+      // once t-SNE is available, set this as the default display
+      if (!defaultRedDims) {
+        setDefaultRedDims("TSNE");
       }
-    } else if (payload.type === "umap_DATA" || payload.type === "umap_iter") {
+
+      setRedDims(tmp);
+      // also don't show the pong game anymore
+      setShowGame(false);
+      setShowAnimation(false);
+      setTriggerAnimation(false);
+
+    } else if (payload.type === "tsne_iter" || payload.type === "umap_iter") {
+      const { resp } = payload;
+      setAnimateData(resp);
+    } else if (payload.type === "umap_DATA") {
       const { resp } = payload;
       setUmapData(resp);
-      setShowAnimation(true);
 
-      // assuming the last response is _data
-      if (payload.type === "umap_DATA") {
+      // enable UMAP selection
+      let tmp = [...redDims];
+      tmp.push("UMAP");
+      setRedDims(tmp);
 
-        // enable UMAP selection
-        let tmp = [...redDims];
-        tmp.push("UMAP");
-        setRedDims(tmp);
-
-        setShowAnimation(false);
-        setTriggerAnimation(false);
-      }
+      setShowAnimation(false);
+      setTriggerAnimation(false);
     } else if (payload.type === "markerGene_DATA") {
     } else if (payload.type === "setMarkersForCluster"
       || payload.type === "setMarkersForCustomSelection") {
       const { resp } = payload;
       let records = [];
+      let index = Array(resp.ordering.length);
       resp.means.forEach((x, i) => {
+        index[resp.ordering[i]] = i;
         records.push({
-          "index": i,
-          "row": resp?.ordering?.[i],
+          "gene": resp?.ordering?.[i],
           "mean": x,
           "delta": resp?.delta_detected?.[i],
           "lfc": resp?.lfc?.[i],
@@ -222,16 +219,12 @@ function App() {
           "expr": null,
         });
       });
+      setSelectedClusterIndex(index);
       setSelectedClusterSummary(records);
     } else if (payload.type === "setGeneExpression") {
       const { resp } = payload;
       let tmp = [...selectedClusterSummary];
-      for (var i = 0; i < tmp.length; i++) {
-        if (resp.gene === tmp[i].row) {
-          tmp[i].expr = Object.values(resp.expr);
-          break;
-        }
-      }
+      tmp[selectedClusterIndex[resp.gene]].expr = Object.values(resp.expr);
       setSelectedClusterSummary(tmp);
     } else if (payload.type === "exportState") {
       const { resp } = payload;
@@ -264,7 +257,7 @@ function App() {
         <div className="plot">
           {
             defaultRedDims ?
-              <DimPlot /> :
+              <DimPlot animateData={animateData}/> :
               showGame ?
                 <div style={{
                   height: '100%',
