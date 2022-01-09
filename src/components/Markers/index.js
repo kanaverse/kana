@@ -19,7 +19,7 @@ const MarkerPlot = () => {
     const {
         genesInfo, clusterData, selectedClusterSummary, setSelectedClusterSummary,
         selectedCluster, setSelectedCluster, setClusterRank,
-        setReqGene, clusterColors, gene, setGene,
+        setReqGene, clusterColors, gene, setGene, selectedClusterIndex,
         customSelection, geneColSel, setGeneColSel } = useContext(AppContext);
 
     // what cluster is selected
@@ -207,7 +207,6 @@ const MarkerPlot = () => {
                 clusSel ?
                     <HTMLSelect
                         onChange={(x) => {
-                            setGene(null);
                             let tmpselection = x.currentTarget?.value;
                             if (tmpselection.startsWith("Cluster")) {
                                 tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1
@@ -361,7 +360,7 @@ const MarkerPlot = () => {
                                                 }} elevation={Elevation.ZERO}>
                                                     <p>
                                                         Difference in the proportion of detected genes inside and outside the cluster.</p>
-                                                        <p>Use the color scale below to apply a filter on this statistic.</p>
+                                                    <p>Use the color scale below to apply a filter on this statistic.</p>
                                                 </Card>}>
                                             <span style={{
                                                 textDecoration: "underline",
@@ -558,7 +557,8 @@ const MarkerPlot = () => {
                                                     className='row-action'
                                                     onClick={() => {
                                                         let tmp = [...selectedClusterSummary];
-                                                        tmp[index].expanded = !tmp[index].expanded;
+                                                        var gindex = selectedClusterIndex[row.gene];
+                                                        tmp[gindex].expanded = !tmp[gindex].expanded;
                                                         setSelectedClusterSummary(tmp);
                                                         if (!rowExpr) {
                                                             setReqGene(row.gene);
