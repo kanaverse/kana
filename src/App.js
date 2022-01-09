@@ -36,6 +36,7 @@ function App() {
     setUmapData, setPcaVarExp, logs, setLogs,
     selectedCluster, clusterRank,
     selectedClusterSummary, setSelectedClusterSummary,
+    selectedClusterIndex, setSelectedClusterIndex,
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection,
     setSelectedCluster, setShowGame, showGame, datasetName, setExportState,
@@ -210,10 +211,11 @@ function App() {
       || payload.type === "setMarkersForCustomSelection") {
       const { resp } = payload;
       let records = [];
+      let index = Array(resp.ordering.length);
       resp.means.forEach((x, i) => {
+        index[resp.ordering[i]] = i;
         records.push({
-          "index": i,
-          "row": resp?.ordering?.[i],
+          "gene": resp?.ordering?.[i],
           "mean": x,
           "delta": resp?.delta_detected?.[i],
           "lfc": resp?.lfc?.[i],
@@ -222,16 +224,12 @@ function App() {
           "expr": null,
         });
       });
+      setSelectedClusterIndex(index);
       setSelectedClusterSummary(records);
     } else if (payload.type === "setGeneExpression") {
       const { resp } = payload;
       let tmp = [...selectedClusterSummary];
-      for (var i = 0; i < tmp.length; i++) {
-        if (resp.gene === tmp[i].row) {
-          tmp[i].expr = Object.values(resp.expr);
-          break;
-        }
-      }
+      tmp[selectedClusterIndex[resp.gene]].expr = Object.values(resp.expr);
       setSelectedClusterSummary(tmp);
     } else if (payload.type === "exportState") {
       const { resp } = payload;

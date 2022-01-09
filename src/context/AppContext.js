@@ -106,6 +106,8 @@ const AppContextProvider = ({ children }) => {
   const [selectedCluster, setSelectedCluster] = useState(null);
   // cohen, mean scores per gene
   const [selectedClusterSummary, setSelectedClusterSummary] = useState([]);
+  // ordering of genes for the selected cluster
+  const [selectedClusterIndex, setSelectedClusterIndex] = useState([]);
   // set cluster colors
   const [clusterColors, setClusterColors] = useState(null);
   // set Cluster rank-type
@@ -257,6 +259,7 @@ const AppContextProvider = ({ children }) => {
         logs, setLogs,
         selectedCluster, setSelectedCluster,
         selectedClusterSummary, setSelectedClusterSummary,
+        selectedClusterIndex, setSelectedClusterIndex,
         clusterRank, setClusterRank,
         gene, setGene,
         clusterColors, setClusterColors,

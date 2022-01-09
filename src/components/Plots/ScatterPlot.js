@@ -37,7 +37,7 @@ const DimPlot = () => {
 
     const { redDims, defaultRedDims, setDefaultRedDims, clusterData,
         tsneData, umapData, clusterColors, setClusterColors,
-        gene, setGene, selectedClusterSummary,
+        gene, setGene, selectedClusterIndex, selectedClusterSummary,
         customSelection, setCustomSelection,
         setDelCustomSelection,
         showAnimation, setTriggerAnimation,
@@ -58,8 +58,11 @@ const DimPlot = () => {
             setGradient(null);
         }
 
-        if (selectedClusterSummary?.[gene]?.expr) {
-            let exprMinMax = getMinMax(selectedClusterSummary?.[gene]?.expr);
+        let index = selectedClusterIndex?.[gene];
+        let expr = selectedClusterSummary?.[index]?.expr;
+
+        if (expr) {
+            let exprMinMax = getMinMax(expr);
             let val = exprMinMax[1] === 0 ? 0.01 : exprMinMax[1];
             let tmpgradient = new Rainbow();
             tmpgradient.setSpectrum('#F5F8FA', "#2965CC");
@@ -70,11 +73,11 @@ const DimPlot = () => {
                 setExprMinMax([0, val]);
             } else {
                 setShowGradient(false);
-                AppToaster.show({icon:"warning-sign", intent: "warning", message: `${genesInfo[geneColSel][selectedClusterSummary?.[gene]?.row]} is not expressed in any cell (mean = 0)`})
+                AppToaster.show({icon:"warning-sign", intent: "warning", message: `${genesInfo[geneColSel][gene]} is not expressed in any cell (mean = 0)`})
             }
             setGradient(tmpgradient);
         }
-    }, [selectedClusterSummary?.[gene]?.expr], gene);
+    }, [selectedClusterIndex?.[gene], selectedClusterSummary?.[selectedClusterIndex?.[gene]]?.expr], gene);
 
     // hook to also react when user changes the slider
     useEffect(() => {
@@ -179,19 +182,23 @@ const DimPlot = () => {
                         }
                     }
 
-                    if (gene !== null && Array.isArray(selectedClusterSummary?.[gene]?.expr)) {
+                    if (gene !== null) {
+                        let index = selectedClusterIndex?.[gene];
+                        let expr = selectedClusterSummary?.[index]?.expr;
 
-                        return "#" + gradient.colorAt(selectedClusterSummary?.[gene]?.expr?.[i]);
-                        // if we want per cell gradient 
-                        // let colorGradients = cluster_colors.map(x => {
-                        //     var gradient = new Rainbow();
-                        //     gradient.setSpectrum('#D3D3D3', x);
-                        //     let val = exprMinMax[1] === 0 ? 0.01 : exprMinMax[1];
-                        //     gradient.setNumberRange(0, val);
-                        //     return gradient;
-                        // });
+                        if (Array.isArray(expr)) {
+                            return "#" + gradient.colorAt(expr?.[i]);
+                            // if we want per cell gradient 
+                            // let colorGradients = cluster_colors.map(x => {
+                            //     var gradient = new Rainbow();
+                            //     gradient.setSpectrum('#D3D3D3', x);
+                            //     let val = exprMinMax[1] === 0 ? 0.01 : exprMinMax[1];
+                            //     gradient.setNumberRange(0, val);
+                            //     return gradient;
+                            // });
 
-                        // return "#" + colorGradients[cluster_mappings[i]].colorAt(selectedClusterSummary?.[gene]?.expr?.[i])
+                            // return "#" + colorGradients[cluster_mappings[i]].colorAt(selectedClusterSummary?.[gene]?.expr?.[i])
+                        } 
                     }
 
                     if (clusHighlight != null && String(clusHighlight).startsWith("cs")) {
@@ -450,7 +457,7 @@ const DimPlot = () => {
                                 minimal={true}
                                 intent='primary' onRemove={() => {
                                     setGene(null);
-                                }}>{genesInfo[geneColSel][selectedClusterSummary?.[gene]?.row]}</Tag>&nbsp;
+                                }}>{genesInfo[geneColSel][gene]}</Tag>&nbsp;
                                     <Tooltip2 content="Use the slider to adjust the color gradient of the plot. Useful when data is skewed
                                 by either a few lowly or highly expressed cells" openOnTargetFocus={false}>
                                         <Icon icon="help"></Icon>
