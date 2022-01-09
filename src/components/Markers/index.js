@@ -174,6 +174,26 @@ const MarkerPlot = () => {
         }
     };
 
+    const get_marker_description = () => {
+        return (
+            <>
+                <p>Choose the effect size and summary statistic to use for ranking markers. For each gene, effect sizes are computed by pairwise comparisons between clusters:</p>
+                <ul>
+                    <li><strong><em>Cohen's d</em></strong> is the ratio of the log-fold change to the average standard deviation between two clusters.</li>
+                    <li>The area under the curve (<strong><em>AUC</em></strong>) is the probability that a randomly chosen observation from one cluster is greater than a randomly chosen observation from another cluster.</li>
+                    <li>The log-fold change (<strong><em>lfc</em></strong>) is the difference in the mean log-expression between two clusters.</li>
+                    <li>The <strong><em>Δ-detected</em></strong> is the difference in the detected proportions between two clusters.</li>
+                </ul>
+                <p>For each cluster, the effect sizes from the comparisons to all other clusters are summarized into a single statistic for ranking purposes:</p>
+                <ul>
+                    <li><strong><em>mean</em></strong> uses the mean effect sizes from all pairwise comparisons. This generally provides a good compromise between exclusitivity and robustness.</li>
+                    <li><strong><em>min</em></strong> uses the minimum effect size from all pairwise comparisons. This promotes markers that are exclusively expressed in the chosen cluster, but will perform poorly if no such genes exist.</li>
+                    <li><strong><em>min-rank</em></strong> ranks genes according to their best rank in each of the individual pairwise comparisons. This is the most robust as the combination of top-ranked genes will always be able to distinguish the chosen cluster from the other clusters, but may not give high rankings to exclusive genes.</li>
+                </ul>
+            </>
+        )
+    }
+
     return (
         <div className='marker-container'>
             <H4>Marker Genes
@@ -194,19 +214,7 @@ const MarkerPlot = () => {
                         }} elevation={Elevation.ZERO}
                         >
                             <H5>Explore markers for various clusters</H5>
-                            <p>Choose the effect size and summary statistic to use for ranking markers. For each gene, effect sizes are computed by pairwise comparisons between clusters:</p>
-                            <ul>
-                                <li><strong><em>Cohen's d</em></strong> is the ratio of the log-fold change to the average standard deviation between two clusters.</li>
-                                <li>The area under the curve (<strong><em>AUC</em></strong>) is the probability that a randomly chosen observation from one cluster is greater than a randomly chosen observation from another cluster.</li>
-                                <li>The log-fold change (<strong><em>lfc</em></strong>) is the difference in the mean log-expression between two clusters.</li>
-                                <li>The <strong><em>Δ-detected</em></strong> is the difference in the detected proportions between two clusters.</li>
-                            </ul>
-                            <p>For each cluster, the effect sizes from the comparisons to all other clusters are summarized into a single statistic for ranking purposes:</p>
-                            <ul>
-                                <li><strong><em>mean</em></strong> uses the mean effect sizes from all pairwise comparisons. This generally provides a good compromise between exclusitivity and robustness.</li>
-                                <li><strong><em>min</em></strong> uses the minimum effect size from all pairwise comparisons. This promotes markers that are exclusively expressed in the chosen cluster, but will perform poorly if no such genes exist.</li>
-                                <li><strong><em>min-rank</em></strong> ranks genes according to their best rank in each of the individual pairwise comparisons. This is the most robust as the combination of top-ranked genes will always be able to distinguish the chosen cluster from the other clusters, but may not give high rankings to exclusive genes.</li>
-                            </ul>
+                            {get_marker_description()}
                         </Card>
                     }
                 >
@@ -268,19 +276,7 @@ const MarkerPlot = () => {
                                             width: '450px'
                                         }} elevation={Elevation.ZERO}
                                         >
-                                            <p>Choose the effect size and summary statistic to use for ranking markers. For each gene, effect sizes are computed by pairwise comparisons between clusters:</p>
-                                            <ul>
-                                                <li><strong><em>Cohen's d</em></strong> is the ratio of the log-fold change to the average standard deviation between two clusters.</li>
-                                                <li>The area under the curve (<strong><em>AUC</em></strong>) is the probability that a randomly chosen observation from one cluster is greater than a randomly chosen observation from another cluster.</li>
-                                                <li>The log-fold change (<strong><em>lfc</em></strong>) is the difference in the mean log-expression between two clusters.</li>
-                                                <li>The <strong><em>Δ-detected</em></strong> is the difference in the detected proportions between two clusters.</li>
-                                            </ul>
-                                            <p>For each cluster, the effect sizes from the comparisons to all other clusters are summarized into a single statistic for ranking purposes:</p>
-                                            <ul>
-                                                <li><strong><em>mean</em></strong> uses the mean effect sizes from all pairwise comparisons. This generally provides a good compromise between exclusitivity and robustness.</li>
-                                                <li><strong><em>min</em></strong> uses the minimum effect size from all pairwise comparisons. This promotes markers that are exclusively expressed in the chosen cluster, but will perform poorly if no such genes exist.</li>
-                                                <li><strong><em>min-rank</em></strong> ranks genes according to their best rank in each of the individual pairwise comparisons. This is the most robust as the combination of top-ranked genes will always be able to distinguish the chosen cluster from the other clusters, but may not give high rankings to exclusive genes.</li>
-                                            </ul>
+                                            {get_marker_description()}
                                         </Card>
                                     }
                                 >
