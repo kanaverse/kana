@@ -11,8 +11,17 @@ const HeatmapCell = (props) => {
     let minmax = props?.minmax;
 
     // inverted scale - blue for +ve, red for -ve
-    const detectedScale = d3.scaleSequential(d3.interpolateRdYlBu)
-        .domain([minmax[1], minmax[0]]);
+    var lower = minmax[0];
+    var upper = minmax[1];
+
+    var limit = 0;
+    if (lower < 0) {
+        limit = -lower;
+    }
+    if (upper > 0 && upper > limit) {
+        limit = upper;
+    }
+    const detectedScale = d3.scaleSequential(d3.interpolateRdYlBu).domain([limit, -limit]);
 
     if (!propwidth) {
         propwidth = "100%";

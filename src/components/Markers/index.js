@@ -13,7 +13,6 @@ import Histogram from '../Plots/Histogram';
 
 import Cell from '../Plots/Cell.js';
 import HeatmapCell from '../Plots/HeatmapCell';
-
 import './markers.css';
 
 const MarkerPlot = () => {
@@ -163,6 +162,28 @@ const MarkerPlot = () => {
         tmp[key] = val;
         setMarkerFilter(tmp);
     }
+
+    const createColorScale = (lower, upper) => {
+        if (lower > 0) {
+            return `linear-gradient(to right, yellow 0%, red 100%)`;
+        } else if (upper < 0) {
+            return `linear-gradient(to right, blue 0%, yellow 100%)`;
+        } else {
+            var limit = 0;
+            if (lower < 0) {
+                limit = -lower;
+            }
+            if (upper > 0 && upper > limit) {
+                limit = upper;
+            }
+            var scaler = d3.scaleSequential(d3.interpolateRdYlBu).domain([limit, -limit]);
+
+            var leftcol = scaler(lower);
+            var rightcol = scaler(upper);
+            var midprop = Math.round(-lower / (upper - lower) * 100);
+            return `linear-gradient(to right, ${leftcol} 0%, yellow ${midprop}%, ${rightcol} 100%)`;
+        }
+    };
 
     return (
         <div className='marker-container'>
@@ -467,7 +488,7 @@ const MarkerPlot = () => {
                                         <div className='marker-filter-gradient'>
                                             <div
                                                 style={{
-                                                    backgroundImage: `linear-gradient(to right, blue 33%, yellow 50%, red 100%)`,
+                                                    backgroundImage: createColorScale(lfcMinMax[0], lfcMinMax[1]),
                                                     width: '100%', height: '5px',
                                                 }}></div>&nbsp;
                                         </div>
@@ -492,7 +513,7 @@ const MarkerPlot = () => {
                                         <div className='marker-filter-gradient'>
                                             <div
                                                 style={{
-                                                    backgroundImage: `linear-gradient(to right, blue 33%, yellow 50%, red 100%)`,
+                                                    backgroundImage: createColorScale(deltaMinMax[0], deltaMinMax[1]),
                                                     width: '100%', height: '5px',
                                                 }}></div>&nbsp;
                                         </div>
@@ -510,7 +531,7 @@ const MarkerPlot = () => {
                             </div>
 
                             <div className='marker-filter-container'>
-                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Mean</Tag>
+                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Expression (mean)</Tag>
                                 {/* <Histogram data={means} height={35} minmax={meanMinMax} /> */}
                                 {meanMinMax &&
                                     <div className='marker-slider-container'>
@@ -535,7 +556,7 @@ const MarkerPlot = () => {
                             </div>
 
                             <div className='marker-filter-container'>
-                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Detected</Tag>
+                                <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Expression (detected)</Tag>
                                 {/* <Histogram data={detects} height={35} minmax={detectedMinMax} /> */}
                                 {detectedMinMax &&
                                     <div className='marker-slider-container'>
