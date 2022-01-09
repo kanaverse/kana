@@ -249,25 +249,72 @@ const MarkerPlot = () => {
                                             </HTMLSelect>
                                         </span>
                                         <span>Log-FC &nbsp;
-                                            <Tooltip2 content="Log-fold change in expression between cells inside and outside the cluster. Use the color scale below to apply a filter on this statistic." openOnTargetFocus={false}>
+                                            <Popover2
+                                                popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                                hasBackdrop={false}
+                                                interactionKind="hover"
+                                                placement='auto'
+                                                hoverOpenDelay={500}
+                                                modifiers={{
+                                                    arrow: { enabled: true },
+                                                    flip: { enabled: true },
+                                                    preventOverflow: { enabled: true },
+                                                }}
+                                                content={
+                                                    <Card elevation={Elevation.ZERO}>
+                                                        Log-fold change in expression between cells inside and outside the cluster. <br />
+                                                        Use the color scale below to apply a filter on this statistic.</Card>
+                                                }>
                                                 <Icon style={{
                                                     marginBottom: '1px'
                                                 }} size={8} icon="help"></Icon>
-                                            </Tooltip2></span>
+                                            </Popover2></span>
                                         <span>Δ-detected &nbsp;
-                                            <Tooltip2 content="Difference in the proportion of detected genes inside and outside the cluster. Use the color scale below to apply a filter on this statistic." openOnTargetFocus={false}>
+                                            <Popover2
+                                                popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                                hasBackdrop={false}
+                                                interactionKind="hover"
+                                                placement='auto'
+                                                hoverOpenDelay={500}
+                                                modifiers={{
+                                                    arrow: { enabled: true },
+                                                    flip: { enabled: true },
+                                                    preventOverflow: { enabled: true },
+                                                }}
+                                                content={
+                                                    <Card elevation={Elevation.ZERO}>
+                                                        <p>
+                                                            Difference in the proportion of detected genes inside and outside the cluster. <br />
+                                                            Use the color scale below to apply a filter on this statistic.
+                                                        </p>
+                                                    </Card>}>
                                                 <Icon style={{
                                                     marginBottom: '1px'
                                                 }} size={8} icon="help"></Icon>
-                                            </Tooltip2></span>
+                                            </Popover2></span>
                                         <span>Expression &nbsp;
-                                            <Tooltip2 content="The intensity of color represents the mean expression of the gene in this cluster, while the length of the bar represents the percentage of cells in which any expression is detected." openOnTargetFocus={false}>
+                                            <Popover2
+                                                popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                                hasBackdrop={false}
+                                                interactionKind="hover"
+                                                placement='auto'
+                                                hoverOpenDelay={500}
+                                                modifiers={{
+                                                    arrow: { enabled: true },
+                                                    flip: { enabled: true },
+                                                    preventOverflow: { enabled: true },
+                                                }}
+                                                content={
+                                                    <Card elevation={Elevation.ZERO}>
+                                                        <p>The intensity of color represents the mean expression of the gene in this cluster, <br />
+                                                            while the length of the bar represents the percentage of cells in which any expression is detected.
+                                                        </p>
+                                                    </Card>}>
                                                 <Icon style={{
                                                     marginBottom: '1px'
                                                 }} size={8} icon="help"></Icon>
-                                            </Tooltip2>
+                                            </Popover2>
                                         </span>
-                                        <span></span>
                                     </div>)
                                 }
                             }}

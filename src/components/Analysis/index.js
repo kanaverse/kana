@@ -571,8 +571,8 @@ function AnalysisDialog({
                                                         </span>
                                                     </Text>
                                                     <NumericInput
-                                                        placeholder="500" value={tmpInputParams["umap"]["umap-epoch"]}
-                                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-epoch": nval } }) }} />
+                                                        placeholder="500" value={tmpInputParams["umap"]["umap-epochs"]}
+                                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-epochs": nval } }) }} />
                                                 </Label>
                                             </div>
                                         </div>
@@ -599,45 +599,45 @@ function AnalysisDialog({
                                         <Callout intent="primary">
                                             <p>We currently support several common file formats for single-cell RNA-seq count data.</p>
                                             <p>
-                                            <strong>A count matrix in the Matrix Market (<code>*.mtx</code>) format.</strong>
-                                            This file may be Gzip-compressed, in which case we expect it to have a <code>*.mtx.gz</code> extension.
-                                            We assume that the matrix has already been filtered to remove empty droplets.
-                                            We also recommend supplying the feature annotation as an additional TSV file with gene identifiers and symbols -
-                                            this is usually called <code>features.tsv.gz</code> or <code>genes.tsv</code> in the output of processing pipelines like Cellranger.
+                                                <strong>A count matrix in the Matrix Market (<code>*.mtx</code>) format.</strong>
+                                                This file may be Gzip-compressed, in which case we expect it to have a <code>*.mtx.gz</code> extension.
+                                                We assume that the matrix has already been filtered to remove empty droplets.
+                                                We also recommend supplying the feature annotation as an additional TSV file with gene identifiers and symbols -
+                                                this is usually called <code>features.tsv.gz</code> or <code>genes.tsv</code> in the output of processing pipelines like Cellranger.
                                             </p>
                                             <p>
-                                            <strong>A count matrix in the 10X matrix HDF5 (<code>*.h5</code>) format.</strong>
-                                            We assume that the matrix has already been filtered to remove empty droplets.
-                                            This is usually called something like <code>filtered_feature_bc_matrix.h5</code> in the output of processing pipelines like Cellranger.
-                                            (Do not confuse this with the molecule information file, which is something different altogether.)
+                                                <strong>A count matrix in the 10X matrix HDF5 (<code>*.h5</code>) format.</strong>
+                                                We assume that the matrix has already been filtered to remove empty droplets.
+                                                This is usually called something like <code>filtered_feature_bc_matrix.h5</code> in the output of processing pipelines like Cellranger.
+                                                (Do not confuse this with the molecule information file, which is something different altogether.)
                                             </p>
                                             <p>
-                                            <strong>A count matrix in the H5AD (<code>*.h5ad</code>) format.</strong>
-                                            We assume that the count matrix is stored in the <code>X</code> group.
-                                            We will also try to guess which field in the <code>obs</code> annotation contains gene symbols.
+                                                <strong>A count matrix in the H5AD (<code>*.h5ad</code>) format.</strong>
+                                                We assume that the count matrix is stored in the <code>X</code> group.
+                                                We will also try to guess which field in the <code>obs</code> annotation contains gene symbols.
                                             </p>
                                         </Callout>
                                     }
                                     {showStepHelper == 2 &&
                                         <Callout intent="primary">
                                             <p>
-                                            Remove low-quality cells to ensure that they do not interfere with downstream steps.
-                                            This is achieved by computing per-cell quality control (QC) metrics such as the total count per cell, 
-                                            the total number of detected features and (if the feature annotation is supplied) the mitochondrial proportion in each cell.
-                                            Cells with low total counts/number of detected features or high mitochondrial proportions are filtered out.
-                                            We use an outlier-based approach to define the filter threshold for each metric,
-                                            under the assumption that most cells in the dataset are of acceptable quality.
+                                                Remove low-quality cells to ensure that they do not interfere with downstream steps.
+                                                This is achieved by computing per-cell quality control (QC) metrics such as the total count per cell,
+                                                the total number of detected features and (if the feature annotation is supplied) the mitochondrial proportion in each cell.
+                                                Cells with low total counts/number of detected features or high mitochondrial proportions are filtered out.
+                                                We use an outlier-based approach to define the filter threshold for each metric,
+                                                under the assumption that most cells in the dataset are of acceptable quality.
                                             </p>
                                             <p>
                                                 <strong>Number of MADs</strong>:
                                                 Number of median absolute deviations (MADs) from the median,
-                                                used to define a filter threshold in the appropriate direction for each QC metric. 
+                                                used to define a filter threshold in the appropriate direction for each QC metric.
                                                 Increasing this value will reduce the stringency of the filtering.
                                             </p>
                                             <p>
                                                 <strong>Use default mitochondrial list</strong>:
-                                                Should we identify mitochondrial genes in the dataset based on the in-built list of Ensembl identifiers and gene symbols for mitochondrial genes in human and mouse genomes?
-                                                This assumes that the dataset contains feature annotation with Ensembl identifiers or gene symbols. 
+                                                Should we identify mitochondrial genes in the dataset based on the <a href="https://github.com/jkanche/kana/blob/master/public/scran/mito.js" target="_blank"><strong>in-built list of Ensembl identifiers and gene symbols for mitochondrial genes in human and mouse genomes?</strong></a>
+                                                This assumes that the dataset contains feature annotation with Ensembl identifiers or gene symbols.
                                             </p>
                                             <p>
                                                 <strong>Mitochondrial gene prefix</strong>:
@@ -649,8 +649,8 @@ function AnalysisDialog({
                                     {showStepHelper == 3 &&
                                         <Callout intent="primary">
                                             <p>
-                                                Identify highly variable genes (HVGs) while accounting for the mean-variance relationship. 
-                                                We do so by fitting a mean-dependent trend to the variances computed from the log-transformed normalized expression values. 
+                                                Identify highly variable genes (HVGs) while accounting for the mean-variance relationship.
+                                                We do so by fitting a mean-dependent trend to the variances computed from the log-transformed normalized expression values.
                                                 HVGs are defined as those genes with the largest positive residuals from the trend, as these are more variable than expected from the trend.
                                                 The aim is to only use the HVGs in some downstream steps like the principal components analysis,
                                                 thereby improving computational efficiency and reducing uninteresting technical noise.
@@ -691,13 +691,13 @@ function AnalysisDialog({
                                         <Callout intent="primary">
                                             <p>
                                                 Cluster cells into discrete groupings based on their relative similarity in the low-dimensional PC space.
-                                                The set of clusters should be treated as a summary of the cellular heterogeneity in the population, 
+                                                The set of clusters should be treated as a summary of the cellular heterogeneity in the population,
                                                 allowing us to easily perform further characterization on subpopulations of interest, e.g., with marker detection.
                                                 Different clustering methods or parameters may provide different perspectives on the population structure in the dataset.
                                             </p>
                                             <p>
                                                 <strong>Method</strong>:
-                                                Clustering algorithm to use. 
+                                                Clustering algorithm to use.
                                                 Currently, we only support multi-level community detection on an shared nearest neighbor (SNN) graph,
                                                 where cells are the nodes and edges are created between neighboring cells.
                                             </p>
@@ -715,7 +715,7 @@ function AnalysisDialog({
                                                 <strong>Weighting scheme</strong>:
                                                 Weighting scheme to use for the edges of the SNN graph.
                                                 The <em>Rank</em> approach derives a weight from the rank of the closest shared neighbor;
-                                                the <em>Number</em> approach uses the number of shared neighbors; 
+                                                the <em>Number</em> approach uses the number of shared neighbors;
                                                 and the Jaccard approach uses the <em>Jaccard</em> index of the neighbor sets.
                                             </p>
                                             <p>
@@ -728,9 +728,9 @@ function AnalysisDialog({
                                     {showStepHelper == 6 &&
                                         <Callout intent="primary">
                                             <p>
-                                                Compute a t-SNE to visualize cells in two dimensions, 
+                                                Compute a t-SNE to visualize cells in two dimensions,
                                                 because our feeble human minds cannot interpret high-dimensional spaces.
-                                                Neighboring cells in the PC space are kept adjacent in the 2D embedding, 
+                                                Neighboring cells in the PC space are kept adjacent in the 2D embedding,
                                                 while dissimilar cells are placed (arbitrarily) far away.
                                             </p>
                                             <p>
@@ -740,7 +740,7 @@ function AnalysisDialog({
                                             </p>
                                             <p>
                                                 <strong>Iterations</strong>:
-                                                Number of t-SNE iterations. 
+                                                Number of t-SNE iterations.
                                                 Doesn't usually have much of an effect if you leave it as it is.
                                             </p>
                                         </Callout>
@@ -749,7 +749,7 @@ function AnalysisDialog({
                                         <Callout intent="primary">
                                             <p>
                                                 Create a UMAP plot to visualize cells in two dimensions.
-                                                Like the t-SNE, this aims to map cells from a high-dimensional space into a 2D embedding, 
+                                                Like the t-SNE, this aims to map cells from a high-dimensional space into a 2D embedding,
                                                 where neighboring cells are kept close together and dissimilar cells are placed far apart.
                                             </p>
                                             <p>
@@ -759,12 +759,12 @@ function AnalysisDialog({
                                             </p>
                                             <p>
                                                 <strong>Minimum distance</strong>:
-                                                Minimum distance between points. 
+                                                Minimum distance between points.
                                                 Smaller values result in a more tightly packed embedding and favor local structure.
                                             </p>
                                             <p>
                                                 <strong>Epochs</strong>:
-                                                Number of epochs to use for convergence. 
+                                                Number of epochs to use for convergence.
                                                 This doesn't really change all too much in the results.
                                             </p>
                                         </Callout>
@@ -882,30 +882,30 @@ function AnalysisDialog({
                                                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-nmads": nval } }) }} />
                                                         </Label>
                                                         <Label className="row-input">
-                                                    <Text className="text-100">
-                                                        <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(2)}>
-                                                            Use default mitochondrial list ?
-                                                        </span>
-                                                    </Text>
-                                                    <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-usemitodefault"]}
-                                                        innerLabelChecked="yes" innerLabel="no"
-                                                        onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-usemitodefault": e.target.checked } }) }} />
-                                                </Label>
-                                                {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
-                                                    <Text className="text-100">
-                                                        <span className="row-tooltip"
-                                                            onMouseEnter={() => setShowStepHelper(2)}>
-                                                            Mitochondrial gene prefix
-                                                        </span>
-                                                    </Text>
-                                                    <InputGroup
-                                                        leftIcon="filter"
-                                                        onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-mito": nval?.target?.value } }) }}
-                                                        placeholder="mt-"
-                                                        value={tmpInputParams["qc"]["qc-mito"]}
-                                                    />
-                                                </Label>}
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(2)}>
+                                                                    Use default mitochondrial list ?
+                                                                </span>
+                                                            </Text>
+                                                            <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-usemitodefault"]}
+                                                                innerLabelChecked="yes" innerLabel="no"
+                                                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-usemitodefault": e.target.checked } }) }} />
+                                                        </Label>
+                                                        {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
+                                                            <Text className="text-100">
+                                                                <span className="row-tooltip"
+                                                                    onMouseEnter={() => setShowStepHelper(2)}>
+                                                                    Mitochondrial gene prefix
+                                                                </span>
+                                                            </Text>
+                                                            <InputGroup
+                                                                leftIcon="filter"
+                                                                onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-mito": nval?.target?.value } }) }}
+                                                                placeholder="mt-"
+                                                                value={tmpInputParams["qc"]["qc-mito"]}
+                                                            />
+                                                        </Label>}
                                                     </div>
                                                 </div>
                                             </div>
@@ -1140,7 +1140,7 @@ function AnalysisDialog({
                                                             </Text>
                                                             <NumericInput
                                                                 placeholder="500" value={tmpInputParams["umap"]["umap-epochs"]}
-                                                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-epoch": nval } }) }} />
+                                                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-epochs": nval } }) }} />
                                                         </Label>
                                                     </div>
                                                 </div>
@@ -1175,38 +1175,40 @@ function AnalysisDialog({
                                     }
                                     {showStepHelper == 2 &&
                                         <Callout intent="primary">
-                                            <p>At this step, we compute per-cell quality control (QC)
-                                                metrics such as the total count per cell, the total number
-                                                of detected features and (if the feature annotation is supplied)
-                                                the mitochondrial proportion in each cell.
-                                            </p>
-                                            <p>We remove low-quality
-                                                cells based on these metrics - specifically, cells with low total
-                                                counts/number of detected features or high mitochondrial proportions
-                                                are filtered out.
-                                            </p>
-                                            <p>We use an outlier-based approach to define the
-                                                filter threshold under the assumption that most cells in the
-                                                dataset are of acceptable quality.
+                                            <p>
+                                                Remove low-quality cells to ensure that they do not interfere with downstream steps.
+                                                This is achieved by computing per-cell quality control (QC) metrics such as the total count per cell,
+                                                the total number of detected features and (if the feature annotation is supplied) the mitochondrial proportion in each cell.
+                                                Cells with low total counts/number of detected features or high mitochondrial proportions are filtered out.
+                                                We use an outlier-based approach to define the filter threshold for each metric,
+                                                under the assumption that most cells in the dataset are of acceptable quality.
                                             </p>
                                             <p>
                                                 <strong>Number of MADs</strong>:
                                                 Number of median absolute deviations (MADs) from the median,
-                                                used to define a filter threshold in the appropriate direction
-                                                for each QC metric. Increasing this value will reduce the stringency
-                                                of the filtering.
+                                                used to define a filter threshold in the appropriate direction for each QC metric.
+                                                Increasing this value will reduce the stringency of the filtering.
+                                            </p>
+                                            <p>
+                                                <strong>Use default mitochondrial list</strong>:
+                                                Should we identify mitochondrial genes in the dataset based on the <a href="https://github.com/jkanche/kana/blob/master/public/scran/mito.js" target="_blank"><strong>in-built list of Ensembl identifiers and gene symbols for mitochondrial genes in human and mouse genomes?</strong></a>
+                                                This assumes that the dataset contains feature annotation with Ensembl identifiers or gene symbols.
+                                            </p>
+                                            <p>
+                                                <strong>Mitochondrial gene prefix</strong>:
+                                                Prefix to use to identify the mitochondrial genes from the feature annotation.
+                                                Only used if we choose to not use the default mitochondrial list.
                                             </p>
                                         </Callout>
                                     }
                                     {showStepHelper == 3 &&
                                         <Callout intent="primary">
                                             <p>
-                                                Identify highly variable genes while accounting
-                                                for the mean-variance relationship. We do so by
-                                                fitting a mean-dependent trend to the variances,
-                                                computed from the log-transformed normalized expression
-                                                values. The residuals from the trend are then used to
-                                                rank highly variable genes.
+                                                Identify highly variable genes (HVGs) while accounting for the mean-variance relationship.
+                                                We do so by fitting a mean-dependent trend to the variances computed from the log-transformed normalized expression values.
+                                                HVGs are defined as those genes with the largest positive residuals from the trend, as these are more variable than expected from the trend.
+                                                The aim is to only use the HVGs in some downstream steps like the principal components analysis,
+                                                thereby improving computational efficiency and reducing uninteresting technical noise.
                                             </p>
                                             <p>
                                                 <strong>Lowess span</strong>:
@@ -1219,10 +1221,11 @@ function AnalysisDialog({
                                     {showStepHelper == 4 &&
                                         <Callout intent="primary">
                                             <p>
-                                                Perform a principal components analysis (PCA)
-                                                to obtain per-cell coordinates in a low-dimensional space.
-                                                This is used to compact the data for faster downstream computation,
-                                                as well as to remove uninteresting high-dimensional noise.
+                                                Perform a principal components analysis (PCA) to obtain per-cell coordinates in a low-dimensional space.
+                                                Specifically, we obtain a compact representation of the dataset by only taking the top principal components (PCs) that explain the largest variance.
+                                                This improves the efficiency of downstream steps as we only have to perform calculations on a few (usually 10-50) PCs rather than the thousands of gene expression profiles.
+                                                It also has the advantage of removing uninteresting high-dimensional noise by discarding the later PCs.
+                                                This ensures that downstream steps focus on the largest factors of variation that - hopefully - correspond to biologically interesting heterogeneity.
                                             </p>
                                             <p>
                                                 <strong>Number of HVGs</strong>:
@@ -1242,41 +1245,37 @@ function AnalysisDialog({
                                     {showStepHelper == 5 &&
                                         <Callout intent="primary">
                                             <p>
-                                                Cluster cells into discrete groupings based on their
-                                                relative similarity in the low-dimensional space.
-                                                The set of clusters serve as a summary of the cellular
-                                                heterogeneity in the population, allowing us to easily
-                                                perform further characterization on subpopulations of
-                                                interest.
+                                                Cluster cells into discrete groupings based on their relative similarity in the low-dimensional PC space.
+                                                The set of clusters should be treated as a summary of the cellular heterogeneity in the population,
+                                                allowing us to easily perform further characterization on subpopulations of interest, e.g., with marker detection.
+                                                Different clustering methods or parameters may provide different perspectives on the population structure in the dataset.
                                             </p>
                                             <p>
                                                 <strong>Method</strong>:
-                                                Clustering algorithm to use. Currently, we use multi-level
-                                                community detection on an shared nearest neighbor (SNN)
-                                                graph where cells are the nodes and edges are created
-                                                between neighboring cells.
+                                                Clustering algorithm to use.
+                                                Currently, we only support multi-level community detection on an shared nearest neighbor (SNN) graph,
+                                                where cells are the nodes and edges are created between neighboring cells.
                                             </p>
                                             <p>
                                                 <strong>Number of neighbors</strong>:
-                                                Number of neighbors to use to construct the shared
-                                                nearest neighbor graph. Larger values result in broader clusters.
+                                                Number of neighbors to use to construct the SNN graph.
+                                                Larger values result in broader clusters.
                                             </p>
                                             <p>
-                                                <strong>Use ANN ?</strong>:
+                                                <strong>Use ANN</strong>:
                                                 Use an approximate method to speed up the nearest neighbor search.
                                                 This sacrifices some accuracy for speed in larger datasets.
                                             </p>
                                             <p>
                                                 <strong>Weighting scheme</strong>:
-                                                Weighting scheme to use for the edges of the shared nearest neighbor graph.
-                                                The Rank approach derives a weight from the rank of the closest shared neighbor;
-                                                the Number approach uses the number of shared neighbors; and the Jaccard approach
-                                                uses the Jaccard index of the neighbor sets.
+                                                Weighting scheme to use for the edges of the SNN graph.
+                                                The <em>Rank</em> approach derives a weight from the rank of the closest shared neighbor;
+                                                the <em>Number</em> approach uses the number of shared neighbors;
+                                                and the Jaccard approach uses the <em>Jaccard</em> index of the neighbor sets.
                                             </p>
                                             <p>
                                                 <strong>Resolution</strong>:
-                                                Resolution parameter for the multi-level clustering, used to adjust
-                                                the modularity calculation during community optimization.
+                                                Resolution parameter for the multi-level clustering, used to adjust the modularity calculation during community optimization.
                                                 Larger values yield more fine-grained clusters.
                                             </p>
                                         </Callout>
@@ -1284,11 +1283,10 @@ function AnalysisDialog({
                                     {showStepHelper == 6 &&
                                         <Callout intent="primary">
                                             <p>
-                                                Create a t-SNE plot to visualize cells in two dimensions, because our
-                                                feeble human minds cannot interpret high-dimensional spaces.
-                                                Cells that were neighbors in the original space are kept close
-                                                together in the 2D embedding, while dissimilar cells are placed
-                                                (arbitrarily) far away.
+                                                Compute a t-SNE to visualize cells in two dimensions,
+                                                because our feeble human minds cannot interpret high-dimensional spaces.
+                                                Neighboring cells in the PC space are kept adjacent in the 2D embedding,
+                                                while dissimilar cells are placed (arbitrarily) far away.
                                             </p>
                                             <p>
                                                 <strong>Perplexity</strong>:
@@ -1297,8 +1295,8 @@ function AnalysisDialog({
                                             </p>
                                             <p>
                                                 <strong>Iterations</strong>:
-                                                Number of t-SNE iterations. Doesn't usually have much of an effect if
-                                                you leave it as it is.
+                                                Number of t-SNE iterations.
+                                                Doesn't usually have much of an effect if you leave it as it is.
                                             </p>
                                         </Callout>
                                     }
@@ -1306,9 +1304,8 @@ function AnalysisDialog({
                                         <Callout intent="primary">
                                             <p>
                                                 Create a UMAP plot to visualize cells in two dimensions.
-                                                Like the t-SNE, this aims to map cells from a high-dimensional
-                                                space into a 2D embedding, where neighboring cells are kept close
-                                                together and dissimilar cells are placed far apart.
+                                                Like the t-SNE, this aims to map cells from a high-dimensional space into a 2D embedding,
+                                                where neighboring cells are kept close together and dissimilar cells are placed far apart.
                                             </p>
                                             <p>
                                                 <strong>Number of neighbors</strong>:
@@ -1317,13 +1314,13 @@ function AnalysisDialog({
                                             </p>
                                             <p>
                                                 <strong>Minimum distance</strong>:
-                                                Minimum distance between points. Smaller values result in more tightly
-                                                packed embedding and favor local structure.
+                                                Minimum distance between points.
+                                                Smaller values result in a more tightly packed embedding and favor local structure.
                                             </p>
                                             <p>
                                                 <strong>Epochs</strong>:
-                                                Number of epochs to use for convergence. This doesn't really
-                                                change all too much.
+                                                Number of epochs to use for convergence.
+                                                This doesn't really change all too much in the results.
                                             </p>
                                         </Callout>
                                     }
