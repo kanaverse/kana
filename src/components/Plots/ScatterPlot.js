@@ -368,17 +368,14 @@ const DimPlot = (props) => {
                                             : ""
                                     })}
                                 </ul>
-                                {
-                                    Object.keys(customSelection).length > 0 ?
+                            </Callout>
+                            {
+                                (Object.keys(customSelection).length > 0 || (selectedPoints && selectedPoints.length > 0)) ?
+                                    <Callout title="CUSTOM SELECTIONS">
                                         <div
-                                            style={{
-                                                paddingTop: '5px'
-                                            }}>
-                                            <span>Custom Selection &nbsp;
-                                                <Tooltip2 content="Custom selection of cells" openOnTargetFocus={false}>
-                                                    <Icon icon="help"></Icon>
-                                                </Tooltip2>
-                                            </span>
+                                           style={{
+                                           paddingTop: '5px'
+                                        }}>
                                             <ul>
                                                 {Object.keys(customSelection)?.map((x, i) => {
                                                     return (<li key={x}
@@ -397,7 +394,7 @@ const DimPlot = (props) => {
                                                                 onClick={() => {
                                                                     if (x === clusHighlight) {
                                                                         setClusHighlight(null);
-
+ 
                                                                     } else {
                                                                         setClusHighlight(x);
                                                                     }
@@ -413,13 +410,13 @@ const DimPlot = (props) => {
                                                                     let tmpSel = { ...customSelection };
                                                                     delete tmpSel[x];
                                                                     setCustomSelection(tmpSel);
-
+ 
                                                                     let tmpcolors = [...clusterColors];
                                                                     tmpcolors = tmpcolors.slice(0, tmpcolors.length - 1);
                                                                     setClusterColors(tmpcolors);
-
+ 
                                                                     setDelCustomSelection(x);
-
+ 
                                                                     if (clusHighlight === x) {
                                                                         setClusHighlight(null);
                                                                     }
@@ -429,29 +426,24 @@ const DimPlot = (props) => {
                                                 })}
                                             </ul>
                                         </div>
-                                        :
-                                        ""
-                                }
-                            </Callout>
-                            {
-                                selectedPoints && selectedPoints.length > 0 ?
-                                    <div>
-                                        <Divider />
-                                        <span>Selection &nbsp;
-                                            <Tooltip2 content="save this selection of cells" openOnTargetFocus={false}>
-                                                <Icon icon="help"></Icon>
-                                            </Tooltip2>
-                                        </span>
-                                        <div className='selection-container'>
-                                            <span>{selectedPoints.length} cells selected</span>
-                                            <div className='selection-button-container'>
-                                                <Button small={true} intent='primary'
-                                                    onClick={savePoints}>Save</Button>
-                                                <Button small={true}
-                                                    onClick={clearPoints}>Clear</Button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                        {
+                                            selectedPoints && selectedPoints.length > 0 ?
+                                                <div>
+                                                    <Divider />
+                                                    <div className='selection-container'>
+                                                        <span>{selectedPoints.length} cells selected</span>
+                                                        <div className='selection-button-container'>
+                                                            <Button small={true} intent='primary'
+                                                                onClick={savePoints}>Save</Button>
+                                                            <Button small={true}
+                                                                onClick={clearPoints}>Clear</Button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                :
+                                                ""
+                                        }
+                                    </Callout>
                                     :
                                     ""
                             }
