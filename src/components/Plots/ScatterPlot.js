@@ -9,7 +9,7 @@ import {
 import { Tooltip2 } from "@blueprintjs/popover2";
 
 import { AppContext } from '../../context/AppContext';
-import {getMinMax} from './utils';
+import { getMinMax } from './utils';
 
 import Rainbow from './rainbowvis';
 import { randomColor } from 'randomcolor';
@@ -17,7 +17,7 @@ import { randomColor } from 'randomcolor';
 import "./ScatterPlot.css";
 import { AppToaster } from "../Spinners/AppToaster";
 
-const DimPlot = () => {
+const DimPlot = (props) => {
     const container = useRef();
 
     // ref to the plot object
@@ -39,7 +39,7 @@ const DimPlot = () => {
         tsneData, umapData, clusterColors, setClusterColors,
         gene, setGene, selectedClusterIndex, selectedClusterSummary,
         customSelection, setCustomSelection,
-        setDelCustomSelection,
+        setDelCustomSelection, setShowAnimation,
         showAnimation, setTriggerAnimation,
         savedPlot, setSavedPlot, selectedCluster,
         genesInfo, geneColSel } = useContext(AppContext);
@@ -73,7 +73,7 @@ const DimPlot = () => {
                 setExprMinMax([0, val]);
             } else {
                 setShowGradient(false);
-                AppToaster.show({icon:"warning-sign", intent: "warning", message: `${genesInfo[geneColSel][gene]} is not expressed in any cell (mean = 0)`})
+                AppToaster.show({ icon: "warning-sign", intent: "warning", message: `${genesInfo[geneColSel][gene]} is not expressed in any cell (mean = 0)` })
             }
             setGradient(tmpgradient);
         }
@@ -130,10 +130,15 @@ const DimPlot = () => {
             }
 
             let data = null;
-            if (defaultRedDims === "TSNE") {
-                data = tsneData;
-            } else if (defaultRedDims === "UMAP") {
-                data = umapData;
+
+            if (showAnimation) {
+                data = props?.animateData;
+            } else {
+                if (defaultRedDims === "TSNE") {
+                    data = tsneData;
+                } else if (defaultRedDims === "UMAP") {
+                    data = umapData;
+                }
             }
 
             // if dimensions are available
@@ -198,7 +203,7 @@ const DimPlot = () => {
                             // });
 
                             // return "#" + colorGradients[cluster_mappings[i]].colorAt(selectedClusterSummary?.[gene]?.expr?.[i])
-                        } 
+                        }
                     }
 
                     if (clusHighlight != null && String(clusHighlight).startsWith("cs")) {
@@ -210,9 +215,9 @@ const DimPlot = () => {
                 });
             }
         }
-    }, [tsneData, umapData, defaultRedDims, gradient, clusHighlight]);
+    }, [tsneData, umapData, props?.animateData, defaultRedDims, gradient, clusHighlight]);
 
-    const setInteraction = (x) => {        
+    const setInteraction = (x) => {
         if (x === "SELECT") {
             scatterplot.setSelectMode();
             setPlotMode("SELECT");
@@ -252,7 +257,7 @@ const DimPlot = () => {
             // preserve drawing buffers is false, so render and capture state right away
             scatterplot.renderScatterPlot();
             const iData = scatterplot.scatterPlot.renderer.domElement.toDataURL();
-            
+
             let tmp = [...savedPlot];
 
             tmp.push({
@@ -310,7 +315,10 @@ const DimPlot = () => {
                     }}>
                     <Tooltip2 content="Interactively visualize embeddings">
                         <Button icon="play"
-                            onClick={() => setTriggerAnimation(true)}>Animate</Button>
+                            onClick={() => {
+                                setShowAnimation(true); 
+                                setTriggerAnimation(true)
+                            }}>Animate</Button>
                     </Tooltip2>
                     <Tooltip2 content="Save this embedding">
                         <Button icon="inheritance"
@@ -453,11 +461,11 @@ const DimPlot = () => {
                         <div className='right-sidebar-slider'>
                             <Divider />
                             <Callout>
-                                <span>Gradient for <Tag 
-                                minimal={true}
-                                intent='primary' onRemove={() => {
-                                    setGene(null);
-                                }}>{genesInfo[geneColSel][gene]}</Tag>&nbsp;
+                                <span>Gradient for <Tag
+                                    minimal={true}
+                                    intent='primary' onRemove={() => {
+                                        setGene(null);
+                                    }}>{genesInfo[geneColSel][gene]}</Tag>&nbsp;
                                     <Tooltip2 content="Use the slider to adjust the color gradient of the plot. Useful when data is skewed
                                 by either a few lowly or highly expressed cells" openOnTargetFocus={false}>
                                         <Icon icon="help"></Icon>
