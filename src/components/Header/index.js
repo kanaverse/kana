@@ -55,7 +55,7 @@ const Header = () => {
 
           <NavbarDivider />
 
-          <Tooltip2 content="Modify dataset title" position={Position.BOTTOM}>
+          <Tooltip2 content="Modify the dataset title here." position={Position.BOTTOM}>
             <EditableText defaultValue={datasetName} intent="primary"
               onConfirm={(val) => { setDatasetName(val) }} />
           </Tooltip2>
@@ -63,15 +63,15 @@ const Header = () => {
           <Stats />
           <NavbarDivider />
 
-          <Tooltip2 content="Save Analysis" position={Position.BOTTOM}>
+          <Tooltip2 content="Save the analysis, either in your browser's cache or to a file on your computer." position={Position.BOTTOM}>
             <ButtonGroup>
               <Popover2 content={
                 <Menu>
-                  <MenuItem text="Save" icon="floppy-disk"
+                  <MenuItem text="Save to browser" icon="floppy-disk"
                     onClick={() => {
                       setIndexedDBState(true);
                     }} />
-                  <MenuItem text="Download" icon="download"
+                  <MenuItem text="Download to file" icon="download"
                     onClick={() => {
                       setExportState(true);
                     }} />
@@ -83,7 +83,7 @@ const Header = () => {
           </Tooltip2>
           <NavbarDivider />
 
-          <Tooltip2 content="Whats happening ?" position={Position.BOTTOM}>
+          <Tooltip2 content="What's happening under the hood? See the blow-by-blow logs as the analysis runs." position={Position.BOTTOM}>
             <Logs />
           </Tooltip2>
           <NavbarDivider />
