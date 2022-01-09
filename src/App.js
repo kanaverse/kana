@@ -100,7 +100,7 @@ function App() {
 
       setDelCustomSelection(null);
     }
-  }, [delCustomSelection])
+  }, [delCustomSelection]);
 
   // get expression for a gene from worker
   useEffect(() => {

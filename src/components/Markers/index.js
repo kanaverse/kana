@@ -3,13 +3,12 @@ import {
     Button, H4, H5, Icon, Collapse, InputGroup,
     RangeSlider, Tag, HTMLSelect, Classes, Card, Elevation
 } from "@blueprintjs/core";
-import { Tooltip2, Popover2 } from "@blueprintjs/popover2";
+import { Popover2 } from "@blueprintjs/popover2";
 import { Virtuoso } from 'react-virtuoso';
 import * as d3 from 'd3';
 
 import { AppContext } from '../../context/AppContext';
 import StackedHistogram from '../Plots/StackedHistogram';
-import Histogram from '../Plots/Histogram';
 
 import Cell from '../Plots/Cell.js';
 import HeatmapCell from '../Plots/HeatmapCell';
@@ -38,12 +37,6 @@ const MarkerPlot = () => {
     const [detectedMinMax, setDetectedMinMax] = useState(null);
     const [minMaxs, setMinMaxs] = useState(null);
 
-    // params for filtering
-    const [means, setMeans] = useState(null);
-    const [deltas, setDeltas] = useState(null);
-    const [lfcs, setLfcs] = useState(null);
-    const [detects, setDetects] = useState(null);
-
     // stores range filters from UI
     const [markerFilter, setMarkerFilter] = useState({});
     // records to show after filtering
@@ -69,25 +62,21 @@ const MarkerPlot = () => {
         let tmeanMinMax = d3.extent(tmpmeans)
         let tmeanval = tmeanMinMax[1] === 0 ? 0.01 : tmeanMinMax[1];
         setMeanMinMax([parseFloat(tmeanMinMax[0].toFixed(2)), parseFloat(tmeanval.toFixed(2))]);
-        setMeans(tmpmeans);
 
         let tmpdeltas = trecs.map(x => x?.delta);
         let tdeltaMinMax = d3.extent(tmpdeltas)
         let tdeltaval = tdeltaMinMax[1] === 0 ? 0.01 : tdeltaMinMax[1];
         setDeltaMinMax([parseFloat(tdeltaMinMax[0].toFixed(2)), parseFloat(tdeltaval.toFixed(2))]);
-        setDeltas(tmpdeltas);
 
         let tmplfcs = trecs.map(x => x?.lfc);
         let tlfcsMinMax = d3.extent(tmplfcs)
         let tlfcsval = tlfcsMinMax[1] === 0 ? 0.01 : tlfcsMinMax[1];
         setLfcMinMax([parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsval.toFixed(2))]);
-        setLfcs(tmplfcs);
 
         let tmpdetects = trecs.map(x => x?.detected);
         let tdetectsMinMax = d3.extent(tmpdetects)
         let tdetecval = tdetectsMinMax[1] === 0 ? 0.01 : tdetectsMinMax[1];
         setDetectedMinMax([parseFloat(tdetectsMinMax[0].toFixed(2)), parseFloat(tdetecval.toFixed(2))]);
-        setDetects(tmpdetects);
 
         setMinMaxs({
             "lfc": [parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsval.toFixed(2))],
@@ -116,7 +105,7 @@ const MarkerPlot = () => {
         if (markerFilter) {
             for (let key in markerFilter) {
                 let range = markerFilter[key];
-                if (range[0] == minMaxs[key][0] && range[1] == minMaxs[key][1]) continue;
+                if (range[0] === minMaxs[key][0] && range[1] === minMaxs[key][1]) continue;
                 sortedRows = sortedRows.filter((x) => x[key] >= range[0] && x[key] <= range[1]);
             }
         }
@@ -140,7 +129,7 @@ const MarkerPlot = () => {
             clus = clus.concat(Object.keys(customSelection));
 
             setClusSel(clus);
-            if (selectedCluster == null) {
+            if (selectedCluster === null) {
                 setSelectedCluster(0);
             }
         }
@@ -166,7 +155,46 @@ const MarkerPlot = () => {
 
     return (
         <div className='marker-container'>
-            <H4>Marker Genes</H4>
+            <H4>Marker Genes
+                <Popover2
+                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                    hasBackdrop={false}
+                    interactionKind="hover"
+                    placement='left'
+                    hoverOpenDelay={500}
+                    modifiers={{
+                        arrow: { enabled: true },
+                        flip: { enabled: true },
+                        preventOverflow: { enabled: true },
+                    }}
+                    content={
+                        <Card style={{
+                            width: '450px'
+                        }} elevation={Elevation.ZERO}
+                        >
+                            <H5>Explore markers for various clusters</H5>
+                            <p>Choose the effect size and summary statistic to use for ranking markers. For each gene, effect sizes are computed by pairwise comparisons between clusters:</p>
+                            <ul>
+                                <li><strong><em>Cohen's d</em></strong> is the ratio of the log-fold change to the average standard deviation between two clusters.</li>
+                                <li>The area under the curve (<strong><em>AUC</em></strong>) is the probability that a randomly chosen observation from one cluster is greater than a randomly chosen observation from another cluster.</li>
+                                <li>The log-fold change (<strong><em>lfc</em></strong>) is the difference in the mean log-expression between two clusters.</li>
+                                <li>The <strong><em>Δ-detected</em></strong> is the difference in the detected proportions between two clusters.</li>
+                            </ul>
+                            <p>For each cluster, the effect sizes from the comparisons to all other clusters are summarized into a single statistic for ranking purposes:</p>
+                            <ul>
+                                <li><strong><em>mean</em></strong> uses the mean effect sizes from all pairwise comparisons. This generally provides a good compromise between exclusitivity and robustness.</li>
+                                <li><strong><em>min</em></strong> uses the minimum effect size from all pairwise comparisons. This promotes markers that are exclusively expressed in the chosen cluster, but will perform poorly if no such genes exist.</li>
+                                <li><strong><em>min-rank</em></strong> ranks genes according to their best rank in each of the individual pairwise comparisons. This is the most robust as the combination of top-ranked genes will always be able to distinguish the chosen cluster from the other clusters, but may not give high rankings to exclusive genes.</li>
+                            </ul>
+                        </Card>
+                    }
+                >
+                    <Icon style={{
+                        marginBottom: '4px',
+                        marginLeft: '5px'
+                    }} size={12} icon="help"></Icon>
+                </Popover2>
+            </H4>
             {
                 clusSel ?
                     <HTMLSelect
@@ -240,22 +268,22 @@ const MarkerPlot = () => {
                                     }}></Icon>
                                 </Popover2>
                                 <HTMLSelect
-                                        onChange={(x) => {
-                                            setClusterRank(x.currentTarget.value);
-                                        }} defaultValue={"cohen-min-rank"}>
-                                        <option>cohen-min</option>
-                                        <option>cohen-mean</option>
-                                        <option>cohen-min-rank</option>
-                                        <option>auc-min</option>
-                                        <option>auc-mean</option>
-                                        <option>auc-min-rank</option>
-                                        <option>lfc-min</option>
-                                        <option>lfc-mean</option>
-                                        <option>lfc-min-rank</option>
-                                        <option>delta-d-min</option>
-                                        <option>delta-d-mean</option>
-                                        <option>delta-d-min-rank</option>
-                                    </HTMLSelect>
+                                    onChange={(x) => {
+                                        setClusterRank(x.currentTarget.value);
+                                    }} defaultValue={"cohen-min-rank"}>
+                                    <option>cohen-min</option>
+                                    <option>cohen-mean</option>
+                                    <option>cohen-min-rank</option>
+                                    <option>auc-min</option>
+                                    <option>auc-mean</option>
+                                    <option>auc-min-rank</option>
+                                    <option>lfc-min</option>
+                                    <option>lfc-mean</option>
+                                    <option>lfc-min-rank</option>
+                                    <option>delta-d-min</option>
+                                    <option>delta-d-mean</option>
+                                    <option>delta-d-min-rank</option>
+                                </HTMLSelect>
                             </span>
                         </div>
                         <Virtuoso
