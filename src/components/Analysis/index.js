@@ -46,12 +46,12 @@ function AnalysisDialog({
     const [loadImportFormat, setLoadImportFormat] = useState("kana");
     // const [hdfFormat, sethdfFormat] = useState("tenx");
 
-    let [tmpInputParams, setTmpInputParams] = useState(tabSelected == "new" ? params : loadParams);
+    let [tmpInputParams, setTmpInputParams] = useState(tabSelected === "new" ? params : loadParams);
 
     function handleImport() {
         setParams(tmpInputParams);
 
-        if (tabSelected == "load") {
+        if (tabSelected === "load") {
             if (loadImportFormat === "kanadb") {
                 setDatasetName(tmpInputFiles?.file);
             } else {
@@ -63,13 +63,13 @@ function AnalysisDialog({
         //     // setLoadParams(tmpInputParams);
         // }
         setInputFiles({
-            "format": tabSelected == "new" ?
+            "format": tabSelected === "new" ?
                 newImportFormat : loadImportFormat,
             "files": tmpInputFiles,
-            "reset": tabSelected == "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file
+            "reset": tabSelected === "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file
         });
 
-        setLoadParamsFor(tabSelected == "new" ?
+        setLoadParamsFor(tabSelected === "new" ?
             newImportFormat : loadImportFormat);
 
         handleClose();
@@ -151,14 +151,14 @@ function AnalysisDialog({
     }, [openInput]);
 
     useEffect(() => {
-        if (loadParams && tabSelected == "load") {
+        if (loadParams && tabSelected === "load") {
             setTmpInputParams(loadParams);
         }
     }, [loadParams]);
 
     useEffect(() => {
-        if (tabSelected == "load" && loadImportFormat == "kanadb"
-            && tmpInputFiles?.file == null && kanaIDBRecs) {
+        if (tabSelected === "load" && loadImportFormat === "kanadb"
+            && tmpInputFiles?.file === null && kanaIDBRecs) {
             setTmpInputFiles({
                 file: kanaIDBRecs[0]
             });
@@ -170,15 +170,15 @@ function AnalysisDialog({
             if (tabSelected === "new") {
                 if (newImportFormat === "mtx") {
                     if (
-                        tmpInputFiles?.mtx && !(inputText?.mtx.toLowerCase().endsWith("mtx") ||
+                        (tmpInputFiles?.mtx && !(inputText?.mtx.toLowerCase().endsWith("mtx") ||
                             inputText?.mtx.toLowerCase().endsWith("mtx.gz")
-                        ) ||
-                        tmpInputFiles?.gene && !(inputText?.gene.toLowerCase().endsWith("tsv") ||
+                        )) ||
+                        (tmpInputFiles?.gene && !(inputText?.gene.toLowerCase().endsWith("tsv") ||
                             inputText?.gene.toLowerCase().endsWith("tsv.gz")
-                        ) ||
-                        tmpInputFiles?.barcode && !(inputText?.barcode.toLowerCase().endsWith("tsv") ||
+                        )) ||
+                        (tmpInputFiles?.barcode && !(inputText?.barcode.toLowerCase().endsWith("tsv") ||
                             inputText?.barcode.toLowerCase().endsWith("tsv.gz")
-                        )
+                        ))
                     ) {
                         setTmpInputValid(false);
                     } else {
@@ -605,7 +605,7 @@ function AnalysisDialog({
                                             </ul>
                                         </Callout>
                                     }
-                                    {showStepHelper == 1 &&
+                                    {showStepHelper === 1 &&
                                         <Callout intent="primary">
                                             <p>We currently support several common file formats for single-cell RNA-seq count data.</p>
                                             <p>
@@ -628,7 +628,7 @@ function AnalysisDialog({
                                             </p>
                                         </Callout>
                                     }
-                                    {showStepHelper == 2 &&
+                                    {showStepHelper === 2 &&
                                         <Callout intent="primary">
                                             <p>
                                                 Remove low-quality cells to ensure that they do not interfere with downstream steps.
@@ -646,7 +646,7 @@ function AnalysisDialog({
                                             </p>
                                             <p>
                                                 <strong>Use default mitochondrial list</strong>:
-                                                Should we identify mitochondrial genes in the dataset based on the <a href="https://github.com/jkanche/kana/blob/master/public/scran/mito.js" target="_blank"><strong>in-built list of Ensembl identifiers and gene symbols for mitochondrial genes in human and mouse genomes?</strong></a>
+                                                Should we identify mitochondrial genes in the dataset based on the <a target="_blank" href="https://github.com/jkanche/kana/blob/master/public/scran/mito.js"><strong>in-built list of Ensembl identifiers and gene symbols for mitochondrial genes in human and mouse genomes?</strong></a>
                                                 This assumes that the dataset contains feature annotation with Ensembl identifiers or gene symbols.
                                             </p>
                                             <p>
@@ -656,7 +656,7 @@ function AnalysisDialog({
                                             </p>
                                         </Callout>
                                     }
-                                    {showStepHelper == 3 &&
+                                    {showStepHelper === 3 &&
                                         <Callout intent="primary">
                                             <p>
                                                 Identify highly variable genes (HVGs) while accounting for the mean-variance relationship.
@@ -673,7 +673,7 @@ function AnalysisDialog({
                                             </p>
                                         </Callout>
                                     }
-                                    {showStepHelper == 4 &&
+                                    {showStepHelper === 4 &&
                                         <Callout intent="primary">
                                             <p>
                                                 Perform a principal components analysis (PCA) to obtain per-cell coordinates in a low-dimensional space.
@@ -697,7 +697,7 @@ function AnalysisDialog({
                                             </p>
                                         </Callout>
                                     }
-                                    {showStepHelper == 5 &&
+                                    {showStepHelper === 5 &&
                                         <Callout intent="primary">
                                             <p>
                                                 Cluster cells into discrete groupings based on their relative similarity in the low-dimensional PC space.
@@ -735,7 +735,7 @@ function AnalysisDialog({
                                             </p>
                                         </Callout>
                                     }
-                                    {showStepHelper == 6 &&
+                                    {showStepHelper === 6 &&
                                         <Callout intent="primary">
                                             <p>
                                                 Compute a t-SNE to visualize cells in two dimensions,
@@ -755,7 +755,7 @@ function AnalysisDialog({
                                             </p>
                                         </Callout>
                                     }
-                                    {showStepHelper == 7 &&
+                                    {showStepHelper === 7 &&
                                         <Callout intent="primary">
                                             <p>
                                                 Create a UMAP plot to visualize cells in two dimensions.
@@ -859,7 +859,7 @@ function AnalysisDialog({
                                         </Tabs>
                                     </div>
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat
+                                        loadParams && loadParamsFor === loadImportFormat
                                             && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
@@ -913,7 +913,7 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat
+                                        loadParams && loadParamsFor === loadImportFormat
                                             && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
@@ -942,7 +942,7 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat
+                                        loadParams && loadParamsFor === loadImportFormat
                                             && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
@@ -982,7 +982,7 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat
+                                        loadParams && loadParamsFor === loadImportFormat
                                             && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
@@ -1058,7 +1058,7 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat
+                                        loadParams && loadParamsFor === loadImportFormat
                                             && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
@@ -1098,7 +1098,7 @@ function AnalysisDialog({
                                     }
 
                                     {
-                                        loadParams && loadParamsFor == loadImportFormat
+                                        loadParams && loadParamsFor === loadImportFormat
                                             && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             <div className="col">
                                                 <div>
@@ -1163,7 +1163,7 @@ function AnalysisDialog({
                                         are stored as <strong><code>*.kana</code></strong>.
                                     </Callout>
 
-                                    {showStepHelper == 1 &&
+                                    {showStepHelper === 1 &&
                                         <Callout intent="primary">
                                             <p>We currently support files in the Cellranger format -
                                                 namely, a Matrix Market file containing the count matrix.
@@ -1173,7 +1173,7 @@ function AnalysisDialog({
                                             </p>
                                         </Callout>
                                     }
-                                    {showStepHelper == 2 &&
+                                    {showStepHelper === 2 &&
                                         <Callout intent="primary">
                                             <p>
                                                 Remove low-quality cells to ensure that they do not interfere with downstream steps.
@@ -1201,7 +1201,7 @@ function AnalysisDialog({
                                             </p>
                                         </Callout>
                                     }
-                                    {showStepHelper == 3 &&
+                                    {showStepHelper === 3 &&
                                         <Callout intent="primary">
                                             <p>
                                                 Identify highly variable genes (HVGs) while accounting for the mean-variance relationship.
@@ -1218,7 +1218,7 @@ function AnalysisDialog({
                                             </p>
                                         </Callout>
                                     }
-                                    {showStepHelper == 4 &&
+                                    {showStepHelper === 4 &&
                                         <Callout intent="primary">
                                             <p>
                                                 Perform a principal components analysis (PCA) to obtain per-cell coordinates in a low-dimensional space.
@@ -1242,7 +1242,7 @@ function AnalysisDialog({
                                             </p>
                                         </Callout>
                                     }
-                                    {showStepHelper == 5 &&
+                                    {showStepHelper === 5 &&
                                         <Callout intent="primary">
                                             <p>
                                                 Cluster cells into discrete groupings based on their relative similarity in the low-dimensional PC space.
@@ -1280,7 +1280,7 @@ function AnalysisDialog({
                                             </p>
                                         </Callout>
                                     }
-                                    {showStepHelper == 6 &&
+                                    {showStepHelper === 6 &&
                                         <Callout intent="primary">
                                             <p>
                                                 Compute a t-SNE to visualize cells in two dimensions,
@@ -1300,7 +1300,7 @@ function AnalysisDialog({
                                             </p>
                                         </Callout>
                                     }
-                                    {showStepHelper == 7 &&
+                                    {showStepHelper === 7 &&
                                         <Callout intent="primary">
                                             <p>
                                                 Create a UMAP plot to visualize cells in two dimensions.

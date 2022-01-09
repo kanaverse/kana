@@ -326,10 +326,10 @@ const DimPlot = (props) => {
                     </Tooltip2>
                 </ControlGroup>
                 <ControlGroup fill={false} vertical={false}>
-                    <Button active={plotMode == "PAN"}
+                    <Button active={plotMode === "PAN"}
                         intent={plotMode === "PAN" ? "primary" : "none"}
                         icon="hand-up" onClick={x => setInteraction("PAN")}>Pan</Button>
-                    <Button active={plotMode == "SELECT"}
+                    <Button active={plotMode === "SELECT"}
                         intent={plotMode === "SELECT" ? "primary" : "none"}
                         icon="widget" onClick={x => setInteraction("SELECT")}>Selection</Button>
                 </ControlGroup>
@@ -355,7 +355,7 @@ const DimPlot = (props) => {
                                     {clusterColors?.map((x, i) => {
                                         return i < clusterColors.length - Object.keys(customSelection).length ?
                                             (<li key={i}
-                                                className={clusHighlight == i ? 'legend-highlight' : ''}
+                                                className={clusHighlight === i ? 'legend-highlight' : ''}
                                                 style={{ color: x }}
                                                 onClick={() => {
                                                     if (i === clusHighlight) {
@@ -382,7 +382,7 @@ const DimPlot = (props) => {
                                             <ul>
                                                 {Object.keys(customSelection)?.map((x, i) => {
                                                     return (<li key={x}
-                                                        className={clusHighlight == x ? 'legend-highlight' : ''}
+                                                        className={clusHighlight === x ? 'legend-highlight' : ''}
                                                         style={{ color: clusterColors[Math.max(...clusterData?.clusters) + 1 + i] }}
                                                     >
                                                         <div style={{

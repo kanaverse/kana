@@ -30,25 +30,25 @@ function serialize(svgNode) {
         // Add Parent element Id and Classes to the list
         selectorTextArr.push('#' + parentElement.id);
         
-        for (var c = 0; c < parentElement.classList.length; c++)
+        for (let c = 0; c < parentElement.classList.length; c++)
             if (!contains('.' + parentElement.classList[c], selectorTextArr))
                 selectorTextArr.push('.' + parentElement.classList[c]);
         // Add Children element Ids and Classes to the list
         
         var nodes = parentElement.getElementsByTagName("*");
-        for (var i = 0; i < nodes.length; i++) {
+        for (let i = 0; i < nodes.length; i++) {
             var id = nodes[i].id;
             if (!contains('#' + id, selectorTextArr))
                 selectorTextArr.push('#' + id);
             var classes = nodes[i].classList;
-            for (var c = 0; c < classes.length; c++)
+            for (let c = 0; c < classes.length; c++)
                 if (!contains('.' + classes[c], selectorTextArr))
                     selectorTextArr.push('.' + classes[c]);
         }
         
         // Extract CSS Rules
         var extractedCSSText = "";
-        for (var i = 0; i < document.styleSheets.length; i++) {
+        for (let i = 0; i < document.styleSheets.length; i++) {
             var s = document.styleSheets[i];
             try {
                 if (!s.cssRules) continue;
@@ -57,7 +57,7 @@ function serialize(svgNode) {
                 continue;
             }
             var cssRules = s.cssRules;
-            for (var r = 0; r < cssRules.length; r++) {
+            for (let r = 0; r < cssRules.length; r++) {
                 if (contains(cssRules[r].selectorText, selectorTextArr))
                     extractedCSSText += cssRules[r].cssText;
             }
@@ -81,14 +81,13 @@ function serialize(svgNode) {
 
 function saveSVG(svgNode, width, height, filename) {
     let svgString = serialize(svgNode);
-    var format = format ? format : 'png';
     var imgsrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString))); // Convert SVG string to data URL
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
     canvas.width = width;
     canvas.height = height;
     var image = new Image();
-    image.onload = function () {
+    image.onload = () => {
         context.clearRect(0, 0, width, height);
         context.drawImage(image, 0, 0, width, height);
         let dataBlob = canvas.toDataURL();

@@ -52,7 +52,6 @@ const StackedHistogram = (props) => {
             .domain(x.domain())
             .thresholds(d3.thresholdScott);
 
-        const bins = histogram(data);
         const allCells = histogram(data.filter((d, i) => { return clusters?.[i] === 0 }));
         const clusterCells = histogram(data.filter((d, i) => { return clusters?.[i] === 1 }));
         const allCellsMax = d3.max(allCells, (d) => { return d.length; });

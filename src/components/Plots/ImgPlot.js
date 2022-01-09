@@ -1,7 +1,6 @@
-import { Button, Icon } from "@blueprintjs/core";
+import { Button } from "@blueprintjs/core";
 import { useEffect, useRef, useState, useContext } from "react";
 import { AppContext } from "../../context/AppContext";
-import { Tooltip2 } from "@blueprintjs/popover2";
 
 import './ImgPlot.css';
 
@@ -35,8 +34,8 @@ const ImgPlot = (props) => {
             if (data?.image) {
                 let ctx = containerEL.getContext("2d");
 
-                var img = new Image;
-                img.onload = function () {
+                var img = new Image();
+                img.onload = () => {
                     ctx.drawImage(img, 0, 0, propwidth, propheight);
                 };
                 img.src = data?.image;
@@ -64,9 +63,6 @@ const ImgPlot = (props) => {
             <Button small={true} className="imgplot-save" icon="download"
                 onClick={() => {
                     let tmpLink = document.createElement("a");
-                    // var fileNew = new Blob([resp], {
-                    //     type: "text/plain"
-                    // });
                     tmpLink.href = data?.image;
                     tmpLink.download = `${title.replace("⊃", "").split(" ").join("_")}.png`;
                     tmpLink.click();
