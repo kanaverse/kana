@@ -21,8 +21,8 @@ const AppContextProvider = ({ children }) => {
       "fsel-span": 0.3
     },
     pca: {
-      "pca-npc": 5,
-      "pca-hvg": 4000,
+      "pca-npc": 25,
+      "pca-hvg": 2500,
     },
     cluster: {
       "clus-k": 10,
@@ -61,7 +61,7 @@ const AppContextProvider = ({ children }) => {
   const [loadParamsFor, setLoadParamsFor] = useState(null);
 
   // creates a default dataset name
-  const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()).slice(0, 8));
+  const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()));
 
   // app export state - .kana file
   const [exportState, setExportState] = useState(false);
@@ -178,7 +178,6 @@ const AppContextProvider = ({ children }) => {
         }
         setInitLoadState(true);
       }
-      // setShowGame(true);
     }
   }, [inputFiles, params, wasmInitialized]);
 

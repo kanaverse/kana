@@ -8,8 +8,8 @@ const Stats = () => {
         <>
             {
                 <span>
-                    : {initDims ? `${initDims}` : " ???"}
-                    {qcDims ?  ` (after QC: ${qcDims})` : "" }
+                    {initDims ? `: ${initDims}` : " "}
+                    {qcDims ?  ` (${qcDims} after QC)` : "" }
                 </span>
             }
         </>

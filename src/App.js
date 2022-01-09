@@ -157,7 +157,7 @@ function App() {
       tmp["thresholds"] = resp;
       setQcData(tmp);
     } else if (payload.type === "quality_control_filtered_DATA") {
-      setQcDims(`${payload.resp.retained} cells`);
+      setQcDims(`${payload.resp.retained}`);
     } else if (payload.type === "feature_selection_DATA") {
       const { resp } = payload;
       setFSelectionData(resp);

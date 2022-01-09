@@ -25,7 +25,7 @@ const Cell = (props) => {
         <div ref={container}
             style={{
                 width: propwidth, height: '15px',
-                margin: '5px', border: '1px solid gainsboro',
+                margin: '1px', border: '1px solid gainsboro',
                 alignItems: 'center'
             }}>
             {colorscale ?
