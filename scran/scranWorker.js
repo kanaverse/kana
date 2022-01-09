@@ -408,28 +408,28 @@ onmessage = function (msg) {
     });
 
     kana_db.initialize()
-    .then(result => {
-      if (result !== null) {
-        postMessage({
-          type: "KanaDB_store",
-          resp: result,
-          msg: "Success"
-        });
-      } else {
-        postMessage({
-          type: "KanaDB_ERROR",
-          msg: `Fail: Cannot initialize DB`
-        });
-      }
-    });
+      .then(result => {
+        if (result !== null) {
+          postMessage({
+            type: "KanaDB_store",
+            resp: result,
+            msg: "Success"
+          });
+        } else {
+          postMessage({
+            type: "KanaDB_ERROR",
+            msg: `Fail: Cannot initialize DB`
+          });
+        }
+      });
 
   } else if (payload.type == "RUN") {
     loaded.then(wasm => {
       runAllSteps(wasm, "run", payload.payload);
     });
 
-/**************** LOADING EXISTING ANALYSES *******************/
-  } else if (payload.type == "LOAD") { 
+    /**************** LOADING EXISTING ANALYSES *******************/
+  } else if (payload.type == "LOAD") {
     if (payload.payload.files.format == "kana") {
       const reader = new FileReaderSync();
       var f = payload.payload.files.files.file[0];
@@ -442,25 +442,25 @@ onmessage = function (msg) {
         });
       });
 
-    } else if (payload.payload.files.format == "kanadb"){
+    } else if (payload.payload.files.format == "kanadb") {
       var id = payload.payload.files.files.file;
       kana_db.loadAnalysis(id)
-      .then(async (res) => {
-        if (res == null) {
-          postMessage({
-            type: "KanaDB_ERROR",
-            msg: `Fail: cannot load analysis ID '${id}'`
-          });
-        } else {
-          var wasm = await loaded;
-          var contents = await scran_utils_serialize.load(res);
-          var response = await runAllSteps(wasm, "unserialize", contents);
-          postMessage({
-            type: "loadedParameters",
-            resp: response
-          });
-        }
-      });
+        .then(async (res) => {
+          if (res == null) {
+            postMessage({
+              type: "KanaDB_ERROR",
+              msg: `Fail: cannot load analysis ID '${id}'`
+            });
+          } else {
+            var wasm = await loaded;
+            var contents = await scran_utils_serialize.load(res);
+            var response = await runAllSteps(wasm, "unserialize", contents);
+            postMessage({
+              type: "loadedParameters",
+              resp: response
+            });
+          }
+        });
     }
 
   } else if (payload.type == "EXPORT") { // exporting an analysis
@@ -480,11 +480,12 @@ onmessage = function (msg) {
       var state = await runAllSteps(wasm, "serialize");
       var output = await scran_utils_serialize.save(state, "KanaDB");
       var result = await kana_db.saveAnalysis(id, output.state, output.file_ids);
-      if (result) { 
+      if (result) {
+        let recs = await kana_db.getRecords();
         postMessage({
-            type: "KanaDB_store",
-            resp: result,
-            msg: `Success: Saved analysis to cache (${id})`
+          type: "KanaDB_store",
+          resp: recs,
+          msg: `Success: Saved analysis to cache (${id})`
         });
       } else {
         postMessage({
@@ -497,23 +498,24 @@ onmessage = function (msg) {
   } else if (payload.type == "REMOVEKDB") { // remove a saved analysis
     var id = payload.payload.id;
     kana_db.removeAnalysis(id)
-    .then(result => {
-      if (result !== null) {
-        postMessage({
-          type: "KanaDB_store",
-          resp: result,
-          msg: `Success: Removed file from cache (${id})`
-        });
-      } else {
-        postMessage({
-          type: "KanaDB_ERROR",
-          msg: `fail: cannot remove file from cache (${id})`
-        });
-      }
-    });
+      .then(async (result) => {
+        if (result) {
+          let recs = await kana_db.getRecords();
+          postMessage({
+            type: "KanaDB_store",
+            resp: recs,
+            msg: `Success: Removed file from cache (${id})`
+          });
+        } else {
+          postMessage({
+            type: "KanaDB_ERROR",
+            msg: `fail: cannot remove file from cache (${id})`
+          });
+        }
+      });
 
-/**************** OTHER EVENTS FROM UI *******************/
-  } else if (payload.type == "getMarkersForCluster") { 
+    /**************** OTHER EVENTS FROM UI *******************/
+  } else if (payload.type == "getMarkersForCluster") {
     loaded.then(wasm => {
       let cluster = payload.payload.cluster;
       let rank_type = payload.payload.rank_type;
