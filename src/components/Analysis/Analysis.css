@@ -48,3 +48,8 @@
 .text-100 {
     max-width: 250px;
 }
+
+.kana-date {
+    font-size: 8px;
+    font-style: italic;
+}

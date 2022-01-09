@@ -211,6 +211,16 @@ function AnalysisDialog({
         }
     }, [tmpInputFiles]);
 
+    function parseKanaDate(x) {
+        try {
+            let kstamp = x.replace("kana-", "");
+            return String(new Date(kstamp*1000)).replace("Invalid Date", "");
+            // easier solution was to replace invalid dates
+          } catch (error) {
+            return "";
+          }
+    }
+
     return (
         <>
             <Tooltip2 content="Start new analysis or modify parameters" position={Position.BOTTOM}>
@@ -807,16 +817,6 @@ function AnalysisDialog({
                                                     {
                                                         kanaIDBRecs ?
                                                             <div className="row">
-                                                                {/* <HTMLSelect
-                                                                    onChange={(x) => {
-                                                                        setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value })
-                                                                    }}>
-                                                                    {
-                                                                        kanaIDBRecs.map((x, i) => (
-                                                                            <option key={i}>{x}</option>
-                                                                        ))
-                                                                    }
-                                                                </HTMLSelect> */}
                                                                 <RadioGroup
                                                                     label="Choose an anlaysis"
                                                                     onChange={(x) => {
@@ -829,11 +829,12 @@ function AnalysisDialog({
                                                                         kanaIDBRecs.map((x, i) => {
                                                                             return (
                                                                                 <Radio key={i} style={{
-                                                                                    display: "flex",
-                                                                                    flexDirection: "row",
-                                                                                    alignItems: "center"
-                                                                                }}
-                                                                                    label={x} value={x} >
+                                                                                        display: "flex",
+                                                                                        flexDirection: "row",
+                                                                                        alignItems: "center"
+                                                                                    }}
+                                                                                    label={x} value={x} > &nbsp;
+                                                                                    <span className="kana-date">{parseKanaDate(x)}</span>  &nbsp;
                                                                                     <Icon icon="trash" size="10"
                                                                                         style={{
                                                                                             alignSelf: 'baseline',
@@ -857,7 +858,6 @@ function AnalysisDialog({
                                             }
                                         </Tabs>
                                     </div>
-
                                     {
                                         loadParams && loadParamsFor == loadImportFormat
                                             && tmpInputFiles?.file === inputFiles?.files?.file ?
