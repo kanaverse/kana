@@ -1,5 +1,6 @@
 import * as scran_utils from "./_utils.js";
 import * as scran_utils_viz_parent from "./_utils_viz_parent.js";
+import * as scran_neighbor_index from "./_neighbor_index.js";
 
 var cache = { "counter": 0, "promises": {} };
 var parameters = {};

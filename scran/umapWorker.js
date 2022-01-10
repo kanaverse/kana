@@ -1,6 +1,5 @@
-import WasmBuffer from "./WasmBuffer.js";
 import * as scran_utils from "./_utils.js";
-import * as scran_utils_viz_child from "_utils_viz_child.js";
+import * as scran_utils_viz_child from "./_utils_viz_child.js";
 
 var cache = {};
 var init_changed = false;
@@ -32,13 +31,14 @@ function rerun(wasm, animate) {
   }
 }
 
+import Module from "./scran.js";
+
 var loaded;
 onmessage = function(msg) {
   var id = msg.data.id;
 
   if (msg.data.cmd == "INIT") {
-    importScripts("./scran.js");
-    loaded = loadScran();
+    loaded = new Module();
     loaded.then(wasm => {
       postMessage({
         "id": id,

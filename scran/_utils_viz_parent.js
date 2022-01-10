@@ -90,7 +90,7 @@ export function runWithNeighbors(worker, args, nn_out, cache) {
   var transferrable = [];
   if (nn_out !== null) {
     run_msg.neighbors = nn_out;
-    extractBuffers(nn_out, transferrable);
+    scran_utils.extractBuffers(nn_out, transferrable);
   }
 
   return sendTask(worker, run_msg, cache, transferrable);

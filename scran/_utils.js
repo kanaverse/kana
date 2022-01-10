@@ -65,11 +65,11 @@ export function wasmifyArray(wasm, arr) {
 export function extractBuffers(object, store) {
   if (Array.isArray(object)) {
     for (const element of object) {
-      scran_utils.extractBuffers(element, store);
+      extractBuffers(element, store);
     }
   } else if (object.constructor == Object) {
     for (const [key, element] of Object.entries(object)) {
-      scran_utils.extractBuffers(element, store);
+      extractBuffers(element, store);
     }
   } else if (ArrayBuffer.isView(object)) {
     if (! (object.buffer instanceof ArrayBuffer)) {
@@ -82,7 +82,7 @@ export function extractBuffers(object, store) {
 /* Post a response after job success. */
 export function postSuccess(info, step, message) {
   var transferable = [];
-  scran_utils.extractBuffers(info, transferable);
+  extractBuffers(info, transferable);
   postMessage({
     type: `${step}_DATA`,
     resp: info,
@@ -96,7 +96,7 @@ export function simpleDeepCopy(x, ignoreTypedArrays = true) {
   if (Array.isArray(x)) {
     var y = x.slice();
     for (var i = 0; i < x.length; i++) {
-      y[i] = scran_utils.deepCopy(x[i]);
+      y[i] = simpleDeepCopy(x[i]);
     }
     return y;
   } else if (ArrayBuffer.isView(x)) {
@@ -108,7 +108,7 @@ export function simpleDeepCopy(x, ignoreTypedArrays = true) {
   } else if (x instanceof Object) {
     var y = { ...x };
     for (const [key, val] of y) {
-      y[key] = scran_utils.deepCopy(val);
+      y[key] = simpleDeepCopy(val);
     }
     return y;
   }

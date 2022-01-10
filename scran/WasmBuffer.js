@@ -34,7 +34,7 @@
  * existing TypedArray views bound to previous memory locations.
  */
 
-export default class WasmBuffer {
+export class WasmBuffer {
     static mapping =  {
         Float64Array: {
             size: 8,
@@ -143,3 +143,5 @@ export default class WasmBuffer {
         this.ptr = null;
     }
 }
+
+export default WasmBuffer;
