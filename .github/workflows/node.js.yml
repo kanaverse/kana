@@ -32,7 +32,7 @@ jobs:
       - run: sed -i 's|scran/scran|kana/scran/scran|g' ./build/scran/scran.js
       - name: GH Pages Deployment
         uses: JamesIves/github-pages-deploy-action@4.1.3
-        if: github.ref == 'ref/head/master'
+        if: ${{ github.ref == 'refs/heads/master'}}
         with:
           branch: gh-pages # The branch the action should deploy to.
           folder: ./build
