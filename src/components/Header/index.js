@@ -72,7 +72,7 @@ const Header = (props) => {
                 <Menu>
                   <MenuItem text="Save to browser" icon="floppy-disk"
                     onClick={() => {
-                      setIndexedDBState(true);
+                      props?.setIndexedDBState(true);
                     }} />
                   <MenuItem text="Download to file" icon="download"
                     onClick={() => {

@@ -26,6 +26,8 @@ function App() {
   const [showGame, setShowGame] = useState(false);
   // app export state - .kana file
   const [exportState, setExportState] = useState(false);
+  // app export state - store to indexedDB
+  const [indexedDBState, setIndexedDBState] = useState(false);
 
   // props for dialogs
   const loadingProps = {
@@ -50,7 +52,7 @@ function App() {
     setSelectedCluster, datasetName,
     setShowAnimation, triggerAnimation, setTriggerAnimation, params,
     setGeneColSel, setKanaIDBRecs, setLoadParams,
-    setInitLoadState, setIndexedDBState, inputFiles } = useContext(AppContext);
+    setInitLoadState, inputFiles } = useContext(AppContext);
 
   // initializes various things on the worker side
   useEffect(() => {
@@ -141,11 +143,30 @@ function App() {
         "msg": "not much to pass"
       });
 
-      AppToaster.show({ icon:"download", intent: "primary", message: "Exporting analysis in the background" });
+      AppToaster.show({ icon: "download", intent: "primary", message: "Exporting analysis in the background" });
     } else {
-      inputFiles?.files && AppToaster.show({ icon:"download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
+      inputFiles?.files && AppToaster.show({ icon: "download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
     }
   }, [exportState]);
+
+  useEffect(() => {
+
+    if (indexedDBState) {
+      window.scranWorker.postMessage({
+        "type": "SAVEKDB",
+        "payload": {
+          "files": inputFiles,
+          "params": params,
+          "id": datasetName,
+        },
+        "msg": "not much to pass"
+      });
+
+      AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Saving analysis in the background. Note: analysis is saved within the browser!!" });
+    } else {
+      inputFiles?.files && AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Analysis saved!" });
+    }
+  }, [indexedDBState]);
 
   // callback for all responses from workers
   // all interactions are logged and shown on the UI
@@ -278,7 +299,9 @@ function App() {
 
   return (
     <div className="App">
-      <Header setExportState={setExportState}/>
+      <Header
+        setExportState={setExportState}
+        setIndexedDBState={setIndexedDBState} />
       <div className="App-content">
         <div className="plot">
           {

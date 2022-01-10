@@ -60,8 +60,6 @@ const AppContextProvider = ({ children }) => {
   const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()));
 
   // app export state - store to indexedDB
-  const [indexedDBState, setIndexedDBState] = useState(false);
-  // app export state - store to indexedDB
   const [initLoadState, setInitLoadState] = useState(false);
 
   // wasm state and error 
@@ -177,25 +175,6 @@ const AppContextProvider = ({ children }) => {
 
   useEffect(() => {
 
-    if (indexedDBState) {
-      window.scranWorker.postMessage({
-        "type": "SAVEKDB",
-        "payload": {
-          "files": inputFiles,
-          "params": params,
-          "id": datasetName,
-        },
-        "msg": "not much to pass"
-      });
-
-      AppToaster.show({ icon:"floppy-disk", intent: "primary", message: "Saving analysis in the background. Note: analysis is saved within the browser!!" });
-    } else {
-      inputFiles?.files && AppToaster.show({ icon:"floppy-disk", intent: "primary", message: "Analysis saved!" });
-    }
-  }, [indexedDBState]);
-
-  useEffect(() => {
-
     if (deletekdb) {
       window.scranWorker.postMessage({
         "type": "REMOVEKDB",
@@ -248,7 +227,6 @@ const AppContextProvider = ({ children }) => {
         triggerAnimation, setTriggerAnimation,
         savedPlot, setSavedPlot,
         geneColSel, setGeneColSel,
-        indexedDBState, setIndexedDBState,
         kanaIDBRecs, setKanaIDBRecs,
         initLoadState, setInitLoadState,
         loadParamsFor, setLoadParamsFor,
