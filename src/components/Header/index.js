@@ -33,7 +33,7 @@ const Header = (props) => {
     shouldReturnFocusOnClose: true,
   });
 
-  const { datasetName, setDatasetName, setIndexedDBState } = useContext(AppContext);
+  const { datasetName, setDatasetName } = useContext(AppContext);
   // app open inputs
   const [openInput, setOpenInput] = useState(false);
 
@@ -63,7 +63,7 @@ const Header = (props) => {
               onConfirm={(val) => { setDatasetName(val) }} />
           </Tooltip2>
 
-          <Stats />
+          <Stats initDims={props?.initDims} qcDims={props?.qcDims}/>
           <NavbarDivider />
 
           <Tooltip2 content="Save the analysis, either in your browser's cache or to a file on your computer." position={Position.BOTTOM}>

@@ -28,6 +28,11 @@ function App() {
   const [exportState, setExportState] = useState(false);
   // app export state - store to indexedDB
   const [indexedDBState, setIndexedDBState] = useState(false);
+  // Response State for various components
+  // dim sizes
+  const [initDims, setInitDims] = useState(null);
+  const [qcDims, setQcDims] = useState(null);
+  // const [fSelDims, setFSelDims] = useState(null);
 
   // props for dialogs
   const loadingProps = {
@@ -41,7 +46,7 @@ function App() {
   };
 
   const { setWasmInitialized, setTsneData, setRedDims, redDims,
-    setGenesInfo, setInitDims, setQcDims, defaultRedDims, setDefaultRedDims,
+    setGenesInfo, defaultRedDims, setDefaultRedDims,
     setQcData, qcData, setClusterData, setFSelectionData,
     setUmapData, setPcaVarExp, logs, setLogs,
     selectedCluster, clusterRank,
@@ -301,7 +306,9 @@ function App() {
     <div className="App">
       <Header
         setExportState={setExportState}
-        setIndexedDBState={setIndexedDBState} />
+        setIndexedDBState={setIndexedDBState}
+        initDims={initDims}
+        qcDims={qcDims}/>
       <div className="App-content">
         <div className="plot">
           {

@@ -59,7 +59,7 @@ const AppContextProvider = ({ children }) => {
   // creates a default dataset name
   const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()));
 
-  // app export state - store to indexedDB
+  // app export state - params loading first time ?
   const [initLoadState, setInitLoadState] = useState(false);
 
   // wasm state and error 
@@ -67,10 +67,6 @@ const AppContextProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   // Response State for various components
-  // dim sizes
-  const [initDims, setInitDims] = useState(null);
-  const [qcDims, setQcDims] = useState(null);
-  const [fSelDims, setFSelDims] = useState(null);
 
   // Gene details 
   const [genesInfo, setGenesInfo] = useState(null);
@@ -200,11 +196,8 @@ const AppContextProvider = ({ children }) => {
         tsneData, setTsneData,
         umapData, setUmapData,
         genesInfo, setGenesInfo,
-        initDims, setInitDims,
-        qcDims, setQcDims,
         qcData, setQcData,
         qcThreshold, setQcThreshold,
-        fSelDims, setFSelDims,
         redDims, setRedDims,
         defaultRedDims, setDefaultRedDims,
         plotRedDims, setPlotRedDims,
