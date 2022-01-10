@@ -45,8 +45,6 @@ const AppContextProvider = ({ children }) => {
     markerGene: {}
   });
 
-  // app open inputs
-  const [openInput, setOpenInput] = useState(false);
   // show in-app game ?
   const [showGame, setShowGame] = useState(false);
   // which tab is selected ? defaults to new
@@ -263,7 +261,6 @@ const AppContextProvider = ({ children }) => {
         gene, setGene,
         clusterColors, setClusterColors,
         reqGene, setReqGene,
-        openInput, setOpenInput,
         customSelection, setCustomSelection,
         delCustomSelection, setDelCustomSelection,
         showGame, setShowGame,

@@ -10,18 +10,18 @@ import React, { useContext, useState, useCallback, useEffect } from "react";
 import { AppContext } from "../../context/AppContext";
 import "./Analysis.css";
 
-function AnalysisDialog({
+const AnalysisDialog =({
     buttonText,
     includeFooter,
     ...props
-}) {
+}) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showStepHelper, setShowStepHelper] = useState(1);
     const handleButtonClick = useCallback(() => setIsOpen(!isOpen), [isOpen]);
     const handleClose = useCallback(() => setIsOpen(false), []);
 
     const { inputFiles, setInputFiles,
-        params, setParams, openInput,
+        params, setParams,
         tabSelected, setTabSelected,
         loadParams, kanaIDBRecs,
         setLoadParamsFor, loadParamsFor,
@@ -147,8 +147,8 @@ function AnalysisDialog({
     }
 
     useEffect(() => {
-        openInput && setIsOpen(true);
-    }, [openInput]);
+        props?.openInput && setIsOpen(true);
+    }, [props?.openInput]);
 
     useEffect(() => {
         if (loadParams && tabSelected === "load") {
@@ -218,7 +218,7 @@ function AnalysisDialog({
                 return "Invalid Date";
             } else {
                 let d = new Date(kstamp);
-                return d.toDateString() + ", " + d.toLocaleTimeString(); 
+                return d.toDateString() + ", " + d.toLocaleTimeString();
             }
         } catch (error) {
             return "";

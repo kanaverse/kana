@@ -34,6 +34,8 @@ const Header = () => {
   });
 
   const { setExportState, datasetName, setDatasetName, setIndexedDBState } = useContext(AppContext);
+  // app open inputs
+  const [openInput, setOpenInput] = useState(false);
 
   return (
     <>
@@ -51,6 +53,7 @@ const Header = () => {
             title="Import dataset & update parameters (mouseover for info)"
             buttonText="Start Analysis"
             includeFooter={true}
+            openInput={openInput}
             {...state} />
 
           <NavbarDivider />
@@ -92,6 +95,7 @@ const Header = () => {
             icon="document"
             title="Single-cell RNA-seq analysis in the browser"
             isOpen={true}
+            setOpenInput={setOpenInput}
             {...state}
           />
         </NavbarGroup>
