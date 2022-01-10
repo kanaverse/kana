@@ -98,7 +98,7 @@ scran_utils_viz_parent.retrieveCoordinates = function(worker, cache) {
   if ("reloaded" in cache) {
     // Buffers are transferred to the main thread, so we need to make sure we
     // clone it so that we don't lose our master copy.
-    var copy = cache.reloaded;
+    var copy = { ...cache.reloaded };
     copy.x = copy.x.slice();
     copy.y = copy.y.slice();
     return new Promise(resolve => resolve(copy));
