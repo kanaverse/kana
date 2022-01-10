@@ -73,10 +73,6 @@ const AppContextProvider = ({ children }) => {
   // default column to show in markers table
   const [geneColSel, setGeneColSel] = useState("id");
 
-  // QC Data
-  const [qcData, setQcData] = useState(null);
-  const [qcThreshold, setQcThreshold] = useState(null);
-
   // Feature Selection
   const [fSelectionData, setFSelectionData] = useState(null);
 
@@ -196,8 +192,6 @@ const AppContextProvider = ({ children }) => {
         tsneData, setTsneData,
         umapData, setUmapData,
         genesInfo, setGenesInfo,
-        qcData, setQcData,
-        qcThreshold, setQcThreshold,
         redDims, setRedDims,
         defaultRedDims, setDefaultRedDims,
         plotRedDims, setPlotRedDims,

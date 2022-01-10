@@ -34,6 +34,9 @@ function App() {
   const [qcDims, setQcDims] = useState(null);
   // const [fSelDims, setFSelDims] = useState(null);
 
+  // QC Data
+  const [qcData, setQcData] = useState(null);
+
   // props for dialogs
   const loadingProps = {
     autoFocus: true,
@@ -47,7 +50,7 @@ function App() {
 
   const { setWasmInitialized, setTsneData, setRedDims, redDims,
     setGenesInfo, defaultRedDims, setDefaultRedDims,
-    setQcData, qcData, setClusterData, setFSelectionData,
+    setClusterData, setFSelectionData,
     setUmapData, setPcaVarExp, logs, setLogs,
     selectedCluster, clusterRank,
     selectedClusterSummary, setSelectedClusterSummary,
@@ -308,7 +311,7 @@ function App() {
         setExportState={setExportState}
         setIndexedDBState={setIndexedDBState}
         initDims={initDims}
-        qcDims={qcDims}/>
+        qcDims={qcDims} />
       <div className="App-content">
         <div className="plot">
           {
@@ -360,7 +363,7 @@ function App() {
             </div>}
         </div>
         <div className="analysis">
-          <Gallery />
+          <Gallery qcData={qcData}/>
         </div>
       </div>
       <Overlay

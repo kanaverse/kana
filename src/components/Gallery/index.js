@@ -9,7 +9,7 @@ import QCPlotMgr from "../Plots/QCPlotMgr";
 import './Gallery.css';
 import ImgPlot from "../Plots/ImgPlot";
 
-const Gallery = () => {
+const Gallery = (props) => {
   const { pcaVarExp, qcData, clusterData, savedPlot,
     datasetName } = useContext(AppContext);
 
@@ -17,10 +17,10 @@ const Gallery = () => {
     <>
       <div className="gallery-cont">
         {
-          qcData && qcData?.["thresholds"] ?
+          props?.qcData && props?.qcData?.["thresholds"] ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
               <h5>QC Statistics</h5>
-              <QCPlotMgr title={datasetName.split(" ").join("_")} data={qcData} />
+              <QCPlotMgr title={datasetName.split(" ").join("_")} data={props?.qcData} />
             </Card>
             : ""
         }
