@@ -350,7 +350,7 @@ function App() {
       <div className="App-content">
         <div className="plot">
           {
-            defaultRedDims ?
+            defaultRedDims && clusterData ?
               <DimPlot animateData={animateData} /> :
               showGame ?
                 <div style={{

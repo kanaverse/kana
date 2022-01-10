@@ -49,6 +49,8 @@ function AnalysisDialog({
     let [tmpInputParams, setTmpInputParams] = useState(tabSelected === "new" ? params : loadParams);
 
     function handleImport() {
+        // convert cluster res to number
+        tmpInputParams["cluster"]["clus-res"] = Number(tmpInputParams["cluster"]["clus-res"])
         setParams(tmpInputParams);
 
         if (tabSelected === "load") {
@@ -569,7 +571,8 @@ function AnalysisDialog({
                             </Text>
                             <NumericInput
                                 placeholder="0.5" value={tmpInputParams["cluster"]["clus-res"]}
-                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-res": nval } }) }} />
+                                stepSize={0.1}
+                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-res": val } }) }} />
                         </Label>
                     </div>
                 </div>
