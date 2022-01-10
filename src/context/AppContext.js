@@ -45,8 +45,6 @@ const AppContextProvider = ({ children }) => {
     markerGene: {}
   });
 
-  // show in-app game ?
-  const [showGame, setShowGame] = useState(false);
   // which tab is selected ? defaults to new
   const [tabSelected, setTabSelected] = useState("new");
   // saved analysis in the browser's indexeddb
@@ -263,7 +261,6 @@ const AppContextProvider = ({ children }) => {
         reqGene, setReqGene,
         customSelection, setCustomSelection,
         delCustomSelection, setDelCustomSelection,
-        showGame, setShowGame,
         exportState, setExportState,
         datasetName, setDatasetName,
         tabSelected, setTabSelected,

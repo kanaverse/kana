@@ -21,6 +21,9 @@ function App() {
   const [loading, setLoading] = useState(true);
   // use local state for tsne/umap animation
   const [animateData, setAnimateData] = useState(null);
+  // show in-app game ?
+  const [showGame, setShowGame] = useState(false);
+
   // props for dialogs
   const loadingProps = {
     autoFocus: true,
@@ -41,7 +44,7 @@ function App() {
     selectedClusterIndex, setSelectedClusterIndex,
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection, setReqGene,
-    setSelectedCluster, setShowGame, showGame, datasetName, setExportState,
+    setSelectedCluster, datasetName, setExportState,
     setShowAnimation, triggerAnimation, setTriggerAnimation, params,
     setGeneColSel, setKanaIDBRecs, setLoadParams,
     setInitLoadState, setIndexedDBState } = useContext(AppContext);
@@ -258,7 +261,7 @@ function App() {
         <div className="plot">
           {
             defaultRedDims ?
-              <DimPlot animateData={animateData}/> :
+              <DimPlot animateData={animateData} /> :
               showGame ?
                 <div style={{
                   height: '100%',
