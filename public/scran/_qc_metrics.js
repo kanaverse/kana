@@ -1,6 +1,7 @@
 import * as scran_inputs from "./_inputs.js";
 import * as scran_utils from "./_utils.js";
 import WasmBuffer from "./WasmBuffer.js";
+import "mito.js";
 
 var cache = {};
 var parameters = {};
