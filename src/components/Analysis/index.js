@@ -160,7 +160,7 @@ function AnalysisDialog({
         if (tabSelected === "load" && loadImportFormat === "kanadb"
             && tmpInputFiles?.file === null && kanaIDBRecs) {
             setTmpInputFiles({
-                file: kanaIDBRecs[0]
+                file: kanaIDBRecs[0].id
             });
         }
     }, [kanaIDBRecs, loadImportFormat]);
@@ -212,17 +212,8 @@ function AnalysisDialog({
     }, [tmpInputFiles]);
 
     function parseKanaDate(x) {
-        try {
-            let kstamp = Number(x.replace("kana-", ""));
-            if (isNaN(kstamp)) {
-                return "Invalid Date";
-            } else {
-                let d = new Date(kstamp);
-                return d.toDateString() + ", " + d.toLocaleTimeString(); 
-            }
-        } catch (error) {
-            return "";
-        }
+        let d = new Date(x);
+        return d.toDateString() + ", " + d.toLocaleTimeString(); 
     }
 
     const get_common_tooltips = () => {
@@ -867,8 +858,8 @@ function AnalysisDialog({
                                                                                     flexDirection: "row",
                                                                                     alignItems: "center"
                                                                                 }}
-                                                                                    label={x} value={x} > &nbsp;
-                                                                                    <span className="kana-date">{parseKanaDate(x)}</span>  &nbsp;
+                                                                                    label={x.title} value={x.id} > &nbsp;
+                                                                                    <span className="kana-date">{parseKanaDate(x.time)}</span>  &nbsp;
                                                                                     <Icon icon="trash" size="10"
                                                                                         style={{
                                                                                             alignSelf: 'baseline',
@@ -876,7 +867,8 @@ function AnalysisDialog({
                                                                                             paddingLeft: '5px',
                                                                                         }}
                                                                                         onClick={() => {
-                                                                                            setDeletekdb(x);
+                                                                                            console.log(x);
+                                                                                            setDeletekdb(x.id);
                                                                                         }}></Icon>
                                                                                 </Radio>
                                                                             )

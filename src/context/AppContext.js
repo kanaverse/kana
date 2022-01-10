@@ -205,9 +205,7 @@ const AppContextProvider = ({ children }) => {
       window.scranWorker.postMessage({
         "type": "SAVEKDB",
         "payload": {
-          "files": inputFiles,
-          "params": params,
-          "id": datasetName,
+          "title": datasetName,
         },
         "msg": "not much to pass"
       });

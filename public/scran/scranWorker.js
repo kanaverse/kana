@@ -475,12 +475,12 @@ onmessage = function (msg) {
     });
 
   } else if (payload.type == "SAVEKDB") { // save analysis to inbrowser indexedDB 
-    var id = payload.payload.id;
+    var title = payload.payload.title;
     loaded.then(async (wasm) => {
       var state = await runAllSteps(wasm, "serialize");
       var output = await scran_utils_serialize.save(state, "KanaDB");
-      var result = await kana_db.saveAnalysis(id, output.state, output.file_ids);
-      if (result) {
+      var id = await kana_db.saveAnalysis(null, output.state, output.file_ids, title);
+      if (id !== null) {
         let recs = await kana_db.getRecords();
         postMessage({
           type: "KanaDB_store",

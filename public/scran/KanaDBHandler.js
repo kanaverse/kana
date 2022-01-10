@@ -8,14 +8,30 @@ var kana_db = {};
     x.initialize = function () {
         init = new Promise(resolve => {
             // initialize database on worker creation
-            kanaDB = indexedDB.open("KanaDB");
+            kanaDB = indexedDB.open("KanaDB", 2);
 
             kanaDB.onupgradeneeded = (e) => {
                 var kanaDBClient = e.target.result;
+
+                // Currently purging all existing stores when the version is updated.
+                // At some point we may add a more sophisticated upgrade mechanism.
+                try {
+                    kanaDBClient.deleteObjectStore("analysis");
+                } catch (e) {}
+                try {
+                    kanaDBClient.deleteObjectStore("analysis_meta");
+                } catch (e) {}
+                try {
+                    kanaDBClient.deleteObjectStore("file");
+                } catch (e) {}
+                try {
+                    kanaDBClient.deleteObjectStore("file_meta");
+                } catch (e) {}
+
                 kanaDBClient.createObjectStore("analysis", { keyPath: 'id' });
-                kanaDBClient.createObjectStore("analysis_files", { keyPath: 'id' });
+                kanaDBClient.createObjectStore("analysis_meta", { keyPath: 'id' });
                 kanaDBClient.createObjectStore("file", { keyPath: 'id' });
-                kanaDBClient.createObjectStore("file_ref_count", { keyPath: 'id' });
+                kanaDBClient.createObjectStore("file_meta", { keyPath: 'id' });
             };
 
             // Send existing stored analyses, if available.
@@ -31,13 +47,19 @@ var kana_db = {};
         return init;
     };
 
-    function getRecordsResolver(resolve) {
-        var allAnalysis = kanaDB.result
-            .transaction(["analysis"], "readonly")
-            .objectStore("analysis").getAllKeys();
+    function getRecordsResolver(resolve, store = null) {
+        if (store === null) {
+            store = kanaDB.result
+                .transaction(["analysis_meta"], "readonly")
+                .objectStore("analysis_meta")
+        }
+
+        var allAnalysis = store.getAll();
 
         allAnalysis.onsuccess = function () {
-            resolve(allAnalysis.result);
+            let vals = allAnalysis.result;
+            vals.forEach(x => { delete x.files }); // no need to transfer that.
+            resolve(vals);
         };
         allAnalysis.onerror = function () {
             resolve(null);
@@ -50,7 +72,7 @@ var kana_db = {};
             let request = store.get(id);
             request.onsuccess = function () {
                 if (request.result !== undefined) {
-                    resolve(request.result.payload);
+                    resolve(request.result);
                 } else {
                     resolve(null);
                 }
@@ -83,13 +105,15 @@ var kana_db = {};
     /** Functions to save content **/
     x.saveFile = async function (id, buffer) {
         await init;
-        let trans = kanaDB.result.transaction(["file", "file_ref_count"], "readwrite");
+        let trans = kanaDB.result.transaction(["file", "file_meta"], "readwrite");
         let file_store = trans.objectStore("file");
-        let ref_store = trans.objectStore("file_ref_count");
+        let meta_store = trans.objectStore("file_meta");
 
-        var refcount = await loadContent(id, ref_store);
-        if (refcount === null) {
+        var meta = await loadContent(id, meta_store);
+        if (meta === null) {
             refcount = 0;
+        } else {
+            refcount = meta["count"];
         }
         refcount++;
 
@@ -104,7 +128,8 @@ var kana_db = {};
         });
 
         var ref_saving = new Promise(resolve => {
-            var putrequest = ref_store.put({ "id": id, "payload": refcount });
+            meta.count = refcount;
+            var putrequest = meta_store.put(meta);
             putrequest.onsuccess = function (event) {
                 resolve(true);
             };
@@ -116,11 +141,18 @@ var kana_db = {};
         return allOK([data_saving, ref_saving])
     };
 
-    x.saveAnalysis = async function (id, state, files) {
+    x.saveAnalysis = async function (id, state, files, title) { 
         await init;
-        let trans = kanaDB.result.transaction(["analysis", "analysis_files"], "readwrite")
+        let trans = kanaDB.result.transaction(["analysis", "analysis_meta"], "readwrite")
         let analysis_store = trans.objectStore("analysis");
-        let file_id_store = trans.objectStore("analysis_files");
+        let meta_store = trans.objectStore("analysis_meta");
+
+        if (id == null) {
+            let already = await new Promise(resolve => {
+                getRecordsResolver(resolve, meta_store);
+            });
+            id = String(already.length);
+        }
 
         var data_saving = new Promise(resolve => {
             var putrequest = analysis_store.put({ "id": id, "payload": state });
@@ -133,7 +165,7 @@ var kana_db = {};
         });
 
         var id_saving = new Promise(resolve => {
-            var putrequest = file_id_store.put({ "id": id, "payload": files });
+            var putrequest = meta_store.put({ "id": id, "files": files, "time": Number(new Date()), "title": title });
             putrequest.onsuccess = function (event) {
                 resolve(true);
             };
@@ -142,7 +174,11 @@ var kana_db = {};
             };
         });
 
-        return allOK([data_saving, id_saving])
+        if (await allOK([data_saving, id_saving])) {
+            return id;
+        } else {
+            return null;
+        }
     };
 
     /** Functions to load content **/
@@ -151,7 +187,7 @@ var kana_db = {};
         let file_store = kanaDB.result
             .transaction(["file"], "readonly")
             .objectStore("file");
-        return loadContent(id, file_store);
+        return loadContent(id, file_store)["payload"];
     };
 
     x.loadAnalysis = async function (id) {
@@ -159,19 +195,20 @@ var kana_db = {};
         let analysis_store = kanaDB.result
             .transaction(["analysis"], "readonly")
             .objectStore("analysis");
-        return loadContent(id, analysis_store);
+        return loadContent(id, analysis_store)["payload"];
     };
 
     /** Functions to load content **/
-    x.removeFile = async function removeFile(id) {
+    x.removeFile = async function(id) {
         await init;
-        let trans = kanaDB.result.transaction(["file", "file_ref_count"], "readwrite");
+        let trans = kanaDB.result.transaction(["file", "file_meta"], "readwrite");
         let file_store = trans.objectStore("file");
-        let ref_store = trans.objectStore("file_ref_count");
+        let meta_store = trans.objectStore("file_meta");
 
-        var promises = [];
-        var refcount = await loadContent(id, file_ref_count);
+        var meta = await loadContent(id, meta_store);
+        var refcount = meta["count"];
         refcount--;
+        var promises = [];
 
         if (refcount == 0) {
             promises.push(new Promise(resolve => {
@@ -184,7 +221,7 @@ var kana_db = {};
                 };
             }));
             promises.push(new Promise(resolve => {
-                let request = ref_store.delete(id);
+                let request = meta_store.delete(id);
                 request.onerror = function (event) {
                     resolve(false);
                 };
@@ -194,7 +231,8 @@ var kana_db = {};
             }))
         } else {
             promises.push(new Promise(resolve => {
-                let request = ref_store.put({ "id": id, "payload": refcount })
+                meta.count = refcount;
+                let request = meta_store.put(meta);
                 request.onsuccess = function (event) {
                     resolve(true);
                 };
@@ -207,11 +245,11 @@ var kana_db = {};
         return allOK(promises);
     };
 
-    x.removeAnalysis = async function removeFile(id) {
+    x.removeAnalysis = async function(id) {
         await init;
-        let trans = kanaDB.result.transaction(["analysis", "analysis_files"], "readwrite")
+        let trans = kanaDB.result.transaction(["analysis", "analysis_meta"], "readwrite")
         let analysis_store = trans.objectStore("analysis");
-        let file_id_store = trans.objectStore("analysis_files");
+        let meta_store = trans.objectStore("analysis_meta");
 
         var promises = [];
 
@@ -226,13 +264,13 @@ var kana_db = {};
         }));
 
         // Removing all files as well.
-        var files = await loadContent(id, file_id_store);
+        var files = await loadContent(id, meta_store)["files"];
         for (const f of files) {
             promises.push(x.removeFile(f));
         }
 
         promises.push(new Promise(resolve => {
-            let request = file_id_store.delete(id);
+            let request = meta_store.delete(id);
             request.onsuccess = function (event) {
                 resolve(true);
             };
