@@ -211,10 +211,10 @@ function App() {
         index[resp.ordering[i]] = i;
         records.push({
           "gene": resp?.ordering?.[i],
-          "mean": x,
-          "delta": resp?.delta_detected?.[i],
-          "lfc": resp?.lfc?.[i],
-          "detected": resp?.detected?.[i],
+          "mean": parseFloat(x.toFixed(2)),
+          "delta": parseFloat(resp?.delta_detected?.[i].toFixed(2)),
+          "lfc": parseFloat(resp?.lfc?.[i].toFixed(2)),
+          "detected": parseFloat(resp?.detected?.[i].toFixed(2)),
           "expanded": false,
           "expr": null,
         });
