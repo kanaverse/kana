@@ -20,7 +20,7 @@ Our client-side approach has a number of advantages:
 
 ## For users
 
-If you have a Matrix Market (`.mtx`) file, you're ready to go.
+If you have a Matrix Market (`.mtx`) file or HDF5 (tenx V3 or AnnData representation stored as h5ad), you're ready to go.
 
 1. Launch the application by clicking [**here**](https://www.jkanche.com/scran.js.app).
 2. Select the Matrix Market file (this may be Gzip-compressed).
@@ -52,7 +52,10 @@ and diagnostic plots from the individual analysis steps.
 - Clicking on the plus icon in the marker table will give some details about that gene's expression in the selected cluster, including a histogram relative to cells in other clusters.
 - Hovering over the bars in the Markers section for a gene displays a tooltip on different statistics for that gene vs the selected cluster.
 - Filter markers either by searching for a gene or using the sliders to filter by various statistics.
+- Clicking on Save in the t-SNE or UMAP section will capture the current state of the visualization to Gallery
+- Clicking on Animate will interactively visualize dimensions at various iterations as the t-SNE or UMAP algorithms computes these embeddings
 - Clicking on "What's happening" will show logs describing how long each step of the analysis took (and any errors during the analysis).
+- Clicking Export will save the analysis either to the browser or download the analysis as a .kana file. Loading these files will restore the state of the application
 
 ## For developers
 
