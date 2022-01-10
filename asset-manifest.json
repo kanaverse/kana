@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "./static/css/main.3e60ad95.chunk.css",
-    "main.js": "./static/js/main.bc94684a.chunk.js",
-    "main.js.map": "./static/js/main.bc94684a.chunk.js.map",
+    "main.js": "./static/js/main.af9d036b.chunk.js",
+    "main.js.map": "./static/js/main.af9d036b.chunk.js.map",
     "runtime-main.js": "./static/js/runtime-main.63753fa6.js",
     "runtime-main.js.map": "./static/js/runtime-main.63753fa6.js.map",
     "static/css/2.9d6cd94b.chunk.css": "./static/css/2.9d6cd94b.chunk.css",
-    "static/js/2.78bac33e.chunk.js": "./static/js/2.78bac33e.chunk.js",
-    "static/js/2.78bac33e.chunk.js.map": "./static/js/2.78bac33e.chunk.js.map",
+    "static/js/2.37c5c357.chunk.js": "./static/js/2.37c5c357.chunk.js",
+    "static/js/2.37c5c357.chunk.js.map": "./static/js/2.37c5c357.chunk.js.map",
     "static/js/3.b4364a40.chunk.js": "./static/js/3.b4364a40.chunk.js",
     "static/js/3.b4364a40.chunk.js.map": "./static/js/3.b4364a40.chunk.js.map",
     "index.html": "./index.html",
@@ -15,14 +15,14 @@
     "service-worker.js.map": "./service-worker.js.map",
     "static/css/2.9d6cd94b.chunk.css.map": "./static/css/2.9d6cd94b.chunk.css.map",
     "static/css/main.3e60ad95.chunk.css.map": "./static/css/main.3e60ad95.chunk.css.map",
-    "static/js/2.78bac33e.chunk.js.LICENSE.txt": "./static/js/2.78bac33e.chunk.js.LICENSE.txt",
+    "static/js/2.37c5c357.chunk.js.LICENSE.txt": "./static/js/2.37c5c357.chunk.js.LICENSE.txt",
     "static/media/index.css": "./static/media/icons-20.cde033c5.eot"
   },
   "entrypoints": [
     "static/js/runtime-main.63753fa6.js",
     "static/css/2.9d6cd94b.chunk.css",
-    "static/js/2.78bac33e.chunk.js",
+    "static/js/2.37c5c357.chunk.js",
     "static/css/main.3e60ad95.chunk.css",
-    "static/js/main.bc94684a.chunk.js"
+    "static/js/main.af9d036b.chunk.js"
   ]
 }
