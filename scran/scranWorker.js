@@ -1,24 +1,38 @@
-import * as scran_utils from "./_utils.js";
-import * as scran_utils_serialize from "./_utils_serialize.js";
+importScripts("./WasmBuffer.js");
+importScripts("./HDF5Reader.js");
+importScripts("./_utils_serialize.js");
+importScripts("./_utils.js");
+importScripts("./_utils_viz_parent.js");
+importScripts("./_utils_markers.js");
 
-import * as scran_inputs from "./_inputs.js";
-import * as scran_qc_metrics from "./_qc_metrics.js";
-import * as scran_qc_thresholds from "./_qc_thresholds.js";
-import * as scran_qc_filter from "./_qc_filter.js";
-import * as scran_normalization from "./_normalization.js";
-import * as scran_model_gene_var from "./_model_gene_var.js";
-import * as scran_pca from "./_pca.js";
-import * as scran_neighbor_index from "./_neighbor_index.js";
-import * as scran_choose_clustering from "./_choose_clustering.js";
-import * as scran_snn_cluster from "./_snn_cluster.js";
-import * as scran_snn_graph from "./_snn_graph.js";
-import * as scran_snn_neighbors from "./_snn_neighbors.js";
-import * as scran_tsne_monitor from "./_tsne_monitor.js";
-import * as scran_umap_monitor from "./_umap_monitor.js";
-import * as scran_score_markers from "./_score_markers.js";
-import * as scran_custom_markers from "./_custom_markers.js";
+// Some external dependencies.
+var window = {};
+importScripts("https://cdn.jsdelivr.net/gh/usnistgov/jsfive@master/dist/hdf5.js");
+var hdf5 = window.hdf5;
+importScripts("https://cdn.jsdelivr.net/pako/1.0.3/pako.min.js");
+var pako = window.pako;
+importScripts("https://cdn.jsdelivr.net/npm/d3-dsv@3");
+importScripts("https://cdn.jsdelivr.net/npm/hash-wasm@4/dist/md5.umd.min.js");
 
-import * as kana_db from "./KanaDBHandler.js";
+importScripts("./_inputs.js");
+importScripts("./_qc_metrics.js");
+importScripts("./_qc_thresholds.js");
+importScripts("./_qc_filter.js");
+importScripts("./_normalization.js");
+importScripts("./_model_gene_var.js");
+importScripts("./_pca.js");
+importScripts("./_neighbor_index.js");
+importScripts("./_choose_clustering.js");
+importScripts("./_snn_cluster.js");
+importScripts("./_snn_graph.js");
+importScripts("./_snn_neighbors.js");
+importScripts("./_tsne_monitor.js");
+importScripts("./_umap_monitor.js");
+importScripts("./_score_markers.js");
+importScripts("./_custom_markers.js");
+importScripts("./KanaDBHandler.js");
+
+importScripts("./mito.js");
 
 /***************************************/
 
@@ -378,12 +392,13 @@ function runAllSteps(wasm, mode = "run", state = null) {
 
 /***************************************/
 
-import loadScran from "./scran.js";
-
 var loaded;
 onmessage = function (msg) {
+
   const payload = msg.data;
   if (payload.type == "INIT") {
+    // TODO: parcel2 doesn't load inline importScripts
+    importScripts("./scran.js");
     loaded = loadScran();
     loaded.then(wasm => {
       postMessage({

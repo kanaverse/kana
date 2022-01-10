@@ -1,50 +1,56 @@
-import * as scran_utils from "./_utils.js";
-import * as scran_neighbor_index from "./_neighbor_index.js";
+const scran_snn_neighbors = {};
 
-var cache = {};
-var parameters = {};
+(function(x) {
+  /** Private members **/
+  var cache = {};
+  var parameters = {};
 
-export var changed = false;
+  /** Public members **/
+  x.changed = false;
 
-function rawCompute(wasm, args) {
-  scran_utils.freeCache(cache.raw);
-  var nn_index = scran_neighbor_index.fetchIndex(wasm);
-  cache.raw = wasm.find_nearest_neighbors(nn_index, args.k);
-  delete cache.reloaded;
-  return;
-}
-
-export function compute(wasm, args) {
-  if (!scran_neighbor_index.changed && !scran_utils.changedParameters(parameters, args)) {
-    changed = false;
-  } else {
-    rawCompute(wasm, args);
-    parameters = args;
-    changed = true;
+  /** Private functions **/
+  function rawCompute(wasm, args) {
+    scran_utils.freeCache(cache.raw);
+    var nn_index = scran_neighbor_index.fetchIndex(wasm);
+    cache.raw = wasm.find_nearest_neighbors(nn_index, args.k);
+    delete cache.reloaded;
+    return;
   }
-  return;
-}
 
-export function results(wasm) {
-  return {};
-}
-
-export function serialize(wasm) {
-  return {
-    "parameters": parameters,
-    "contents": results(wasm)
+  /** Public functions (standard) **/
+  x.compute = function(wasm, args) {
+    if (!scran_neighbor_index.changed && !scran_utils.changedParameters(parameters, args)) {
+      x.changed = false;
+    } else {
+      rawCompute(wasm, args);
+      parameters = args;
+      x.changed = true;
+    }
+    return;
   };
-}
 
-export function unserialize(wasm, saved) {
-  parameters = saved.parameters;
-  cache.reloaded = saved.contents;
-  return;
-}
+  x.results = function(wasm) {
+    return {};
+  };
 
-export function fetchNeighbors(wasm) {
-  if ("reloaded" in cache) {
-    rawCompute(wasm, parameters);
-  }
-  return cache.raw;
-}
+  x.serialize = function(wasm) {
+    return {
+      "parameters": parameters,
+      "contents": x.results(wasm)
+    };
+  };
+
+  x.unserialize = function(wasm, saved) {
+    parameters = saved.parameters;
+    cache.reloaded = saved.contents;
+    return;
+  };
+
+  /** Public functions (custom) **/
+  x.fetchNeighbors = function(wasm) {
+    if ("reloaded" in cache) {
+      rawCompute(wasm, parameters);
+    }
+    return cache.raw;
+  };
+})(scran_snn_neighbors);

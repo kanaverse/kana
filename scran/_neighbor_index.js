@@ -1,50 +1,56 @@
-import * as scran_utils from "./_utils.js";
-import * as scran_pca from "./_pca.js";
+const scran_neighbor_index = {};
 
-var cache = {};
-var parameters = {};
+(function(x) {
+  /** Private members **/
+  var cache = {};
+  var parameters = {};
 
-export var changed = false;
+  /** Public members **/
+  x.changed = false;
 
-function rawCompute(wasm, args) {
-  scran_utils.freeCache(cache.raw);
-  var pcs = scran_pca.fetchPCsOFFSET(wasm);
-  cache.raw = wasm.build_neighbor_index(pcs.offset, pcs.num_pcs, pcs.num_obs, args.approximate);
-  delete cache.reloaded;
-  return;
-}
-
-export function compute(wasm, args) {
-  if (!scran_pca.changed && !scran_utils.changedParameters(parameters, args)) {
-    changed = false;
-  } else {
-    rawCompute(wasm, args);
-    parameters = args;
-    changed = true;
+  /** Private functions **/
+  function rawCompute(wasm, args) {
+    scran_utils.freeCache(cache.raw);
+    var pcs = scran_pca.fetchPCsOFFSET(wasm);
+    cache.raw = wasm.build_neighbor_index(pcs.offset, pcs.num_pcs, pcs.num_obs, args.approximate);
+    delete cache.reloaded;
+    return;
   }
-  return;
-}
 
-export function results(wasm) {
-  return {};
-}
-
-export function serialize(wasm) {
-  return {
-    "parameters": parameters,
-    "contents": results(wasm)
+  /** Public functions (standard) **/
+  x.compute = function(wasm, args) {
+    if (!scran_pca.changed && !scran_utils.changedParameters(parameters, args)) {
+      x.changed = false;
+    } else {
+      rawCompute(wasm, args);
+      parameters = args;
+      x.changed = true;
+    }
+    return;
   };
-}
 
-export function unserialize(wasm, saved) {
-  parameters = saved.parameters;
-  cache.reloaded = saved.contents;
-  return;
-}
+  x.results = function(wasm) {
+    return {};
+  };
 
-export function fetchIndex(wasm) {
-  if ("reloaded" in cache) {
-    rawCompute(wasm, parameters);
-  }
-  return cache.raw;
-}
+  x.serialize = function(wasm) {
+    return {
+      "parameters": parameters,
+      "contents": x.results(wasm)
+    };
+  };
+
+  x.unserialize = function(wasm, saved) {
+    parameters = saved.parameters;
+    cache.reloaded = saved.contents;
+    return;
+  };
+
+  /** Public functions (custom) **/
+  x.fetchIndex = function(wasm) {
+    if ("reloaded" in cache) {
+      rawCompute(wasm, parameters);
+    }
+    return cache.raw;
+  };
+})(scran_neighbor_index);

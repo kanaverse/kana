@@ -1,32 +1,84 @@
-import WasmBuffer from "./WasmBuffer.js";
-import * as hdf5 from "https://cdn.jsdelivr.net/npm/h5wasm@latest/dist/hdf5_hl.js";
+// This assumes that WasmBuffer.js is somehow loaded.
+// It also assumes that https://github.com/usnistgov/jsfive is somehow 
+// loaded and its functions are available in the "hdf5" namespace.
 
-export function readMatrixFromHDF5(wasm, buffer, path = null) {
-    hdf5.FS.writeFile("tmp.h5", new Uint8Array(ab));
-    var f = new hdf5.File("tmp.h5", "r");
+function cloneIntoWasmBuffer(wasm, arr) {
+    // Let's try to figure out what the hell this is.
+    var is_float = false;
+    var min_val = Infinity;
+    var max_val = -Infinity;
+    for (var i = 0; i < arr.length; i++) {
+        if (!is_float && !Number.isInteger(arr[i])) {
+            is_float = true;
+        }
+        if (min_val > arr[i]) {
+            min_val = arr[i];
+        }
+        if (max_val < arr[i]) {
+            max_val = arr[i];
+        }
+    }
+
+    // Choosing an appropriate type.
+    var type;
+    if (is_float) {
+        type = "Float64Array";
+    } else if (min_val < 0) {
+        if (min_val >= -(2**7) && max_val < 2**7) {
+            type = "Int8Array";
+        } else if (min_val >= -(2**15) && max_val < 2**15) {
+            type = "Int16Array";
+        } else if (min_val >= -(2**31) && max_val < 2**31) {
+            type = "Int32Array";
+        } else {
+            type = "Int64Array";
+        }
+    } else {
+        if (max_val < 2**8) {
+            type = "Uint8Array";
+        } else if (max_val < 2**16) {
+            type = "Uint16Array";
+        } else if (max_val < 2**32) {
+            type = "Uint32Array";
+        } else {
+            type = "Uint64Array";
+        }
+    }
+
+    var output = new WasmBuffer(wasm, arr.length, type);
+    try {
+        output.set(arr);
+    } catch (e) {
+        output.free();
+        throw e;
+    }
+
+    return output;
+}
+
+function readMatrixFromHDF5(wasm, buffer, path = null) {
+    var f = new hdf5.File(buffer, "HDF5");
 
     // Let's try to guess the path.
     if (path === null) {
-      let file_keys = f.keys();
-      if (file_keys.indexOf("X") != -1) {
+      if (f.keys.indexOf("X") != -1) {
         path = "X";
-      } else if (file_keys.indexOf("matrix") != -1) {
+      } else if (f.keys.indexOf("matrix") != -1) {
         path = "matrix";
       } else {
         var sparse_opts = [];
         var dense_opts = [];
 
         // Try to pick out sparse formats.
-        var file_vals = f.values();
-        for (var i = 0; i < file_keys.length; i++) {
-          var current = file_vals[i];
-          var cur_keys = current.keys();
+        for (var i = 0; i < f.keys.length; i++) {
+          var current = f.values[i];
           if (current instanceof hdf5.Group) {
+            var cur_keys = current.keys;
             if (cur_keys.indexOf("data") != -1 && cur_keys.indexOf("indices") && cur_keys.indexOf("indptr")) {
-              sparse_opts.push(file_keys[i]);
+              sparse_opts.push(f.keys[i]);
             }
           } else if (current instanceof hdf5.Dataset && current.shape.length == 2) {
-            dense_opts.push(file_keys[i]);
+            dense_opts.push(f.keys[i]);
           }
         }
 
@@ -129,7 +181,7 @@ export function readMatrixFromHDF5(wasm, buffer, path = null) {
     return output;
 }
 
-export function guessGenesFromHDF5(buffer) {
+function guessGenesFromHDF5(buffer) {
   var f = new hdf5.File(buffer, "HDF5");
 
   // Does it have a 'var' group?
