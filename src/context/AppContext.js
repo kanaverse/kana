@@ -52,7 +52,7 @@ const AppContextProvider = ({ children }) => {
   // which tab is selected ? defaults to new
   const [tabSelected, setTabSelected] = useState("new");
   // saved analysis in the browser's indexeddb
-  const [kanaIDBRecs, setKanaIDBRecs] = useState(null);
+  const [kanaIDBRecs, setKanaIDBRecs] = useState([]);
     // delete rec in database
   const [deletekdb, setDeletekdb] = useState(null);
   // params from worker for stored analysis (kana file)
@@ -61,7 +61,7 @@ const AppContextProvider = ({ children }) => {
   const [loadParamsFor, setLoadParamsFor] = useState(null);
 
   // creates a default dataset name
-  const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()));
+  const [datasetName, setDatasetName] = useState("My Analysis Title");
 
   // app export state - .kana file
   const [exportState, setExportState] = useState(false);
@@ -205,9 +205,7 @@ const AppContextProvider = ({ children }) => {
       window.scranWorker.postMessage({
         "type": "SAVEKDB",
         "payload": {
-          "files": inputFiles,
-          "params": params,
-          "id": datasetName,
+          "title": datasetName,
         },
         "msg": "not much to pass"
       });

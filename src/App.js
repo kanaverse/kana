@@ -220,7 +220,7 @@ function App() {
       setWasmInitialized(true);
     } else if (payload.type === "KanaDB_store") {
       const { resp } = payload;
-      if (resp.length > 0) {
+      if (resp !== undefined) {
         setKanaIDBRecs(resp);
       }
       setIndexedDBState(false);
