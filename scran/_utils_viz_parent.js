@@ -39,7 +39,7 @@ export function computeNeighbors(wasm, k) {
 };
 
 export function createWorker(script, cache) {
-  var worker = new Worker(script);
+  var worker = new Worker(script, { "type": "module" });
   worker.onmessage = function (msg) {
     var type = msg.data.type;
     if (type.endsWith("_iter")) {

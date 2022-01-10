@@ -1,6 +1,6 @@
-importScripts("./WasmBuffer.js");
-importScripts("./_utils.js");
-importScripts("./_utils_viz_child.js");
+import WasmBuffer from "./WasmBuffer.js";
+import * as scran_utils from "./_utils.js";
+import * as scran_utils_viz_child from "_utils_viz_child.js";
 
 var cache = {};
 var init_changed = false;
