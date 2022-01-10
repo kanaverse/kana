@@ -10,7 +10,7 @@ import './Gallery.css';
 import ImgPlot from "../Plots/ImgPlot";
 
 const Gallery = (props) => {
-  const { pcaVarExp, qcData, clusterData, savedPlot,
+  const { clusterData, savedPlot,
     datasetName } = useContext(AppContext);
 
   return (
@@ -25,10 +25,10 @@ const Gallery = (props) => {
             : ""
         }
         {
-          pcaVarExp ?
+          props?.pcaVarExp ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
               <h5>PCA (% variance explained)</h5>
-              <PCABarPlot title={datasetName.split(" ").join("_")} pca={pcaVarExp} />
+              <PCABarPlot title={datasetName.split(" ").join("_")} pca={props?.pcaVarExp} />
             </Card>
             : ""
         }

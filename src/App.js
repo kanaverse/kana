@@ -53,6 +53,9 @@ function App() {
   // if a user manually triggers an animation (using the play button)
   const [triggerAnimation, setTriggerAnimation] = useState(false);
 
+  // PCA
+  const [pcaVarExp, setPcaVarExp] = useState(null);
+
   // props for dialogs
   const loadingProps = {
     autoFocus: true,
@@ -66,8 +69,7 @@ function App() {
 
   const { setWasmInitialized,
     setGenesInfo,
-    setClusterData,
-    setPcaVarExp, logs, setLogs,
+    setClusterData, logs, setLogs,
     selectedCluster, clusterRank,
     selectedClusterSummary, setSelectedClusterSummary,
     selectedClusterIndex, setSelectedClusterIndex,
@@ -256,7 +258,6 @@ function App() {
       setShowGame(false);
       setShowAnimation(false);
       setTriggerAnimation(false);
-
     } else if (payload.type === "tsne_iter" || payload.type === "umap_iter") {
       const { resp } = payload;
       setAnimateData(resp);
@@ -332,8 +333,8 @@ function App() {
         <div className="plot">
           {
             defaultRedDims ?
-              <DimPlot 
-                tsneData={tsneData} umapData={umapData} 
+              <DimPlot
+                tsneData={tsneData} umapData={umapData}
                 animateData={animateData}
                 redDims={redDims}
                 defaultRedDims={defaultRedDims}
@@ -341,7 +342,7 @@ function App() {
                 showAnimation={showAnimation}
                 setShowAnimation={setShowAnimation}
                 setTriggerAnimation={setTriggerAnimation}
-                /> :
+              /> :
               showGame ?
                 <div style={{
                   height: '100%',
@@ -388,7 +389,9 @@ function App() {
             </div>}
         </div>
         <div className="analysis">
-          <Gallery qcData={qcData} />
+          <Gallery 
+            qcData={qcData}
+            pcaVarExp={pcaVarExp}/>
         </div>
       </div>
       <Overlay

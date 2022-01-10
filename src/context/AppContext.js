@@ -91,10 +91,6 @@ const AppContextProvider = ({ children }) => {
   // remove custom Selection
   const [delCustomSelection, setDelCustomSelection] = useState(null);
 
-  // PCA
-  const [pcaData, setPcaData] = useState(null);
-  const [pcaVarExp, setPcaVarExp] = useState(null);
-
   // geneExpression
   // what gene is selected for scatterplot
   const [gene, setGene] = useState(null);
@@ -165,8 +161,6 @@ const AppContextProvider = ({ children }) => {
         params, setParams,
         error, setError,
         wasmInitialized, setWasmInitialized,
-        pcaData, setPcaData,
-        pcaVarExp, setPcaVarExp,
         genesInfo, setGenesInfo,
         clusterData, setClusterData,
         logs, setLogs,
