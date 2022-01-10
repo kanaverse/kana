@@ -136,9 +136,9 @@ function loadHDF5Raw(wasm, files) {
 
   // In theory, we could support multiple HDF5 buffers.
   var first_file = files[0];
-  cache.matrix = readMatrixFromHDF5(wasm, first_file.buffer);
+  cache.matrix = hdf5.readMatrixFromHDF5(wasm, first_file.buffer);
 
-  var genes = guessGenesFromHDF5(first_file.buffer);
+  var genes = hdf5.guessGenesFromHDF5(first_file.buffer);
   if (genes === null) {
     cache.genes = dummyGenes(cache.matrix.nrow());
   } else {

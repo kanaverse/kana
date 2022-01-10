@@ -68,13 +68,13 @@ export class WasmBuffer {
             size: 4,
             wasm: "HEAPU32",
         },
-        Int64Array: {
+        BigInt64Array: {
             size: 8,
-            wasm: "HEAP64",
+            wasm: "HEAPF64", // not sure where my bigint support went in Emscripten's object.
         },
-        Uint64Array: {
+        BigUint64Array: {
             size: 8,
-            wasm: "HEAPU64",
+            wasm: "HEAPF64",
         }
     };
 
@@ -107,10 +107,10 @@ export class WasmBuffer {
             arr = new Int32Array(buffer, ptr, size);
         } else if (type == "Uint32Array") {
             arr = new Uint32Array(buffer, ptr, size);
-        } else if (type == "Int64Array") {
-            arr = new Int64Array(buffer, ptr, size);
-        } else if (type == "Uint64Array") {
-            arr = new Uint64Array(buffer, ptr, size);
+        } else if (type == "BigInt64Array") {
+            arr = new Float64Array(buffer, ptr, size);
+        } else if (type == "BigUint64Array") {
+            arr = new Float64Array(buffer, ptr, size);
         }
 
         return arr;
@@ -130,7 +130,14 @@ export class WasmBuffer {
     }
 
     set(x) {
-        this.array().set(x);
+        if (this.type == "BigInt64Array" || this.type == "BigUint64Array") {
+            var arr = this.array();
+            x.forEach((y, i) => {
+                arr[i] = Number(y);
+            });
+        } else {
+            this.array().set(x);
+        }
         return;
     }
 
