@@ -20,7 +20,7 @@ var kana_db = {};
 
             // Send existing stored analyses, if available.
             kanaDB.onsuccess = () => {
-                getRecords(resolve);
+                getRecordsResolver(resolve);
             };
 
             kanaDB.onerror = () => {
@@ -31,7 +31,7 @@ var kana_db = {};
         return init;
     };
 
-    function getRecords(resolve) {
+    function getRecordsResolver(resolve) {
         var allAnalysis = kanaDB.result
             .transaction(["analysis"], "readonly")
             .objectStore("analysis").getAllKeys();
@@ -71,6 +71,13 @@ var kana_db = {};
                 }
                 return true;
             });
+    }
+
+    x.getRecords = async () => {
+        await init;
+        return new Promise(resolve => {
+            getRecordsResolver(resolve);
+        });
     }
 
     /** Functions to save content **/
@@ -118,7 +125,7 @@ var kana_db = {};
         var data_saving = new Promise(resolve => {
             var putrequest = analysis_store.put({ "id": id, "payload": state });
             putrequest.onsuccess = function (event) {
-                getRecords(resolve);
+                resolve(true);
             };
             putrequest.onerror = function (event) {
                 resolve(false);
@@ -211,7 +218,7 @@ var kana_db = {};
         promises.push(new Promise(resolve => {
             let request = analysis_store.delete(id);
             request.onsuccess = function (event) {
-                getRecords(resolve);
+                resolve(true);
             };
             request.onerror = function (event) {
                 resolve(false);

@@ -40,7 +40,7 @@ function App() {
     selectedClusterSummary, setSelectedClusterSummary,
     selectedClusterIndex, setSelectedClusterIndex,
     reqGene, customSelection, clusterData,
-    delCustomSelection, setDelCustomSelection,
+    delCustomSelection, setDelCustomSelection, setReqGene,
     setSelectedCluster, setShowGame, showGame, datasetName, setExportState,
     setShowAnimation, triggerAnimation, setTriggerAnimation, params,
     setGeneColSel, setKanaIDBRecs, setLoadParams,
@@ -226,6 +226,7 @@ function App() {
       let tmp = [...selectedClusterSummary];
       tmp[selectedClusterIndex[resp.gene]].expr = Object.values(resp.expr);
       setSelectedClusterSummary(tmp);
+      setReqGene(null);
     } else if (payload.type === "exportState") {
       const { resp } = payload;
 

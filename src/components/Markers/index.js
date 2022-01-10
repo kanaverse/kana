@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
 import {
-    Button, H4, H5, Icon, Collapse, InputGroup,
+    Button, H4, H5, Icon, Collapse, InputGroup, Text,
     RangeSlider, Tag, HTMLSelect, Classes, Card, Elevation
 } from "@blueprintjs/core";
 import { Popover2 } from "@blueprintjs/popover2";
@@ -19,7 +19,7 @@ const MarkerPlot = () => {
     const {
         genesInfo, clusterData, selectedClusterSummary, setSelectedClusterSummary,
         selectedCluster, setSelectedCluster, setClusterRank,
-        setReqGene, clusterColors, gene, setGene,
+        setReqGene, clusterColors, gene, setGene, selectedClusterIndex,
         customSelection, geneColSel, setGeneColSel } = useContext(AppContext);
 
     // what cluster is selected
@@ -192,9 +192,9 @@ const MarkerPlot = () => {
                         width: '450px'
                     }} elevation={Elevation.ZERO}
                     >
-                    This panel shows the marker genes that are upregulated in the cluster of interest compared to some or all of the other clusters.
-                    Hopefully, this allows us to assign some kind of biological meaning to each cluster based on the functions of the top markers.
-                    Several ranking schemes are available depending on how we quantify the strength of the upregulation.
+                        <p>This panel shows the marker genes that are upregulated in the cluster of interest compared to some or all of the other clusters.
+                            Hopefully, this allows us to assign some kind of biological meaning to each cluster based on the functions of the top markers.</p>
+                        <p>Several ranking schemes are available depending on how we quantify the strength of the upregulation.</p>
                     </Card>
                 }
             >
@@ -207,7 +207,6 @@ const MarkerPlot = () => {
                 clusSel ?
                     <HTMLSelect
                         onChange={(x) => {
-                            setGene(null);
                             let tmpselection = x.currentTarget?.value;
                             if (tmpselection.startsWith("Cluster")) {
                                 tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1
@@ -333,14 +332,15 @@ const MarkerPlot = () => {
                                                 <Card style={{
                                                     width: '250px'
                                                 }} elevation={Elevation.ZERO}>
-                                                    <p>Log-fold change in mean expression between cells inside and outside the cluster.</p><p>
-                                                        Use the color scale below to apply a filter on this statistic.</p></Card>
+                                                    <p>Log-fold change in mean expression between cells inside and outside the cluster.</p>
+                                                    <p>Use the color scale below to apply a filter on this statistic.</p>
+                                                </Card>
                                             }>
                                             <span style={{
                                                 textDecoration: "underline",
                                                 cursor: "help"
                                             }}>
-                                            Log-FC
+                                                Log-FC
                                             </span>
                                         </Popover2>
                                         <Popover2
@@ -359,15 +359,14 @@ const MarkerPlot = () => {
                                                     width: '250px'
                                                 }} elevation={Elevation.ZERO}>
                                                     <p>
-                                                        Difference in the proportion of detected genes inside and outside the cluster. </p><p>
-                                                        Use the color scale below to apply a filter on this statistic.
-                                                    </p>
+                                                        Difference in the proportion of detected genes inside and outside the cluster.</p>
+                                                    <p>Use the color scale below to apply a filter on this statistic.</p>
                                                 </Card>}>
                                             <span style={{
                                                 textDecoration: "underline",
                                                 cursor: "help"
                                             }}>
-                                            Δ-detected
+                                                Δ-detected
                                             </span>
                                         </Popover2>
                                         <Popover2
@@ -558,10 +557,13 @@ const MarkerPlot = () => {
                                                     className='row-action'
                                                     onClick={() => {
                                                         let tmp = [...selectedClusterSummary];
-                                                        tmp[index].expanded = !tmp[index].expanded;
+                                                        var gindex = selectedClusterIndex[row.gene];
+                                                        tmp[gindex].expanded = !tmp[gindex].expanded;
                                                         setSelectedClusterSummary(tmp);
-                                                        if (!rowExpr) {
+                                                        if (!rowExpr && tmp[gindex].expanded) {
                                                             setReqGene(row.gene);
+                                                        } else {
+                                                            setReqGene(null);
                                                         }
                                                     }}
                                                 >
@@ -600,34 +602,34 @@ const MarkerPlot = () => {
                         />
                         <div className='marker-footer'>
                             <H5>
-                            <Popover2
-                                popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
-                                hasBackdrop={false}
-                                interactionKind="hover"
-                                placement='left'
-                                hoverOpenDelay={500}
-                                modifiers={{
-                                    arrow: { enabled: true },
-                                    flip: { enabled: true },
-                                    preventOverflow: { enabled: true },
-                                }}
-                                content={
-                                    <Card style={{
-                                        width: '450px'
-                                    }} elevation={Elevation.ZERO}
-                                    >
-                                    Filter the set of marker genes according to various statistics.
-                                    For example, this can be used to apply a minimum threshold on the log-fold change or Δ-detected, to focus on genes with strong upregulation;
-                                    or to apply a maximum threshold on the expression, to remove constitutively expressed genes. 
-                                    Note that this does not change the relative ordering in the table above.
-                                    </Card>
-                                }
-                            >
-                                <text style={{
-                                    textDecoration: "underline",
-                                    cursor: "help"
-                                }}>Filter Markers</text>
-                            </Popover2>
+                                <Popover2
+                                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                    hasBackdrop={false}
+                                    interactionKind="hover"
+                                    placement='left'
+                                    hoverOpenDelay={500}
+                                    modifiers={{
+                                        arrow: { enabled: true },
+                                        flip: { enabled: true },
+                                        preventOverflow: { enabled: true },
+                                    }}
+                                    content={
+                                        <Card style={{
+                                            width: '450px'
+                                        }} elevation={Elevation.ZERO}
+                                        >
+                                            <p>Filter the set of marker genes according to various statistics.
+                                                For example, this can be used to apply a minimum threshold on the <strong><em>log-fold change</em></strong> or <strong><em>Δ-detected</em></strong>, to focus on genes with strong upregulation;
+                                                or to apply a maximum threshold on the expression, to remove constitutively expressed genes.</p>
+                                            <p>Note that this does not change the relative ordering in the table above.</p>
+                                        </Card>
+                                    }
+                                >
+                                    <Text style={{
+                                        textDecoration: "underline",
+                                        cursor: "help"
+                                    }}>Filter Markers</Text>
+                                </Popover2>
                             </H5>
 
                             <div className='marker-filter-container'>

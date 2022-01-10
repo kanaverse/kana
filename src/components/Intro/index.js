@@ -29,7 +29,7 @@ function IntroDialog({
 
     return (
         <>
-            <Tooltip2 content="App Info" position={Position.BOTTOM}>
+            <Tooltip2 content="Some information about the app." position={Position.BOTTOM}>
             <Button onClick={handleButtonClick} icon="info-sign" intent="primary" text="" />
             </Tooltip2>
             <Dialog {...props} isOpen={isOpen} onClose={handleClose}>
