@@ -389,9 +389,9 @@ function App() {
             </div>}
         </div>
         <div className="analysis">
-          <Gallery 
+          <Gallery
             qcData={qcData}
-            pcaVarExp={pcaVarExp}/>
+            pcaVarExp={pcaVarExp} />
         </div>
       </div>
       <Overlay
