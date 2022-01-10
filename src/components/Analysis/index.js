@@ -818,11 +818,11 @@ function AnalysisDialog({
                                             onChange={handleLoadImportTab}
                                             defaultSelectedTabId={loadImportFormat}
                                         >
-                                            <Tab id="kana" title="Load Analysis file" panel={
+                                            <Tab id="kana" title="Load from file" panel={
                                                 <div>
                                                     <H5><Tag round={true}>1</Tag>
                                                         <span className="row-tooltip">
-                                                            Load saved analysis file
+                                                            Load analysis from file
                                                         </span>
                                                     </H5>
                                                     <div className="row">
@@ -832,18 +832,17 @@ function AnalysisDialog({
                                                     </div>
                                                 </div>
                                             } />
-                                            {<Tab id="kanadb" title="Load from database" panel={
+                                            {<Tab id="kanadb" title="Load from browser" panel={
                                                 <div>
                                                     <H5><Tag round={true}>1</Tag>
                                                         <span className="row-tooltip">
-                                                            Load analysis file
+                                                            Load analysis from browser cache
                                                         </span>
                                                     </H5>
                                                     {
                                                         kanaIDBRecs ?
                                                             <div className="row">
                                                                 <RadioGroup
-                                                                    label="Choose an anlaysis"
                                                                     onChange={(x) => {
                                                                         setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value });
                                                                         setTmpInputValid(true);
