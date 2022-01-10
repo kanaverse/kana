@@ -73,13 +73,6 @@ const AppContextProvider = ({ children }) => {
   // default column to show in markers table
   const [geneColSel, setGeneColSel] = useState("id");
 
-  // UI dimensions reduction dropdown
-  const [redDims, setRedDims] = useState([]);
-  // which dimension is selected
-  const [defaultRedDims, setDefaultRedDims] = useState(null);
-  // the actual dimensions
-  const [plotRedDims, setPlotRedDims] = useState(null);
-
   // Cluster Analysis
   // cluster assignments
   const [clusterData, setClusterData] = useState(null);
@@ -101,18 +94,6 @@ const AppContextProvider = ({ children }) => {
   // PCA
   const [pcaData, setPcaData] = useState(null);
   const [pcaVarExp, setPcaVarExp] = useState(null);
-
-  // this applies to both tsne and umap
-  // is animation in progress ?
-  const [showAnimation, setShowAnimation] = useState(false);
-  // if a user manually triggers an animation (using the play button)
-  const [triggerAnimation, setTriggerAnimation] = useState(false);
-
-  // TSNE
-  const [tsneData, setTsneData] = useState(null);
-
-  // UMAP
-  const [umapData, setUmapData] = useState(null);
 
   // geneExpression
   // what gene is selected for scatterplot
@@ -186,12 +167,7 @@ const AppContextProvider = ({ children }) => {
         wasmInitialized, setWasmInitialized,
         pcaData, setPcaData,
         pcaVarExp, setPcaVarExp,
-        tsneData, setTsneData,
-        umapData, setUmapData,
         genesInfo, setGenesInfo,
-        redDims, setRedDims,
-        defaultRedDims, setDefaultRedDims,
-        plotRedDims, setPlotRedDims,
         clusterData, setClusterData,
         logs, setLogs,
         selectedCluster, setSelectedCluster,
@@ -206,8 +182,6 @@ const AppContextProvider = ({ children }) => {
         datasetName, setDatasetName,
         tabSelected, setTabSelected,
         loadParams, setLoadParams,
-        showAnimation, setShowAnimation,
-        triggerAnimation, setTriggerAnimation,
         savedPlot, setSavedPlot,
         geneColSel, setGeneColSel,
         kanaIDBRecs, setKanaIDBRecs,

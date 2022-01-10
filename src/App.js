@@ -8,7 +8,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AppContext } from './context/AppContext';
 
 import { AppToaster } from "./components/Spinners/AppToaster";
-import DimPlot from './components/Plots/ScatterPlot.js';
+import DimPlot from './components/Plots/DimPlot.js';
 import MarkerPlot from './components/Markers';
 import Pong from './components/Spinners/Pong';
 import Spinner2 from './components/Spinners/Spinner2';
@@ -39,6 +39,20 @@ function App() {
   // Feature Selection
   const [fSelectionData, setFSelectionData] = useState(null);
 
+  // UI dimensions reduction dropdown
+  const [redDims, setRedDims] = useState([]);
+  // which dimension is selected
+  const [defaultRedDims, setDefaultRedDims] = useState(null);
+  // TSNE
+  const [tsneData, setTsneData] = useState(null);
+  // UMAP
+  const [umapData, setUmapData] = useState(null);
+  // this applies to both tsne and umap
+  // is animation in progress ?
+  const [showAnimation, setShowAnimation] = useState(false);
+  // if a user manually triggers an animation (using the play button)
+  const [triggerAnimation, setTriggerAnimation] = useState(false);
+
   // props for dialogs
   const loadingProps = {
     autoFocus: true,
@@ -50,17 +64,17 @@ function App() {
     useTallContent: false,
   };
 
-  const { setWasmInitialized, setTsneData, setRedDims, redDims,
-    setGenesInfo, defaultRedDims, setDefaultRedDims,
+  const { setWasmInitialized,
+    setGenesInfo,
     setClusterData,
-    setUmapData, setPcaVarExp, logs, setLogs,
+    setPcaVarExp, logs, setLogs,
     selectedCluster, clusterRank,
     selectedClusterSummary, setSelectedClusterSummary,
     selectedClusterIndex, setSelectedClusterIndex,
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection, setReqGene,
     setSelectedCluster, datasetName,
-    setShowAnimation, triggerAnimation, setTriggerAnimation, params,
+    params,
     setGeneColSel, setKanaIDBRecs, setLoadParams,
     setInitLoadState, inputFiles } = useContext(AppContext);
 
@@ -318,7 +332,16 @@ function App() {
         <div className="plot">
           {
             defaultRedDims ?
-              <DimPlot animateData={animateData} /> :
+              <DimPlot 
+                tsneData={tsneData} umapData={umapData} 
+                animateData={animateData}
+                redDims={redDims}
+                defaultRedDims={defaultRedDims}
+                setDefaultRedDims={setDefaultRedDims}
+                showAnimation={showAnimation}
+                setShowAnimation={setShowAnimation}
+                setTriggerAnimation={setTriggerAnimation}
+                /> :
               showGame ?
                 <div style={{
                   height: '100%',
@@ -365,7 +388,7 @@ function App() {
             </div>}
         </div>
         <div className="analysis">
-          <Gallery qcData={qcData}/>
+          <Gallery qcData={qcData} />
         </div>
       </div>
       <Overlay

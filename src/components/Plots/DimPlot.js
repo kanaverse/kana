@@ -14,7 +14,7 @@ import { getMinMax } from './utils';
 import Rainbow from './rainbowvis';
 import { randomColor } from 'randomcolor';
 
-import "./ScatterPlot.css";
+import "./DimPlot.css";
 import { AppToaster } from "../Spinners/AppToaster";
 
 const DimPlot = (props) => {
@@ -35,12 +35,11 @@ const DimPlot = (props) => {
     // first render ?
     const [renderCount, setRenderCount] = useState(true);
 
-    const { redDims, defaultRedDims, setDefaultRedDims, clusterData,
-        tsneData, umapData, clusterColors, setClusterColors,
+    const { clusterData,
+        clusterColors, setClusterColors,
         gene, setGene, selectedClusterIndex, selectedClusterSummary,
         customSelection, setCustomSelection,
-        setDelCustomSelection, setShowAnimation,
-        showAnimation, setTriggerAnimation,
+        setDelCustomSelection,
         savedPlot, setSavedPlot, selectedCluster,
         genesInfo, geneColSel } = useContext(AppContext);
 
@@ -131,13 +130,13 @@ const DimPlot = (props) => {
 
             let data = null;
 
-            if (showAnimation) {
+            if (props?.showAnimation) {
                 data = props?.animateData;
             } else {
-                if (defaultRedDims === "TSNE") {
-                    data = tsneData;
-                } else if (defaultRedDims === "UMAP") {
-                    data = umapData;
+                if (props?.defaultRedDims === "TSNE") {
+                    data = props?.tsneData;
+                } else if (props?.defaultRedDims === "UMAP") {
+                    data = props?.umapData;
                 }
             }
 
@@ -215,7 +214,8 @@ const DimPlot = (props) => {
                 });
             }
         }
-    }, [tsneData, umapData, props?.animateData, defaultRedDims, gradient, clusHighlight]);
+    }, [props?.tsneData, props?.umapData, props?.animateData, props?.defaultRedDims, 
+            gradient, clusHighlight]);
 
     const setInteraction = (x) => {
         if (x === "SELECT") {
@@ -266,7 +266,7 @@ const DimPlot = (props) => {
                     "cluster": selectedCluster,
                     "gene": gene,
                     "highlight": clusHighlight,
-                    "embedding": defaultRedDims
+                    "embedding": props?.defaultRedDims
                 }
             });
 
@@ -284,18 +284,18 @@ const DimPlot = (props) => {
                 className='left-sidebar'
             >
                 <Button className='dim-button'
-                    disabled={redDims.indexOf("TSNE") === -1}
-                    onClick={() => setDefaultRedDims("TSNE")}
-                    intent={defaultRedDims === "TSNE" ? "primary" : ""}
+                    disabled={props?.redDims.indexOf("TSNE") === -1}
+                    onClick={() => props?.setDefaultRedDims("TSNE")}
+                    intent={props?.defaultRedDims === "TSNE" ? "primary" : ""}
                 >
                     <Icon icon="heatmap"></Icon>
                     <br />
                     <span>t-SNE</span>
                 </Button>
                 <Button className='dim-button'
-                    disabled={redDims.indexOf("UMAP") === -1}
-                    onClick={() => setDefaultRedDims("UMAP")}
-                    intent={defaultRedDims === "UMAP" ? "primary" : ""}
+                    disabled={props?.redDims.indexOf("UMAP") === -1}
+                    onClick={() => props?.setDefaultRedDims("UMAP")}
+                    intent={props?.defaultRedDims === "UMAP" ? "primary" : ""}
                 >
                     <Icon icon="heatmap"></Icon><br />
                     <span>UMAP</span>
@@ -316,8 +316,8 @@ const DimPlot = (props) => {
                     <Tooltip2 content="Interactively visualize embeddings">
                         <Button icon="play"
                             onClick={() => {
-                                setShowAnimation(true);
-                                setTriggerAnimation(true)
+                                props?.setShowAnimation(true);
+                                props?.setTriggerAnimation(true);
                             }}>Animate</Button>
                     </Tooltip2>
                     <Tooltip2 content="Save this embedding">
@@ -335,13 +335,13 @@ const DimPlot = (props) => {
                 </ControlGroup>
             </div>
             {
-                showAnimation ?
+                props?.showAnimation ?
                     <Label className='iter'>Iteration: {props?.animateData?.iteration}</Label>
                     : ""
             }
             <div className='dim-plot'>
                 {
-                    defaultRedDims ?
+                    props?.defaultRedDims ?
                         <div ref={container} ></div> :
                         "Choose an Embedding... or Embeddings are being computed..."
                 }
