@@ -1,56 +1,50 @@
-const scran_snn_neighbors = {};
+import * as scran_utils from "./_utils.js";
+import * as scran_neighbor_index from "./_neighbor_index.js";
 
-(function(x) {
-  /** Private members **/
-  var cache = {};
-  var parameters = {};
+var cache = {};
+var parameters = {};
 
-  /** Public members **/
-  x.changed = false;
+export var changed = false;
 
-  /** Private functions **/
-  function rawCompute(wasm, args) {
-    scran_utils.freeCache(cache.raw);
-    var nn_index = scran_neighbor_index.fetchIndex(wasm);
-    cache.raw = wasm.find_nearest_neighbors(nn_index, args.k);
-    delete cache.reloaded;
-    return;
+function rawCompute(wasm, args) {
+  scran_utils.freeCache(cache.raw);
+  var nn_index = scran_neighbor_index.fetchIndex(wasm);
+  cache.raw = wasm.find_nearest_neighbors(nn_index, args.k);
+  delete cache.reloaded;
+  return;
+}
+
+export function compute(wasm, args) {
+  if (!scran_neighbor_index.changed && !scran_utils.changedParameters(parameters, args)) {
+    changed = false;
+  } else {
+    rawCompute(wasm, args);
+    parameters = args;
+    changed = true;
   }
+  return;
+}
 
-  /** Public functions (standard) **/
-  x.compute = function(wasm, args) {
-    if (!scran_neighbor_index.changed && !scran_utils.changedParameters(parameters, args)) {
-      x.changed = false;
-    } else {
-      rawCompute(wasm, args);
-      parameters = args;
-      x.changed = true;
-    }
-    return;
-  };
+export function results(wasm) {
+  return {};
+}
 
-  x.results = function(wasm) {
-    return {};
+export function serialize(wasm) {
+  return {
+    "parameters": parameters,
+    "contents": results(wasm)
   };
+}
 
-  x.serialize = function(wasm) {
-    return {
-      "parameters": parameters,
-      "contents": x.results(wasm)
-    };
-  };
+export function unserialize(wasm, saved) {
+  parameters = saved.parameters;
+  cache.reloaded = saved.contents;
+  return;
+}
 
-  x.unserialize = function(wasm, saved) {
-    parameters = saved.parameters;
-    cache.reloaded = saved.contents;
-    return;
-  };
-
-  /** Public functions (custom) **/
-  x.fetchNeighbors = function(wasm) {
-    if ("reloaded" in cache) {
-      rawCompute(wasm, parameters);
-    }
-    return cache.raw;
-  };
-})(scran_snn_neighbors);
+export function fetchNeighbors(wasm) {
+  if ("reloaded" in cache) {
+    rawCompute(wasm, parameters);
+  }
+  return cache.raw;
+}

@@ -1,6 +1,4 @@
-const scran_utils_markers = {};
-
-scran_utils_markers.serializeGroupStats = function(obj, group) {
+export function serializeGroupStats(obj, group) {
   return {
     "means": obj.means(group, 0).slice(),
     "detected": obj.detected(group, 0).slice(),
@@ -25,14 +23,14 @@ scran_utils_markers.serializeGroupStats = function(obj, group) {
       "min-rank": obj.auc(group, 4).slice()
     }
   };
-};
+}
 
 /*
  * Helper function to retrieve marker statistics for plotting.
  * This is used both for cluster-specific markers as well as the
  * DE genes that are computed for a custom selection vs the rest.
  */
-scran_utils_markers.fetchGroupResults = function(wasm, results, reloaded, rank_type, group) {
+export function fetchGroupResults(wasm, results, reloaded, rank_type, group) {
   if (!rank_type || rank_type === undefined) {
       rank_type = "cohen-min-rank";
   }
@@ -132,4 +130,4 @@ scran_utils_markers.fetchGroupResults = function(wasm, results, reloaded, rank_t
     "lfc": stat_lfc,
     "delta_detected": stat_delta_d
   };
-};
+}

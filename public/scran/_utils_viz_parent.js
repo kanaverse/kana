@@ -1,6 +1,8 @@
-const scran_utils_viz_parent = {};
+import WasmBuffer from "./WasmBuffer.js";
+import * as scran_utils from "./_utils.js";
+import * as scran_neighbor_index from "./_neighbor_index.js";
 
-scran_utils_viz_parent.computeNeighbors = function(wasm, k) {
+export function computeNeighbors(wasm, k) {
   var nn_index = scran_neighbor_index.fetchIndex(wasm);
 
   var output = { "num_obs": nn_index.num_obs() };
@@ -36,7 +38,7 @@ scran_utils_viz_parent.computeNeighbors = function(wasm, k) {
   return output;
 };
 
-scran_utils_viz_parent.createWorker = function(script, cache) {
+export function createWorker(script, cache) {
   var worker = new Worker(script);
   worker.onmessage = function (msg) {
     var type = msg.data.type;
@@ -62,9 +64,9 @@ scran_utils_viz_parent.createWorker = function(script, cache) {
     delete cache.promises[id];
   };
   return worker;
-};
+}
 
-scran_utils_viz_parent.sendTask = function(worker, payload, cache, transferrable = []) {
+export function sendTask(worker, payload, cache, transferrable = []) {
   var i = cache.counter;
   var p = new Promise((resolve, reject) => {
     cache.promises[i] = { "resolve": resolve, "reject": reject };
@@ -73,13 +75,13 @@ scran_utils_viz_parent.sendTask = function(worker, payload, cache, transferrable
   payload.id = i;
   worker.postMessage(payload, transferrable);
   return p;
-};
+}
 
-scran_utils_viz_parent.initializeWorker = function(worker, cache) {
-  return scran_utils_viz_parent.sendTask(worker, { "cmd": "INIT" }, cache);
-};
+export function initializeWorker(worker, cache) {
+  return sendTask(worker, { "cmd": "INIT" }, cache);
+}
 
-scran_utils_viz_parent.runWithNeighbors = function(worker, args, nn_out, cache) {
+export function runWithNeighbors(worker, args, nn_out, cache) {
   var run_msg = {
     "cmd": "RUN",
     "params": args 
@@ -88,13 +90,13 @@ scran_utils_viz_parent.runWithNeighbors = function(worker, args, nn_out, cache) 
   var transferrable = [];
   if (nn_out !== null) {
     run_msg.neighbors = nn_out;
-    scran_utils.extractBuffers(nn_out, transferrable);
+    extractBuffers(nn_out, transferrable);
   }
 
-  return scran_utils_viz_parent.sendTask(worker, run_msg, cache, transferrable);
-};
+  return sendTask(worker, run_msg, cache, transferrable);
+}
 
-scran_utils_viz_parent.retrieveCoordinates = function(worker, cache) {
+export function retrieveCoordinates(worker, cache) {
   if ("reloaded" in cache) {
     // Buffers are transferred to the main thread, so we need to make sure we
     // clone it so that we don't lose our master copy.
@@ -103,6 +105,6 @@ scran_utils_viz_parent.retrieveCoordinates = function(worker, cache) {
     copy.y = copy.y.slice();
     return new Promise(resolve => resolve(copy));
   } else {
-    return cache.run.then(x => scran_utils_viz_parent.sendTask(worker, { "cmd": "FETCH" }, cache));
+    return cache.run.then(x => sendTask(worker, { "cmd": "FETCH" }, cache));
   }
-};
+}
