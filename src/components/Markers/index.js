@@ -12,6 +12,7 @@ import StackedHistogram from '../Plots/StackedHistogram';
 
 import Cell from '../Plots/Cell.js';
 import HeatmapCell from '../Plots/HeatmapCell';
+// import Histogram from '../Plots/Histogram';
 import './markers.css';
 
 const MarkerPlot = (props) => {
@@ -86,8 +87,10 @@ const MarkerPlot = (props) => {
         let sortedRows = [...trecs];
 
         setMarkerFilter({
-            "lfc": [0, parseFloat(tlfcsval.toFixed(2))],
-            "delta": [0, parseFloat(tdeltaval.toFixed(2))]
+            "lfc": markerFilter?.lfc ? markerFilter?.lfc : [0, parseFloat(tlfcsval.toFixed(2))],
+            "delta": markerFilter?.delta ? markerFilter?.delta : [0, parseFloat(tdeltaval.toFixed(2))],
+            "mean": markerFilter?.mean ? markerFilter?.mean : [parseFloat(tmeanMinMax[0].toFixed(2)), parseFloat(tmeanval.toFixed(2))],
+            "detected": markerFilter?.detected ? markerFilter?.detected : [parseFloat(tdetectsMinMax[0].toFixed(2)), parseFloat(tdetecval.toFixed(2))]
         });
 
         setProsRecords(sortedRows);
@@ -103,6 +106,7 @@ const MarkerPlot = (props) => {
         if (markerFilter) {
             for (let key in markerFilter) {
                 let range = markerFilter[key];
+                if (!range) continue;
                 if (range[0] === minMaxs[key][0] && range[1] === minMaxs[key][1]) continue;
                 sortedRows = sortedRows.filter((x) => x[key] >= range[0] && x[key] <= range[1]);
             }
@@ -192,8 +196,8 @@ const MarkerPlot = (props) => {
                     }} elevation={Elevation.ZERO}
                     >
                         <p>This panel shows the marker genes that are upregulated in the cluster of interest compared to some or all of the other clusters.
-                            Hopefully, this allows us to assign some kind of biological meaning to each cluster based on the functions of the top markers.</p>
-                        <p>Several ranking schemes are available depending on how we quantify the strength of the upregulation.</p>
+                            Hopefully, this allows us to assign some kind of biological meaning to each cluster based on the functions of the top markers.
+                            Several ranking schemes are available depending on how we choose to quantify the strength of the upregulation.</p>
                     </Card>
                 }
             >
@@ -633,9 +637,9 @@ const MarkerPlot = (props) => {
 
                             <div className='marker-filter-container'>
                                 <Tag className="marker-filter-container-tag" minimal={true} intent='primary'>Log-FC</Tag>
-                                {/* <Histogram data={lfcs} height={35} minmax={lfcMinMax}/> */}
                                 {lfcMinMax &&
                                     <div className='marker-slider-container'>
+                                        {/* <Histogram data={selectedClusterSummary} datakey={"lfc"} height={100} minmax={lfcMinMax}/> */}
                                         <div className='marker-filter-gradient'>
                                             <div
                                                 style={{
@@ -650,7 +654,7 @@ const MarkerPlot = (props) => {
                                             labelValues={lfcMinMax}
                                             stepSize={parseFloat((Math.abs(lfcMinMax[1] - lfcMinMax[0]) / 20).toFixed(2))}
                                             onChange={(val) => handleMarkerFilter(val, "lfc")}
-                                            value={markerFilter?.["lfc"] ? markerFilter?.["lfc"] : [0, lfcMinMax[1]]}
+                                            value={markerFilter?.["lfc"]}
                                             vertical={false}
                                         />
                                     </div>}
@@ -675,7 +679,7 @@ const MarkerPlot = (props) => {
                                             labelValues={deltaMinMax}
                                             stepSize={parseFloat((Math.abs(deltaMinMax[1] - deltaMinMax[0]) / 20).toFixed(2))}
                                             onChange={(val) => handleMarkerFilter(val, "delta")}
-                                            value={markerFilter?.["delta"] ? markerFilter?.["delta"] : [0, deltaMinMax[1]]}
+                                            value={markerFilter?.["delta"]}
                                             vertical={false}
                                         />
                                     </div>}
@@ -700,7 +704,7 @@ const MarkerPlot = (props) => {
                                             labelValues={meanMinMax}
                                             stepSize={parseFloat((Math.abs(meanMinMax[1] - meanMinMax[0]) / 20).toFixed(2))}
                                             onChange={(val) => handleMarkerFilter(val, "mean")}
-                                            value={markerFilter?.["mean"] ? markerFilter?.["mean"] : meanMinMax}
+                                            value={markerFilter?.["mean"]}
                                             vertical={false}
                                         />
                                     </div>}
@@ -725,7 +729,7 @@ const MarkerPlot = (props) => {
                                             labelValues={detectedMinMax}
                                             stepSize={parseFloat((Math.abs(detectedMinMax[1] - detectedMinMax[0]) / 20).toFixed(2))}
                                             onChange={(val) => handleMarkerFilter(val, "detected")}
-                                            value={markerFilter?.["detected"] ? markerFilter?.["detected"] : detectedMinMax}
+                                            value={markerFilter?.["detected"]}
                                             vertical={false}
                                         />
                                     </div>}

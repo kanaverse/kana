@@ -49,6 +49,8 @@ const AnalysisDialog =({
     let [tmpInputParams, setTmpInputParams] = useState(tabSelected === "new" ? params : loadParams);
 
     function handleImport() {
+        // convert cluster res to number
+        tmpInputParams["cluster"]["clus-res"] = Number(tmpInputParams["cluster"]["clus-res"])
         setParams(tmpInputParams);
 
         if (tabSelected === "load") {
@@ -95,7 +97,7 @@ const AnalysisDialog =({
 
             setInputText({
                 mtx: "Choose Matrix Market file",
-                gene: "Choose feature/gene annotation",
+                gene: "Choose gene annotation",
                 barcode: "Choose barcode annotation",
             });
         } else if (currTab === "tenx") {
@@ -105,7 +107,7 @@ const AnalysisDialog =({
             });
 
             setInputText({
-                file: "Choose 10x v3 H5 file",
+                file: "Choose 10x HDF5 matrix file",
             });
         } else if (currTab === "h5ad") {
             setTmpInputFiles({
@@ -113,7 +115,7 @@ const AnalysisDialog =({
             });
 
             setInputText({
-                file: "Choose H5ad file",
+                file: "Choose H5AD file",
             });
         }
 
@@ -569,7 +571,8 @@ const AnalysisDialog =({
                             </Text>
                             <NumericInput
                                 placeholder="0.5" value={tmpInputParams["cluster"]["clus-res"]}
-                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-res": nval } }) }} />
+                                stepSize={0.1}
+                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-res": val } }) }} />
                         </Label>
                     </div>
                 </div>
@@ -717,15 +720,10 @@ const AnalysisDialog =({
                                                         </Label> */}
                                                     </div>
                                                 } />
-                                                <Tab id="tenx" title="10x v3 H5" panel={
+                                                <Tab id="tenx" title="10x HDF5 matrix" panel={
                                                     <div className="row"
                                                     >
                                                         <Label className="row-input">
-                                                            <Text className="text-100">
-                                                                <span className="row-tooltip">
-                                                                    Choose 10x V3 H5 file
-                                                                </span>
-                                                            </Text>
                                                             <FileInput style={{
                                                                 marginTop: '5px'
                                                             }}
@@ -749,15 +747,10 @@ const AnalysisDialog =({
                                                         </Label> */}
                                                     </div>
                                                 } />
-                                                <Tab id="h5ad" title="H5ad" panel={
+                                                <Tab id="h5ad" title="H5AD" panel={
                                                     <div className="row"
                                                     >
                                                         <Label className="row-input">
-                                                            <Text className="text-100">
-                                                                <span className="row-tooltip">
-                                                                    Choose H5ad file
-                                                                </span>
-                                                            </Text>
                                                             <FileInput style={{
                                                                 marginTop: '5px'
                                                             }}
@@ -802,20 +795,21 @@ const AnalysisDialog =({
                                         <Callout intent="primary">
                                             <p>We currently support several common file formats for single-cell RNA-seq count data.</p>
                                             <p>
-                                                <strong>A count matrix in the Matrix Market (<code>*.mtx</code>) format.</strong>
+                                                <strong>A count matrix in the Matrix Market (<code>*.mtx</code>) format. </strong>
                                                 This file may be Gzip-compressed, in which case we expect it to have a <code>*.mtx.gz</code> extension.
                                                 We assume that the matrix has already been filtered to remove empty droplets.
                                                 We also recommend supplying the feature annotation as an additional TSV file with gene identifiers and symbols -
                                                 this is usually called <code>features.tsv.gz</code> or <code>genes.tsv</code> in the output of processing pipelines like Cellranger.
                                             </p>
                                             <p>
-                                                <strong>A count matrix in the 10X matrix HDF5 (<code>*.h5</code>) format.</strong>
+                                                <strong>A count matrix in the 10X HDF5 feature-barcode matrix format. </strong>
                                                 We assume that the matrix has already been filtered to remove empty droplets.
                                                 This is usually called something like <code>filtered_feature_bc_matrix.h5</code> in the output of processing pipelines like Cellranger.
-                                                (Do not confuse this with the molecule information file, which is something different altogether.)
+                                                (See <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices">here</a> for details.
+                                                Do not confuse this with the molecule information file, which is something different altogether.)
                                             </p>
                                             <p>
-                                                <strong>A count matrix in the H5AD (<code>*.h5ad</code>) format.</strong>
+                                                <strong>A count matrix in the H5AD (<code>*.h5ad</code>) format. </strong>
                                                 We assume that the count matrix is stored in the <code>X</code> group.
                                                 We will also try to guess which field in the <code>obs</code> annotation contains gene symbols.
                                             </p>

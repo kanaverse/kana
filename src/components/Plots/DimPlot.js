@@ -217,7 +217,7 @@ const DimPlot = (props) => {
             }
         }
     }, [props?.tsneData, props?.umapData, props?.animateData, props?.defaultRedDims, 
-            gradient, clusHighlight]);
+            gradient, clusHighlight, clusterData]);
 
     const setInteraction = (x) => {
         if (x === "SELECT") {
