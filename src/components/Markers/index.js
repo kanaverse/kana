@@ -197,8 +197,8 @@ const MarkerPlot = () => {
                     }} elevation={Elevation.ZERO}
                     >
                         <p>This panel shows the marker genes that are upregulated in the cluster of interest compared to some or all of the other clusters.
-                            Hopefully, this allows us to assign some kind of biological meaning to each cluster based on the functions of the top markers.</p>
-                        <p>Several ranking schemes are available depending on how we quantify the strength of the upregulation.</p>
+                            Hopefully, this allows us to assign some kind of biological meaning to each cluster based on the functions of the top markers.
+                            Several ranking schemes are available depending on how we choose to quantify the strength of the upregulation.</p>
                     </Card>
                 }
             >
