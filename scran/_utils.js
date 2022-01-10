@@ -1,7 +1,7 @@
-const scran_utils = {};
+import WasmBuffer from "./WasmBuffer.js";
 
 /* Free a cached Wasm-constructed object. */
-scran_utils.freeCache = function(object) {
+export function freeCache(object) {
   if (object !== undefined && object !== null) {
     object.delete();
   }
@@ -9,12 +9,12 @@ scran_utils.freeCache = function(object) {
 };
 
 /* Compare two parameter sets. */
-scran_utils.changedParameters = function(x, y) {
+export function changedParameters(x, y) {
     return JSON.stringify(x) != JSON.stringify(y);
 };
 
 /* Calculate range of an array */
-scran_utils.computeRange = (arr) => {
+export function computeRange(arr) {
   var max = -Infinity, min = Infinity;
   arr.forEach(function (x) {
     if (max < x) {
@@ -33,7 +33,7 @@ scran_utils.computeRange = (arr) => {
  * desired size and type. This avoids unnecessary reallocations if an
  * appropriate buffer was already created from a previous run.
  */
-scran_utils.allocateBuffer = function(wasm, size, type, cache, name = "buffer") {
+export function allocateBuffer(wasm, size, type, cache, name = "buffer") {
   var reallocate = true;
   if (name in cache) {
     var candidate = cache[name];
@@ -48,10 +48,10 @@ scran_utils.allocateBuffer = function(wasm, size, type, cache, name = "buffer") 
     cache[name] = new WasmBuffer(wasm, size, type);
   }
   return cache[name];
-};
+}
 
 /* Transfers an array's contents into a Wasm buffer. */
-scran_utils.wasmifyArray = function(wasm, arr) {
+export function wasmifyArray(wasm, arr) {
   var tmp = new WasmBuffer(wasm, arr.length, arr.constructor.name);
   tmp.set(arr);
   return tmp;
@@ -62,7 +62,7 @@ scran_utils.wasmifyArray = function(wasm, arr) {
  * The idea is to extract buffers from an object containing one or more TypedArrays,
  * to enable transfer of the memory store across workers via postMessage.
  */
-scran_utils.extractBuffers = function(object, store) {
+export function extractBuffers(object, store) {
   if (Array.isArray(object)) {
     for (const element of object) {
       scran_utils.extractBuffers(element, store);
@@ -77,10 +77,10 @@ scran_utils.extractBuffers = function(object, store) {
     }
     store.push(object.buffer);
   }
-};
+}
 
 /* Post a response after job success. */
-scran_utils.postSuccess = function(info, step, message) {
+export function postSuccess(info, step, message) {
   var transferable = [];
   scran_utils.extractBuffers(info, transferable);
   postMessage({
@@ -88,11 +88,11 @@ scran_utils.postSuccess = function(info, step, message) {
     resp: info,
     msg: "Success: " + message
   }, transferable);
-};
+}
 
 /* A deep copy function that may not copy TypedArrays,
  * under the assumption that they are already cloned. */
-scran_utils.simpleDeepCopy = function(x, ignoreTypedArrays = true) {
+export function simpleDeepCopy(x, ignoreTypedArrays = true) {
   if (Array.isArray(x)) {
     var y = x.slice();
     for (var i = 0; i < x.length; i++) {
@@ -114,7 +114,3 @@ scran_utils.simpleDeepCopy = function(x, ignoreTypedArrays = true) {
   }
   return x;
 }
-
-
-
-

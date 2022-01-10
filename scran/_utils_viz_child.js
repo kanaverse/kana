@@ -1,6 +1,6 @@
-const scran_utils_viz_child = {};
+import WasmBuffer from "./WasmBuffer.js";
 
-scran_utils_viz_child.chooseDelay = function(animate) {
+export function chooseDelay(animate) {
   if (animate) {
     // TODO: using 75 for now
     // in the future the user can choose a bar for speed on the UI
@@ -11,7 +11,7 @@ scran_utils_viz_child.chooseDelay = function(animate) {
   }
 };
 
-scran_utils_viz_child.recreateNeighbors = function(wasm, neighbors) {
+export function recreateNeighbors(wasm, neighbors) {
   var output = null;
   var rbuf = null;
   var ibuf = null;
@@ -44,7 +44,7 @@ scran_utils_viz_child.recreateNeighbors = function(wasm, neighbors) {
   return output;
 };
 
-scran_utils_viz_child.extractXY = function(buffer) {
+export function extractXY(buffer) {
   var nobs = buffer.size / 2;
   var x = new Float64Array(nobs);
   var y = new Float64Array(nobs);
