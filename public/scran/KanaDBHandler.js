@@ -148,9 +148,7 @@ var kana_db = {};
         let meta_store = trans.objectStore("analysis_meta");
 
         if (id == null) {
-            let already = await new Promise(resolve => {
-                getRecordsResolver(resolve, meta_store);
-            });
+            let already = await new Promise(resolve => getRecordsResolver(resolve, meta_store));
             id = String(already.length);
         }
 
@@ -187,7 +185,9 @@ var kana_db = {};
         let file_store = kanaDB.result
             .transaction(["file"], "readonly")
             .objectStore("file");
-        return loadContent(id, file_store)["payload"];
+
+        var meta = await loadContent(id, file_store);
+        return meta["payload"];
     };
 
     x.loadAnalysis = async function (id) {
@@ -195,7 +195,8 @@ var kana_db = {};
         let analysis_store = kanaDB.result
             .transaction(["analysis"], "readonly")
             .objectStore("analysis");
-        return loadContent(id, analysis_store)["payload"];
+        var meta = await loadContent(id, analysis_store);
+        return meta["payload"];
     };
 
     /** Functions to load content **/
@@ -264,8 +265,8 @@ var kana_db = {};
         }));
 
         // Removing all files as well.
-        var files = await loadContent(id, meta_store)["files"];
-        for (const f of files) {
+        var meta = await loadContent(id, meta_store);
+        for (const f of meta["files"]) {
             promises.push(x.removeFile(f));
         }
 

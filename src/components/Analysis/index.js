@@ -866,7 +866,6 @@ function AnalysisDialog({
                                                                                             paddingLeft: '5px',
                                                                                         }}
                                                                                         onClick={() => {
-                                                                                            console.log(x);
                                                                                             setDeletekdb(x.id);
                                                                                         }}></Icon>
                                                                                 </Radio>
