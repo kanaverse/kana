@@ -36,6 +36,8 @@ function App() {
 
   // QC Data
   const [qcData, setQcData] = useState(null);
+  // Feature Selection
+  const [fSelectionData, setFSelectionData] = useState(null);
 
   // props for dialogs
   const loadingProps = {
@@ -50,7 +52,7 @@ function App() {
 
   const { setWasmInitialized, setTsneData, setRedDims, redDims,
     setGenesInfo, defaultRedDims, setDefaultRedDims,
-    setClusterData, setFSelectionData,
+    setClusterData,
     setUmapData, setPcaVarExp, logs, setLogs,
     selectedCluster, clusterRank,
     selectedClusterSummary, setSelectedClusterSummary,

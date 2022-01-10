@@ -73,9 +73,6 @@ const AppContextProvider = ({ children }) => {
   // default column to show in markers table
   const [geneColSel, setGeneColSel] = useState("id");
 
-  // Feature Selection
-  const [fSelectionData, setFSelectionData] = useState(null);
-
   // UI dimensions reduction dropdown
   const [redDims, setRedDims] = useState([]);
   // which dimension is selected
@@ -196,7 +193,6 @@ const AppContextProvider = ({ children }) => {
         defaultRedDims, setDefaultRedDims,
         plotRedDims, setPlotRedDims,
         clusterData, setClusterData,
-        fSelectionData, setFSelectionData,
         logs, setLogs,
         selectedCluster, setSelectedCluster,
         selectedClusterSummary, setSelectedClusterSummary,
