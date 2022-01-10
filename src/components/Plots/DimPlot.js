@@ -37,10 +37,10 @@ const DimPlot = (props) => {
 
     const { clusterData,
         clusterColors, setClusterColors,
-        gene, setGene, selectedClusterIndex, selectedClusterSummary,
+        gene, setGene,
         customSelection, setCustomSelection,
         setDelCustomSelection,
-        savedPlot, setSavedPlot, selectedCluster,
+        savedPlot, setSavedPlot,
         genesInfo, geneColSel } = useContext(AppContext);
 
     // keeps track of what points were selected in lasso selections
@@ -57,8 +57,8 @@ const DimPlot = (props) => {
             setGradient(null);
         }
 
-        let index = selectedClusterIndex?.[gene];
-        let expr = selectedClusterSummary?.[index]?.expr;
+        let index = props?.selectedClusterIndex?.[gene];
+        let expr = props?.selectedClusterSummary?.[index]?.expr;
 
         if (expr) {
             let exprMinMax = getMinMax(expr);
@@ -76,7 +76,9 @@ const DimPlot = (props) => {
             }
             setGradient(tmpgradient);
         }
-    }, [selectedClusterIndex?.[gene], selectedClusterSummary?.[selectedClusterIndex?.[gene]]?.expr], gene);
+    }, [props?.selectedClusterIndex?.[gene], 
+        props?.selectedClusterSummary?.[props?.selectedClusterIndex?.[gene]]?.expr,
+        gene]);
 
     // hook to also react when user changes the slider
     useEffect(() => {
@@ -187,8 +189,8 @@ const DimPlot = (props) => {
                     }
 
                     if (gene !== null) {
-                        let index = selectedClusterIndex?.[gene];
-                        let expr = selectedClusterSummary?.[index]?.expr;
+                        let index = props?.selectedClusterIndex?.[gene];
+                        let expr = props?.selectedClusterSummary?.[index]?.expr;
 
                         if (Array.isArray(expr)) {
                             return "#" + gradient.colorAt(expr?.[i]);
@@ -201,7 +203,7 @@ const DimPlot = (props) => {
                             //     return gradient;
                             // });
 
-                            // return "#" + colorGradients[cluster_mappings[i]].colorAt(selectedClusterSummary?.[gene]?.expr?.[i])
+                            // return "#" + colorGradients[cluster_mappings[i]].colorAt(props?.selectedClusterSummary?.[gene]?.expr?.[i])
                         }
                     }
 
@@ -263,7 +265,7 @@ const DimPlot = (props) => {
             tmp.push({
                 "image": iData,
                 "config": {
-                    "cluster": selectedCluster,
+                    "cluster": props?.selectedCluster,
                     "gene": gene,
                     "highlight": clusHighlight,
                     "embedding": props?.defaultRedDims

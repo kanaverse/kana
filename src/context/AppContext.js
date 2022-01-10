@@ -49,7 +49,7 @@ const AppContextProvider = ({ children }) => {
   const [tabSelected, setTabSelected] = useState("new");
   // saved analysis in the browser's indexeddb
   const [kanaIDBRecs, setKanaIDBRecs] = useState(null);
-    // delete rec in database
+  // delete rec in database
   const [deletekdb, setDeletekdb] = useState(null);
   // params from worker for stored analysis (kana file)
   const [loadParams, setLoadParams] = useState(null);
@@ -76,16 +76,8 @@ const AppContextProvider = ({ children }) => {
   // Cluster Analysis
   // cluster assignments
   const [clusterData, setClusterData] = useState(null);
-  // which cluster is selected
-  const [selectedCluster, setSelectedCluster] = useState(null);
-  // cohen, mean scores per gene
-  const [selectedClusterSummary, setSelectedClusterSummary] = useState([]);
-  // ordering of genes for the selected cluster
-  const [selectedClusterIndex, setSelectedClusterIndex] = useState([]);
   // set cluster colors
   const [clusterColors, setClusterColors] = useState(null);
-  // set Cluster rank-type
-  const [clusterRank, setClusterRank] = useState(null);
   // custom selection on tsne plot
   const [customSelection, setCustomSelection] = useState({});
   // remove custom Selection
@@ -116,7 +108,7 @@ const AppContextProvider = ({ children }) => {
           "msg": "not much to pass"
         });
       } else if (tabSelected === "load") {
-        if (loadParams == null ||  inputFiles?.reset) {
+        if (loadParams == null || inputFiles?.reset) {
           window.scranWorker.postMessage({
             "type": "LOAD",
             "payload": {
@@ -150,7 +142,7 @@ const AppContextProvider = ({ children }) => {
         "msg": "not much to pass"
       });
 
-      AppToaster.show({ icon:"floppy-disk", intent: "danger", message: "Deleting Analysis in the background" });
+      AppToaster.show({ icon: "floppy-disk", intent: "danger", message: "Deleting Analysis in the background" });
     }
   }, [deletekdb]);
 
@@ -164,10 +156,6 @@ const AppContextProvider = ({ children }) => {
         genesInfo, setGenesInfo,
         clusterData, setClusterData,
         logs, setLogs,
-        selectedCluster, setSelectedCluster,
-        selectedClusterSummary, setSelectedClusterSummary,
-        selectedClusterIndex, setSelectedClusterIndex,
-        clusterRank, setClusterRank,
         gene, setGene,
         clusterColors, setClusterColors,
         reqGene, setReqGene,

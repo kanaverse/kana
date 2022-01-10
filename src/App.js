@@ -56,6 +56,16 @@ function App() {
   // PCA
   const [pcaVarExp, setPcaVarExp] = useState(null);
 
+  // Cluster Data
+  // which cluster is selected
+  const [selectedCluster, setSelectedCluster] = useState(null);
+  // cohen, mean scores per gene
+  const [selectedClusterSummary, setSelectedClusterSummary] = useState([]);
+  // ordering of genes for the selected cluster
+  const [selectedClusterIndex, setSelectedClusterIndex] = useState([]);
+  // set Cluster rank-type
+  const [clusterRank, setClusterRank] = useState(null);
+
   // props for dialogs
   const loadingProps = {
     autoFocus: true,
@@ -70,12 +80,9 @@ function App() {
   const { setWasmInitialized,
     setGenesInfo,
     setClusterData, logs, setLogs,
-    selectedCluster, clusterRank,
-    selectedClusterSummary, setSelectedClusterSummary,
-    selectedClusterIndex, setSelectedClusterIndex,
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection, setReqGene,
-    setSelectedCluster, datasetName,
+    datasetName,
     params,
     setGeneColSel, setKanaIDBRecs, setLoadParams,
     setInitLoadState, inputFiles } = useContext(AppContext);
@@ -342,6 +349,10 @@ function App() {
                 showAnimation={showAnimation}
                 setShowAnimation={setShowAnimation}
                 setTriggerAnimation={setTriggerAnimation}
+                selectedClusterSummary={selectedClusterSummary}
+                setSelectedClusterSummary={setSelectedClusterSummary}
+                selectedClusterIndex={selectedClusterIndex}
+                selectedCluster={selectedCluster}
               /> :
               showGame ?
                 <div style={{
@@ -375,7 +386,14 @@ function App() {
         </div>
         <div className="marker">
           {clusterData ?
-            <MarkerPlot /> :
+            <MarkerPlot
+              selectedClusterSummary={selectedClusterSummary}
+              setSelectedClusterSummary={setSelectedClusterSummary}
+              selectedClusterIndex={selectedClusterIndex}
+              selectedCluster={selectedCluster}
+              setSelectedCluster={setSelectedCluster}
+              setClusterRank={setClusterRank}
+              /> :
             <div style={{
               height: '100%',
               width: '100%',
