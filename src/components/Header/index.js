@@ -23,7 +23,7 @@ import IntroDialog from "../Intro";
 
 import { AppContext } from "../../context/AppContext";
 
-const Header = () => {
+const Header = (props) => {
   // state for dialogs
   const [state] = useState({
     autoFocus: true,
@@ -33,7 +33,7 @@ const Header = () => {
     shouldReturnFocusOnClose: true,
   });
 
-  const { setExportState, datasetName, setDatasetName, setIndexedDBState } = useContext(AppContext);
+  const { datasetName, setDatasetName, setIndexedDBState } = useContext(AppContext);
   // app open inputs
   const [openInput, setOpenInput] = useState(false);
 
@@ -76,7 +76,7 @@ const Header = () => {
                     }} />
                   <MenuItem text="Download to file" icon="download"
                     onClick={() => {
-                      setExportState(true);
+                      props?.setExportState(true);
                     }} />
                 </Menu>
               } placement="bottom-start">

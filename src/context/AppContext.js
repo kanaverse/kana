@@ -59,8 +59,6 @@ const AppContextProvider = ({ children }) => {
   // creates a default dataset name
   const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()));
 
-  // app export state - .kana file
-  const [exportState, setExportState] = useState(false);
   // app export state - store to indexedDB
   const [indexedDBState, setIndexedDBState] = useState(false);
   // app export state - store to indexedDB
@@ -179,24 +177,6 @@ const AppContextProvider = ({ children }) => {
 
   useEffect(() => {
 
-    if (exportState) {
-      window.scranWorker.postMessage({
-        "type": "EXPORT",
-        "payload": {
-          "files": inputFiles,
-          "params": params
-        },
-        "msg": "not much to pass"
-      });
-
-      AppToaster.show({ icon:"download", intent: "primary", message: "Exporting analysis in the background" });
-    } else {
-      inputFiles?.files && AppToaster.show({ icon:"download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
-    }
-  }, [exportState]);
-
-  useEffect(() => {
-
     if (indexedDBState) {
       window.scranWorker.postMessage({
         "type": "SAVEKDB",
@@ -261,7 +241,6 @@ const AppContextProvider = ({ children }) => {
         reqGene, setReqGene,
         customSelection, setCustomSelection,
         delCustomSelection, setDelCustomSelection,
-        exportState, setExportState,
         datasetName, setDatasetName,
         tabSelected, setTabSelected,
         loadParams, setLoadParams,

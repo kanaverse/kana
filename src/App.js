@@ -7,6 +7,7 @@ import { Button, Label, Overlay, Spinner } from "@blueprintjs/core";
 import React, { useState, useEffect, useContext } from 'react';
 import { AppContext } from './context/AppContext';
 
+import { AppToaster } from "./components/Spinners/AppToaster";
 import DimPlot from './components/Plots/ScatterPlot.js';
 import MarkerPlot from './components/Markers';
 import Pong from './components/Spinners/Pong';
@@ -23,6 +24,8 @@ function App() {
   const [animateData, setAnimateData] = useState(null);
   // show in-app game ?
   const [showGame, setShowGame] = useState(false);
+  // app export state - .kana file
+  const [exportState, setExportState] = useState(false);
 
   // props for dialogs
   const loadingProps = {
@@ -44,10 +47,10 @@ function App() {
     selectedClusterIndex, setSelectedClusterIndex,
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection, setReqGene,
-    setSelectedCluster, datasetName, setExportState,
+    setSelectedCluster, datasetName,
     setShowAnimation, triggerAnimation, setTriggerAnimation, params,
     setGeneColSel, setKanaIDBRecs, setLoadParams,
-    setInitLoadState, setIndexedDBState } = useContext(AppContext);
+    setInitLoadState, setIndexedDBState, inputFiles } = useContext(AppContext);
 
   // initializes various things on the worker side
   useEffect(() => {
@@ -124,6 +127,25 @@ function App() {
       }
     });
   }, [triggerAnimation]);
+
+  // export an analysis
+  useEffect(() => {
+
+    if (exportState) {
+      window.scranWorker.postMessage({
+        "type": "EXPORT",
+        "payload": {
+          "files": inputFiles,
+          "params": params
+        },
+        "msg": "not much to pass"
+      });
+
+      AppToaster.show({ icon:"download", intent: "primary", message: "Exporting analysis in the background" });
+    } else {
+      inputFiles?.files && AppToaster.show({ icon:"download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
+    }
+  }, [exportState]);
 
   // callback for all responses from workers
   // all interactions are logged and shown on the UI
@@ -256,7 +278,7 @@ function App() {
 
   return (
     <div className="App">
-      <Header />
+      <Header setExportState={setExportState}/>
       <div className="App-content">
         <div className="plot">
           {
