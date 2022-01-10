@@ -2,6 +2,7 @@ import * as hdf5 from "./HDF5Reader.js";
 import * as d3 from "https://cdn.skypack.dev/d3-dsv@3";
 import pako from "./pako_wrapper.js";
 import WasmBuffer from "./WasmBuffer.js";
+import * as scran_utils from "./_utils.js";
 
 var cache = {};
 var parameters = {};

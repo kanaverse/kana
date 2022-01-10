@@ -1,4 +1,4 @@
-import defaultExport from "./WasmBuffer.js";
+import WasmBuffer from "./WasmBuffer.js";
 import * as hdf5 from "https://cdn.jsdelivr.net/npm/h5wasm@latest/dist/hdf5_hl.js";
 
 export function readMatrixFromHDF5(wasm, buffer, path = null) {

@@ -1,7 +1,7 @@
 import * as scran_inputs from "./_inputs.js";
 import * as scran_utils from "./_utils.js";
 import WasmBuffer from "./WasmBuffer.js";
-import "mito.js";
+import * as mito from "./mito.js";
 
 var cache = {};
 var parameters = {};
@@ -62,7 +62,6 @@ function fetchResults() {
   return data;
 }
 
-/** Public functions (standard) **/
 export function compute(wasm, args) {
   if (!scran_inputs.changed && !scran_utils.changedParameters(parameters, args)) {
     changed = false;
@@ -85,7 +84,7 @@ export function results(wasm) {
   return { "data": data, "ranges": ranges };
 }
 
-export serialize(wasm) {
+export function serialize(wasm) {
   return {
     "parameters": parameters,
     "contents": fetchResults()

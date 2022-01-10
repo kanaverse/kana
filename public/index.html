@@ -31,8 +31,7 @@
     -->
   <title>kana</title>
   <script type="text/javascript">
-
-    const worker = new Worker("%PUBLIC_URL%/scran/scranWorker.js");
+    const worker = new Worker("%PUBLIC_URL%/scran/scranWorker.js", { type: "module" });
     window.scranWorker = worker;
 
   </script>

@@ -1,6 +1,7 @@
 import * as scran_utils from "./_utils.js";
-import * as scran_normaliazation from "./_normalization.js";
+import * as scran_normalization from "./_normalization.js";
 import * as scran_choose_clustering from "./_choose_clustering.js";
+import * as scran_utils_markers from "./_utils_markers.js";
 
 var cache = {};
 var parameters = {};

@@ -2,8 +2,8 @@ import * as scran_utils from "./_utils.js";
 import * as scran_inputs from "./_inputs.js";
 import * as scran_qc_thresholds from "./_qc_thresholds.js";
 
-cache = {};
-parameters = {};
+var cache = {};
+var parameters = {};
 
 export var changed = false;
 

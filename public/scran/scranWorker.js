@@ -1,12 +1,5 @@
-importScripts("./WasmBuffer.js");
-importScripts("./HDF5Reader.js");
-importScripts("./_utils_serialize.js");
-importScripts("./_utils.js");
-importScripts("./_utils_viz_parent.js");
-importScripts("./_utils_markers.js");
-
-// Some external dependencies.
-import "https://cdn.jsdelivr.net/npm/hash-wasm@4/dist/md5.umd.min.js";
+import * as scran_utils from "./_utils.js";
+import * as scran_utils_serialize from "./_utils_serialize.js";
 
 import * as scran_inputs from "./_inputs.js";
 import * as scran_qc_metrics from "./_qc_metrics.js";
@@ -25,7 +18,7 @@ import * as scran_umap_monitor from "./_umap_monitor.js";
 import * as scran_score_markers from "./_score_markers.js";
 import * as scran_custom_markers from "./_custom_markers.js";
 
-importScripts("./mito.js");
+import * as kana_db from "./KanaDBHandler.js";
 
 /***************************************/
 
@@ -385,14 +378,13 @@ function runAllSteps(wasm, mode = "run", state = null) {
 
 /***************************************/
 
+import Module from "./scran.js";
+
 var loaded;
 onmessage = function (msg) {
-
   const payload = msg.data;
   if (payload.type == "INIT") {
-    // TODO: parcel2 doesn't load inline importScripts
-    importScripts("./scran.js");
-    loaded = loadScran();
+    loaded = new Module();
     loaded.then(wasm => {
       postMessage({
         type: payload.type,
