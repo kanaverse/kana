@@ -378,13 +378,13 @@ function runAllSteps(wasm, mode = "run", state = null) {
 
 /***************************************/
 
-import Module from "./scran.js";
+import loadScran from "./scran.js";
 
 var loaded;
 onmessage = function (msg) {
   const payload = msg.data;
   if (payload.type == "INIT") {
-    loaded = new Module();
+    loaded = loadScran();
     loaded.then(wasm => {
       postMessage({
         type: payload.type,
