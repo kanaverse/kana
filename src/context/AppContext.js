@@ -61,7 +61,7 @@ const AppContextProvider = ({ children }) => {
   const [loadParamsFor, setLoadParamsFor] = useState(null);
 
   // creates a default dataset name
-  const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()));
+  const [datasetName, setDatasetName] = useState("My Analysis Title");
 
   // app export state - .kana file
   const [exportState, setExportState] = useState(false);
