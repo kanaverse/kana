@@ -31,14 +31,14 @@ function rerun(wasm, animate) {
   }
 }
 
-import Module from "./scran.js";
+import loadScran from "./scran.js";
 
 var loaded;
 onmessage = function(msg) {
   var id = msg.data.id;
 
   if (msg.data.cmd == "INIT") {
-    loaded = new Module();
+    loaded = loadScran();
     loaded.then(wasm => {
       postMessage({
         "id": id,
