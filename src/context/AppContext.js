@@ -52,7 +52,7 @@ const AppContextProvider = ({ children }) => {
   // which tab is selected ? defaults to new
   const [tabSelected, setTabSelected] = useState("new");
   // saved analysis in the browser's indexeddb
-  const [kanaIDBRecs, setKanaIDBRecs] = useState(null);
+  const [kanaIDBRecs, setKanaIDBRecs] = useState([]);
     // delete rec in database
   const [deletekdb, setDeletekdb] = useState(null);
   // params from worker for stored analysis (kana file)

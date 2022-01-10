@@ -158,7 +158,7 @@ function AnalysisDialog({
 
     useEffect(() => {
         if (tabSelected === "load" && loadImportFormat === "kanadb"
-            && tmpInputFiles?.file === null && kanaIDBRecs) {
+            && tmpInputFiles?.file === null && kanaIDBRecs.length > 0) {
             setTmpInputFiles({
                 file: kanaIDBRecs[0].id
             });
@@ -840,7 +840,7 @@ function AnalysisDialog({
                                                         </span>
                                                     </H5>
                                                     {
-                                                        kanaIDBRecs ?
+                                                        kanaIDBRecs.length > 0 ?
                                                             <div className="row">
                                                                 <RadioGroup
                                                                     onChange={(x) => {
