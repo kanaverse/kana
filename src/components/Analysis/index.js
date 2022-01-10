@@ -53,7 +53,7 @@ function AnalysisDialog({
 
         if (tabSelected === "load") {
             if (loadImportFormat === "kanadb") {
-                setDatasetName(tmpInputFiles?.file);
+                setDatasetName(kanaIDBRecs[parseInt(tmpInputFiles?.file)]?.title);
             } else {
                 setDatasetName(tmpInputFiles?.file?.[0]?.name.split(".")[0]);
             }
