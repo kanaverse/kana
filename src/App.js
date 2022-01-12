@@ -35,6 +35,9 @@ function App() {
   const [qcDims, setQcDims] = useState(null);
   // const [fSelDims, setFSelDims] = useState(null);
 
+  // Logs
+  const [logs, setLogs] = useState([]);
+
   // QC Data
   const [qcData, setQcData] = useState(null);
   // Feature Selection
@@ -79,15 +82,13 @@ function App() {
   };
 
   const { setWasmInitialized,
-    setGenesInfo,
-    setClusterData, logs, setLogs,
+    setGenesInfo, setClusterData,
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection, setReqGene,
-    datasetName,
-    params,
+    datasetName, params,
     setGeneColSel, setKanaIDBRecs, setLoadParams,
     setInitLoadState, inputFiles,
-    setIndexedDBState, setClusterColors } = useContext(AppContext);
+    setClusterColors } = useContext(AppContext);
 
   const palette = {
     1: ['#1b9e77'],
@@ -428,7 +429,8 @@ function App() {
         setExportState={setExportState}
         setIndexedDBState={setIndexedDBState}
         initDims={initDims}
-        qcDims={qcDims} />
+        qcDims={qcDims}
+        logs={logs}/>
       <div className="App-content">
         <div className="plot">
           {
@@ -486,7 +488,7 @@ function App() {
               selectedCluster={selectedCluster}
               setSelectedCluster={setSelectedCluster}
               setClusterRank={setClusterRank}
-              /> :
+            /> :
             <div style={{
               height: '100%',
               width: '100%',

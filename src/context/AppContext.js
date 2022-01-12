@@ -89,9 +89,6 @@ const AppContextProvider = ({ children }) => {
   // request gene expression
   const [reqGene, setReqGene] = useState(null);
 
-  // Logs
-  const [logs, setLogs] = useState([]);
-
   // ImageData user saves while exploring
   const [savedPlot, setSavedPlot] = useState([]);
 
@@ -155,7 +152,6 @@ const AppContextProvider = ({ children }) => {
         wasmInitialized, setWasmInitialized,
         genesInfo, setGenesInfo,
         clusterData, setClusterData,
-        logs, setLogs,
         gene, setGene,
         clusterColors, setClusterColors,
         reqGene, setReqGene,

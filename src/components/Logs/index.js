@@ -8,8 +8,7 @@ import React, { useState, useContext } from 'react';
 
 import { AppContext } from '../../context/AppContext';
 
-const Logs = () => {
-    const { logs } = useContext(AppContext);
+const Logs = (props) => {
 
     const [state, setState] = useState({
         autoFocus: true,
@@ -41,7 +40,7 @@ const Logs = () => {
                     <div className={Classes.DIALOG_BODY}>
                         <ul className="list">
                             {
-                                logs.map((x, i) => (
+                                props?.logs.map((x, i) => (
                                     <li key={i}>{x}</li>
                                 ))
                             }
