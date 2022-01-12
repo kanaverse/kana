@@ -25,7 +25,12 @@ const scran_model_gene_var = {};
       x.changed = false;
     } else {
       var mat = scran_normalization.fetchNormalizedMatrix(wasm);
-      cache.raw = wasm.model_gene_var(mat, false, 0, args.span);
+
+      try {
+        cache.raw = wasm.model_gene_var(mat, false, 0, args.span);
+      } catch (e) {
+        throw wasm.get_error_message(e);
+      }
 
       cache.sorted_residuals = cache.raw.residuals(0).slice(); // a separate copy.
       cache.sorted_residuals.sort();

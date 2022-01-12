@@ -12,7 +12,13 @@ const scran_neighbor_index = {};
   function rawCompute(wasm, args) {
     scran_utils.freeCache(cache.raw);
     var pcs = scran_pca.fetchPCsOFFSET(wasm);
-    cache.raw = wasm.build_neighbor_index(pcs.offset, pcs.num_pcs, pcs.num_obs, args.approximate);
+
+    try {
+      cache.raw = wasm.build_neighbor_index(pcs.offset, pcs.num_pcs, pcs.num_obs, args.approximate);
+    } catch (e) {
+      throw wasm.get_error_message(e);
+    }
+
     delete cache.reloaded;
     return;
   }
