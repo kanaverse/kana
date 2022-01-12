@@ -22,7 +22,7 @@ Our client-side approach has a number of advantages:
 
 If you have a Matrix Market (`.mtx`) file or HDF5 (tenx V3 or AnnData representation stored as h5ad), you're ready to go.
 
-1. Launch the application by clicking [**here**](https://www.jkanche.com/scran.js.app).
+1. Launch the application by clicking [**here**](https://www.jkanche.com/kana/).
 2. Select the Matrix Market file (this may be Gzip-compressed).
    We recommend also providing the corresponding `genes.tsv` or `features.tsv` file to identify marker genes properly.
 3. Click the "Analyze" button, and we'll run a standard scRNA-seq analysis for you.
@@ -62,7 +62,7 @@ and diagnostic plots from the individual analysis steps.
 ### Deployment 
 
 Deployment is as easy as serving the static files in this repository via HTTPS.
-Indeed, our [**deployment**](https://www.jkanche.com/scran.js.app) is just being served via GitHub Pages.
+Indeed, our [**deployment**](https://www.jkanche.com/kana/) is just being served via GitHub Pages.
 As promised, there's no need to set up a backend server.
 
 ### Architecture

@@ -48,8 +48,8 @@ const AppContextProvider = ({ children }) => {
   // which tab is selected ? defaults to new
   const [tabSelected, setTabSelected] = useState("new");
   // saved analysis in the browser's indexeddb
-  const [kanaIDBRecs, setKanaIDBRecs] = useState(null);
-  // delete rec in database
+  const [kanaIDBRecs, setKanaIDBRecs] = useState([]);
+    // delete rec in database
   const [deletekdb, setDeletekdb] = useState(null);
   // params from worker for stored analysis (kana file)
   const [loadParams, setLoadParams] = useState(null);
@@ -57,7 +57,7 @@ const AppContextProvider = ({ children }) => {
   const [loadParamsFor, setLoadParamsFor] = useState(null);
 
   // creates a default dataset name
-  const [datasetName, setDatasetName] = useState("kana-" + String(Date.now()));
+  const [datasetName, setDatasetName] = useState("My Analysis Title");
 
   // app export state - params loading first time ?
   const [initLoadState, setInitLoadState] = useState(false);
@@ -127,6 +127,41 @@ const AppContextProvider = ({ children }) => {
       }
     }
   }, [inputFiles, params, wasmInitialized]);
+
+  useEffect(() => {
+
+    if (exportState) {
+      window.scranWorker.postMessage({
+        "type": "EXPORT",
+        "payload": {
+          "files": inputFiles,
+          "params": params
+        },
+        "msg": "not much to pass"
+      });
+
+      AppToaster.show({ icon:"download", intent: "primary", message: "Exporting analysis in the background" });
+    } else {
+      inputFiles?.files && AppToaster.show({ icon:"download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
+    }
+  }, [exportState]);
+
+  useEffect(() => {
+
+    if (indexedDBState) {
+      window.scranWorker.postMessage({
+        "type": "SAVEKDB",
+        "payload": {
+          "title": datasetName,
+        },
+        "msg": "not much to pass"
+      });
+
+      AppToaster.show({ icon:"floppy-disk", intent: "primary", message: "Saving analysis in the background. Note: analysis is saved within the browser!!" });
+    } else {
+      inputFiles?.files && AppToaster.show({ icon:"floppy-disk", intent: "primary", message: "Analysis saved!" });
+    }
+  }, [indexedDBState]);
 
   useEffect(() => {
 

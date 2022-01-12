@@ -55,7 +55,7 @@ const AnalysisDialog =({
 
         if (tabSelected === "load") {
             if (loadImportFormat === "kanadb") {
-                setDatasetName(tmpInputFiles?.file);
+                setDatasetName(kanaIDBRecs[parseInt(tmpInputFiles?.file)]?.title);
             } else {
                 setDatasetName(tmpInputFiles?.file?.[0]?.name.split(".")[0]);
             }
@@ -160,9 +160,9 @@ const AnalysisDialog =({
 
     useEffect(() => {
         if (tabSelected === "load" && loadImportFormat === "kanadb"
-            && tmpInputFiles?.file === null && kanaIDBRecs) {
+            && tmpInputFiles?.file === null && kanaIDBRecs.length > 0) {
             setTmpInputFiles({
-                file: kanaIDBRecs[0]
+                file: kanaIDBRecs[0].id
             });
         }
     }, [kanaIDBRecs, loadImportFormat]);
@@ -214,17 +214,8 @@ const AnalysisDialog =({
     }, [tmpInputFiles]);
 
     function parseKanaDate(x) {
-        try {
-            let kstamp = Number(x.replace("kana-", ""));
-            if (isNaN(kstamp)) {
-                return "Invalid Date";
-            } else {
-                let d = new Date(kstamp);
-                return d.toDateString() + ", " + d.toLocaleTimeString();
-            }
-        } catch (error) {
-            return "";
-        }
+        let d = new Date(x);
+        return d.toDateString() + ", " + d.toLocaleTimeString(); 
     }
 
     const get_common_tooltips = () => {
@@ -830,11 +821,11 @@ const AnalysisDialog =({
                                             onChange={handleLoadImportTab}
                                             defaultSelectedTabId={loadImportFormat}
                                         >
-                                            <Tab id="kana" title="Load Analysis file" panel={
+                                            <Tab id="kana" title="Load from file" panel={
                                                 <div>
                                                     <H5><Tag round={true}>1</Tag>
                                                         <span className="row-tooltip">
-                                                            Load saved analysis file
+                                                            Load analysis from file
                                                         </span>
                                                     </H5>
                                                     <div className="row">
@@ -844,18 +835,17 @@ const AnalysisDialog =({
                                                     </div>
                                                 </div>
                                             } />
-                                            {<Tab id="kanadb" title="Load from database" panel={
+                                            {<Tab id="kanadb" title="Load from browser" panel={
                                                 <div>
                                                     <H5><Tag round={true}>1</Tag>
                                                         <span className="row-tooltip">
-                                                            Load analysis file
+                                                            Load analysis from browser cache
                                                         </span>
                                                     </H5>
                                                     {
-                                                        kanaIDBRecs ?
+                                                        kanaIDBRecs.length > 0 ?
                                                             <div className="row">
                                                                 <RadioGroup
-                                                                    label="Choose an anlaysis"
                                                                     onChange={(x) => {
                                                                         setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value });
                                                                         setTmpInputValid(true);
@@ -870,8 +860,8 @@ const AnalysisDialog =({
                                                                                     flexDirection: "row",
                                                                                     alignItems: "center"
                                                                                 }}
-                                                                                    label={x} value={x} > &nbsp;
-                                                                                    <span className="kana-date">{parseKanaDate(x)}</span>  &nbsp;
+                                                                                    label={x.title} value={x.id} > &nbsp;
+                                                                                    <span className="kana-date">{parseKanaDate(x.time)}</span>  &nbsp;
                                                                                     <Icon icon="trash" size="10"
                                                                                         style={{
                                                                                             alignSelf: 'baseline',
@@ -879,7 +869,7 @@ const AnalysisDialog =({
                                                                                             paddingLeft: '5px',
                                                                                         }}
                                                                                         onClick={() => {
-                                                                                            setDeletekdb(x);
+                                                                                            setDeletekdb(x.id);
                                                                                         }}></Icon>
                                                                                 </Radio>
                                                                             )
