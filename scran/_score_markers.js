@@ -17,7 +17,12 @@ const scran_score_markers = {};
 
       var mat = scran_normalization.fetchNormalizedMatrix(wasm);
       var cluster_offset = scran_choose_clustering.fetchClustersOFFSET(wasm);
-      cache.raw = wasm.score_markers(mat, cluster_offset, false, 0);
+
+      try {
+        cache.raw = wasm.score_markers(mat, cluster_offset, false, 0);
+      } catch (e) {
+        throw wasm.get_error_message(e);
+      }
 
       parameters = args;
       delete cache.reloaded;

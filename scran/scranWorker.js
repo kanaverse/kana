@@ -425,7 +425,13 @@ onmessage = function (msg) {
 
   } else if (payload.type == "RUN") {
     loaded.then(wasm => {
-      runAllSteps(wasm, "run", payload.payload);
+      runAllSteps(wasm, "run", payload.payload)
+    })
+    .catch(error => {
+      postMessage({
+        type: "run_ERROR",
+        msg: error.toString()
+      });
     });
 
     /**************** LOADING EXISTING ANALYSES *******************/
@@ -440,7 +446,14 @@ onmessage = function (msg) {
           type: "loadedParameters",
           resp: response
         });
+      })
+      .catch(error => {
+        postMessage({
+          type: "load_ERROR",
+          msg: error.toString()
+        });
       });
+
 
     } else if (payload.payload.files.format == "kanadb") {
       var id = payload.payload.files.files.file;
@@ -460,6 +473,12 @@ onmessage = function (msg) {
               resp: response
             });
           }
+        })
+        .catch(error => {
+          postMessage({
+            type: "load_ERROR",
+            msg: error.toString()
+          });
         });
     }
 
@@ -472,6 +491,12 @@ onmessage = function (msg) {
         resp: output,
         msg: "Success: application state exported"
       }, [output]);
+    })
+    .catch(error => {
+      postMessage({
+        type: "export_ERROR",
+        msg: error.toString()
+      });
     });
 
   } else if (payload.type == "SAVEKDB") { // save analysis to inbrowser indexedDB 
@@ -493,6 +518,12 @@ onmessage = function (msg) {
           msg: `Fail: Cannot save analysis to cache (${id})`
         });
       }
+    })
+    .catch(error => {
+      postMessage({
+        type: "export_ERROR",
+        msg: error.toString()
+      });
     });
 
   } else if (payload.type == "REMOVEKDB") { // remove a saved analysis

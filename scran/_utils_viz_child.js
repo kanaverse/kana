@@ -28,7 +28,11 @@ scran_utils_viz_child.recreateNeighbors = function(wasm, neighbors) {
     dbuf = new WasmBuffer(wasm, size, "Float64Array");
     dbuf.set(neighbors.distances);
 
-    output = new wasm.NeighborResults(neighbors.num_obs, rbuf.ptr, ibuf.ptr, dbuf.ptr);
+    try {
+      output = new wasm.NeighborResults(neighbors.num_obs, rbuf.ptr, ibuf.ptr, dbuf.ptr);
+    } catch (e) {
+      throw wasm.get_error_message(e);
+    }
   } finally {
     if (rbuf !== null) {
       rbuf.free();

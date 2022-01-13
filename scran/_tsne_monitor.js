@@ -18,7 +18,12 @@ const scran_tsne_monitor = {};
 
     var nn_out = null;
     if (reneighbor()) {
-      var k = wasm.perplexity_to_k(args.perplexity);
+      var k;
+      try {
+        k = wasm.perplexity_to_k(args.perplexity);
+      } catch (e) {
+        throw wasm.get_error_message(e);
+      }
       nn_out = scran_utils_viz_parent.computeNeighbors(wasm, k);
     }
 

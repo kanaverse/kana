@@ -71,7 +71,12 @@ const scran_custom_markers = {};
     var tmp = buffer.array();
     selection.forEach(element => { tmp[element] = 1; });
 
-    var res = wasm.score_markers(mat, buffer.ptr, false, 0); // assumes that we have at least one cell in and outside the selection!
+    var res;
+    try {
+      res = wasm.score_markers(mat, buffer.ptr, false, 0); // assumes that we have at least one cell in and outside the selection!
+    } catch (e) {
+      throw wasm.get_error_message(e);
+    }
 
     // Removing previous results, if there were any.
     if (id in cache.results) {
