@@ -96,10 +96,10 @@ function readMatrixFromHDF5(wasm, buffer, path = null) {
     var output;
     if (entity instanceof hdf5.Dataset) {
         // i.e., we're dealing with a dense dataset.
-        var dims = d.shape;
-        var vals = cloneIntoWasmBuffer(wasm, d.value);
+        var dims = entity.shape;
+        var vals = cloneIntoWasmBuffer(wasm, entity.value);
         try {
-            output = wasm.initialize_sparse_matrix_from_dense_vector(d.shape[1], d.shape[0], vals.ptr, vals.type);
+            output = wasm.initialize_sparse_matrix_from_dense_vector(entity.shape[1], entity.shape[0], vals.ptr, vals.type);
         } finally {
             vals.free();
         }
@@ -215,28 +215,33 @@ function guessGenesFromHDF5(buffer) {
     return output;
   } 
 
-  // Does it have a 'features' group?
-  var index = f.keys.indexOf("features");
+  // Does it have a 'matrix' group with a "features" subgroup?
+  var index = f.keys.indexOf("matrix");
   if (index != -1) {
-    var feats = f.values[index];
-    if (! (feats instanceof hdf5.Group)) {
-      throw "expected 'features' to be a HDF5 group";
-    }
+    var mat = f.values[index];
+    index = mat.keys.indexOf("features");
 
-    var id_index = feats.keys.indexOf("id");
-    if (id_index == -1 || ! (feats.values[id_index] instanceof hdf5.Dataset)) {
-      throw "expected 'features' to contain a 'id' dataset";
+    if (index != -1) {
+      var feats = mat.values[index];
+      if (! (feats instanceof hdf5.Group)) {
+        throw "expected 'features' to be a HDF5 group";
+      }
+  
+      var id_index = feats.keys.indexOf("id");
+      if (id_index == -1 || ! (feats.values[id_index] instanceof hdf5.Dataset)) {
+        throw "expected 'features' to contain a 'id' dataset";
+      }
+  
+      var name_index = feats.keys.indexOf("name");
+      if (name_index == -1 || ! (feats.values[name_index] instanceof hdf5.Dataset)) {
+        throw "expected 'features' to contain a 'name' dataset";
+      }
+  
+      var output = {};
+      output.id = feats.values[id_index].value;
+      output.name = feats.values[name_index].value;
+      return output;
     }
-
-    var name_index = feats.keys.indexOf("name");
-    if (name_index == -1 || ! (feats.values[name_index] instanceof hdf5.Dataset)) {
-      throw "expected 'features' to contain a 'name' dataset";
-    }
-
-    var output = {};
-    output.id = feats.values[id_index].value;
-    output.name = feats.values[name_index].value;
-    return output;
   }
 
   return null;
