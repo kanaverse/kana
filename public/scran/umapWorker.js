@@ -16,7 +16,12 @@ function rerun(wasm, animate) {
   try {
     cache.total = current_status.num_epochs();
     for (; current_status.epoch() < cache.total; ) {
-      wasm.run_umap(current_status, delay, current_buffer.ptr);
+      try {
+        wasm.run_umap(current_status, delay, current_buffer.ptr);
+      } catch (e) {
+        throw wasm.get_error_message(e);
+      }
+
       if (animate) {
         var xy = scran_utils_viz_child.extractXY(current_buffer);
         postMessage({
@@ -71,7 +76,13 @@ onmessage = function(msg) {
       } else {
         scran_utils.freeCache(cache.init);
         var buffer = scran_utils.allocateBuffer(wasm, cache.neighbors.num_obs() * 2, "Float64Array", cache, "buffer_start");
-        cache.init = wasm.initialize_umap(cache.neighbors, init_args.num_epochs, init_args.min_dist, buffer.ptr);
+
+        try {
+          cache.init = wasm.initialize_umap(cache.neighbors, init_args.num_epochs, init_args.min_dist, buffer.ptr);
+        } catch (e) {
+          throw wasm.get_error_message(e);
+        }
+
         init_parameters = init_args;
         init_changed = true;
       }

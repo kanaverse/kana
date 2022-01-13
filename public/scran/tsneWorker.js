@@ -10,13 +10,22 @@ var run_parameters = {};
 function rerun(wasm, animate, iterations) {
   var num_obs = cache.init.num_obs(); 
   var buffer = scran_utils.allocateBuffer(wasm, num_obs * 2, "Float64Array", cache);
-  wasm.randomize_tsne_start(num_obs, buffer.ptr, 42);
+  try {
+    wasm.randomize_tsne_start(num_obs, buffer.ptr, 42);
+  } catch (e) {
+    throw wasm.get_error_message(e);
+  }
 
   var delay = scran_utils_viz_child.chooseDelay(animate);
   var current_status = cache.init.deepcopy();
   try {
     for (; current_status.iterations() < iterations; ) {
-      wasm.run_tsne(current_status, delay, iterations, buffer.ptr);
+      try {
+        wasm.run_tsne(current_status, delay, iterations, buffer.ptr);
+      } catch (e) {
+        throw wasm.get_error_message(e);
+      }
+
       if (animate) {
         var xy = scran_utils_viz_child.extractXY(buffer);
         postMessage({
@@ -70,7 +79,13 @@ onmessage = function(msg) {
         init_changed = false;
       } else {
         scran_utils.freeCache(cache.init);
-        cache.init = wasm.initialize_tsne(cache.neighbors, init_args.perplexity);
+
+        try {
+          cache.init = wasm.initialize_tsne(cache.neighbors, init_args.perplexity);
+        } catch (e) {
+          throw wasm.get_error_message(e);
+        }
+
         init_parameters = init_args;
         init_changed = true;
       }

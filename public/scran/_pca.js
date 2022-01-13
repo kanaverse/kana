@@ -35,7 +35,11 @@ const scran_pca = {};
 
       // Actually performing the PCA.
       scran_utils.freeCache(cache.raw);
-      cache.raw = wasm.run_pca(mat, args.num_pcs, true, sub.ptr, false);
+      try {
+        cache.raw = wasm.run_pca(mat, args.num_pcs, true, sub.ptr, false);
+      } catch (e) {
+        throw wasm.get_error_message(e);
+      }
 
       x.changed = true;
       parameters = args;

@@ -12,7 +12,13 @@ const scran_snn_graph = {};
   function rawCompute(wasm, args) {
     scran_utils.freeCache(cache.raw);
     var neighbors = scran_snn_neighbors.fetchNeighbors(wasm);
-    cache.raw = wasm.build_snn_graph(neighbors, args.scheme);
+
+    try {
+      cache.raw = wasm.build_snn_graph(neighbors, args.scheme);
+    } catch (e) {
+      throw wasm.get_error_message(e);
+    }
+
     delete cache.reloaded;
     return;
   }

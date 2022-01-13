@@ -12,7 +12,13 @@ const scran_snn_neighbors = {};
   function rawCompute(wasm, args) {
     scran_utils.freeCache(cache.raw);
     var nn_index = scran_neighbor_index.fetchIndex(wasm);
-    cache.raw = wasm.find_nearest_neighbors(nn_index, args.k);
+
+    try {
+      cache.raw = wasm.find_nearest_neighbors(nn_index, args.k);
+    } catch (e) {
+      throw wasm.get_error_message(e);
+    }
+
     delete cache.reloaded;
     return;
   }

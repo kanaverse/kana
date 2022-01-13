@@ -21,7 +21,12 @@ const scran_snn_cluster = {};
     } else {
       scran_utils.freeCache(cache.raw);
       var graph = scran_snn_graph.fetchGraph(wasm);
-      cache.raw = wasm.cluster_snn_graph(graph, args.resolution);
+
+      try {
+        cache.raw = wasm.cluster_snn_graph(graph, args.resolution);
+      } catch (e) {
+        throw wasm.get_error_message(e);
+      }
 
       parameters = args;
       x.changed = true;

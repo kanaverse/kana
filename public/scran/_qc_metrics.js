@@ -38,7 +38,11 @@ const scran_qc_metrics = {};
         }
       }
 
-      cache.raw = wasm.per_cell_qc_metrics(mat, nsubsets, subsets.ptr);
+      try {
+        cache.raw = wasm.per_cell_qc_metrics(mat, nsubsets, subsets.ptr);
+      } catch (e) {
+        throw wasm.get_error_message(e);
+      }
     } finally {
       subsets.free();
     }
