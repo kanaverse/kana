@@ -15,7 +15,12 @@ const scran_qc_thresholds = {};
     } else {
       scran_utils.freeCache(cache.raw);
       var metrics = scran_qc_metrics.fetchQCMetrics(wasm);
-      cache.raw = wasm.per_cell_qc_filters(metrics, false, 0, args.nmads);
+
+      try {
+        cache.raw = wasm.per_cell_qc_filters(metrics, false, 0, args.nmads);
+      } catch (e) {
+        throw wasm.get_error_message(e);
+      }
 
       parameters = args;
       delete cache.reloaded;

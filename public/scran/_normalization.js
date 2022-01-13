@@ -32,7 +32,12 @@ const scran_normalization = {};
     }
 
     scran_utils.freeCache(cache.matrix);
-    cache.matrix = wasm.log_norm_counts(mat, true, buffer.ptr, false, 0);
+
+    try {
+      cache.matrix = wasm.log_norm_counts(mat, true, buffer.ptr, false, 0);
+    } catch (e) {
+      throw wasm.get_error_message(e);
+    }
 
     delete cache.reloaded;
     return;

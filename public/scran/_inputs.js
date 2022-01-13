@@ -48,7 +48,11 @@ const scran_inputs = {};
       buffer.set(contents);
       var ext = first_mtx.name.split('.').pop();
       var is_compressed = (ext == "gz");
-      cache.matrix = wasm.read_matrix_market(buffer.ptr, buffer.size, is_compressed);
+      try {
+        cache.matrix = wasm.read_matrix_market(buffer.ptr, buffer.size, is_compressed);
+      } catch (e) {
+        throw wasm.get_error_message(e);
+      }
     } finally {
       buffer.free();
     }

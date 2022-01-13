@@ -6,7 +6,11 @@ scran_utils_viz_parent.computeNeighbors = function(wasm, k) {
   var output = { "num_obs": nn_index.num_obs() };
   var results = null, rbuf = null, ibuf = null, dbuf = null;
   try {
-    results = wasm.find_nearest_neighbors(nn_index, k);
+    try {
+      results = wasm.find_nearest_neighbors(nn_index, k);
+    } catch (e) {
+      throw wasm.get_error_message(e);
+    }
 
     rbuf = new WasmBuffer(wasm, results.num_obs(), "Int32Array");
     ibuf = new WasmBuffer(wasm, results.size(), "Int32Array");
