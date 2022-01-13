@@ -3,7 +3,7 @@ import Header from "./components/Header";
 import Gallery from './components/Gallery';
 import { randomColor } from 'randomcolor';
 
-import { Button, Label, Overlay, Spinner } from "@blueprintjs/core";
+import { Button, Label, Overlay, Spinner, Alert, Divider } from "@blueprintjs/core";
 
 import React, { useState, useEffect, useContext } from 'react';
 import { AppContext } from './context/AppContext';
@@ -22,6 +22,10 @@ function App() {
   const [loading, setLoading] = useState(true);
   // use local state for tsne/umap animation
   const [animateData, setAnimateData] = useState(null);
+
+  // use local state for tsne/umap animation
+  const [scranError, setScranError] = useState(null);
+
   // props for dialogs
   const loadingProps = {
     autoFocus: true,
@@ -213,6 +217,10 @@ function App() {
       tmp.push(`${d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds()} - ${payload?.type} - ${payload?.msg}`);
 
       setLogs(tmp);
+    }
+
+    if (payload?.type.endsWith("ERROR")) {
+      setScranError(payload);
     }
 
     if (payload.type === "INIT") {
@@ -410,6 +418,29 @@ function App() {
           <p>Initializing kana</p>
         </div>
       </Overlay>
+
+      <Alert
+        canEscapeKeyCancel={false}
+        canOutsideClickCancel={false}
+        confirmButtonText="Reload App"
+        icon="warning-sign"
+        intent="danger"
+        isOpen={scranError != null}
+        onConfirm={() => window.location.reload()}
+      >
+        <h3>{scranError?.type.replace("_", " ").toUpperCase()}</h3>
+        <Divider/>
+        <p>
+          {scranError?.msg}
+        </p>
+        <Divider/>
+        <p>If the error is related to input data, we support <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/output/matrices">Matrix Market</a>, 
+          <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices">10X V3 HDF5</a> or H5AD formats.</p>
+        <p>
+          If not, please report the issue on <a href='https://github.com/jkanche/kana/issues' target="_blank">GitHub</a>.
+        </p>
+      </Alert>
+
     </div>
   );
 }
