@@ -96,10 +96,10 @@ function readMatrixFromHDF5(wasm, buffer, path = null) {
     var output;
     if (entity instanceof hdf5.Dataset) {
         // i.e., we're dealing with a dense dataset.
-        var dims = d.shape;
-        var vals = cloneIntoWasmBuffer(wasm, d.value);
+        var dims = entity.shape;
+        var vals = cloneIntoWasmBuffer(wasm, entity.value);
         try {
-            output = wasm.initialize_sparse_matrix_from_dense_vector(d.shape[1], d.shape[0], vals.ptr, vals.type);
+            output = wasm.initialize_sparse_matrix_from_dense_vector(entity.shape[1], entity.shape[0], vals.ptr, vals.type);
         } finally {
             vals.free();
         }
