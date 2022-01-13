@@ -8,7 +8,7 @@ const ImgPlot = (props) => {
     const container = useRef();
     const [title, setTitle] = useState(null);
 
-    const { genesInfo, gene, geneColSel } = useContext(AppContext);
+    const { genesInfo, geneColSel } = useContext(AppContext);
 
     let data = props?.data;
     let propwidth = props?.width;
@@ -44,7 +44,7 @@ const ImgPlot = (props) => {
 
             let text = ` ${data?.config?.embedding} `
             if (data?.config?.gene) {
-                text += `⊃ ${genesInfo[geneColSel][gene]} `
+                text += `⊃ ${genesInfo[geneColSel][props?.gene]} `
             }
 
             if (data?.config?.highlight) {

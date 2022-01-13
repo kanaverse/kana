@@ -10,7 +10,7 @@ import './Gallery.css';
 import ImgPlot from "../Plots/ImgPlot";
 
 const Gallery = (props) => {
-  const { clusterData, datasetName } = useContext(AppContext);
+  const { datasetName } = useContext(AppContext);
 
   return (
     <>
@@ -32,10 +32,10 @@ const Gallery = (props) => {
             : ""
         }
         {
-          clusterData ?
+          props?.clusterData && props?.clusterColors ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
               <h5># of cells per cluster</h5>
-              <ClusterBarPlot data={clusterData} />
+              <ClusterBarPlot data={props?.clusterData} clusterColors={props?.clusterColors} />
             </Card>
             : ""
         }
@@ -43,7 +43,7 @@ const Gallery = (props) => {
           props?.savedPlot ?
             props?.savedPlot.map((x, i) => (
               <Card key={i} className="gallery-elem" elevation={Elevation.ONE}>
-                <ImgPlot data={x} />
+                <ImgPlot data={x} gene={props?.gene} />
               </Card>
             )
             ) : ""

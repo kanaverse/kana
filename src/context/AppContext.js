@@ -1,5 +1,4 @@
 import React, { createContext, useEffect, useState } from "react";
-import { AppToaster } from "../components/Spinners/AppToaster";
 
 export const AppContext = createContext(null);
 
@@ -69,22 +68,6 @@ const AppContextProvider = ({ children }) => {
   // default column to show in markers table
   const [geneColSel, setGeneColSel] = useState("id");
 
-  // Cluster Analysis
-  // cluster assignments
-  const [clusterData, setClusterData] = useState(null);
-  // set cluster colors
-  const [clusterColors, setClusterColors] = useState(null);
-  // custom selection on tsne plot
-  const [customSelection, setCustomSelection] = useState({});
-  // remove custom Selection
-  const [delCustomSelection, setDelCustomSelection] = useState(null);
-
-  // geneExpression
-  // what gene is selected for scatterplot
-  const [gene, setGene] = useState(null);
-  // request gene expression
-  const [reqGene, setReqGene] = useState(null);
-
   useEffect(() => {
 
     if (wasmInitialized && inputFiles.files != null && !initLoadState) {
@@ -129,12 +112,6 @@ const AppContextProvider = ({ children }) => {
         error, setError,
         wasmInitialized, setWasmInitialized,
         genesInfo, setGenesInfo,
-        clusterData, setClusterData,
-        gene, setGene,
-        clusterColors, setClusterColors,
-        reqGene, setReqGene,
-        customSelection, setCustomSelection,
-        delCustomSelection, setDelCustomSelection,
         datasetName, setDatasetName,
         tabSelected, setTabSelected,
         loadParams, setLoadParams,

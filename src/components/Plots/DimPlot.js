@@ -35,28 +35,23 @@ const DimPlot = (props) => {
     // first render ?
     const [renderCount, setRenderCount] = useState(true);
 
-    const { clusterData,
-        clusterColors, setClusterColors,
-        gene, setGene,
-        customSelection, setCustomSelection,
-        setDelCustomSelection,
-        genesInfo, geneColSel } = useContext(AppContext);
+    const { genesInfo, geneColSel } = useContext(AppContext);
 
     // keeps track of what points were selected in lasso selections
     const [selectedPoints, setSelectedPoints] = useState(null);
     // set mode for plot
     const [plotMode, setPlotMode] = useState('PAN');
 
-    const max = Math.max(...clusterData?.clusters);
+    const max = Math.max(...props?.clusterData?.clusters);
 
     // if either gene or expression changes, compute gradients and min/max
     useEffect(() => {
-        if (gene === null) {
+        if (props?.gene === null) {
             setShowGradient(false);
             setGradient(null);
         }
 
-        let index = props?.selectedClusterIndex?.[gene];
+        let index = props?.selectedClusterIndex?.[props?.gene];
         let expr = props?.selectedClusterSummary?.[index]?.expr;
 
         if (expr) {
@@ -71,13 +66,13 @@ const DimPlot = (props) => {
                 setExprMinMax([0, val]);
             } else {
                 setShowGradient(false);
-                AppToaster.show({ icon: "warning-sign", intent: "warning", message: `${genesInfo[geneColSel][gene]} is not expressed in any cell (mean = 0)` })
+                AppToaster.show({ icon: "warning-sign", intent: "warning", message: `${genesInfo[geneColSel][props?.gene]} is not expressed in any cell (mean = 0)` })
             }
             setGradient(tmpgradient);
         }
-    }, [props?.selectedClusterIndex?.[gene], 
-        props?.selectedClusterSummary?.[props?.selectedClusterIndex?.[gene]]?.expr,
-        gene]);
+    }, [props?.selectedClusterIndex?.[props?.gene], 
+        props?.selectedClusterSummary?.[props?.selectedClusterIndex?.[props?.gene]]?.expr,
+        props?.gene]);
 
     // hook to also react when user changes the slider
     useEffect(() => {
@@ -144,8 +139,8 @@ const DimPlot = (props) => {
             // if dimensions are available
             if (data) {
 
-                let cluster_mappings = clusterData?.clusters;
-                const cluster_colors = clusterColors
+                let cluster_mappings = props?.clusterData?.clusters;
+                const cluster_colors = props?.clusterColors;
 
                 let points = []
                 data.x.forEach((x, i) => {
@@ -183,12 +178,12 @@ const DimPlot = (props) => {
                         if (!String(clusHighlight).startsWith("cs")) {
                             if (clusHighlight !== cluster_mappings[i]) return '#D3D3D3';
                         } else {
-                            if (!customSelection[clusHighlight].includes(i)) return '#D3D3D3';
+                            if (!props?.customSelection[clusHighlight].includes(i)) return '#D3D3D3';
                         }
                     }
 
-                    if (gene !== null) {
-                        let index = props?.selectedClusterIndex?.[gene];
+                    if (props?.gene !== null) {
+                        let index = props?.selectedClusterIndex?.[props?.gene];
                         let expr = props?.selectedClusterSummary?.[index]?.expr;
 
                         if (Array.isArray(expr)) {
@@ -216,7 +211,7 @@ const DimPlot = (props) => {
             }
         }
     }, [props?.tsneData, props?.umapData, props?.animateData, props?.defaultRedDims, 
-            gradient, clusHighlight, clusterData]);
+            gradient, clusHighlight, props?.clusterData]);
 
     const setInteraction = (x) => {
         if (x === "SELECT") {
@@ -237,14 +232,14 @@ const DimPlot = (props) => {
     const savePoints = () => {
         // generate random color
         let color = randomColor({ luminosity: 'dark', count: 1 });
-        let tmpcolor = [...clusterColors];
+        let tmpcolor = [...props?.clusterColors];
         tmpcolor.push(color[0]);
-        setClusterColors(tmpcolor);
+        props?.setClusterColors(tmpcolor);
 
-        let cid = Object.keys(customSelection).length;
-        let tmpSelection = { ...customSelection };
+        let cid = Object.keys(props?.customSelection).length;
+        let tmpSelection = { ...props?.customSelection };
         tmpSelection[`cs${cid + 1}`] = selectedPoints;
-        setCustomSelection(tmpSelection);
+        props?.setCustomSelection(tmpSelection);
 
         setSelectedPoints(null);
         scatterplot.select(null);
@@ -265,7 +260,7 @@ const DimPlot = (props) => {
                 "image": iData,
                 "config": {
                     "cluster": props?.selectedCluster,
-                    "gene": gene,
+                    "gene": props?.gene,
                     "highlight": clusHighlight,
                     "embedding": props?.defaultRedDims
                 }
@@ -353,8 +348,8 @@ const DimPlot = (props) => {
                         <div className='right-sidebar-cluster'>
                             <Callout title="CLUSTERS">
                                 <ul>
-                                    {clusterColors?.map((x, i) => {
-                                        return i < clusterColors.length - Object.keys(customSelection).length ?
+                                    {props?.clusterColors?.map((x, i) => {
+                                        return i < props?.clusterColors.length - Object.keys(props?.customSelection).length ?
                                             (<li key={i}
                                                 className={clusHighlight === i ? 'legend-highlight' : ''}
                                                 style={{ color: x }}
@@ -371,17 +366,17 @@ const DimPlot = (props) => {
                                 </ul>
                             </Callout>
                             {
-                                (Object.keys(customSelection).length > 0 || (selectedPoints && selectedPoints.length > 0)) ?
+                                (Object.keys(props?.customSelection).length > 0 || (selectedPoints && selectedPoints.length > 0)) ?
                                     <Callout title="CUSTOM SELECTIONS">
                                         <div
                                             style={{
                                                 paddingTop: '5px'
                                             }}>
                                             <ul>
-                                                {Object.keys(customSelection)?.map((x, i) => {
+                                                {Object.keys(props?.customSelection)?.map((x, i) => {
                                                     return (<li key={x}
                                                         className={clusHighlight === x ? 'legend-highlight' : ''}
-                                                        style={{ color: clusterColors[Math.max(...clusterData?.clusters) + 1 + i] }}
+                                                        style={{ color: props?.clusterColors[Math.max(...props?.clusterData?.clusters) + 1 + i] }}
                                                     >
                                                         <div style={{
                                                             display: 'inline-flex',
@@ -407,15 +402,15 @@ const DimPlot = (props) => {
                                                                     paddingLeft: '2px'
                                                                 }}
                                                                 onClick={() => {
-                                                                    let tmpSel = { ...customSelection };
+                                                                    let tmpSel = { ...props?.customSelection };
                                                                     delete tmpSel[x];
-                                                                    setCustomSelection(tmpSel);
+                                                                    props?.setCustomSelection(tmpSel);
 
-                                                                    let tmpcolors = [...clusterColors];
+                                                                    let tmpcolors = [...props?.clusterColors];
                                                                     tmpcolors = tmpcolors.slice(0, tmpcolors.length - 1);
-                                                                    setClusterColors(tmpcolors);
+                                                                    props?.setClusterColors(tmpcolors);
 
-                                                                    setDelCustomSelection(x);
+                                                                    props?.setDelCustomSelection(x);
 
                                                                     if (clusHighlight === x) {
                                                                         setClusHighlight(null);
@@ -455,8 +450,8 @@ const DimPlot = (props) => {
                                 <span>Gradient for <Tag
                                     minimal={true}
                                     intent='primary' onRemove={() => {
-                                        setGene(null);
-                                    }}>{genesInfo[geneColSel][gene]}</Tag>&nbsp;
+                                        props?.setGene(null);
+                                    }}>{genesInfo[geneColSel][props?.gene]}</Tag>&nbsp;
                                     <Tooltip2 content="Use the slider to adjust the color gradient of the plot. Useful when data is skewed
                                 by either a few lowly or highly expressed cells" openOnTargetFocus={false}>
                                         <Icon icon="help"></Icon>

@@ -6,7 +6,7 @@ const ClusterBarPlot = (props) => {
 
     const [chartData, setChartData] = useState(null);
 
-    const { clusterColors, datasetName } = useContext(AppContext);
+    const { datasetName } = useContext(AppContext);
 
     useEffect(() => {
         let data = props?.data?.clusters;
@@ -22,7 +22,7 @@ const ClusterBarPlot = (props) => {
                 x["CLUS_" + clus] = 0;
             }
         }
-    
+
         let chart_data = [];
         Object.values(x)?.forEach((z, i) => {
             chart_data.push({
@@ -32,10 +32,13 @@ const ClusterBarPlot = (props) => {
         });
 
         setChartData(chart_data);
-    }, [props?.data, clusterColors]);
+    }, [props?.data, props?.clusterColors]);
 
     return (
-        clusterColors && chartData && <BarPlot filename={datasetName.split(" ").join("_") + "_clusters.png"} data={chartData} color={clusterColors} />
+        props?.clusterColors && chartData &&
+        <BarPlot
+            filename={datasetName.split(" ").join("_") + "_clusters.png"}
+            data={chartData} color={props?.clusterColors} />
     );
 };
 

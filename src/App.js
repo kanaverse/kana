@@ -74,6 +74,22 @@ function App() {
   // set Cluster rank-type
   const [clusterRank, setClusterRank] = useState(null);
 
+  // Cluster Analysis
+  // cluster assignments
+  const [clusterData, setClusterData] = useState(null);
+  // set cluster colors
+  const [clusterColors, setClusterColors] = useState(null);
+  // custom selection on tsne plot
+  const [customSelection, setCustomSelection] = useState({});
+  // remove custom Selection
+  const [delCustomSelection, setDelCustomSelection] = useState(null);
+
+  // geneExpression
+  // what gene is selected for scatterplot
+  const [gene, setGene] = useState(null);
+  // request gene expression
+  const [reqGene, setReqGene] = useState(null);
+
   // ImageData user saves while exploring
   const [savedPlot, setSavedPlot] = useState([]);
 
@@ -89,13 +105,10 @@ function App() {
   };
 
   const { setWasmInitialized,
-    setGenesInfo, setClusterData,
-    reqGene, customSelection, clusterData,
-    delCustomSelection, setDelCustomSelection, setReqGene,
+    setGenesInfo,
     datasetName, params,
     setGeneColSel, setLoadParams,
-    setInitLoadState, inputFiles,
-    setClusterColors } = useContext(AppContext);
+    setInitLoadState, inputFiles } = useContext(AppContext);
 
   const palette = {
     1: ['#1b9e77'],
@@ -287,41 +300,6 @@ function App() {
     }
   }, [indexedDBState]);
 
-  useEffect(() => {
-
-    if (deletekdb) {
-      window.scranWorker.postMessage({
-        "type": "REMOVEKDB",
-        "payload": {
-          "id": deletekdb,
-        },
-        "msg": "not much to pass"
-      });
-
-      AppToaster.show({ icon: "floppy-disk", intent: "danger", message: "Deleting Analysis in the background" });
-    }
-  }, [deletekdb]);
-
-
-  useEffect(() => {
-
-    if (indexedDBState) {
-      window.scranWorker.postMessage({
-        "type": "SAVEKDB",
-        "payload": {
-          "files": inputFiles,
-          "params": params,
-          "id": datasetName,
-        },
-        "msg": "not much to pass"
-      });
-
-      AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Saving analysis in the background. Note: analysis is saved within the browser!!" });
-    } else {
-      inputFiles?.files && AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Analysis saved!" });
-    }
-  }, [indexedDBState]);
-
   // callback for all responses from workers
   // all interactions are logged and shown on the UI
   window.scranWorker.onmessage = (msg) => {
@@ -494,6 +472,14 @@ function App() {
                 selectedCluster={selectedCluster}
                 savedPlot={savedPlot}
                 setSavedPlot={setSavedPlot}
+                clusterData={clusterData}
+                customSelection={customSelection}
+                setCustomSelection={setCustomSelection}
+                setGene={setGene}
+                gene={gene}
+                clusterColors={clusterColors}
+                setClusterColors={setClusterColors}
+                setDelCustomSelection={setDelCustomSelection}
               /> :
               showGame ?
                 <div style={{
@@ -527,13 +513,19 @@ function App() {
         </div>
         <div className="marker">
           {clusterData ?
-            <MarkerPlot
+            selectedClusterSummary && <MarkerPlot
               selectedClusterSummary={selectedClusterSummary}
               setSelectedClusterSummary={setSelectedClusterSummary}
               selectedClusterIndex={selectedClusterIndex}
               selectedCluster={selectedCluster}
               setSelectedCluster={setSelectedCluster}
               setClusterRank={setClusterRank}
+              clusterData={clusterData}
+              customSelection={customSelection}
+              setGene={setGene}
+              gene={gene}
+              clusterColors={clusterColors}
+              setReqGene={setReqGene}
             /> :
             <div style={{
               height: '100%',
@@ -552,7 +544,11 @@ function App() {
             qcData={qcData}
             pcaVarExp={pcaVarExp}
             savedPlot={savedPlot}
-            setSavedPlot={setSavedPlot} />
+            setSavedPlot={setSavedPlot} 
+            clusterData={clusterData}
+            clusterColors={clusterColors}
+            gene={gene}
+            />
         </div>
       </div>
       <Overlay
