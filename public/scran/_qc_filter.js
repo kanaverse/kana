@@ -14,7 +14,12 @@ const scran_qc_filter = {};
 
     var mat = scran_inputs.fetchCountMatrix(wasm);
     var disc_offset = scran_qc_thresholds.fetchDiscardsOFFSET(wasm);
-    cache.matrix = wasm.filter_cells(mat, disc_offset, false);
+
+    try {
+      cache.matrix = wasm.filter_cells(mat, disc_offset, false);
+    } catch (e) {
+      throw wasm.get_error_message(e);
+    }
 
     delete cache.reloaded;
     return;

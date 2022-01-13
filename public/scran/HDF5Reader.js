@@ -99,10 +99,13 @@ function readMatrixFromHDF5(wasm, buffer, path = null) {
         var dims = entity.shape;
         var vals = cloneIntoWasmBuffer(wasm, entity.value);
         try {
-            output = wasm.initialize_sparse_matrix_from_dense_vector(entity.shape[1], entity.shape[0], vals.ptr, vals.type);
+            output = wasm.initialize_sparse_matrix_from_dense_vector(d.shape[1], d.shape[0], vals.ptr, vals.type);
+        } catch (e) {
+            throw wasm.get_error_message(e);
         } finally {
             vals.free();
         }
+
     } else if (entity instanceof hdf5.Group) {
         var shape_dex = entity.keys.indexOf("shape");
         var dims;
@@ -164,6 +167,9 @@ function readMatrixFromHDF5(wasm, buffer, path = null) {
                 sparse_indices.ptr, sparse_indices.type,
                 sparse_indptr.ptr, sparse_indptr.type,
                 csc);
+
+        } catch (e) {
+            throw wasm.get_error_message(e);
 
         } finally {
             if (sparse_data !== null) {
