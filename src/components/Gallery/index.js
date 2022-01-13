@@ -10,8 +10,7 @@ import './Gallery.css';
 import ImgPlot from "../Plots/ImgPlot";
 
 const Gallery = (props) => {
-  const { clusterData, savedPlot,
-    datasetName } = useContext(AppContext);
+  const { clusterData, datasetName } = useContext(AppContext);
 
   return (
     <>
@@ -41,8 +40,8 @@ const Gallery = (props) => {
             : ""
         }
         {
-          savedPlot ?
-            savedPlot.map((x, i) => (
+          props?.savedPlot ?
+            props?.savedPlot.map((x, i) => (
               <Card key={i} className="gallery-elem" elevation={Elevation.ONE}>
                 <ImgPlot data={x} />
               </Card>

@@ -54,17 +54,21 @@ const Header = (props) => {
             buttonText="Start Analysis"
             includeFooter={true}
             openInput={openInput}
-            {...state} />
+            {...state}
+            kanaIDBRecs={props?.kanaIDBRecs}
+            setKanaIDBRecs={props?.setKanaIDBRecs}
+            deletekdb={props?.deletekdb}
+            setDeletekdb={props?.setDeletekdb} />
 
           <NavbarDivider />
 
           <Tooltip2 content="Modify the dataset title here." position={Position.BOTTOM}>
-          <EditableText value={datasetName} intent="primary"
+            <EditableText value={datasetName} intent="primary"
               onConfirm={(val) => { setDatasetName(val) }}
-              onChange={(val) => { setDatasetName(val) }}/>
+              onChange={(val) => { setDatasetName(val) }} />
           </Tooltip2>
 
-          <Stats initDims={props?.initDims} qcDims={props?.qcDims}/>
+          <Stats initDims={props?.initDims} qcDims={props?.qcDims} />
           <NavbarDivider />
 
           <Tooltip2 content="Save the analysis, either in your browser's cache or to a file on your computer." position={Position.BOTTOM}>
@@ -88,7 +92,7 @@ const Header = (props) => {
           <NavbarDivider />
 
           <Tooltip2 content="What's happening under the hood? See the blow-by-blow logs as the analysis runs." position={Position.BOTTOM}>
-            <Logs logs={props?.logs}/>
+            <Logs logs={props?.logs} />
           </Tooltip2>
           <NavbarDivider />
 

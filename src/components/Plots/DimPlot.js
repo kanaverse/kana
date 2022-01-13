@@ -40,7 +40,6 @@ const DimPlot = (props) => {
         gene, setGene,
         customSelection, setCustomSelection,
         setDelCustomSelection,
-        savedPlot, setSavedPlot,
         genesInfo, geneColSel } = useContext(AppContext);
 
     // keeps track of what points were selected in lasso selections
@@ -260,7 +259,7 @@ const DimPlot = (props) => {
             scatterplot.renderScatterPlot();
             const iData = scatterplot.scatterPlot.renderer.domElement.toDataURL();
 
-            let tmp = [...savedPlot];
+            let tmp = [...props?.savedPlot];
 
             tmp.push({
                 "image": iData,
@@ -272,7 +271,7 @@ const DimPlot = (props) => {
                 }
             });
 
-            setSavedPlot(tmp);
+            props?.setSavedPlot(tmp);
         }
     }
 

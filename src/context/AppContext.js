@@ -47,10 +47,6 @@ const AppContextProvider = ({ children }) => {
 
   // which tab is selected ? defaults to new
   const [tabSelected, setTabSelected] = useState("new");
-  // saved analysis in the browser's indexeddb
-  const [kanaIDBRecs, setKanaIDBRecs] = useState([]);
-    // delete rec in database
-  const [deletekdb, setDeletekdb] = useState(null);
   // params from worker for stored analysis (kana file)
   const [loadParams, setLoadParams] = useState(null);
   // kana file or db ?
@@ -66,8 +62,8 @@ const AppContextProvider = ({ children }) => {
   const [wasmInitialized, setWasmInitialized] = useState(false);
   const [error, setError] = useState(null);
 
-  // Response State for various components
-
+  // Response State for various components - these are state that are spread 
+  // allover the app so its better they are at the context level
   // Gene details 
   const [genesInfo, setGenesInfo] = useState(null);
   // default column to show in markers table
@@ -88,9 +84,6 @@ const AppContextProvider = ({ children }) => {
   const [gene, setGene] = useState(null);
   // request gene expression
   const [reqGene, setReqGene] = useState(null);
-
-  // ImageData user saves while exploring
-  const [savedPlot, setSavedPlot] = useState([]);
 
   useEffect(() => {
 
@@ -128,56 +121,6 @@ const AppContextProvider = ({ children }) => {
     }
   }, [inputFiles, params, wasmInitialized]);
 
-  useEffect(() => {
-
-    if (exportState) {
-      window.scranWorker.postMessage({
-        "type": "EXPORT",
-        "payload": {
-          "files": inputFiles,
-          "params": params
-        },
-        "msg": "not much to pass"
-      });
-
-      AppToaster.show({ icon:"download", intent: "primary", message: "Exporting analysis in the background" });
-    } else {
-      inputFiles?.files && AppToaster.show({ icon:"download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
-    }
-  }, [exportState]);
-
-  useEffect(() => {
-
-    if (indexedDBState) {
-      window.scranWorker.postMessage({
-        "type": "SAVEKDB",
-        "payload": {
-          "title": datasetName,
-        },
-        "msg": "not much to pass"
-      });
-
-      AppToaster.show({ icon:"floppy-disk", intent: "primary", message: "Saving analysis in the background. Note: analysis is saved within the browser!!" });
-    } else {
-      inputFiles?.files && AppToaster.show({ icon:"floppy-disk", intent: "primary", message: "Analysis saved!" });
-    }
-  }, [indexedDBState]);
-
-  useEffect(() => {
-
-    if (deletekdb) {
-      window.scranWorker.postMessage({
-        "type": "REMOVEKDB",
-        "payload": {
-          "id": deletekdb,
-        },
-        "msg": "not much to pass"
-      });
-
-      AppToaster.show({ icon: "floppy-disk", intent: "danger", message: "Deleting Analysis in the background" });
-    }
-  }, [deletekdb]);
-
   return (
     <AppContext.Provider
       value={{
@@ -195,12 +138,9 @@ const AppContextProvider = ({ children }) => {
         datasetName, setDatasetName,
         tabSelected, setTabSelected,
         loadParams, setLoadParams,
-        savedPlot, setSavedPlot,
         geneColSel, setGeneColSel,
-        kanaIDBRecs, setKanaIDBRecs,
         initLoadState, setInitLoadState,
-        loadParamsFor, setLoadParamsFor,
-        deletekdb, setDeletekdb
+        loadParamsFor, setLoadParamsFor
       }}
     >
       {children}

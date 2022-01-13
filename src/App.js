@@ -29,6 +29,10 @@ function App() {
   const [exportState, setExportState] = useState(false);
   // app export state - store to indexedDB
   const [indexedDBState, setIndexedDBState] = useState(false);
+  // saved analysis in the browser's indexeddb
+  const [kanaIDBRecs, setKanaIDBRecs] = useState([]);
+  // delete rec in database
+  const [deletekdb, setDeletekdb] = useState(null);
   // Response State for various components
   // dim sizes
   const [initDims, setInitDims] = useState(null);
@@ -70,6 +74,9 @@ function App() {
   // set Cluster rank-type
   const [clusterRank, setClusterRank] = useState(null);
 
+  // ImageData user saves while exploring
+  const [savedPlot, setSavedPlot] = useState([]);
+
   // props for dialogs
   const loadingProps = {
     autoFocus: true,
@@ -86,7 +93,7 @@ function App() {
     reqGene, customSelection, clusterData,
     delCustomSelection, setDelCustomSelection, setReqGene,
     datasetName, params,
-    setGeneColSel, setKanaIDBRecs, setLoadParams,
+    setGeneColSel, setLoadParams,
     setInitLoadState, inputFiles,
     setClusterColors } = useContext(AppContext);
 
@@ -269,6 +276,39 @@ function App() {
       window.scranWorker.postMessage({
         "type": "SAVEKDB",
         "payload": {
+          "title": datasetName,
+        },
+        "msg": "not much to pass"
+      });
+
+      AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Saving analysis in the background. Note: analysis is saved within the browser!!" });
+    } else {
+      inputFiles?.files && AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Analysis saved!" });
+    }
+  }, [indexedDBState]);
+
+  useEffect(() => {
+
+    if (deletekdb) {
+      window.scranWorker.postMessage({
+        "type": "REMOVEKDB",
+        "payload": {
+          "id": deletekdb,
+        },
+        "msg": "not much to pass"
+      });
+
+      AppToaster.show({ icon: "floppy-disk", intent: "danger", message: "Deleting Analysis in the background" });
+    }
+  }, [deletekdb]);
+
+
+  useEffect(() => {
+
+    if (indexedDBState) {
+      window.scranWorker.postMessage({
+        "type": "SAVEKDB",
+        "payload": {
           "files": inputFiles,
           "params": params,
           "id": datasetName,
@@ -430,7 +470,11 @@ function App() {
         setIndexedDBState={setIndexedDBState}
         initDims={initDims}
         qcDims={qcDims}
-        logs={logs}/>
+        logs={logs} 
+        kanaIDBRecs={kanaIDBRecs}
+        setKanaIDBRecs={setKanaIDBRecs}
+        deletekdb={deletekdb}
+        setDeletekdb={setDeletekdb}/>
       <div className="App-content">
         <div className="plot">
           {
@@ -448,6 +492,8 @@ function App() {
                 setSelectedClusterSummary={setSelectedClusterSummary}
                 selectedClusterIndex={selectedClusterIndex}
                 selectedCluster={selectedCluster}
+                savedPlot={savedPlot}
+                setSavedPlot={setSavedPlot}
               /> :
               showGame ?
                 <div style={{
@@ -504,7 +550,9 @@ function App() {
         <div className="analysis">
           <Gallery
             qcData={qcData}
-            pcaVarExp={pcaVarExp} />
+            pcaVarExp={pcaVarExp}
+            savedPlot={savedPlot}
+            setSavedPlot={setSavedPlot} />
         </div>
       </div>
       <Overlay
