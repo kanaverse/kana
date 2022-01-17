@@ -23,7 +23,7 @@ import IntroDialog from "../Intro";
 
 import { AppContext } from "../../context/AppContext";
 
-const Header = () => {
+const Header = (props) => {
   // state for dialogs
   const [state] = useState({
     autoFocus: true,
@@ -33,7 +33,9 @@ const Header = () => {
     shouldReturnFocusOnClose: true,
   });
 
-  const { setExportState, datasetName, setDatasetName, setIndexedDBState } = useContext(AppContext);
+  const { datasetName, setDatasetName } = useContext(AppContext);
+  // app open inputs
+  const [openInput, setOpenInput] = useState(false);
 
   return (
     <>
@@ -51,17 +53,22 @@ const Header = () => {
             title="Import dataset & update parameters (mouseover for info)"
             buttonText="Start Analysis"
             includeFooter={true}
-            {...state} />
+            openInput={openInput}
+            {...state}
+            kanaIDBRecs={props?.kanaIDBRecs}
+            setKanaIDBRecs={props?.setKanaIDBRecs}
+            deletekdb={props?.deletekdb}
+            setDeletekdb={props?.setDeletekdb} />
 
           <NavbarDivider />
 
           <Tooltip2 content="Modify the dataset title here." position={Position.BOTTOM}>
-          <EditableText value={datasetName} intent="primary"
+            <EditableText value={datasetName} intent="primary"
               onConfirm={(val) => { setDatasetName(val) }}
-              onChange={(val) => { setDatasetName(val) }}/>
+              onChange={(val) => { setDatasetName(val) }} />
           </Tooltip2>
 
-          <Stats />
+          <Stats initDims={props?.initDims} qcDims={props?.qcDims} />
           <NavbarDivider />
 
           <Tooltip2 content="Save the analysis, either in your browser's cache or to a file on your computer." position={Position.BOTTOM}>
@@ -70,11 +77,11 @@ const Header = () => {
                 <Menu>
                   <MenuItem text="Save to browser" icon="floppy-disk"
                     onClick={() => {
-                      setIndexedDBState(true);
+                      props?.setIndexedDBState(true);
                     }} />
                   <MenuItem text="Download to file" icon="download"
                     onClick={() => {
-                      setExportState(true);
+                      props?.setExportState(true);
                     }} />
                 </Menu>
               } placement="bottom-start">
@@ -85,7 +92,7 @@ const Header = () => {
           <NavbarDivider />
 
           <Tooltip2 content="What's happening under the hood? See the blow-by-blow logs as the analysis runs." position={Position.BOTTOM}>
-            <Logs />
+            <Logs logs={props?.logs} />
           </Tooltip2>
           <NavbarDivider />
 
@@ -93,6 +100,7 @@ const Header = () => {
             icon="document"
             title="Single-cell RNA-seq analysis in the browser"
             isOpen={true}
+            setOpenInput={setOpenInput}
             {...state}
           />
         </NavbarGroup>

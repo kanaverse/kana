@@ -8,7 +8,8 @@ import { Button, Label, Overlay, Spinner, Alert, Divider } from "@blueprintjs/co
 import React, { useState, useEffect, useContext } from 'react';
 import { AppContext } from './context/AppContext';
 
-import DimPlot from './components/Plots/ScatterPlot.js';
+import { AppToaster } from "./components/Spinners/AppToaster";
+import DimPlot from './components/Plots/DimPlot.js';
 import MarkerPlot from './components/Markers';
 import Pong from './components/Spinners/Pong';
 import Spinner2 from './components/Spinners/Spinner2';
@@ -22,8 +23,78 @@ function App() {
   const [loading, setLoading] = useState(true);
   // use local state for tsne/umap animation
   const [animateData, setAnimateData] = useState(null);
+  // show in-app game ?
+  const [showGame, setShowGame] = useState(false);
+  // app export state - .kana file
+  const [exportState, setExportState] = useState(false);
+  // app export state - store to indexedDB
+  const [indexedDBState, setIndexedDBState] = useState(false);
+  // saved analysis in the browser's indexeddb
+  const [kanaIDBRecs, setKanaIDBRecs] = useState([]);
+  // delete rec in database
+  const [deletekdb, setDeletekdb] = useState(null);
+  // Response State for various components
+  // dim sizes
+  const [initDims, setInitDims] = useState(null);
+  const [qcDims, setQcDims] = useState(null);
+  // const [fSelDims, setFSelDims] = useState(null);
 
-  // use local state for tsne/umap animation
+  // Logs
+  const [logs, setLogs] = useState([]);
+
+  // QC Data
+  const [qcData, setQcData] = useState(null);
+  // Feature Selection
+  const [fSelectionData, setFSelectionData] = useState(null);
+
+  // UI dimensions reduction dropdown
+  const [redDims, setRedDims] = useState([]);
+  // which dimension is selected
+  const [defaultRedDims, setDefaultRedDims] = useState(null);
+  // TSNE
+  const [tsneData, setTsneData] = useState(null);
+  // UMAP
+  const [umapData, setUmapData] = useState(null);
+  // this applies to both tsne and umap
+  // is animation in progress ?
+  const [showAnimation, setShowAnimation] = useState(false);
+  // if a user manually triggers an animation (using the play button)
+  const [triggerAnimation, setTriggerAnimation] = useState(false);
+
+  // PCA
+  const [pcaVarExp, setPcaVarExp] = useState(null);
+
+  // Cluster Data
+  // which cluster is selected
+  const [selectedCluster, setSelectedCluster] = useState(null);
+  // cohen, mean scores per gene
+  const [selectedClusterSummary, setSelectedClusterSummary] = useState([]);
+  // ordering of genes for the selected cluster
+  const [selectedClusterIndex, setSelectedClusterIndex] = useState([]);
+  // set Cluster rank-type
+  const [clusterRank, setClusterRank] = useState(null);
+
+  // Cluster Analysis
+  // cluster assignments
+  const [clusterData, setClusterData] = useState(null);
+  // set cluster colors
+  const [clusterColors, setClusterColors] = useState(null);
+  // custom selection on tsne plot
+  const [customSelection, setCustomSelection] = useState({});
+  // remove custom Selection
+  const [delCustomSelection, setDelCustomSelection] = useState(null);
+
+  // geneExpression
+  // what gene is selected for scatterplot
+  const [gene, setGene] = useState(null);
+  // request gene expression
+  const [reqGene, setReqGene] = useState(null);
+
+  // ImageData user saves while exploring
+  const [savedPlot, setSavedPlot] = useState([]);
+
+  // Error handling
+  // error message caught from the worker 
   const [scranError, setScranError] = useState(null);
 
   // props for dialogs
@@ -37,20 +108,11 @@ function App() {
     useTallContent: false,
   };
 
-  const { setWasmInitialized, setTsneData, setRedDims, redDims,
-    setGenesInfo, setInitDims, setQcDims, defaultRedDims, setDefaultRedDims,
-    setQcData, qcData, setClusterData, setFSelectionData,
-    setUmapData, setPcaVarExp, logs, setLogs,
-    selectedCluster, clusterRank,
-    selectedClusterSummary, setSelectedClusterSummary,
-    selectedClusterIndex, setSelectedClusterIndex,
-    reqGene, customSelection, clusterData,
-    delCustomSelection, setDelCustomSelection, setReqGene,
-    setSelectedCluster, setShowGame, showGame, datasetName, setExportState,
-    setShowAnimation, triggerAnimation, setTriggerAnimation, params,
-    setGeneColSel, setKanaIDBRecs, setLoadParams,
-    setInitLoadState, setIndexedDBState,
-    setClusterColors } = useContext(AppContext);
+  const { setWasmInitialized,
+    setGenesInfo,
+    datasetName, params,
+    setGeneColSel, setLoadParams,
+    setInitLoadState, inputFiles } = useContext(AppContext);
 
   const palette = {
     1: ['#1b9e77'],
@@ -206,6 +268,42 @@ function App() {
     });
   }, [triggerAnimation]);
 
+  // export an analysis
+  useEffect(() => {
+
+    if (exportState) {
+      window.scranWorker.postMessage({
+        "type": "EXPORT",
+        "payload": {
+          "files": inputFiles,
+          "params": params
+        },
+        "msg": "not much to pass"
+      });
+
+      AppToaster.show({ icon: "download", intent: "primary", message: "Exporting analysis in the background" });
+    } else {
+      inputFiles?.files && AppToaster.show({ icon: "download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
+    }
+  }, [exportState]);
+
+  useEffect(() => {
+
+    if (indexedDBState) {
+      window.scranWorker.postMessage({
+        "type": "SAVEKDB",
+        "payload": {
+          "title": datasetName,
+        },
+        "msg": "not much to pass"
+      });
+
+      AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Saving analysis in the background. Note: analysis is saved within the browser!!" });
+    } else {
+      inputFiles?.files && AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Analysis saved!" });
+    }
+  }, [indexedDBState]);
+
   // callback for all responses from workers
   // all interactions are logged and shown on the UI
   window.scranWorker.onmessage = (msg) => {
@@ -287,7 +385,6 @@ function App() {
       setShowGame(false);
       setShowAnimation(false);
       setTriggerAnimation(false);
-
     } else if (payload.type === "tsne_iter" || payload.type === "umap_iter") {
       const { resp } = payload;
       setAnimateData(resp);
@@ -354,12 +451,44 @@ function App() {
 
   return (
     <div className="App">
-      <Header />
+      <Header
+        setExportState={setExportState}
+        setIndexedDBState={setIndexedDBState}
+        initDims={initDims}
+        qcDims={qcDims}
+        logs={logs} 
+        kanaIDBRecs={kanaIDBRecs}
+        setKanaIDBRecs={setKanaIDBRecs}
+        deletekdb={deletekdb}
+        setDeletekdb={setDeletekdb}/>
       <div className="App-content">
         <div className="plot">
           {
-            defaultRedDims && clusterData ?
-              <DimPlot animateData={animateData} /> :
+            defaultRedDims ?
+              <DimPlot
+                tsneData={tsneData} umapData={umapData}
+                animateData={animateData}
+                redDims={redDims}
+                defaultRedDims={defaultRedDims}
+                setDefaultRedDims={setDefaultRedDims}
+                showAnimation={showAnimation}
+                setShowAnimation={setShowAnimation}
+                setTriggerAnimation={setTriggerAnimation}
+                selectedClusterSummary={selectedClusterSummary}
+                setSelectedClusterSummary={setSelectedClusterSummary}
+                selectedClusterIndex={selectedClusterIndex}
+                selectedCluster={selectedCluster}
+                savedPlot={savedPlot}
+                setSavedPlot={setSavedPlot}
+                clusterData={clusterData}
+                customSelection={customSelection}
+                setCustomSelection={setCustomSelection}
+                setGene={setGene}
+                gene={gene}
+                clusterColors={clusterColors}
+                setClusterColors={setClusterColors}
+                setDelCustomSelection={setDelCustomSelection}
+              /> :
               showGame ?
                 <div style={{
                   height: '100%',
@@ -392,7 +521,20 @@ function App() {
         </div>
         <div className="marker">
           {clusterData ?
-            <MarkerPlot /> :
+            selectedClusterSummary && <MarkerPlot
+              selectedClusterSummary={selectedClusterSummary}
+              setSelectedClusterSummary={setSelectedClusterSummary}
+              selectedClusterIndex={selectedClusterIndex}
+              selectedCluster={selectedCluster}
+              setSelectedCluster={setSelectedCluster}
+              setClusterRank={setClusterRank}
+              clusterData={clusterData}
+              customSelection={customSelection}
+              setGene={setGene}
+              gene={gene}
+              clusterColors={clusterColors}
+              setReqGene={setReqGene}
+            /> :
             <div style={{
               height: '100%',
               width: '100%',
@@ -406,7 +548,15 @@ function App() {
             </div>}
         </div>
         <div className="analysis">
-          <Gallery />
+          <Gallery
+            qcData={qcData}
+            pcaVarExp={pcaVarExp}
+            savedPlot={savedPlot}
+            setSavedPlot={setSavedPlot} 
+            clusterData={clusterData}
+            clusterColors={clusterColors}
+            gene={gene}
+            />
         </div>
       </div>
       <Overlay

@@ -14,7 +14,7 @@ import { getMinMax } from './utils';
 import Rainbow from './rainbowvis';
 import { randomColor } from 'randomcolor';
 
-import "./ScatterPlot.css";
+import "./DimPlot.css";
 import { AppToaster } from "../Spinners/AppToaster";
 
 const DimPlot = (props) => {
@@ -35,31 +35,24 @@ const DimPlot = (props) => {
     // first render ?
     const [renderCount, setRenderCount] = useState(true);
 
-    const { redDims, defaultRedDims, setDefaultRedDims, clusterData,
-        tsneData, umapData, clusterColors, setClusterColors,
-        gene, setGene, selectedClusterIndex, selectedClusterSummary,
-        customSelection, setCustomSelection,
-        setDelCustomSelection, setShowAnimation,
-        showAnimation, setTriggerAnimation,
-        savedPlot, setSavedPlot, selectedCluster,
-        genesInfo, geneColSel } = useContext(AppContext);
+    const { genesInfo, geneColSel } = useContext(AppContext);
 
     // keeps track of what points were selected in lasso selections
     const [selectedPoints, setSelectedPoints] = useState(null);
     // set mode for plot
     const [plotMode, setPlotMode] = useState('PAN');
 
-    const max = Math.max(...clusterData?.clusters);
+    const max = Math.max(...props?.clusterData?.clusters);
 
     // if either gene or expression changes, compute gradients and min/max
     useEffect(() => {
-        if (gene === null) {
+        if (props?.gene === null) {
             setShowGradient(false);
             setGradient(null);
         }
 
-        let index = selectedClusterIndex?.[gene];
-        let expr = selectedClusterSummary?.[index]?.expr;
+        let index = props?.selectedClusterIndex?.[props?.gene];
+        let expr = props?.selectedClusterSummary?.[index]?.expr;
 
         if (expr) {
             let exprMinMax = getMinMax(expr);
@@ -73,11 +66,13 @@ const DimPlot = (props) => {
                 setExprMinMax([0, val]);
             } else {
                 setShowGradient(false);
-                AppToaster.show({ icon: "warning-sign", intent: "warning", message: `${genesInfo[geneColSel][gene]} is not expressed in any cell (mean = 0)` })
+                AppToaster.show({ icon: "warning-sign", intent: "warning", message: `${genesInfo[geneColSel][props?.gene]} is not expressed in any cell (mean = 0)` })
             }
             setGradient(tmpgradient);
         }
-    }, [selectedClusterIndex?.[gene], selectedClusterSummary?.[selectedClusterIndex?.[gene]]?.expr], gene);
+    }, [props?.selectedClusterIndex?.[props?.gene], 
+        props?.selectedClusterSummary?.[props?.selectedClusterIndex?.[props?.gene]]?.expr,
+        props?.gene]);
 
     // hook to also react when user changes the slider
     useEffect(() => {
@@ -131,21 +126,21 @@ const DimPlot = (props) => {
 
             let data = null;
 
-            if (showAnimation) {
+            if (props?.showAnimation) {
                 data = props?.animateData;
             } else {
-                if (defaultRedDims === "TSNE") {
-                    data = tsneData;
-                } else if (defaultRedDims === "UMAP") {
-                    data = umapData;
+                if (props?.defaultRedDims === "TSNE") {
+                    data = props?.tsneData;
+                } else if (props?.defaultRedDims === "UMAP") {
+                    data = props?.umapData;
                 }
             }
 
             // if dimensions are available
             if (data) {
 
-                let cluster_mappings = clusterData?.clusters;
-                const cluster_colors = clusterColors
+                let cluster_mappings = props?.clusterData?.clusters;
+                const cluster_colors = props?.clusterColors;
 
                 let points = []
                 data.x.forEach((x, i) => {
@@ -183,13 +178,13 @@ const DimPlot = (props) => {
                         if (!String(clusHighlight).startsWith("cs")) {
                             if (clusHighlight !== cluster_mappings[i]) return '#D3D3D3';
                         } else {
-                            if (!customSelection[clusHighlight].includes(i)) return '#D3D3D3';
+                            if (!props?.customSelection[clusHighlight].includes(i)) return '#D3D3D3';
                         }
                     }
 
-                    if (gene !== null) {
-                        let index = selectedClusterIndex?.[gene];
-                        let expr = selectedClusterSummary?.[index]?.expr;
+                    if (props?.gene !== null) {
+                        let index = props?.selectedClusterIndex?.[props?.gene];
+                        let expr = props?.selectedClusterSummary?.[index]?.expr;
 
                         if (Array.isArray(expr)) {
                             return "#" + gradient.colorAt(expr?.[i]);
@@ -202,7 +197,7 @@ const DimPlot = (props) => {
                             //     return gradient;
                             // });
 
-                            // return "#" + colorGradients[cluster_mappings[i]].colorAt(selectedClusterSummary?.[gene]?.expr?.[i])
+                            // return "#" + colorGradients[cluster_mappings[i]].colorAt(props?.selectedClusterSummary?.[gene]?.expr?.[i])
                         }
                     }
 
@@ -215,7 +210,8 @@ const DimPlot = (props) => {
                 });
             }
         }
-    }, [tsneData, umapData, props?.animateData, clusterColors, clusterData, defaultRedDims, gradient, clusHighlight]);
+    }, [props?.tsneData, props?.umapData, props?.animateData, props?.defaultRedDims, 
+            gradient, clusHighlight, props?.clusterData]);
 
     const setInteraction = (x) => {
         if (x === "SELECT") {
@@ -236,14 +232,14 @@ const DimPlot = (props) => {
     const savePoints = () => {
         // generate random color
         let color = randomColor({ luminosity: 'dark', count: 1 });
-        let tmpcolor = [...clusterColors];
+        let tmpcolor = [...props?.clusterColors];
         tmpcolor.push(color[0]);
-        setClusterColors(tmpcolor);
+        props?.setClusterColors(tmpcolor);
 
-        let cid = Object.keys(customSelection).length;
-        let tmpSelection = { ...customSelection };
+        let cid = Object.keys(props?.customSelection).length;
+        let tmpSelection = { ...props?.customSelection };
         tmpSelection[`cs${cid + 1}`] = selectedPoints;
-        setCustomSelection(tmpSelection);
+        props?.setCustomSelection(tmpSelection);
 
         setSelectedPoints(null);
         scatterplot.select(null);
@@ -258,19 +254,19 @@ const DimPlot = (props) => {
             scatterplot.renderScatterPlot();
             const iData = scatterplot.scatterPlot.renderer.domElement.toDataURL();
 
-            let tmp = [...savedPlot];
+            let tmp = [...props?.savedPlot];
 
             tmp.push({
                 "image": iData,
                 "config": {
-                    "cluster": selectedCluster,
-                    "gene": gene,
+                    "cluster": props?.selectedCluster,
+                    "gene": props?.gene,
                     "highlight": clusHighlight,
-                    "embedding": defaultRedDims
+                    "embedding": props?.defaultRedDims
                 }
             });
 
-            setSavedPlot(tmp);
+            props?.setSavedPlot(tmp);
         }
     }
 
@@ -284,18 +280,18 @@ const DimPlot = (props) => {
                 className='left-sidebar'
             >
                 <Button className='dim-button'
-                    disabled={redDims.indexOf("TSNE") === -1}
-                    onClick={() => setDefaultRedDims("TSNE")}
-                    intent={defaultRedDims === "TSNE" ? "primary" : ""}
+                    disabled={props?.redDims.indexOf("TSNE") === -1}
+                    onClick={() => props?.setDefaultRedDims("TSNE")}
+                    intent={props?.defaultRedDims === "TSNE" ? "primary" : ""}
                 >
                     <Icon icon="heatmap"></Icon>
                     <br />
                     <span>t-SNE</span>
                 </Button>
                 <Button className='dim-button'
-                    disabled={redDims.indexOf("UMAP") === -1}
-                    onClick={() => setDefaultRedDims("UMAP")}
-                    intent={defaultRedDims === "UMAP" ? "primary" : ""}
+                    disabled={props?.redDims.indexOf("UMAP") === -1}
+                    onClick={() => props?.setDefaultRedDims("UMAP")}
+                    intent={props?.defaultRedDims === "UMAP" ? "primary" : ""}
                 >
                     <Icon icon="heatmap"></Icon><br />
                     <span>UMAP</span>
@@ -316,8 +312,8 @@ const DimPlot = (props) => {
                     <Tooltip2 content="Interactively visualize embeddings">
                         <Button icon="play"
                             onClick={() => {
-                                setShowAnimation(true);
-                                setTriggerAnimation(true)
+                                props?.setShowAnimation(true);
+                                props?.setTriggerAnimation(true);
                             }}>Animate</Button>
                     </Tooltip2>
                     <Tooltip2 content="Save this embedding">
@@ -335,13 +331,13 @@ const DimPlot = (props) => {
                 </ControlGroup>
             </div>
             {
-                showAnimation ?
+                props?.showAnimation ?
                     <Label className='iter'>Iteration: {props?.animateData?.iteration}</Label>
                     : ""
             }
             <div className='dim-plot'>
                 {
-                    defaultRedDims ?
+                    props?.defaultRedDims ?
                         <div ref={container} ></div> :
                         "Choose an Embedding... or Embeddings are being computed..."
                 }
@@ -352,8 +348,8 @@ const DimPlot = (props) => {
                         <div className='right-sidebar-cluster'>
                             <Callout title="CLUSTERS">
                                 <ul>
-                                    {clusterColors?.map((x, i) => {
-                                        return i < clusterColors.length - Object.keys(customSelection).length ?
+                                    {props?.clusterColors?.map((x, i) => {
+                                        return i < props?.clusterColors.length - Object.keys(props?.customSelection).length ?
                                             (<li key={i}
                                                 className={clusHighlight === i ? 'legend-highlight' : ''}
                                                 style={{ color: x }}
@@ -370,17 +366,17 @@ const DimPlot = (props) => {
                                 </ul>
                             </Callout>
                             {
-                                (Object.keys(customSelection).length > 0 || (selectedPoints && selectedPoints.length > 0)) ?
+                                (Object.keys(props?.customSelection).length > 0 || (selectedPoints && selectedPoints.length > 0)) ?
                                     <Callout title="CUSTOM SELECTIONS">
                                         <div
                                             style={{
                                                 paddingTop: '5px'
                                             }}>
                                             <ul>
-                                                {Object.keys(customSelection)?.map((x, i) => {
+                                                {Object.keys(props?.customSelection)?.map((x, i) => {
                                                     return (<li key={x}
                                                         className={clusHighlight === x ? 'legend-highlight' : ''}
-                                                        style={{ color: clusterColors[Math.max(...clusterData?.clusters) + 1 + i] }}
+                                                        style={{ color: props?.clusterColors[Math.max(...props?.clusterData?.clusters) + 1 + i] }}
                                                     >
                                                         <div style={{
                                                             display: 'inline-flex',
@@ -406,15 +402,15 @@ const DimPlot = (props) => {
                                                                     paddingLeft: '2px'
                                                                 }}
                                                                 onClick={() => {
-                                                                    let tmpSel = { ...customSelection };
+                                                                    let tmpSel = { ...props?.customSelection };
                                                                     delete tmpSel[x];
-                                                                    setCustomSelection(tmpSel);
+                                                                    props?.setCustomSelection(tmpSel);
 
-                                                                    let tmpcolors = [...clusterColors];
+                                                                    let tmpcolors = [...props?.clusterColors];
                                                                     tmpcolors = tmpcolors.slice(0, tmpcolors.length - 1);
-                                                                    setClusterColors(tmpcolors);
+                                                                    props?.setClusterColors(tmpcolors);
 
-                                                                    setDelCustomSelection(x);
+                                                                    props?.setDelCustomSelection(x);
 
                                                                     if (clusHighlight === x) {
                                                                         setClusHighlight(null);
@@ -454,8 +450,8 @@ const DimPlot = (props) => {
                                 <span>Gradient for <Tag
                                     minimal={true}
                                     intent='primary' onRemove={() => {
-                                        setGene(null);
-                                    }}>{genesInfo[geneColSel][gene]}</Tag>&nbsp;
+                                        props?.setGene(null);
+                                    }}>{genesInfo[geneColSel][props?.gene]}</Tag>&nbsp;
                                     <Tooltip2 content="Use the slider to adjust the color gradient of the plot. Useful when data is skewed
                                 by either a few lowly or highly expressed cells" openOnTargetFocus={false}>
                                         <Icon icon="help"></Icon>

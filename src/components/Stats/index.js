@@ -1,15 +1,11 @@
-import { useContext } from 'react';
-import { AppContext } from '../../context/AppContext';
-
-const Stats = () => {
-    const { initDims, qcDims } = useContext(AppContext);
+const Stats = (props) => {
 
     return (
         <>
             {
                 <span>
-                    {initDims ? `: ${initDims}` : " "}
-                    {qcDims ?  ` (${qcDims} after QC)` : "" }
+                    {props?.initDims ? `: ${props?.initDims}` : " "}
+                    {props?.qcDims ?  ` (${props?.qcDims} after QC)` : "" }
                 </span>
             }
         </>

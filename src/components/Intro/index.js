@@ -2,16 +2,13 @@ import {
     Button, Classes, Dialog, H5, Card, Elevation, Position
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
-import React, { useContext, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 
-import { AppContext } from "../../context/AppContext";
-
-function IntroDialog({
+const IntroDialog = ({
     buttonText,
     includeFooter,
     ...props
-}) {
-    const { setOpenInput } = useContext(AppContext);
+}) => {
 
     const [isOpen, setIsOpen] = useState(true);
     const [showClose, setShowClose] = useState(false);
@@ -23,7 +20,7 @@ function IntroDialog({
     const handleClose = useCallback(() => setIsOpen(false), []);
 
     const handleInputs = () => {
-        setOpenInput(true);
+        props?.setOpenInput(true);
         handleClose();
     }
 

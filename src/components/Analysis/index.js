@@ -10,22 +10,21 @@ import React, { useContext, useState, useCallback, useEffect } from "react";
 import { AppContext } from "../../context/AppContext";
 import "./Analysis.css";
 
-function AnalysisDialog({
+const AnalysisDialog =({
     buttonText,
     includeFooter,
     ...props
-}) {
+}) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showStepHelper, setShowStepHelper] = useState(1);
     const handleButtonClick = useCallback(() => setIsOpen(!isOpen), [isOpen]);
     const handleClose = useCallback(() => setIsOpen(false), []);
 
     const { inputFiles, setInputFiles,
-        params, setParams, openInput,
+        params, setParams,
         tabSelected, setTabSelected,
-        loadParams, kanaIDBRecs,
-        setLoadParamsFor, loadParamsFor,
-        setDeletekdb, setDatasetName } = useContext(AppContext);
+        loadParams,
+        setLoadParamsFor, loadParamsFor, setDatasetName } = useContext(AppContext);
 
     // assuming new is the default tab
     let [tmpInputFiles, setTmpInputFiles] = useState({
@@ -55,7 +54,7 @@ function AnalysisDialog({
 
         if (tabSelected === "load") {
             if (loadImportFormat === "kanadb") {
-                setDatasetName(kanaIDBRecs[parseInt(tmpInputFiles?.file)]?.title);
+                setDatasetName(props?.kanaIDBRecs[parseInt(tmpInputFiles?.file)]?.title);
             } else {
                 setDatasetName(tmpInputFiles?.file?.[0]?.name.split(".")[0]);
             }
@@ -149,8 +148,8 @@ function AnalysisDialog({
     }
 
     useEffect(() => {
-        openInput && setIsOpen(true);
-    }, [openInput]);
+        props?.openInput && setIsOpen(true);
+    }, [props?.openInput]);
 
     useEffect(() => {
         if (loadParams && tabSelected === "load") {
@@ -160,12 +159,12 @@ function AnalysisDialog({
 
     useEffect(() => {
         if (tabSelected === "load" && loadImportFormat === "kanadb"
-            && tmpInputFiles?.file === null && kanaIDBRecs.length > 0) {
+            && tmpInputFiles?.file === null && props?.kanaIDBRecs.length > 0) {
             setTmpInputFiles({
-                file: kanaIDBRecs[0].id
+                file: props?.kanaIDBRecs[0].id
             });
         }
-    }, [kanaIDBRecs, loadImportFormat]);
+    }, [props?.kanaIDBRecs, loadImportFormat]);
 
     useEffect(() => {
         if (tmpInputFiles) {
@@ -843,7 +842,7 @@ function AnalysisDialog({
                                                         </span>
                                                     </H5>
                                                     {
-                                                        kanaIDBRecs.length > 0 ?
+                                                        props?.kanaIDBRecs.length > 0 ?
                                                             <div className="row">
                                                                 <RadioGroup
                                                                     onChange={(x) => {
@@ -853,7 +852,7 @@ function AnalysisDialog({
                                                                     selectedValue={tmpInputFiles?.file}
                                                                 >
                                                                     {
-                                                                        kanaIDBRecs.map((x, i) => {
+                                                                        props?.kanaIDBRecs.map((x, i) => {
                                                                             return (
                                                                                 <Radio key={i} style={{
                                                                                     display: "flex",
@@ -869,7 +868,7 @@ function AnalysisDialog({
                                                                                             paddingLeft: '5px',
                                                                                         }}
                                                                                         onClick={() => {
-                                                                                            setDeletekdb(x.id);
+                                                                                            props?.setDeletekdb(x.id);
                                                                                         }}></Icon>
                                                                                 </Radio>
                                                                             )

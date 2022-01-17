@@ -15,13 +15,9 @@ import HeatmapCell from '../Plots/HeatmapCell';
 // import Histogram from '../Plots/Histogram';
 import './markers.css';
 
-const MarkerPlot = () => {
+const MarkerPlot = (props) => {
 
-    const {
-        genesInfo, clusterData, selectedClusterSummary, setSelectedClusterSummary,
-        selectedCluster, setSelectedCluster, setClusterRank,
-        setReqGene, clusterColors, gene, setGene, selectedClusterIndex,
-        customSelection, geneColSel, setGeneColSel } = useContext(AppContext);
+    const { genesInfo, geneColSel, setGeneColSel } = useContext(AppContext);
 
     // what cluster is selected
     const [clusSel, setClusSel] = useState(null);
@@ -52,9 +48,9 @@ const MarkerPlot = () => {
     // if a cluster changes, its summary data is requested from the worker
     // pre-process results for UI
     useEffect(() => {
-        if (!selectedClusterSummary) return selectedClusterSummary;
+        if (!props?.selectedClusterSummary) return props?.selectedClusterSummary;
 
-        let trecs = selectedClusterSummary;
+        let trecs = props?.selectedClusterSummary;
 
         if (trecs.length === 0) return trecs;
 
@@ -96,7 +92,7 @@ const MarkerPlot = () => {
 
         setProsRecords(sortedRows);
 
-    }, [selectedClusterSummary]);
+    }, [props?.selectedClusterSummary]);
 
     // genes to show, hook for filters and input
     const sortedRows = useMemo(() => {
@@ -121,33 +117,33 @@ const MarkerPlot = () => {
 
     // update clusters when custom selection is made in the UI
     useEffect(() => {
-        if (clusterData?.clusters) {
-            let max_clusters = Math.max(...clusterData.clusters);
+        if (props?.clusterData?.clusters) {
+            let max_clusters = Math.max(...props?.clusterData.clusters);
 
             let clus = [];
             for (let i = 0; i < max_clusters + 1; i++) {
                 clus.push(i + 1);
             }
 
-            clus = clus.concat(Object.keys(customSelection));
+            clus = clus.concat(Object.keys(props?.customSelection));
 
             setClusSel(clus);
-            if (selectedCluster === null) {
-                setSelectedCluster(0);
+            if (props?.selectedCluster === null) {
+                props?.setSelectedCluster(0);
             }
         }
-    }, [clusterData, customSelection, selectedCluster]);
+    }, [props?.clusterData, props?.customSelection, props?.selectedCluster]);
 
     // hook for figure out this vs other cells for stacked histograms
     useEffect(() => {
         var clusArray = [];
-        if (String(selectedCluster).startsWith("cs")) {
-            clusterData?.clusters?.forEach((x, i) => customSelection[selectedCluster].includes(i) ? clusArray.push(1) : clusArray.push(0));
+        if (String(props?.selectedCluster).startsWith("cs")) {
+            props?.clusterData?.clusters?.forEach((x, i) => props?.customSelection[props?.selectedCluster].includes(i) ? clusArray.push(1) : clusArray.push(0));
         } else {
-            clusterData?.clusters?.forEach(x => x === selectedCluster ? clusArray.push(1) : clusArray.push(0));
+            props?.clusterData?.clusters?.forEach(x => x === props?.selectedCluster ? clusArray.push(1) : clusArray.push(0));
         }
         setClusArrayStacked(clusArray);
-    }, [selectedCluster]);
+    }, [props?.selectedCluster]);
 
     const handleMarkerFilter = (val, key) => {
 
@@ -217,10 +213,10 @@ const MarkerPlot = () => {
                             } else if (tmpselection.startsWith("Custom")) {
                                 tmpselection = tmpselection.replace("Custom Selection ", "")
                             }
-                            setSelectedCluster(tmpselection);
+                            props?.setSelectedCluster(tmpselection);
 
                             setMarkerFilter({});
-                            setGene(null);
+                            props?.setGene(null);
                         }}>
                         {
                             clusSel.map((x, i) => (
@@ -231,7 +227,7 @@ const MarkerPlot = () => {
                     : ""
             }
             {
-                selectedClusterSummary ?
+                props?.selectedClusterSummary ?
                     <div className='marker-table'>
                         <div className='marker-header'>
                             <InputGroup
@@ -283,7 +279,7 @@ const MarkerPlot = () => {
                                 </Popover2>
                                 <HTMLSelect
                                     onChange={(x) => {
-                                        setClusterRank(x.currentTarget.value);
+                                        props?.setClusterRank(x.currentTarget.value);
                                     }} defaultValue={"cohen-min-rank"}>
                                     <option>cohen-min</option>
                                     <option>cohen-mean</option>
@@ -413,11 +409,11 @@ const MarkerPlot = () => {
                                     <div>
                                         <div className='row-container'>
                                             <span style={{
-                                                color: row.gene === gene ?
-                                                    String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : clusterColors[selectedCluster]
+                                                color: row.gene === props?.gene ?
+                                                    String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[Math.max(...props?.clusterData?.clusters) + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
                                                     : 'black'
                                             }}
-                                                className={row.gene === gene ? 'marker-gene-title-selected' : 'marker-gene-title'}>{genesInfo[geneColSel][row.gene]}</span>
+                                                className={row.gene === props?.gene ? 'marker-gene-title-selected' : 'marker-gene-title'}>{genesInfo[geneColSel][row.gene]}</span>
                                             {
                                                 <Popover2
                                                     popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
@@ -560,14 +556,14 @@ const MarkerPlot = () => {
                                                 <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
                                                     className='row-action'
                                                     onClick={() => {
-                                                        let tmp = [...selectedClusterSummary];
-                                                        var gindex = selectedClusterIndex[row.gene];
+                                                        let tmp = [...props?.selectedClusterSummary];
+                                                        var gindex = props?.selectedClusterIndex[row.gene];
                                                         tmp[gindex].expanded = !tmp[gindex].expanded;
-                                                        setSelectedClusterSummary(tmp);
+                                                        props?.setSelectedClusterSummary(tmp);
                                                         if (!rowExpr && tmp[gindex].expanded) {
-                                                            setReqGene(row.gene);
+                                                            props?.setReqGene(row.gene);
                                                         } else {
-                                                            setReqGene(null);
+                                                            props?.setReqGene(null);
                                                         }
                                                     }}
                                                 >
@@ -575,19 +571,19 @@ const MarkerPlot = () => {
                                                 <Button small={true} fill={false}
                                                     className='row-action'
                                                     onClick={() => {
-                                                        if (row.gene === gene) {
-                                                            setGene(null);
+                                                        if (row.gene === props?.gene) {
+                                                            props?.setGene(null);
                                                         } else {
-                                                            setGene(row.gene);
+                                                            props?.setGene(row.gene);
                                                             if (!rowExpr) {
-                                                                setReqGene(row.gene);
+                                                                props?.setReqGene(row.gene);
                                                             }
                                                         }
                                                     }}
                                                 >
                                                     <Icon icon={'tint'}
-                                                        color={row.gene === gene ?
-                                                            String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : clusterColors[selectedCluster]
+                                                        color={row.gene === props?.gene ?
+                                                            String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[Math.max(...props?.clusterData?.clusters) + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
                                                             : ''}
                                                     ></Icon>
                                                 </Button>
@@ -596,8 +592,8 @@ const MarkerPlot = () => {
                                         <Collapse isOpen={rowexp}>
                                             {/* <Histogram data={rowExpr} color={clusterColors[selectedCluster]} /> */}
                                             {rowExpr && <StackedHistogram data={rowExpr}
-                                                color={String(selectedCluster).startsWith("cs") ? clusterColors[Math.max(...clusterData?.clusters) + parseInt(selectedCluster.replace("cs", ""))] : clusterColors[selectedCluster]}
-                                                clusterlabel={String(selectedCluster).startsWith("cs") ? `Custom Selection ${selectedCluster}` : `Cluster ${parseInt(selectedCluster + 1)}`}
+                                                color={String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[Math.max(...props?.clusterData?.clusters) + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]}
+                                                clusterlabel={String(props?.selectedCluster).startsWith("cs") ? `Custom Selection ${props?.selectedCluster}` : `Cluster ${parseInt(props?.selectedCluster + 1)}`}
                                                 clusters={clusArrayStacked} />}
                                         </Collapse>
                                     </div>

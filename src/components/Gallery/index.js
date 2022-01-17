@@ -9,42 +9,41 @@ import QCPlotMgr from "../Plots/QCPlotMgr";
 import './Gallery.css';
 import ImgPlot from "../Plots/ImgPlot";
 
-const Gallery = () => {
-  const { pcaVarExp, qcData, clusterData, savedPlot,
-    datasetName } = useContext(AppContext);
+const Gallery = (props) => {
+  const { datasetName } = useContext(AppContext);
 
   return (
     <>
       <div className="gallery-cont">
         {
-          qcData && qcData?.["thresholds"] ?
+          props?.qcData && props?.qcData?.["thresholds"] ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
               <h5>QC Statistics</h5>
-              <QCPlotMgr title={datasetName.split(" ").join("_")} data={qcData} />
+              <QCPlotMgr title={datasetName.split(" ").join("_")} data={props?.qcData} />
             </Card>
             : ""
         }
         {
-          pcaVarExp ?
+          props?.pcaVarExp ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
               <h5>PCA (% variance explained)</h5>
-              <PCABarPlot title={datasetName.split(" ").join("_")} pca={pcaVarExp} />
+              <PCABarPlot title={datasetName.split(" ").join("_")} pca={props?.pcaVarExp} />
             </Card>
             : ""
         }
         {
-          clusterData ?
+          props?.clusterData && props?.clusterColors ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
               <h5># of cells per cluster</h5>
-              <ClusterBarPlot data={clusterData} />
+              <ClusterBarPlot data={props?.clusterData} clusterColors={props?.clusterColors} />
             </Card>
             : ""
         }
         {
-          savedPlot ?
-            savedPlot.map((x, i) => (
+          props?.savedPlot ?
+            props?.savedPlot.map((x, i) => (
               <Card key={i} className="gallery-elem" elevation={Elevation.ONE}>
-                <ImgPlot data={x} />
+                <ImgPlot data={x} gene={props?.gene} />
               </Card>
             )
             ) : ""
