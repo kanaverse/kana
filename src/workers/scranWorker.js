@@ -36,6 +36,15 @@ importScripts("./mito.js");
 
 /***************************************/
 
+function postSuccess(info, step, message) {
+    var transferable = [];
+    scran_utils.extractBuffers(info, transferable);
+    postMessage({
+        type: `${step}_DATA`,
+        resp: info,
+        msg: "Success: " + message
+    }, transferable);
+}
 function runAllSteps(wasm, mode = "run", state = null) {
   var response;
   if (mode === "serialize") {

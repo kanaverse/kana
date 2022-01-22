@@ -1,89 +1,81 @@
-const scran_normalization = {};
+import * as scran from "scran.js"; 
+import * as utils from "./_utils.js";
+import * as thresholds from "./_qc_thresholds.js";
+import * as filter from "./_qc_filter.js";
+import * as metrics from "./_qc_metrics.js";
 
-(function(x) {
-  /** Private members **/
-  var cache = {};
-  var parameters = {};
+var cache = {};
+var parameters = {};
 
-  /** Public members **/
-  x.changed = false;
+export var changed = false;
 
-  /** Private functions **/
-  function rawCompute(wasm) {
-    var mat = scran_qc_filter.fetchFilteredMatrix(wasm);
-    var buffer = scran_utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", cache);
+function rawCompute() {
+    var mat = filter.fetchFilteredMatrix();
+    var buffer = utils.allocateCacheBuffer(mat.numberOfColumns(), "Float64Array", cache);
 
     // Better not have any more allocations in between now and filling of size_factors!
-    var sums = scran_qc_metrics.fetchSumsUNSAFE(wasm);
-    var discards = scran_qc_thresholds.fetchDiscardsUNSAFE(wasm);
+    var sums = metrics.fetchSums({ unsafe: true });
+    var discards = thresholds.fetchDiscards({ unsafe: true });
 
     // Reusing the totals computed earlier.
     var size_factors = buffer.array();
     var j = 0;
     for (var i = 0; i < discards.length; ++i) {
-      if (!discards[i]) {
-        size_factors[j] = sums[i];
-        j++;
-      }
+        if (!discards[i]) {
+            size_factors[j] = sums[i];
+            j++;
+        }
     }
 
-    if (j != mat.ncol()) {
+    if (j != mat.numberOfColumns()) {
         throw "normalization and filtering are not in sync";
     }
 
-    scran_utils.freeCache(cache.matrix);
-
-    try {
-      cache.matrix = wasm.log_norm_counts(mat, true, buffer.ptr, false, 0);
-    } catch (e) {
-      throw wasm.get_error_message(e);
-    }
+    utils.freeCache(cache.matrix);
+    cache.matrix = scran.logNormCounts(mat, { sizeFactors: buffer });
 
     delete cache.reloaded;
     return;
-  }
+}
 
-  /** Public functions (standard) **/
-  x.compute = function(wasm, args) {
-    if (!scran_qc_metrics.changed && !scran_qc_filter.changed && !scran_utils.changedParameters(parameters, args)) {
-      x.changed = false;
+export function compute(args) {
+    if (!metrics.changed && !filter.changed && !utils.changedParameters(parameters, args)) {
+        changed = false;
     } else {
-      rawCompute(wasm);
-      parameters = args;
-      x.changed = true;
+        rawCompute();
+        parameters = args;
+        changed = true;
     }
     return;
-  };
+}
 
-  x.results = function(wasm) {
+export function results() {
     return {};
-  };
+}
 
-  x.serialize = function(wasm) {
+export function serialize() {
     return {
-      "parameters": parameters,
-      "contents": x.results(wasm)
+        "parameters": parameters,
+        "contents": results()
     };
-  };
+}
 
-  x.unserialize = function(wasm, saved) {
+export function unserialize(saved) {
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
     return;
-  };
+}
 
-  /** Public functions (custom) **/
-  x.fetchNormalizedMatrix = function(wasm) {
+export function fetchNormalizedMatrix() {
     if ("reloaded" in cache) {
-      rawCompute(wasm);
+        rawCompute();
     }
     return cache.matrix;
-  };
+}
 
-  x.fetchExpression = function(wasm, index) {
-    var mat = x.fetchNormalizedMatrix(wasm);
-    var buffer = scran_utils.allocateBuffer(wasm, mat.ncol(), "Float64Array", cache); // re-using the buffer.
-    mat.row(index, buffer.ptr)
-    return buffer.array().slice();    
-  };
-})(scran_normalization);
+export function fetchExpression(index) {
+    var buffer = scran_utils.allocateCachedBuffer(mat.numberOfColumns(), "Float64Array", cache); // re-using the buffer.
+    var mat = x.fetchNormalizedMatrix();
+    mat.row(index, { buffer: buffer });
+    return buffer.slice();
+}

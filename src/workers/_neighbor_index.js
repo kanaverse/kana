@@ -1,62 +1,51 @@
-const scran_neighbor_index = {};
+import * as scran from "scran.js";
+import * as utils from "./_utils.js";
+import * as pca from "./_pca.js";
 
-(function(x) {
-  /** Private members **/
-  var cache = {};
-  var parameters = {};
+var cache = {};
+var parameters = {};
 
-  /** Public members **/
-  x.changed = false;
+export var changed = false;
 
-  /** Private functions **/
-  function rawCompute(wasm, args) {
-    scran_utils.freeCache(cache.raw);
-    var pcs = scran_pca.fetchPCsOFFSET(wasm);
-
-    try {
-      cache.raw = wasm.build_neighbor_index(pcs.offset, pcs.num_pcs, pcs.num_obs, args.approximate);
-    } catch (e) {
-      throw wasm.get_error_message(e);
-    }
-
+export function rawCompute(args) {
+    utils.freeCache(cache.raw);
+    var pcs = pca.fetchPCs();
+    cache.raw = scran.buildNeighborSearchIndex(pcs.pcs, { numberOfDims: pcs.num_pcs, numberOfCells: pcs.num_obs });
     delete cache.reloaded;
     return;
-  }
+}
 
-  /** Public functions (standard) **/
-  x.compute = function(wasm, args) {
-    if (!scran_pca.changed && !scran_utils.changedParameters(parameters, args)) {
-      x.changed = false;
+export function compute(args) {
+    if (!pca.changed && !utils.changedParameters(parameters, args)) {
+        changed = false;
     } else {
-      rawCompute(wasm, args);
-      parameters = args;
-      x.changed = true;
+        rawCompute(args);
+        parameters = args;
+        changed = true;
     }
     return;
-  };
+}
 
-  x.results = function(wasm) {
+export function results() {
     return {};
-  };
+}
 
-  x.serialize = function(wasm) {
+export function serialize() {
     return {
       "parameters": parameters,
-      "contents": x.results(wasm)
+      "contents": results()
     };
-  };
+}
 
-  x.unserialize = function(wasm, saved) {
+export function unserialize(saved) {
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
     return;
-  };
+}
 
-  /** Public functions (custom) **/
-  x.fetchIndex = function(wasm) {
+export function fetchIndex() {
     if ("reloaded" in cache) {
-      rawCompute(wasm, parameters);
+        rawCompute(parameters);
     }
     return cache.raw;
-  };
-})(scran_neighbor_index);
+}

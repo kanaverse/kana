@@ -7,6 +7,17 @@ export function freeCache(object) {
     return;
 }
 
+export function freeReloaded(cache) {
+    if ("reloaded" in cache) {
+        for (const [k, v] of Object.entries(cache.reloaded)) {
+            if (v instanceof scran.WasmArray) {
+                v.free();
+            }
+        }
+        delete cache.reloaded;
+    }
+}
+
 export function changedParameters(x, y) {
     return JSON.stringify(x) != JSON.stringify(y);
 }
@@ -24,7 +35,7 @@ export function computeRange(arr) {
     return [min, max];
 }
 
-export function allocateCachedBuffer(size, type, cache, name = "buffer") {
+export function allocateCachedArray(size, type, cache, name = "buffer") {
     var reallocate = true;
     if (name in cache) {
         var candidate = cache[name];
@@ -37,13 +48,13 @@ export function allocateCachedBuffer(size, type, cache, name = "buffer") {
   
     if (reallocate) {
         switch (type) {
-            case "Uint8WasmArray":
+            case "Uint8Array":
                 cache[name] = new scran.Uint8WasmArray(size, type);
                 break;
-            case "Int32WasmArray":
+            case "Int32Array":
                 cache[name] = new scran.Int32WasmArray(size, type);
                 break;
-            case "Float64WasmArray":
+            case "Float64Array":
                 cache[name] = new scran.Float64WasmArray(size, type);
                 break;
             default:

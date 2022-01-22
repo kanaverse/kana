@@ -1,97 +1,90 @@
-const scran_pca = {};
+import * as scran from "scran.js";
+import * as utils from "./_utils.js";
+import * as normalization from "./_normalization.js";
+import * as variance from "./model_gene_var.js";
 
-(function(x) {
-  /** Private members **/
-  var cache = {};
-  var parameters = {};
+var cache = {};
+var parameters = {};
 
-  /** Public members **/
-  x.changed = false;
+export var changed = false;
 
-  /** Private functions **/
-  function fetchPCsUNSAFE(wasm) {
+function fetchPCsAsWasmArray(wasm) {
     if ("reloaded" in cache) {
-      return cache.reloaded.pcs.array();
+        return cache.reloaded.pcs;
     } else {
-      return cache.raw.pcs();
+        let tmp = cache.raw.pcs({ copy: false });
+        return new scran.Float64WasmArray(tmp.length, tmp.byteOffset);
     }
-  }
+}
 
-  /** Public functions (standard) **/
-  x.compute = function(wasm, args) {
-    if (!scran_normalization.changed && !scran_model_gene_var.changed && !scran_utils.changedParameters(parameters, args)) {
-      x.changed = false;
+export function compute(args) {
+    if (!normalization.changed && !variance.changed && !utils.changedParameters(parameters, args)) {
+        x.changed = false;
     } else {
-      // Choosing the highly variable genes.
-      var sorted_resids = scran_model_gene_var.fetchSortedResiduals(wasm)
-      var threshold_at = sorted_resids[sorted_resids.length - args.num_hvgs];
+        // Choosing the highly variable genes.
+        var sorted_resids = variance.fetchSortedResiduals();
+        var threshold_at = sorted_resids[sorted_resids.length - args.num_hvgs];
 
-      var mat = scran_normalization.fetchNormalizedMatrix(wasm);
-      var sub = scran_utils.allocateBuffer(wasm, mat.nrow(), "Uint8Array", cache);
-      var unsorted_resids = scran_model_gene_var.fetchResidualsUNSAFE(wasm);
-      sub.array().forEach((element, index, array) => {
-        array[index] = unsorted_resids[index] >= threshold_at;
-      });
+        var mat = normalization.fetchNormalizedMatrix();
+        var sub = utils.allocateCachedArray(mat.numberOfRows(), "Uint8Array", cache);
+        var unsorted_resids = scran_model_gene_var.fetchResiduals({ unsafe: true });
+        sub.array().forEach((element, index, array) => {
+            array[index] = unsorted_resids[index] >= threshold_at;
+        });
 
-      // Actually performing the PCA.
-      scran_utils.freeCache(cache.raw);
-      try {
-        cache.raw = wasm.run_pca(mat, args.num_pcs, true, sub.ptr, false);
-      } catch (e) {
-        throw wasm.get_error_message(e);
-      }
+        // Actually performing the PCA.
+        scran_utils.freeCache(cache.raw);
+        cache.raw = scran.runPCA(mat, { features: sub, numberOfPCs: args.num_pcs });
 
-      x.changed = true;
-      parameters = args;
-
-      if ("reloaded" in cache) {
-        cache.reloaded.pcs.free();
-        delete cache.reloaded;
-      }
+        utils.freeReloaded(cache);
+        changed = true;
+        parameters = args;
     }
     return;
-  }
+}
 
-  x.results = function(wasm) {
+export function results(wasm) {
     var var_exp;
 
     if ("reloaded" in cache) {
-      var_exp = cache.reloaded.var_exp.slice();
+        var_exp = cache.reloaded.var_exp.slice();
     } else {
-      var pca_output = cache.raw;
-      var_exp = pca_output.variance_explained().slice();
-      var total_var = pca_output.total_variance();
-      for (var n = 0; n < var_exp.length; n++) {
-        var_exp[n] /= total_var;
-      }
+        var pca_output = cache.raw;
+        var_exp = pca_output.variance_explained();
+        var total_var = pca_output.total_variance();
+        var_exp.forEach((x, i) => {
+            var_exp[i] = x/total_var;
+        });
     }
 
     return { "var_exp": var_exp };
-  };
+}
 
-  x.serialize = function(wasm) {
-    var to_save = x.results(wasm);
-    to_save.pcs = fetchPCsUNSAFE(wasm).slice();
+export function serialize() {
+    var to_save = x.results();
+    to_save.pcs = fetchPCsAsWasmArray().slice();
     return {
       "parameters": parameters,
       "contents": to_save
     };
-  };
-
-  x.unserialize = function(wasm, saved) {
+}
+ 
+export function unserialize(saved) {
     parameters = saved.parameters;
-    cache.reloaded = saved.contents;
-    cache.reloaded.pcs = scran_utils.wasmifyArray(wasm, cache.reloaded.pcs);
-    return;
-  };
 
-  /** Public functions (custom) **/
-  x.fetchPCsOFFSET = function(wasm) {
-    var pcs = fetchPCsUNSAFE(wasm);
+    utils.freeReloaded(cache);
+    cache.reloaded = saved.contents;
+
+    var tmp = new scran.Float64WasmArray(cache.reloaded.pcs.length);
+    tmp.set(cache.reloaded.pcs);
+    cache.reloaded.pcs = tmp;
+    return;
+}
+
+export function fetchPCs() {
     return {
-      "offset": pcs.byteOffset,
-      "num_pcs": parameters.num_pcs,
-      "num_obs": pcs.length / parameters.num_pcs
+        "pcs": fetchPCsAsWasmArray(),
+        "num_pcs": parameters.num_pcs,
+        "num_obs": pcs.length / parameters.num_pcs
     };
-  };
-})(scran_pca);
+}

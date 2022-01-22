@@ -9,7 +9,7 @@ var abbreviated = {};
 export var changed = false;
 
 function permuteGenes(genes) {
-    var buf = new scran.Int32WasmArray(cache.matrix.nrow());
+    var buf = new scran.Int32WasmArray(cache.matrix.numberOfRows());
     try {
         cache.matrix.permutation({ buffer: buf });
 
@@ -27,9 +27,9 @@ function permuteGenes(genes) {
     }
 }
 
-function dummyGenes(nrows) {
+function dummyGenes(numberOfRowss) {
     let genes = []
-    for (let i = 0; i < nrows; i++) {
+    for (let i = 0; i < numberOfRowss; i++) {
         genes.push(`Gene ${i + 1}`);
     }
     return { "id": genes };
@@ -60,7 +60,7 @@ function loadMatrixMarketRaw(files) {
         let genes_str = dec.decode(content);
         const tsv = d3.dsvFormat("\t");
         let parsed = tsv.parseRows(genes_str);
-        if (parsed.length != cache.matrix.nrow()) {
+        if (parsed.length != cache.matrix.numberOfRows()) {
             throw "number of matrix rows is not equal to the number of genes in '" + genes_file.name + "'";
         }
 
@@ -72,7 +72,7 @@ function loadMatrixMarketRaw(files) {
 
         cache.genes = { "id": ids, "symbol": symb };
     } else {
-        cache.genes = dummyGenes(cache.matrix.nrow());
+        cache.genes = dummyGenes(cache.matrix.numberOfRows());
     }
 
     permuteGenes(cache.genes);
@@ -235,7 +235,7 @@ function loadHDF5Raw(files) {
 
     var genes = guessGenesFromHDF5(f);
     if (genes === null) {
-        cache.genes = dummyGenes(cache.matrix.nrow());
+        cache.genes = dummyGenes(cache.matrix.numberOfRows());
     } else {
         cache.genes = genes;
     }
@@ -318,7 +318,7 @@ export function serialize() {
         contents.num_cells = cache.reloaded.num_cells;
     } else {
         contents.genes = { ...cache.genes };
-        contents.num_cells = cache.matrix.ncol();
+        contents.num_cells = cache.matrix.numberOfColumns();
     }
 
     // Making a deep-ish clone of the parameters so that any fiddling with
@@ -361,8 +361,8 @@ export function fetchDimensions() {
         };
     } else {
         return {
-            "num_genes": cache.matrix.nrow(),
-            "num_cells": cache.matrix.ncol()
+            "num_genes": cache.matrix.numberOfRows(),
+            "num_cells": cache.matrix.numberOfColumns()
         };
     }
 }

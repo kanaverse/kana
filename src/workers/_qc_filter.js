@@ -1,85 +1,75 @@
-const scran_qc_filter = {};
+import * as scran from "scran.js"; 
+import * as utils from "./_utils.js";
+import * as inputs from "./_qc_inputs.js";
+import * as thresholds from "./_qc_thresholds.js";
 
-(function(x) {
-  /** Private members **/
-  cache = {};
-  parameters = {};
+var cache = {};
+var parameters = {};
 
-  /** Public members **/
-  x.changed = false;
+export var changed = false;
 
-  /** Private functions **/
-  function rawCompute(wasm) {
+function rawCompute(wasm) {
     scran_utils.freeCache(cache.matrix);
+    var mat = inputs.fetchCountMatrix();
 
-    var mat = scran_inputs.fetchCountMatrix(wasm);
-    var disc_offset = scran_qc_thresholds.fetchDiscardsOFFSET(wasm);
-
-    try {
-      cache.matrix = wasm.filter_cells(mat, disc_offset, false);
-    } catch (e) {
-      throw wasm.get_error_message(e);
-    }
+    var disc = thresholds.fetchDiscardsAsWasmArray();
+    cache.matrix = scran.filterCells(mat, disc);
 
     delete cache.reloaded;
     return;
-  }
+}
 
-  /** Public functions (standard) **/
-  x.compute = function(wasm, args) {
-    if (!scran_inputs.changed && !scran_qc_thresholds.changed && !scran_utils.changedParameters(parameters, args)) {
-      x.changed = false;
+export function compute(args) {
+    if (!inputs.changed && !thresholds.changed && !utils.changedParameters(parameters, args)) {
+        changed = false;
     } else {
-      rawCompute(wasm);
-      parameters = args;
-      x.changed = true;
+        rawCompute(wasm);
+        parameters = args;
+        changed = true;
     }
     return;
-  }
+}
    
-  x.results = function(wasm) {
+export function results() {
     return {
-      "retained": x.fetchRetained(wasm)
+      "retained": fetchRetained()
     };
-  };
+}
 
-  x.serialize = function(wasm) {
+export function serialize() {
     return {
-      "parameters": parameters,
-      "contents": x.results(wasm)
+        "parameters": parameters,
+        "contents": x.results()
     };
-  };
+}
 
-  x.unserialize = function(wasm, saved) {
+export function unserialize(saved) {
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
 
     // Precomputing this for easier retrieval later.
-    var discards = scran_qc_thresholds.fetchDiscardsUNSAFE(wasm);
+    var discards = thresholds.fetchDiscards({ unsafe: true });
     var retained = 0;
     for (const i of discards) {
-      if (i == 0) {
-        retained++;
-      }
+        if (i == 0) {
+            retained++;
+        }
     }
     cache.reloaded.retained = retained;
     return;
-  };
+}
 
-  /** Public functions (standard) **/
-  x.fetchFilteredMatrix = function(wasm) {
+export function fetchFilteredMatrix() {
     if ("reloaded" in cache) {
-      rawCompute(wasm);
+        rawCompute();
     }
     return cache.matrix;    
-  };
+}
 
-  x.fetchRetained = function(wasm) {
+export function fetchRetained() {
     if ("reloaded" in cache) {
-      return cache.reloaded.retained;
+        return cache.reloaded.retained;
     } else {
-      return cache.matrix.ncol();
+        return cache.matrix.numberOfColumns();
     }
-  };
-
-})(scran_qc_filter);
+}

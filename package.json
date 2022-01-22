@@ -16,7 +16,7 @@
     "randomcolor": "^0.6.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-scripts": "4.0.3",
+    "react-scripts": "5.0.0",
     "react-virtuoso": "^2.3.1",
     "scatter-gl": "^0.0.11",
     "scran.js": "0.0.2",

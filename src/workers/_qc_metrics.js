@@ -1,85 +1,73 @@
-const scran_qc_metrics = {};
+import * as scran from "scran.js"; 
+import * as utils from "./_utils.js";
+import * as inputs from "./_qc_inputs.js";
 
-(function (x) {
-  /** Private members **/
-  var cache = {};
-  var parameters = {};
+var cache = {};
+var parameters = {};
 
-  /** Public members **/
-  x.changed = false;
+export var changed = false;
 
-  /** Private functions **/
-  function rawCompute(wasm, args) {
+function rawCompute(args) {
     scran_utils.freeCache(cache.raw);
     var mat = scran_inputs.fetchCountMatrix();
 
     // TODO: add more choices.
     var nsubsets = 1;
-    var subsets = new WasmBuffer(wasm, mat.nrow() * nsubsets, "Uint8Array");
-    try {
-      subsets.fill(0);
+    var subsets = utils.allocateCachedBuffer(mat.numberOfRows() * nsubsets, "Uint8Array", cache);
+    subsets.fill(0);
 
-      var gene_info = scran_inputs.fetchGenes();
-      var sub_arr = subsets.array();
-      for (const [key, val] of Object.entries(gene_info)) {
+    var gene_info = inputs.fetchGenes();
+    var sub_arr = subsets.array();
+    for (const [key, val] of Object.entries(gene_info)) {
         if (args.use_mito_default) {
-          val.forEach((x, i) => {
-            if (mito.symbol.has(x) || mito.ensembl.has(x)) {
-              sub_arr[i] = 1;
-            }
-          });
+            val.forEach((x, i) => {
+                if (mito.symbol.has(x) || mito.ensembl.has(x)) {
+                    sub_arr[i] = 1;
+                }
+            });
         } else {
-          var lower_mito = args.mito_prefix.toLowerCase();
-          val.forEach((x, i) => {
-            if(x.toLowerCase().startsWith(lower_mito)) {
-              sub_arr[i] = 1;
-            }
-          });
+            var lower_mito = args.mito_prefix.toLowerCase();
+            val.forEach((x, i) => {
+                if(x.toLowerCase().startsWith(lower_mito)) {
+                    sub_arr[i] = 1;
+                }
+            });
         }
-      }
-
-      try {
-        cache.raw = wasm.per_cell_qc_metrics(mat, nsubsets, subsets.ptr);
-      } catch (e) {
-        throw wasm.get_error_message(e);
-      }
-    } finally {
-      subsets.free();
     }
 
+    scran.computePerCellQCMetrics(mat, subsets);
     delete cache.reloaded;
     return;
-  }
+}
 
-  function fetchResults() {
+function fetchResults() {
     var data = {};
     if ("reloaded" in cache) {
-      var qc_output = cache.reloaded;
-      data.sums = qc_output.sums.slice();
-      data.detected = qc_output.detected.slice();
-      data.proportion = qc_output.proportion.slice();
+        var qc_output = cache.reloaded;
+        data.sums = qc_output.sums.slice();
+        data.detected = qc_output.detected.slice();
+        data.proportion = qc_output.proportion.slice();
     } else {
-      var qc_output = cache.raw;
-      data.sums = qc_output.sums().slice();
-      data.detected = qc_output.detected().slice();
-      data.proportion = qc_output.subset_proportions(0).slice();
+        var qc_output = cache.raw;
+        data.sums = qc_output.sums();
+        data.detected = qc_output.detected();
+        data.proportion = qc_output.subset_proportions(0);
     }
     return data;
-  }
+}
 
-  /** Public functions (standard) **/
-  x.compute = function (wasm, args) {
-    if (!scran_inputs.changed && !scran_utils.changedParameters(parameters, args)) {
-      x.changed = false;
+export function compute(args) {
+    if (!inputs.changed && !utils.changedParameters(parameters, args)) {
+        changed = false;
     } else {
-      rawCompute(wasm, args);
-      parameters = args;
-      x.changed = true;
+        rawCompute(args);
+        parameters = args;
+        changed = true;
     }
     return;
-  };
+}
 
-  x.results = function (wasm) {
+export function results() {
     var data = fetchResults();
 
     var ranges = {};
@@ -87,41 +75,41 @@ const scran_qc_metrics = {};
     ranges.detected = scran_utils.computeRange(data.detected);
     ranges.proportion = scran_utils.computeRange(data.proportion);
 
-    return { "data": data, "ranges": ranges };
-  };
+    return { 
+        "data": data, 
+        "ranges": ranges 
+    };
+}
 
-  x.serialize = function (wasm) {
+export function serialize() {
     return {
       "parameters": parameters,
       "contents": fetchResults()
     };
-  };
+}
 
-  x.unserialize = function (wasm, saved) {
+export function unserialize(saved) {
     /* TODO: reconstutite a fully-formed QCMetrics object so that
      * fetchQCMetrics() doesn't have to recompute it.
      */
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
     return;
-  };
+}
 
-  /** Public functions (custom) **/
-  x.fetchQCMetrics = function (wasm) {
+export function fetchQCMetrics() {
     if ("reloaded" in cache) {
-      rawCompute(wasm);
+        rawCompute();
     }
     return cache.raw;
-  };
+}
 
-  x.fetchSumsUNSAFE = function (wasm) {
+export function fetchSums({ unsafe: true }) {
     if ("reloaded" in cache) {
-      return cache.reloaded.sums;
+        return cache.reloaded.sums;
     } else {
-      // Unsafe, because we're returning a raw view into the Wasm heap,
-      // which might be invalidated upon further allocations.
-      return cache.raw.sums();
+        // Unsafe, because we're returning a raw view into the Wasm heap,
+        // which might be invalidated upon further allocations.
+        return cache.raw.sums({ copy: !unsafe });
     }
-  };
-
-})(scran_qc_metrics);
+}
