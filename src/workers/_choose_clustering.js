@@ -1,52 +1,51 @@
-const scran_choose_clustering = {};
+import * as scran from "scran.js";
+import * as utils from "./utils.js";
+import * as cluster from "./snn_cluster.js";
 
-(function(x) {
-  /** Private members **/
-  var cache = {};
-  var parameters = {};
+var cache = {};
+var parameters = {};
 
-  /** Public members **/
-  x.changed = false;
+export var changed = false;
 
-  /** Public functions (standard) **/
-  x.compute = function(wasm, args) {
-    x.changed = true;
-
-    if (!scran_utils.changedParameters(parameters, args)) {
-      if (args.method == "snn_graph" && !scran_snn_graph.changed) {
-        x.changed = false;
-      }
+/** Standard functions **/
+export function compute(args) {
+    changed = true;
+    
+    if (!utils.changedParameters(parameters, args)) {
+        if (args.method == "snn_graph" && !scran_snn_graph.changed) {
+            changed = false;
+        }
     }
 
-    if (x.changed) {
-      delete cache.reloaded;
-      parameters = args;
-      x.changed = true;
+    if (changed) {
+        delete cache.reloaded;
+        parameters = args;
+        changed = true;
     }
+    
     return;
-  };
+}
 
-  x.results = function(wasm) {
+export function results() {
     return {};
-  };
+}
 
-  x.serialize = function(wasm) {
+export function serialize() {
     return {
-      "parameters": parameters,
-      "contents": x.results(wasm)
+        "parameters": parameters,
+        "contents": results()
     };
-  };
+}
 
-  x.unserialize = function(wasm, saved) {
+export function unserialize(saved) {
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
     return;
-  };
+}
 
-  /** Public functions (custom) **/
-  x.fetchClustersOFFSET = function(wasm) {
+/** Non-standard functions **/
+export function fetchClustersOFFSET {
 //    if (parameters.method == "snn_graph") {
-      return scran_snn_cluster.fetchClustersOFFSET(wasm); // really the only option right now.
+    return cluster.fetchClustersOFFSET(); // really the only option right now.
 //  }
-  };
-})(scran_choose_clustering);
+}
