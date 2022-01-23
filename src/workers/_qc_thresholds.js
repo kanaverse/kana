@@ -43,7 +43,7 @@ export function results() {
 }
 
 export function serialize() {
-    var contents = x.results();
+    var contents = results();
     contents.discards = fetchDiscards();
     return {
         "parameters": parameters,

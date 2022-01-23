@@ -110,11 +110,11 @@ function loadMatrixMarket(args) {
 
         if (it == 0) {
             if (!utils.changedParameters(abbreviated, formatted)) {
-                x.changed = false;
+                changed = false;
                 return;
             } else {
                 abbreviated = formatted;
-                x.changed = true;
+                changed = true;
             }
         } else {
             parameters = formatted;
@@ -267,11 +267,11 @@ function loadHDF5(args) {
 
         if (it == 0) {
             if (!utils.changedParameters(abbreviated, formatted)) {
-                x.changed = false;
+                changed = false;
                 return;
             } else {
                 abbreviated = formatted;
-                x.changed = true;
+                changed = true;
             }
         } else {
             parameters = formatted;

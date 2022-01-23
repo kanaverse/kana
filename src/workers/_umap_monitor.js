@@ -11,7 +11,7 @@ export var changed = false;
 
 function core(args, reneighbor) {
     if (worker == null) {
-        worker = vizutils.createWorker("./umapWorker.js", cache);
+        worker = vizutils.createWorker("./umap.worker.js", cache);
         cache.initialized = vizutils.initializeWorker(worker, cache);
     }
 
@@ -35,7 +35,7 @@ export function compute(args) {
 
     parameters = args;
     delete cache.reloaded;
-    x.changed = true;
+    changed = true;
 }
 
 export function results() {

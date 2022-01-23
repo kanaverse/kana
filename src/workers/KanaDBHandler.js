@@ -263,7 +263,7 @@ export async function removeAnalysis(id) {
     // Removing all files as well.
     var meta = await loadContent(id, meta_store);
     for (const f of meta["files"]) {
-        promises.push(x.removeFile(f));
+        promises.push(removeFile(f));
     }
 
     promises.push(new Promise(resolve => {

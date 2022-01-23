@@ -21,7 +21,7 @@ export function compute(args) {
 
         parameters = args;
         delete cache.reloaded;
-        x.changed = true;
+        changed = true;
     }
     return;
 }

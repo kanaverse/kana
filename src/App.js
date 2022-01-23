@@ -17,12 +17,12 @@ import Spinner2 from './components/Spinners/Spinner2';
 // App is the single point of contact with the web workers
 // All requests and responses are received here
 
-var scranWorker = null;
+var scranWorker = new Worker(new URL('./workers/scran.worker.js', import.meta.url), { type: "module" });;
 
-function App() {
-  if (scranWorker === null) {
-    scranWorker = new Worker(new URL('./workers/scranWorker.js', import.meta.url), { type: "module" });
-  }
+const App = () => {
+  // if (scranWorker === null) {
+  //   scranWorker = new Worker(new URL('./workers/scranWorker.js', import.meta.url), { type: "module" });
+  // }
 
   // show loading screen ?
   const [loading, setLoading] = useState(true);
@@ -113,8 +113,8 @@ function App() {
     useTallContent: false,
   };
 
-  const { setWasmInitialized,
-    setGenesInfo,
+  const { setWasmInitialized, wasmInitialized,
+    setGenesInfo, initLoadState, tabSelected,
     datasetName, params,
     setGeneColSel, setLoadParams,
     setInitLoadState, inputFiles } = useContext(AppContext);
@@ -197,262 +197,298 @@ function App() {
     ],
   };
 
-//  // initializes various things on the worker side
-//  useEffect(() => {
-//    window.scranWorker.postMessage({
-//      "type": "INIT",
-//      "msg": "Initial Load"
-//    });
-//  }, [])
-//
-//  // request worker for new markers 
-//  // if either the cluster or the ranking changes
-//  useEffect(() => {
-//
-//    if (selectedCluster !== null) {
-//      let type = String(selectedCluster).startsWith("cs") ?
-//        "getMarkersForSelection" : "getMarkersForCluster";
-//      window.scranWorker.postMessage({
-//        "type": type,
-//        "payload": {
-//          "cluster": selectedCluster,
-//          "rank_type": clusterRank,
-//        }
-//      });
-//    }
-//  }, [selectedCluster, clusterRank]);
-//
-//  // compute markers in the worker 
-//  // when a new custom selection of cells is made through the UI
-//  useEffect(() => {
-//
-//    if (customSelection !== null && Object.keys(customSelection).length > 0) {
-//      let csLen = `cs${Object.keys(customSelection).length}`;
-//      var cs = customSelection[csLen];
-//      window.scranWorker.postMessage({
-//        "type": "computeCustomMarkers",
-//        "payload": {
-//          "selection": cs,
-//          "id": csLen
-//        }
-//      });
-//    }
-//  }, [customSelection]);
-//
-//  // Remove a custom selection from cache
-//  useEffect(() => {
-//    if (delCustomSelection !== null) {
-//      window.scranWorker.postMessage({
-//        "type": "removeCustomMarkers",
-//        "payload": {
-//          "id": delCustomSelection
-//        }
-//      });
-//
-//      setDelCustomSelection(null);
-//    }
-//  }, [delCustomSelection]);
-//
-//  // get expression for a gene from worker
-//  useEffect(() => {
-//
-//    reqGene !== null && window.scranWorker.postMessage({
-//      "type": "getGeneExpression",
-//      "payload": {
-//        "gene": reqGene
-//      }
-//    });
-//  }, [reqGene]);
-//
-//  useEffect(() => {
-//    triggerAnimation && defaultRedDims && window.scranWorker.postMessage({
-//      "type": "animate" + defaultRedDims,
-//      payload: {
-//        params: params[defaultRedDims.toLowerCase()]
-//      }
-//    });
-//  }, [triggerAnimation]);
-//
-//  // export an analysis
-//  useEffect(() => {
-//
-//    if (exportState) {
-//      window.scranWorker.postMessage({
-//        "type": "EXPORT",
-//        "payload": {
-//          "files": inputFiles,
-//          "params": params
-//        },
-//        "msg": "not much to pass"
-//      });
-//
-//      AppToaster.show({ icon: "download", intent: "primary", message: "Exporting analysis in the background" });
-//    } else {
-//      inputFiles?.files && AppToaster.show({ icon: "download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
-//    }
-//  }, [exportState]);
-//
-//  useEffect(() => {
-//
-//    if (indexedDBState) {
-//      window.scranWorker.postMessage({
-//        "type": "SAVEKDB",
-//        "payload": {
-//          "title": datasetName,
-//        },
-//        "msg": "not much to pass"
-//      });
-//
-//      AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Saving analysis in the background. Note: analysis is saved within the browser!!" });
-//    } else {
-//      inputFiles?.files && AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Analysis saved!" });
-//    }
-//  }, [indexedDBState]);
+  // initializes various things on the worker side
+  useEffect(() => {
+    scranWorker.postMessage({
+      "type": "INIT",
+      "msg": "Initial Load"
+    });
+  }, [])
 
-//  // callback for all responses from workers
-//  // all interactions are logged and shown on the UI
-//  window.scranWorker.onmessage = (msg) => {
-//    const payload = msg.data;
-//
-//    if (payload?.msg) {
-//      let tmp = [...logs];
-//      let d = new Date();
-//      tmp.push(`${d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds()} - ${payload?.type} - ${payload?.msg}`);
-//
-//      setLogs(tmp);
-//    }
-//
-//    if (payload?.type.endsWith("ERROR")) {
-//      setScranError(payload);
-//    }
-//
-//    if (payload.type === "INIT") {
-//      setLoading(false);
-//      setWasmInitialized(true);
-//    } else if (payload.type === "KanaDB_store") {
-//      const { resp } = payload;
-//      if (resp !== undefined) {
-//        setKanaIDBRecs(resp);
-//      }
-//      setIndexedDBState(false);
-//    } else if (payload.type === "inputs_DATA") {
-//      setInitDims(`${payload.resp.dimensions.num_genes} genes, ${payload.resp.dimensions.num_cells} cells`);
-//      setGenesInfo(payload.resp.genes);
-//      setGeneColSel(Object.keys(payload.resp.genes)[0]);
-//    } else if (payload.type === "quality_control_metrics_DATA") {
-//      const { resp } = payload;
-//      setQcData(resp);
-//    } else if (payload.type === "quality_control_thresholds_DATA") {
-//      const { resp } = payload;
-//      let tmp = { ...qcData };
-//      tmp["thresholds"] = resp;
-//      setQcData(tmp);
-//    } else if (payload.type === "quality_control_filtered_DATA") {
-//      setQcDims(`${payload.resp.retained}`);
-//    } else if (payload.type === "feature_selection_DATA") {
-//      const { resp } = payload;
-//      setFSelectionData(resp);
-//    } else if (payload.type === "pca_DATA") {
-//      const { resp } = payload;
-//      setPcaVarExp(resp);
-//    } else if (payload.type === "snn_cluster_graph_DATA") {
-//      const { resp } = payload;
-//
-//      let cluster_count = Math.max(...resp?.clusters) + 1;
-//      if (customSelection) {
-//        cluster_count += Object.keys(customSelection).length;
-//      }
-//      let cluster_colors = null;
-//      if (cluster_count > Object.keys(palette).length) {
-//        cluster_colors = randomColor({ luminosity: 'dark', count: cluster_count + 1 });
-//      } else {
-//        cluster_colors = palette[cluster_count.toString()];
-//      }
-//      setClusterColors(cluster_colors);
-//
-//      setClusterData(resp);
-//
-//      // show markers for the first cluster
-//      setSelectedCluster(0);
-//    } else if (payload.type === "tsne_DATA") {
-//      const { resp } = payload;
-//      setTsneData(resp);
-//
-//      let tmp = [...redDims];
-//      tmp.push("TSNE");
-//      // once t-SNE is available, set this as the default display
-//      if (!defaultRedDims) {
-//        setDefaultRedDims("TSNE");
-//      }
-//
-//      setRedDims(tmp);
-//      // also don't show the pong game anymore
-//      setShowGame(false);
-//      setShowAnimation(false);
-//      setTriggerAnimation(false);
-//    } else if (payload.type === "tsne_iter" || payload.type === "umap_iter") {
-//      const { resp } = payload;
-//      setAnimateData(resp);
-//    } else if (payload.type === "umap_DATA") {
-//      const { resp } = payload;
-//      setUmapData(resp);
-//
-//      // enable UMAP selection
-//      let tmp = [...redDims];
-//      tmp.push("UMAP");
-//      setRedDims(tmp);
-//
-//      setShowAnimation(false);
-//      setTriggerAnimation(false);
-//    } else if (payload.type === "markerGene_DATA") {
-//    } else if (payload.type === "setMarkersForCluster"
-//      || payload.type === "setMarkersForCustomSelection") {
-//      const { resp } = payload;
-//      let records = [];
-//      let index = Array(resp.ordering.length);
-//      resp.means.forEach((x, i) => {
-//        index[resp.ordering[i]] = i;
-//        records.push({
-//          "gene": resp?.ordering?.[i],
-//          "mean": parseFloat(x.toFixed(2)),
-//          "delta": parseFloat(resp?.delta_detected?.[i].toFixed(2)),
-//          "lfc": parseFloat(resp?.lfc?.[i].toFixed(2)),
-//          "detected": parseFloat(resp?.detected?.[i].toFixed(2)),
-//          "expanded": false,
-//          "expr": null,
-//        });
-//      });
-//      setSelectedClusterIndex(index);
-//      setSelectedClusterSummary(records);
-//    } else if (payload.type === "setGeneExpression") {
-//      const { resp } = payload;
-//      let tmp = [...selectedClusterSummary];
-//      tmp[selectedClusterIndex[resp.gene]].expr = Object.values(resp.expr);
-//      setSelectedClusterSummary(tmp);
-//      setReqGene(null);
-//    } else if (payload.type === "exportState") {
-//      const { resp } = payload;
-//
-//      let tmpLink = document.createElement("a");
-//      var fileNew = new Blob([resp], {
-//        type: "text/plain"
-//      });
-//      tmpLink.href = URL.createObjectURL(fileNew);
-//      tmpLink.download = datasetName.split(' ').join('_') + ".kana";
-//      tmpLink.click();
-//
-//      setExportState(false);
-//    } else if (payload.type === "KanaDB") {
-//      setIndexedDBState(false);
-//    } else if (payload.type === "loadedParameters") {
-//      const { resp } = payload;
-//      setLoadParams(resp.params);
-//
-//      setTimeout(() => {
-//        setInitLoadState(false);
-//      }, 1000);
-//    }
-//  }
+  // request worker for new markers 
+  // if either the cluster or the ranking changes
+  useEffect(() => {
+
+    if (selectedCluster !== null) {
+      let type = String(selectedCluster).startsWith("cs") ?
+        "getMarkersForSelection" : "getMarkersForCluster";
+      scranWorker.postMessage({
+        "type": type,
+        "payload": {
+          "cluster": selectedCluster,
+          "rank_type": clusterRank,
+        }
+      });
+    }
+  }, [selectedCluster, clusterRank]);
+
+  // compute markers in the worker 
+  // when a new custom selection of cells is made through the UI
+  useEffect(() => {
+
+    if (customSelection !== null && Object.keys(customSelection).length > 0) {
+      let csLen = `cs${Object.keys(customSelection).length}`;
+      var cs = customSelection[csLen];
+      scranWorker.postMessage({
+        "type": "computeCustomMarkers",
+        "payload": {
+          "selection": cs,
+          "id": csLen
+        }
+      });
+    }
+  }, [customSelection]);
+
+  // Remove a custom selection from cache
+  useEffect(() => {
+    if (delCustomSelection !== null) {
+      scranWorker.postMessage({
+        "type": "removeCustomMarkers",
+        "payload": {
+          "id": delCustomSelection
+        }
+      });
+
+      setDelCustomSelection(null);
+    }
+  }, [delCustomSelection]);
+
+  // get expression for a gene from worker
+  useEffect(() => {
+
+    reqGene !== null && scranWorker.postMessage({
+      "type": "getGeneExpression",
+      "payload": {
+        "gene": reqGene
+      }
+    });
+  }, [reqGene]);
+
+  useEffect(() => {
+    triggerAnimation && defaultRedDims && scranWorker.postMessage({
+      "type": "animate" + defaultRedDims,
+      payload: {
+        params: params[defaultRedDims.toLowerCase()]
+      }
+    });
+  }, [triggerAnimation]);
+
+  // export an analysis
+  useEffect(() => {
+
+    if (exportState) {
+      scranWorker.postMessage({
+        "type": "EXPORT",
+        "payload": {
+          "files": inputFiles,
+          "params": params
+        },
+        "msg": "not much to pass"
+      });
+
+      AppToaster.show({ icon: "download", intent: "primary", message: "Exporting analysis in the background" });
+    } else {
+      inputFiles?.files && AppToaster.show({ icon: "download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
+    }
+  }, [exportState]);
+
+  useEffect(() => {
+
+    if (indexedDBState) {
+      scranWorker.postMessage({
+        "type": "SAVEKDB",
+        "payload": {
+          "title": datasetName,
+        },
+        "msg": "not much to pass"
+      });
+
+      AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Saving analysis in the background. Note: analysis is saved within the browser!!" });
+    } else {
+      inputFiles?.files && AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Analysis saved!" });
+    }
+  }, [indexedDBState]);
+
+  useEffect(() => {
+
+    if (wasmInitialized && inputFiles.files != null && !initLoadState) {
+      if (tabSelected === "new") {
+        scranWorker.postMessage({
+          "type": "RUN",
+          "payload": {
+            "files": inputFiles,
+            "params": params
+          },
+          "msg": "not much to pass"
+        });
+      } else if (tabSelected === "load") {
+        if (loadParams == null || inputFiles?.reset) {
+          scranWorker.postMessage({
+            "type": "LOAD",
+            "payload": {
+              "files": inputFiles
+            },
+            "msg": "not much to pass"
+          });
+        } else {
+          scranWorker.postMessage({
+            "type": "RUN",
+            "payload": {
+              "files": inputFiles,
+              "params": params
+            },
+            "msg": "not much to pass"
+          });
+        }
+        setInitLoadState(true);
+      }
+    }
+  }, [inputFiles, params, wasmInitialized]);
+
+  // callback for all responses from workers
+  // all interactions are logged and shown on the UI
+  scranWorker.onmessage = (msg) => {
+    const payload = msg.data;
+
+    if (payload?.msg) {
+      let tmp = [...logs];
+      let d = new Date();
+      tmp.push(`${d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds()} - ${payload?.type} - ${payload?.msg}`);
+
+      setLogs(tmp);
+    }
+
+    if (payload?.type.endsWith("ERROR")) {
+      setScranError(payload);
+    }
+
+    if (payload.type === "INIT") {
+      setLoading(false);
+      setWasmInitialized(true);
+    } else if (payload.type === "KanaDB_store") {
+      const { resp } = payload;
+      if (resp !== undefined) {
+        setKanaIDBRecs(resp);
+      }
+      setIndexedDBState(false);
+    } else if (payload.type === "inputs_DATA") {
+      setInitDims(`${payload.resp.dimensions.num_genes} genes, ${payload.resp.dimensions.num_cells} cells`);
+      setGenesInfo(payload.resp.genes);
+      setGeneColSel(Object.keys(payload.resp.genes)[0]);
+    } else if (payload.type === "quality_control_metrics_DATA") {
+      const { resp } = payload;
+      setQcData(resp);
+    } else if (payload.type === "quality_control_thresholds_DATA") {
+      const { resp } = payload;
+      let tmp = { ...qcData };
+      tmp["thresholds"] = resp;
+      setQcData(tmp);
+    } else if (payload.type === "quality_control_filtered_DATA") {
+      setQcDims(`${payload.resp.retained}`);
+    } else if (payload.type === "feature_selection_DATA") {
+      const { resp } = payload;
+      setFSelectionData(resp);
+    } else if (payload.type === "pca_DATA") {
+      const { resp } = payload;
+      setPcaVarExp(resp);
+    } else if (payload.type === "snn_cluster_graph_DATA") {
+      const { resp } = payload;
+
+      let cluster_count = Math.max(...resp?.clusters) + 1;
+      if (customSelection) {
+        cluster_count += Object.keys(customSelection).length;
+      }
+      let cluster_colors = null;
+      if (cluster_count > Object.keys(palette).length) {
+        cluster_colors = randomColor({ luminosity: 'dark', count: cluster_count + 1 });
+      } else {
+        cluster_colors = palette[cluster_count.toString()];
+      }
+      setClusterColors(cluster_colors);
+
+      setClusterData(resp);
+
+      // show markers for the first cluster
+      setSelectedCluster(0);
+    } else if (payload.type === "tsne_DATA") {
+      const { resp } = payload;
+      setTsneData(resp);
+
+      let tmp = [...redDims];
+      tmp.push("TSNE");
+      // once t-SNE is available, set this as the default display
+      if (!defaultRedDims) {
+        setDefaultRedDims("TSNE");
+      }
+
+      setRedDims(tmp);
+      // also don't show the pong game anymore
+      setShowGame(false);
+      setShowAnimation(false);
+      setTriggerAnimation(false);
+    } else if (payload.type === "tsne_iter" || payload.type === "umap_iter") {
+      const { resp } = payload;
+      setAnimateData(resp);
+    } else if (payload.type === "umap_DATA") {
+      const { resp } = payload;
+      setUmapData(resp);
+
+      // enable UMAP selection
+      let tmp = [...redDims];
+      tmp.push("UMAP");
+      setRedDims(tmp);
+
+      setShowAnimation(false);
+      setTriggerAnimation(false);
+    } else if (payload.type === "markerGene_DATA") {
+    } else if (payload.type === "setMarkersForCluster"
+      || payload.type === "setMarkersForCustomSelection") {
+      const { resp } = payload;
+      let records = [];
+      let index = Array(resp.ordering.length);
+      resp.means.forEach((x, i) => {
+        index[resp.ordering[i]] = i;
+        records.push({
+          "gene": resp?.ordering?.[i],
+          "mean": parseFloat(x.toFixed(2)),
+          "delta": parseFloat(resp?.delta_detected?.[i].toFixed(2)),
+          "lfc": parseFloat(resp?.lfc?.[i].toFixed(2)),
+          "detected": parseFloat(resp?.detected?.[i].toFixed(2)),
+          "expanded": false,
+          "expr": null,
+        });
+      });
+      setSelectedClusterIndex(index);
+      setSelectedClusterSummary(records);
+    } else if (payload.type === "setGeneExpression") {
+      const { resp } = payload;
+      let tmp = [...selectedClusterSummary];
+      tmp[selectedClusterIndex[resp.gene]].expr = Object.values(resp.expr);
+      setSelectedClusterSummary(tmp);
+      setReqGene(null);
+    } else if (payload.type === "exportState") {
+      const { resp } = payload;
+
+      let tmpLink = document.createElement("a");
+      var fileNew = new Blob([resp], {
+        type: "text/plain"
+      });
+      tmpLink.href = URL.createObjectURL(fileNew);
+      tmpLink.download = datasetName.split(' ').join('_') + ".kana";
+      tmpLink.click();
+
+      setExportState(false);
+    } else if (payload.type === "KanaDB") {
+      setIndexedDBState(false);
+    } else if (payload.type === "loadedParameters") {
+      const { resp } = payload;
+      setLoadParams(resp.params);
+
+      setTimeout(() => {
+        setInitLoadState(false);
+      }, 1000);
+    }
+  }
 
   return (
     <div className="App">
@@ -461,11 +497,11 @@ function App() {
         setIndexedDBState={setIndexedDBState}
         initDims={initDims}
         qcDims={qcDims}
-        logs={logs} 
+        logs={logs}
         kanaIDBRecs={kanaIDBRecs}
         setKanaIDBRecs={setKanaIDBRecs}
         deletekdb={deletekdb}
-        setDeletekdb={setDeletekdb}/>
+        setDeletekdb={setDeletekdb} />
       <div className="App-content">
         <div className="plot">
           {
@@ -557,11 +593,11 @@ function App() {
             qcData={qcData}
             pcaVarExp={pcaVarExp}
             savedPlot={savedPlot}
-            setSavedPlot={setSavedPlot} 
+            setSavedPlot={setSavedPlot}
             clusterData={clusterData}
             clusterColors={clusterColors}
             gene={gene}
-            />
+          />
         </div>
       </div>
       <Overlay
@@ -581,15 +617,15 @@ function App() {
         icon="warning-sign"
         intent="danger"
         isOpen={scranError != null}
-        onConfirm={() => window.location.reload()}
+        onConfirm={() => location.reload()}
       >
         <h3>{scranError?.type.replace("_", " ").toUpperCase()}</h3>
-        <Divider/>
+        <Divider />
         <p>
           {scranError?.msg}
         </p>
-        <Divider/>
-        <p>If the error is related to input data, we support <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/output/matrices">Matrix Market</a>, 
+        <Divider />
+        <p>If the error is related to input data, we support <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/output/matrices">Matrix Market</a>,
           <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices">10X V3 HDF5</a> or H5AD formats.</p>
         <p>
           If not, please report the issue on <a href='https://github.com/jkanche/kana/issues' target="_blank">GitHub</a>.

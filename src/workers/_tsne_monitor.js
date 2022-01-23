@@ -11,7 +11,7 @@ export var changed = false;
 
 function core(args, reneighbor) {
     if (worker == null) {
-        worker = vizutils.createWorker("./tsneWorker.js", cache);
+        worker = vizutils.createWorker("./tsne.worker.js", cache);
         cache.initialized = vizutils.initializeWorker(worker, cache);
     }
     

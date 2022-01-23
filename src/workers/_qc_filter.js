@@ -39,7 +39,7 @@ export function results() {
 export function serialize() {
     return {
         "parameters": parameters,
-        "contents": x.results()
+        "contents": results()
     };
 }
 

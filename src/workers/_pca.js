@@ -19,7 +19,7 @@ function fetchPCsAsWasmArray() {
 
 export function compute(args) {
     if (!normalization.changed && !variance.changed && !utils.changedParameters(parameters, args)) {
-        x.changed = false;
+        changed = false;
     } else {
         // Choosing the highly variable genes.
         var sorted_resids = variance.fetchSortedResiduals();
@@ -61,7 +61,7 @@ export function results() {
 }
 
 export function serialize() {
-    var to_save = x.results();
+    var to_save = results();
     to_save.pcs = fetchPCsAsWasmArray().slice();
     return {
       "parameters": parameters,

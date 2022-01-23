@@ -15,7 +15,7 @@ import * as tsne from "./_tsne_monitor.js";
 import * as umap from "./_umap_monitor.js";
 import * as cluster_markers from "./_score_markers.js";
 import * as custom_markers from "./_custom_markers.js";
-import * as kanadb from "./KanaDBHandler.js";
+import * as kana_db from "./KanaDBHandler.js";
 import * as utils from "./_utils.js";
 import * as marker_utils from "./_utils_markers.js";
 import * as serialize_utils from "./_utils_serialize.js";
