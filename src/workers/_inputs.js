@@ -1,5 +1,5 @@
 import * as scran from "scran.js";
-import * as utils from "./utils.js";
+import * as utils from "./_utils.js";
 import * as hdf5 from "jsfive";
 import * as d3 from "d3-dsv";
 import * as pako from "pako";

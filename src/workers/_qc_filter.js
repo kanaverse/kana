@@ -1,6 +1,6 @@
 import * as scran from "scran.js"; 
 import * as utils from "./_utils.js";
-import * as inputs from "./_qc_inputs.js";
+import * as inputs from "./_inputs.js";
 import * as thresholds from "./_qc_thresholds.js";
 
 var cache = {};

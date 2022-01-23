@@ -1,6 +1,6 @@
 import * as scran from "scran.js"; 
 import * as utils from "./_utils.js";
-import * as inputs from "./_qc_inputs.js";
+import * as metrics from "./_qc_metrics.js";
 
 var cache = {};
 var parameters = {};
@@ -12,9 +12,9 @@ export function compute(args) {
         changed = false;
     } else {
         utils.freeCache(cache.raw);
-        var metrics = metrics.fetchQCMetrics();
+        var stats = metrics.fetchQCMetrics();
 
-        cache.raw = scran.computePerCellQCFilters(metrics, { numberOfMADs: args.nmads });
+        cache.raw = scran.computePerCellQCFilters(stats, { numberOfMADs: args.nmads });
 
         utils.freeReloaded(cache);
         changed = true;
@@ -73,7 +73,7 @@ export function fetchDiscardsAsWasmArray() {
     }
 }
 
-export function fetchDiscards({ unsafe: false } = {}) {
+export function fetchDiscards({ unsafe = false } = {}) {
     var out;
     if ("reloaded" in cache) {
         out = cache.reloaded.discards.array();

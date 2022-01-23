@@ -1,6 +1,6 @@
 import * as scran from "scran.js";
-import * as utils from "./utils.js";
-import * as cluster from "./snn_cluster.js";
+import * as utils from "./_utils.js";
+import * as cluster from "./_snn_cluster.js";
 
 var cache = {};
 var parameters = {};

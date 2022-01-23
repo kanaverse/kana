@@ -1,4 +1,3 @@
-import * as h5wasm from "h5wasm";
 import * as pako from "pako";
 
 // Must be integers!

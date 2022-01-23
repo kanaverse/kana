@@ -1,7 +1,7 @@
 import * as scran from "scran.js";
 import * as utils from "./_utils.js";
 import * as normalization from "./_normalization.js";
-import * as variance from "./model_gene_var.js";
+import * as variance from "./_model_gene_var.js";
 
 var cache = {};
 var parameters = {};

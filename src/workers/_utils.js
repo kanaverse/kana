@@ -1,4 +1,4 @@
-import * as scran from "./scran.js";
+import * as scran from "scran.js";
 
 export function freeCache(object) {
     if (object !== undefined && object !== null) {

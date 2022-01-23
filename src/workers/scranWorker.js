@@ -1,4 +1,4 @@
-import * as scran from "./scran.js";
+import * as scran from "scran.js";
 import * as inputs from "./_inputs.js";
 import * as metrics from "./_qc_metrics.js";
 import * as thresholds from "./_qc_thresholds.js";

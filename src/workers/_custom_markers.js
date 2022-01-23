@@ -8,7 +8,7 @@ var parameters = { "selections": {} };
 
 export var changed = false;
 
-export function compute = function(args) {
+export function compute(args) {
     /* If the QC filter was re-run, all of the selections are invalidated as
      * the identity of the indices may have changed.
      */

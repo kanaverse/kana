@@ -1,6 +1,6 @@
 import * as scran from "scran.js"; 
 import * as utils from "./_utils.js";
-import * as inputs from "./_qc_inputs.js";
+import * as inputs from "./_inputs.js";
 import { mito } from "./mito.js";
 
 var cache = {};
@@ -105,7 +105,7 @@ export function fetchQCMetrics() {
     return cache.raw;
 }
 
-export function fetchSums({ unsafe: true }) {
+export function fetchSums({ unsafe = true } = {}) {
     if ("reloaded" in cache) {
         return cache.reloaded.sums;
     } else {

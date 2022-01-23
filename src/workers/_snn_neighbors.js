@@ -1,5 +1,5 @@
 import * as scran from "scran.js";
-import * as utils from "./utils.js";
+import * as utils from "./_utils.js";
 import * as index from "./_neighbor_index.js";
 
 var cache = {};
