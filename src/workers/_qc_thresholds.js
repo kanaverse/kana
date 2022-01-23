@@ -34,8 +34,8 @@ export function results() {
     } else {
         var obj = cache.raw;
         data = {
-            "sums": obj.thresholds_sums()[0],
-            "detected": obj.thresholds_detected()[0],
+            "sums": obj.thresholdsSums()[0],
+            "detected": obj.thresholdsDetected()[0],
             "proportion": obj.thresholds_proportions(0)[0] // TODO: generalize...
         };
     }

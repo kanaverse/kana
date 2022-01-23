@@ -36,7 +36,9 @@ function rawCompute(args) {
         }
     }
 
-    scran.computePerCellQCMetrics(mat, subsets);
+    var mat = inputs.fetchCountMatrix();
+
+    cache.raw = scran.computePerCellQCMetrics(mat, subsets);
     delete cache.reloaded;
     return;
 }
@@ -52,7 +54,7 @@ function fetchResults() {
         var qc_output = cache.raw;
         data.sums = qc_output.sums();
         data.detected = qc_output.detected();
-        data.proportion = qc_output.subset_proportions(0);
+        data.proportion = qc_output.subsetProportions(0);
     }
     return data;
 }

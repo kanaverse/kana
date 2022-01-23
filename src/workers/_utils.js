@@ -49,13 +49,13 @@ export function allocateCachedArray(size, type, cache, name = "buffer") {
     if (reallocate) {
         switch (type) {
             case "Uint8Array":
-                cache[name] = new scran.Uint8WasmArray(size, type);
+                cache[name] = new scran.Uint8WasmArray(size);
                 break;
             case "Int32Array":
-                cache[name] = new scran.Int32WasmArray(size, type);
+                cache[name] = new scran.Int32WasmArray(size);
                 break;
             case "Float64Array":
-                cache[name] = new scran.Float64WasmArray(size, type);
+                cache[name] = new scran.Float64WasmArray(size);
                 break;
             default:
                 // We only ever use one of the three above types in our 
