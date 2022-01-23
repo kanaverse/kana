@@ -1,74 +1,57 @@
-const scran_snn_cluster = {};
+import * as scran from "scran.js"; 
+import * as utils from "./_utils.js";
+import * as graph from "./_snn_graph.js";
 
-(function(x) {
-  /** Private members **/
-  var cache = {};
-  var parameters = {};
+var cache = {};
+var parameters = {};
 
-  /** Public members **/
-  x.changed = false;
+export var changed = false;
 
-  /** Private functions (standard) **/
-  function fetchClusters(wasm) {
-    var chosen = cache.raw.best();
-    return cache.raw.membership(chosen);
-  }
-
-  /** Public functions (standard) **/
-  x.compute = function(wasm, args) {
-    if (!scran_snn_graph.changed && !scran_utils.changedParameters(parameters, args)) {
-      x.changed = false;
+export function fetchClustersAsWasmArray() {
+    if ("reloaded" in cache) {
+        return cache.reloaded.clusters;
     } else {
-      scran_utils.freeCache(cache.raw);
-      var graph = scran_snn_graph.fetchGraph(wasm);
+        var tmp = cache.raw.membership();
+        return new scran.Int32WasmArray(tmp.length, tmp.byteOffset);
+    }
+}
 
-      try {
-        cache.raw = wasm.cluster_snn_graph(graph, args.resolution);
-      } catch (e) {
-        throw wasm.get_error_message(e);
-      }
+export function compute(args) {
+    if (!graph.changed && !utils.changedParameters(parameters, args)) {
+        changed = false;
+    } else {
+        utils.freeCache(cache.raw);
+        var graph = graph.fetchGraph();
+        cache.raw = scran.clusterSNNGraph(graph, { resolution: args.resolution });
 
-      parameters = args;
-      x.changed = true;
-
-      if ("reloaded" in cache) {
-        cache.reloaded.clusters.free();
-        delete cache.reloaded;
-      }
+        parameters = args;
+        changed = true;
+        utils.freeReloaded(cache);
     }
     return;
-  };
+}
 
-  x.results = function(wasm) {
-    var clusters;
-    if ("reloaded" in cache) {
-      clusters = cache.reloaded.clusters.clone();
-    } else {
-      clusters = fetchClusters(wasm).slice();
-    }
-    return { "clusters": clusters };
-  };
+export function results() {
+    var clusters = fetchClustersAsWasmArray();
+    return { "clusters": clusters.slice() };
+}
 
-  x.serialize = function(wasm) {
+export function serialize() {
     return {
       "parameters": parameters,
-      "contents": x.results(wasm)
+      "contents": results()
     };
-  };
+}
 
-  x.unserialize = function(wasm, saved) {
+export function unserialize(saved) {
     parameters = saved.parameters;
-    cache.reloaded = saved.contents;
-    cache.reloaded.clusters = scran_utils.wasmifyArray(wasm, cache.reloaded.clusters);
-    return;
-  };
 
-  /** Public functions (custom) **/
-  x.fetchClustersOFFSET = function(wasm) {
-    if ("reloaded" in cache) {
-      return cache.reloaded.clusters.ptr;
-    } else {
-      return fetchClusters(wasm).byteOffset;
-    }
-  };
-})(scran_snn_cluster);
+    utils.freeReloaded(cache);
+    cache.reloaded = saved.contents;
+
+    var out = new scran.Int32WasmArray(cache.reloaded.clusters.length);
+    out.set(cache.reloaded.clusters);
+    cache.reloaded.clusters = out;
+
+    return;
+}

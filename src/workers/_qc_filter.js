@@ -9,7 +9,7 @@ var parameters = {};
 export var changed = false;
 
 function rawCompute(wasm) {
-    scran_utils.freeCache(cache.matrix);
+    utils.freeCache(cache.matrix);
     var mat = inputs.fetchCountMatrix();
 
     var disc = thresholds.fetchDiscardsAsWasmArray();

@@ -27,13 +27,13 @@ export function compute(args) {
 
         var mat = normalization.fetchNormalizedMatrix();
         var sub = utils.allocateCachedArray(mat.numberOfRows(), "Uint8Array", cache);
-        var unsorted_resids = scran_model_gene_var.fetchResiduals({ unsafe: true });
+        var unsorted_resids = variance.fetchResiduals({ unsafe: true });
         sub.array().forEach((element, index, array) => {
             array[index] = unsorted_resids[index] >= threshold_at;
         });
 
         // Actually performing the PCA.
-        scran_utils.freeCache(cache.raw);
+        utils.freeCache(cache.raw);
         cache.raw = scran.runPCA(mat, { features: sub, numberOfPCs: args.num_pcs });
 
         utils.freeReloaded(cache);

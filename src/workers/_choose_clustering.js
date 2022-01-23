@@ -12,7 +12,7 @@ export function compute(args) {
     changed = true;
     
     if (!utils.changedParameters(parameters, args)) {
-        if (args.method == "snn_graph" && !scran_snn_graph.changed) {
+        if (args.method == "snn_graph" && !cluster.changed) {
             changed = false;
         }
     }
@@ -44,8 +44,8 @@ export function unserialize(saved) {
 }
 
 /** Non-standard functions **/
-export function fetchClustersOFFSET {
+export function fetchClustersAsWasmArray() {
 //    if (parameters.method == "snn_graph") {
-    return cluster.fetchClustersOFFSET(); // really the only option right now.
+    return cluster.fetchClustersAsWasmArray(); // really the only option right now.
 //  }
 }

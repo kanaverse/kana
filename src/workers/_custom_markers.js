@@ -1,7 +1,7 @@
 import * as scran from "scran.js";
 import * as utils from "./_utils.js";
-import * as filter from "./_qc_filter.js";
-import * as markers from "./_score_markers.js";
+import * as normalization from "./_normalization.js";
+import * as markers from "./_utils_markers.js";
 
 var cache = { "results": {} };
 var parameters = { "selections": {} };
@@ -60,19 +60,19 @@ export function unserialize(saved) {
 }
 
 export function addSelection(id, selection) {
-    var mat = scran_normalization.fetchNormalizedMatrix();
+    var mat = normalization.fetchNormalizedMatrix();
 
-    var buffer = scran_utils.allocateCachedArray(mat.numberOfColumns(), "Int32Array", cache);
+    var buffer = utils.allocateCachedArray(mat.numberOfColumns(), "Int32Array", cache);
     buffer.fill(0);
     var tmp = buffer.array();
     selection.forEach(element => { tmp[element] = 1; });
 
     // Assumes that we have at least one cell in and outside the selection!
-    var res = scran.score_markers(mat, buffer); 
+    var res = scran.scoreMarkers(mat, buffer); 
   
     // Removing previous results, if there were any.
     if (id in cache.results) {
-        scran_utils.freeCache(cache.results[id].raw);
+        utils.freeCache(cache.results[id].raw);
         delete cache.results[id];
     }
   
@@ -80,13 +80,13 @@ export function addSelection(id, selection) {
     parameters.selections[id] = selection;
 }
 
-export function removeSelection = function(id) {
-    scran_utils.freeCache(cache.results[id].raw);
+export function removeSelection(id) {
+    utils.freeCache(cache.results[id].raw);
     delete cache.results[id];
     delete parameters.selections[id];
 }
 
-export function fetchResults = function(id, rank_type) {
+export function fetchResults(id, rank_type) {
     var current = cache.results[id];
     return markers.fetchGroupResults(current.raw, current.reloaded, rank_type, 1); 
 };

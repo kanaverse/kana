@@ -1,63 +1,46 @@
-const scran_utils_viz_child = {};
+import * as scran from "scran.js";
 
-scran_utils_viz_child.chooseDelay = function(animate) {
-  if (animate) {
-    // TODO: using 75 for now
-    // in the future the user can choose a bar for speed on the UI
-    // options would be 1x, 2x, 3x
-    return 75;
-  } else {
-    return 1000000; // effectively no delay.
-  }
+export function chooseDelay(animate) {
+    if (animate) {
+        // TODO: using 75 for now
+        // in the future the user can choose a bar for speed on the UI
+        // options would be 1x, 2x, 3x
+        return 75;
+    } else {
+        return 1000000; // effectively no delay.
+    }
 };
 
-scran_utils_viz_child.recreateNeighbors = function(wasm, neighbors) {
-  var output = null;
-  var rbuf = null;
-  var ibuf = null;
-  var dbuf = null;
-
-  try {
-    var num_obs = neighbors.num_obs;
-    var size = neighbors.size;
-
-    rbuf = new WasmBuffer(wasm, num_obs, "Int32Array");
-    rbuf.set(neighbors.runs);
-    ibuf = new WasmBuffer(wasm, size, "Int32Array");
-    ibuf.set(neighbors.indices);
-    dbuf = new WasmBuffer(wasm, size, "Float64Array");
-    dbuf.set(neighbors.distances);
-
+export function recreateNeighbors(neighbors) {
+    var output = null;
+    var rbuf = null;
+    var ibuf = null;
+    var dbuf = null;
+  
     try {
-      output = new wasm.NeighborResults(neighbors.num_obs, rbuf.ptr, ibuf.ptr, dbuf.ptr);
-    } catch (e) {
-      throw wasm.get_error_message(e);
-    }
-  } finally {
-    if (rbuf !== null) {
-      rbuf.free();
-    }
-    if (ibuf !== null) {
-      ibuf.free();
-    }
-    if (dbuf !== null) {
-      dbuf.free();
-    }
-  }
+        var num_obs = neighbors.num_obs;
+        var size = neighbors.size;
 
-  return output;
+        rbuf = new scran.Int32WasmArray(num_obs);
+        rbuf.set(neighbors.runs);
+        ibuf = new scran.Int32WasmArray(size);
+        ibuf.set(neighbors.indices);
+        dbuf = new scran.Float64WasmArray(size);
+        dbuf.set(neighbors.distances);
+
+        output = scran.NeighborResults.unserialize(rbuf, ibuf, dbuf);
+
+    } finally {
+        if (rbuf !== null) {
+            rbuf.free();
+        }
+        if (ibuf !== null) {
+            ibuf.free();
+        }
+        if (dbuf !== null) {
+            dbuf.free();
+        }
+    }
+
+    return output;
 };
-
-scran_utils_viz_child.extractXY = function(buffer) {
-  var nobs = buffer.size / 2;
-  var x = new Float64Array(nobs);
-  var y = new Float64Array(nobs);
-  var buf = buffer.array();
-
-  for (var i = 0; i < nobs; i++) {
-    x[i] = buf[2*i];
-    y[i] = buf[2*i + 1];
-  }
-
-  return { "x": x, "y": y };
-}

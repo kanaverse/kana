@@ -8,8 +8,8 @@ var parameters = {};
 export var changed = false;
 
 function rawCompute(args) {
-    scran_utils.freeCache(cache.raw);
-    var mat = scran_inputs.fetchCountMatrix();
+    utils.freeCache(cache.raw);
+    var mat = inputs.fetchCountMatrix();
 
     // TODO: add more choices.
     var nsubsets = 1;
@@ -71,9 +71,9 @@ export function results() {
     var data = fetchResults();
 
     var ranges = {};
-    ranges.sums = scran_utils.computeRange(data.sums);
-    ranges.detected = scran_utils.computeRange(data.detected);
-    ranges.proportion = scran_utils.computeRange(data.proportion);
+    ranges.sums = utils.computeRange(data.sums);
+    ranges.detected = utils.computeRange(data.detected);
+    ranges.proportion = utils.computeRange(data.proportion);
 
     return { 
         "data": data, 

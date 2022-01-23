@@ -1,65 +1,58 @@
-const scran_score_markers = {};
+import * as scran from "scran.js"; 
+import * as utils from "./_utils.js";
+import * as normalization from "./_normalization.js";
+import * as choice from "./_choose_clustering.js";
+import * as markers from "./_utils_markers.js";
 
-(function(x) {
-  /** Private members **/
-  var cache = {};
-  var parameters = {};
+var cache = {};
+var parameters = {};
 
-  /** Public members **/
-  x.changed = false;
+export var changed = false;
 
-  /** Public functions (standard) **/
-  x.compute = function(wasm, args) {
-    if (!scran_normalization.changed && !scran_choose_clustering.changed && !scran_utils.changedParameters(parameters, args)) {
-      x.changed = false;
+export function compute(args) {
+    if (!normalization.changed && !choice.changed && !utils.changedParameters(parameters, args)) {
+        changed = false;
     } else {
-      scran_utils.freeCache(cache.raw);
+        utils.freeCache(cache.raw);
+        var mat = normalization.fetchNormalizedMatrix();
+        var clusters = choice.fetchClustersAsWasmArray();
 
-      var mat = scran_normalization.fetchNormalizedMatrix(wasm);
-      var cluster_offset = scran_choose_clustering.fetchClustersOFFSET(wasm);
+        cache.raw = scran.scoreMarkers(mat, clusters);
 
-      try {
-        cache.raw = wasm.score_markers(mat, cluster_offset, false, 0);
-      } catch (e) {
-        throw wasm.get_error_message(e);
-      }
-
-      parameters = args;
-      delete cache.reloaded;
-      x.changed = true;
+        parameters = args;
+        delete cache.reloaded;
+        x.changed = true;
     }
     return;
-  };
+}
 
-  x.results = function(wasm) {
+export function results() {
     return {};
-  };
+}
 
-  x.serialize = function(wasm) {
+export function serialize() {
     var contents;
     if ("reloaded" in cache) {
-      contents = cache.reloaded;
+        contents = cache.reloaded;
     } else {
-      var contents = [];
-      var num = cache.raw.num_groups(); /** TODO: get the number of groups. **/
-      for (var i = 0; i < num; i++) {
-        contents.push(scran_utils_markers.serializeGroupStats(cache.raw, i));
-      }
+        var contents = [];
+        var num = cache.raw.num_groups(); /** TODO: get the number of groups. **/
+        for (var i = 0; i < num; i++) {
+            contents.push(markers.serializeGroupStats(cache.raw, i));
+        }
     }
     return {
-      "parameters": parameters,
-      "contents": contents
+        "parameters": parameters,
+        "contents": contents
     };
-  };
+}
 
-  x.unserialize = function(wasm, saved) {
+export function unserialize(saved) {
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
     return;
-  };
+}
 
-  /** Public functions (custom) **/
-  x.fetchGroupResults = function(wasm, rank_type, group) {
-    return scran_utils_markers.fetchGroupResults(wasm, cache.raw, cache.reloaded, rank_type, group); 
-  }
-})(scran_score_markers);
+export function fetchGroupResults(rank_type, group) {
+    return markers.fetchGroupResults(cache.raw, cache.reloaded, rank_type, group); 
+}
