@@ -8,9 +8,9 @@ var init_parameters = {};
 var run_parameters = {};
 
 function rerun(animate, iterations) {
-    var num_obs = cache.init.num_obs(); 
+    var num_obs = cache.init.numberOfCells(); 
     var delay = vizutils.chooseDelay(animate);
-    var current_status = cache.init.deepcopy();
+    var current_status = cache.init.clone();
 
     try {
         for (; current_status.iterations() < iterations; ) {
@@ -66,7 +66,7 @@ onmessage = function(msg) {
                 } else {
                     new_neighbors = false;
                 }
-          
+
                 var init_args = { "perplexity": msg.data.params.perplexity };
                 if (!new_neighbors && !utils.changedParameters(init_args, init_parameters)) {
                     init_changed = false;
@@ -76,7 +76,7 @@ onmessage = function(msg) {
                     init_parameters = init_args;
                     init_changed = true;
                 }
-          
+
                 // Nothing downstream depends on the run results, so we don't set any changed flag.
                 var run_args = { "iterations": msg.data.params.iterations };
                 if (init_changed || utils.changedParameters(run_args, run_parameters)) {

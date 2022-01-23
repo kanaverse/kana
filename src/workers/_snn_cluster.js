@@ -11,7 +11,7 @@ export function fetchClustersAsWasmArray() {
     if ("reloaded" in cache) {
         return cache.reloaded.clusters;
     } else {
-        var tmp = cache.raw.membership();
+        var tmp = cache.raw.membership({ copy: false });
         return new scran.Int32WasmArray(tmp.length, tmp.byteOffset);
     }
 }
@@ -21,8 +21,8 @@ export function compute(args) {
         changed = false;
     } else {
         utils.freeCache(cache.raw);
-        var graph = graph.fetchGraph();
-        cache.raw = scran.clusterSNNGraph(graph, { resolution: args.resolution });
+        var g = graph.fetchGraph();
+        cache.raw = scran.clusterSNNGraph(g, { resolution: args.resolution });
 
         parameters = args;
         changed = true;

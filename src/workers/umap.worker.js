@@ -9,11 +9,11 @@ var run_parameters = {};
 
 function rerun(animate) {
     var delay = vizutils.chooseDelay(animate);
-    var current_status = cache.init.deepcopy();
+    var current_status = cache.init.clone();
 
     try {
-        cache.total = current_status.num_epochs();
-        for (; current_status.epoch() < cache.total; ) {
+        cache.total = current_status.totalEpochs();
+        for (; current_status.currentEpoch() < cache.total; ) {
             scran.runUMAP(current_status, { runTime: delay });
 
             if (animate) {
@@ -22,7 +22,7 @@ function rerun(animate) {
                     "type": "umap_iter",
                     "x": xy.x,
                     "y": xy.y,
-                    "iteration": current_status.epoch()
+                    "iteration": current_status.currentEpoch()
                 }, [xy.x.buffer, xy.y.buffer]);
             }
         }
@@ -71,7 +71,7 @@ onmessage = function(msg) {
                     init_changed = false;
                 } else {
                     utils.freeCache(cache.init);
-                    cache.init = scran.initializeTSNE(cache.neighbors, { epochs: init_args.num_epochs, minDist: init_args.min_dist });
+                    cache.init = scran.initializeUMAP(cache.neighbors, { epochs: init_args.num_epochs, minDist: init_args.min_dist });
                     init_parameters = init_args;
                     init_changed = true;
                 }

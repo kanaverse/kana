@@ -9,8 +9,8 @@ export var changed = false;
 
 function rawCompute(args) {
     utils.freeCache(cache.raw);
-    var neighbors = neighbors.fetchNeighbors();
-    cache.raw = scran.buildSNNGraph(neighbors, { scheme: args.scheme });
+    var res = neighbors.fetchNeighbors();
+    cache.raw = scran.buildSNNGraph(res, { scheme: args.scheme });
     delete cache.reloaded;
     return;
 }

@@ -8,9 +8,9 @@ export function serializeGroupStats(obj, group) {
             "min-rank": obj.lfc(group, { summary: 4 })
         },
         "delta_detected": {
-            "min": obj.delta_detected(group, { summary: 0 }),
-            "mean": obj.delta_detected(group, { summary: 1 }),
-            "min-rank": obj.delta_detected(group, { summary: 4 })
+            "min": obj.deltaDetected(group, { summary: 0 }),
+            "mean": obj.deltaDetected(group, { summary: 1 }),
+            "min-rank": obj.deltaDetected(group, { summary: 4 })
         },
         "cohen": {
             "min": obj.cohen(group, { summary: 0 }),
@@ -76,13 +76,13 @@ export function fetchGroupResults(results, reloaded, rank_type, group) {
             }
 
             if (rank_type.match(/^cohen-/)) {
-                ranking = results.cohen(group, index);
+                ranking = results.cohen(group, { summary: index, copy: false });
             } else if (rank_type.match(/^auc-/)) {
-                ranking = results.auc(group, index);
+                ranking = results.auc(group, { summary: index, copy: false });
             } else if (rank_type.match(/^lfc-/)) {
-                ranking = results.lfc(group, index);
+                ranking = results.lfc(group, { summary: index, copy: false });
             } else if (rank_type.match(/^delta-d-/)) {
-                ranking = results.delta_detected(group, index);
+                ranking = results.deltaDetected(group, { summary: index, copy: false });
             } else {
                 throw "unknown rank type '" + rank_type + "'";
             }
@@ -120,7 +120,7 @@ export function fetchGroupResults(results, reloaded, rank_type, group) {
         stat_detected = reorder(results.detected(group, { copy: false }));
         stat_mean = reorder(results.means(group, { copy: false }));
         stat_lfc = reorder(results.lfc(group, { summary: 1, copy: false }));
-        stat_delta_d = reorder(results.delta_detected(group, { summary: 1, copy: false }));
+        stat_delta_d = reorder(results.deltaDetected(group, { summary: 1, copy: false }));
     }
   
     return {

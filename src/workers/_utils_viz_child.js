@@ -28,7 +28,7 @@ export function recreateNeighbors(neighbors) {
         dbuf = new scran.Float64WasmArray(size);
         dbuf.set(neighbors.distances);
 
-        output = scran.NeighborResults.unserialize(rbuf, ibuf, dbuf);
+        output = scran.NeighborSearchResults.unserialize(rbuf, ibuf, dbuf);
 
     } finally {
         if (rbuf !== null) {

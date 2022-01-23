@@ -74,8 +74,8 @@ export function fetchNormalizedMatrix() {
 }
 
 export function fetchExpression(index) {
-    var buffer = utils.allocateCachedArray(mat.numberOfColumns(), "Float64Array", cache); // re-using the buffer.
     var mat = fetchNormalizedMatrix();
+    var buffer = utils.allocateCachedArray(mat.numberOfColumns(), "Float64Array", cache); // re-using the buffer.
     mat.row(index, { buffer: buffer });
     return buffer.slice();
 }

@@ -17,7 +17,6 @@ import * as cluster_markers from "./_score_markers.js";
 import * as custom_markers from "./_custom_markers.js";
 import * as kana_db from "./KanaDBHandler.js";
 import * as utils from "./_utils.js";
-import * as marker_utils from "./_utils_markers.js";
 import * as serialize_utils from "./_utils_serialize.js";
 
 /***************************************/
@@ -242,7 +241,7 @@ function runAllSteps(mode = "run", state = null) {
             postSuccessAsync(tsne, step, "t-SNE completed");
         }
     }
-  
+
     var umap_res;
     {
         let step = "umap";
@@ -555,7 +554,7 @@ onmessage = function (msg) {
         loaded.then(x => {
             let cluster = payload.payload.cluster;
             let rank_type = payload.payload.rank_type;
-            var resp = marker_utils.fetchGroupResults(rank_type, cluster);
+            var resp = cluster_markers.fetchGroupResults(rank_type, cluster);
       
             var transferrable = [];
             utils.extractBuffers(resp, transferrable);

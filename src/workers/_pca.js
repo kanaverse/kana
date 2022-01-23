@@ -12,7 +12,7 @@ function fetchPCsAsWasmArray() {
     if ("reloaded" in cache) {
         return cache.reloaded.pcs;
     } else {
-        let tmp = cache.raw.pcs({ copy: false });
+        let tmp = cache.raw.principalComponents({ copy: false });
         return new scran.Float64WasmArray(tmp.length, tmp.byteOffset);
     }
 }
@@ -50,8 +50,8 @@ export function results() {
         var_exp = cache.reloaded.var_exp.slice();
     } else {
         var pca_output = cache.raw;
-        var_exp = pca_output.variance_explained();
-        var total_var = pca_output.total_variance();
+        var_exp = pca_output.varianceExplained();
+        var total_var = pca_output.totalVariance();
         var_exp.forEach((x, i) => {
             var_exp[i] = x/total_var;
         });
@@ -82,8 +82,9 @@ export function unserialize(saved) {
 }
 
 export function fetchPCs() {
+    var pcs = fetchPCsAsWasmArray();
     return {
-        "pcs": fetchPCsAsWasmArray(),
+        "pcs": pcs,
         "num_pcs": parameters.num_pcs,
         "num_obs": pcs.length / parameters.num_pcs
     };

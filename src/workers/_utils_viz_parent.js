@@ -5,16 +5,16 @@ import * as utils from "./_utils.js";
 export function computeNeighbors(k) {
     var nn_index = index.fetchIndex();
 
-    var output = { "num_obs": nn_index.num_obs() };
+    var output = { "num_obs": nn_index.index.num_obs() }; // TODO: expose in scran.js.
     var results = null, rbuf = null, ibuf = null, dbuf = null;
     try {
         results = scran.findNearestNeighbors(nn_index, k);
 
-        rbuf = new scran.Int32WasmArray(results.num_obs());
+        rbuf = new scran.Int32WasmArray(results.numberOfCells());
         ibuf = new scran.Int32WasmArray(results.size());
         dbuf = new scran.Float64WasmArray(results.size());
 
-        results.serialize(rbuf.ptr, ibuf.ptr, dbuf.ptr);
+        results.serialize({ runs: rbuf, indices: ibuf, distances: dbuf });
         output["size"] = results.size();
         output["runs"] = rbuf.array().slice();
         output["indices"] = ibuf.array().slice();
@@ -38,8 +38,18 @@ export function computeNeighbors(k) {
     return output;
 }
 
-export function createWorker(script, cache) {
-    var worker = new Worker(script);
+export function sendTask(worker, payload, cache, transferrable = []) {
+    var i = cache.counter;
+    var p = new Promise((resolve, reject) => {
+        cache.promises[i] = { "resolve": resolve, "reject": reject };
+    });
+    cache.counter++;
+    payload.id = i;
+    worker.postMessage(payload, transferrable);
+    return p;
+}
+
+export function initializeWorker(worker, cache) {
     worker.onmessage = function (msg) {
         var type = msg.data.type;
         if (type.endsWith("_iter")) {
@@ -63,21 +73,6 @@ export function createWorker(script, cache) {
         }
         delete cache.promises[id];
     };
-    return worker;
-}
-
-export function sendTask(worker, payload, cache, transferrable = []) {
-    var i = cache.counter;
-    var p = new Promise((resolve, reject) => {
-        cache.promises[i] = { "resolve": resolve, "reject": reject };
-    });
-    cache.counter++;
-    payload.id = i;
-    worker.postMessage(payload, transferrable);
-    return p;
-}
-
-export function initializeWorker(worker, cache) {
     return sendTask(worker, { "cmd": "INIT" }, cache);
 }
 

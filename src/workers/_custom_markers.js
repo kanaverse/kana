@@ -1,5 +1,6 @@
 import * as scran from "scran.js";
 import * as utils from "./_utils.js";
+import * as filter from "./_qc_filter.js";
 import * as normalization from "./_normalization.js";
 import * as markers from "./_utils_markers.js";
 

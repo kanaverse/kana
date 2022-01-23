@@ -36,7 +36,7 @@ export function results() {
         data = {
             "sums": obj.thresholdsSums()[0],
             "detected": obj.thresholdsDetected()[0],
-            "proportion": obj.thresholds_proportions(0)[0] // TODO: generalize...
+            "proportion": obj.thresholdsSubsetProportions(0)[0] // TODO: generalize...
         };
     }
     return data;
@@ -57,7 +57,7 @@ export function unserialize(saved) {
     utils.freeReloaded(cache);
     cache.reloaded = saved.contents;
 
-    var tmp = new scran.Float64WasmArray(cache.reloaded.discards.length);
+    var tmp = new scran.Uint8WasmArray(cache.reloaded.discards.length);
     tmp.set(cache.reloaded.discards);
     cache.reloaded.discards = tmp;
     
@@ -68,8 +68,8 @@ export function fetchDiscardsAsWasmArray() {
     if ("reloaded" in cache) {
         return cache.reloaded.discards;        
     } else {
-        var tmp = cache.raw.discard_overall();
-        return new scran.Float64WasmArray(tmp.length, tmp.byteOffset);
+        var tmp = cache.raw.discardOverall({ copy: false });
+        return new scran.Uint8WasmArray(tmp.length, tmp.byteOffset);
     }
 }
 
@@ -78,7 +78,7 @@ export function fetchDiscards({ unsafe = false } = {}) {
     if ("reloaded" in cache) {
         out = cache.reloaded.discards.array();
     } else {
-        out = cache.raw.discard_overall();
+        out = cache.raw.discardOverall();
     }
 
     if (unsafe) {
