@@ -8,7 +8,7 @@ var parameters = {};
 export var changed = false;
 
 export function rawCompute(args) {
-    scran_utils.freeCache(cache.raw);
+    utils.freeCache(cache.raw);
     var nn_index = index.fetchIndex();
     cache.raw = scran.findNearestNeighbors(nn_index, args.k);
     delete cache.reloaded;

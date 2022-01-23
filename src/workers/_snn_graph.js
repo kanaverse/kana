@@ -1,62 +1,51 @@
-const scran_snn_graph = {};
+import * as scran from "scran.js";
+import * as neighbors from "./_snn_neighbors.js";
+import * as utils from "./_utils.js";
 
-(function(x) {
-  /** Private members **/
-  var cache = {};
-  var parameters = {};
+var cache = {};
+var parameters = {};
 
-  /** Public members **/
-  x.changed = false;
+export var changed = false;
 
-  /** Private functions **/
-  function rawCompute(wasm, args) {
-    scran_utils.freeCache(cache.raw);
-    var neighbors = scran_snn_neighbors.fetchNeighbors(wasm);
-
-    try {
-      cache.raw = wasm.build_snn_graph(neighbors, args.scheme);
-    } catch (e) {
-      throw wasm.get_error_message(e);
-    }
-
+function rawCompute(args) {
+    utils.freeCache(cache.raw);
+    var neighbors = neighbors.fetchNeighbors();
+    cache.raw = scran.buildSNNGraph(neighbors, { scheme: args.scheme });
     delete cache.reloaded;
     return;
-  }
+}
 
-  /** Public functions (standard) **/
-  x.compute = function(wasm, args) {
-    if (!scran_snn_neighbors.changed && !scran_utils.changedParameters(parameters, args)) {
-      x.changed = false;
+export function compute(args) {
+    if (!neighbors.changed && !utils.changedParameters(parameters, args)) {
+        changed = false;
     } else {
-      rawCompute(wasm, args);
-      parameters = args;
-      x.changed = true;
+        rawCompute(args);
+        parameters = args;
+        changed = true;
     }
     return;
-  };
+}
 
-  x.results = function(wasm) {
+export function results() {
     return {};
-  };
+}
 
-  x.serialize = function(wasm) {
+export function serialize() {
     return {
-      "parameters": parameters,
-      "contents": x.results(wasm)
+        "parameters": parameters,
+        "contents": results()
     };
-  };
+}
 
-  x.unserialize = function(wasm, saved) {
+export function unserialize(saved) {
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
     return;
-  };
+}
 
-  /** Public functions (custom) **/
-  x.fetchGraph = function(wasm) {
+export function fetchGraph() {
     if ("reloaded" in cache) {
-      rawCompute(wasm, parameters);
+        rawCompute(parameters);
     }
     return cache.raw;
-  };
-})(scran_snn_graph);
+}

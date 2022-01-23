@@ -70,11 +70,11 @@ export function allocateCachedArray(size, type, cache, name = "buffer") {
 function extractBuffers(object, store) {
     if (Array.isArray(object)) {
         for (const element of object) {
-            scran_utils.extractBuffers(element, store);
+            extractBuffers(element, store);
         }
     } else if (object.constructor == Object) {
         for (const [key, element] of Object.entries(object)) {
-            scran_utils.extractBuffers(element, store);
+            extractBuffers(element, store);
         }
     } else if (ArrayBuffer.isView(object)) {
         if (! (object.buffer instanceof ArrayBuffer)) {

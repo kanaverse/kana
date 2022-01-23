@@ -8,7 +8,7 @@ var parameters = {};
 
 export var changed = false;
 
-function rawCompute(wasm) {
+function rawCompute() {
     utils.freeCache(cache.matrix);
     var mat = inputs.fetchCountMatrix();
 
@@ -23,7 +23,7 @@ export function compute(args) {
     if (!inputs.changed && !thresholds.changed && !utils.changedParameters(parameters, args)) {
         changed = false;
     } else {
-        rawCompute(wasm);
+        rawCompute();
         parameters = args;
         changed = true;
     }

@@ -559,7 +559,7 @@ onmessage = function (msg) {
         });
   
     } else if (payload.type == "getGeneExpression") {
-        loaded.then(wasm => {
+        loaded.then(x => {
             let row_idx = payload.payload.gene;
             var vec = normalization.fetchExpression(row_idx);
             postMessage({
@@ -606,9 +606,9 @@ onmessage = function (msg) {
         });
   
     } else if (payload.type == "animateUMAP") {
-        loaded.then(async (wasm) => {
-            await umap.animate(wasm);
-            var res = await umap.results(wasm);
+        loaded.then(async (x) => {
+            await umap.animate();
+            var res = await umap.results();
             postSuccess_(res, "umap", "Resending UMAP coordinates");
         });
   

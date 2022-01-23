@@ -7,7 +7,7 @@ var init_changed = false;
 var init_parameters = {};
 var run_parameters = {};
 
-function rerun(wasm, animate) {
+function rerun(animate) {
     var delay = vizutils.chooseDelay(animate);
     var current_status = cache.init.deepcopy();
 
@@ -39,7 +39,7 @@ onmessage = function(msg) {
     if (msg.data.cmd == "INIT") {
         loaded = scran.initialize({ numberOfThreads: 1 });
         loaded
-            .then(wasm => {
+            .then(x => {
                 postMessage({
                     "id": id,
                     "type": "init_worker",
@@ -56,7 +56,7 @@ onmessage = function(msg) {
 
     } else if (msg.data.cmd == "RUN") {
         loaded
-            .then(wasm => {
+            .then(x => {
                 var new_neighbors;
                 if ("neighbors" in msg.data) {
                     utils.freeCache(cache.neighbors);
@@ -67,7 +67,7 @@ onmessage = function(msg) {
                 }
         
                 var init_args = { "min_dist": msg.data.params.min_dist, "num_epochs": msg.data.params.num_epochs };
-                if (!new_neighbors && !scran_utils.changedParameters(init_args, init_parameters)) {
+                if (!new_neighbors && !utils.changedParameters(init_args, init_parameters)) {
                     init_changed = false;
                 } else {
                     utils.freeCache(cache.init);
@@ -78,8 +78,8 @@ onmessage = function(msg) {
         
                 // Nothing downstream depends on the run results, so we don't set any changed flag.
                 var run_args = {};
-                if (init_changed || scran_utils.changedParameters(run_args, run_parameters)) {
-                    rerun(wasm, msg.data.params.animate);
+                if (init_changed || utils.changedParameters(run_args, run_parameters)) {
+                    rerun(msg.data.params.animate);
                     run_parameters = run_args;
                 }
         
@@ -99,8 +99,8 @@ onmessage = function(msg) {
     
     } else if (msg.data.cmd == "RERUN") {
         loaded
-            .then(wasm => {
-                rerun(wasm, true);
+            .then(x => {
+                rerun(true);
                 postMessage({
                     "id": id,
                     "type": "umap_rerun",
@@ -117,7 +117,7 @@ onmessage = function(msg) {
           
     } else if (msg.data.cmd == "FETCH") {
         loaded
-            .then(wasm => {
+            .then(x => {
                 var xy = cache.final;
                 var info = {
                     "x": xy.x,
@@ -126,7 +126,7 @@ onmessage = function(msg) {
                 };
                 
                 var transfer = [];
-                scran_utils.extractBuffers(info, transfer);
+                utils.extractBuffers(info, transfer);
                 postMessage({
                     "id": id,
                     "type": "umap_fetch",

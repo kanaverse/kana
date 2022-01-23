@@ -18,7 +18,7 @@ function core(args, reneighbor) {
     var nn_out = null;
     if (reneighbor) {
         var k = scran.perplexityToNeighbors(args.perplexity);
-        nn_out = vizutils.computeNeighbors(wasm, k);
+        nn_out = vizutils.computeNeighbors(k);
     }
 
     cache.run = cache.initialized.then(x => vizutils.runWithNeighbors(worker, args, nn_out, cache));
@@ -31,7 +31,7 @@ export function compute(args) {
         return;
     }
 
-    var reneighbor = scran_neighbor_index.changed || scran_utils.changedParameters(parameters.perplexity, args.perplexity);
+    var reneighbor = index.changed || utils.changedParameters(parameters.perplexity, args.perplexity);
     core(args, reneighbor);
 
     parameters = args;

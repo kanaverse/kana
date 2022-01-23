@@ -7,7 +7,7 @@ var init_changed = false;
 var init_parameters = {};
 var run_parameters = {};
 
-function rerun(wasm, animate, iterations) {
+function rerun(animate, iterations) {
     var num_obs = cache.init.num_obs(); 
     var delay = vizutils.chooseDelay(animate);
     var current_status = cache.init.deepcopy();
@@ -80,7 +80,7 @@ onmessage = function(msg) {
                 // Nothing downstream depends on the run results, so we don't set any changed flag.
                 var run_args = { "iterations": msg.data.params.iterations };
                 if (init_changed || utils.changedParameters(run_args, run_parameters)) {
-                    rerun(wasm, msg.data.params.animate, run_args.iterations);
+                    rerun(msg.data.params.animate, run_args.iterations);
                     run_parameters = run_args;
                 }
           
@@ -118,7 +118,7 @@ onmessage = function(msg) {
 
     } else if (msg.data.cmd == "FETCH") {
         loaded
-            .then(wasm => {
+            .then(x => {
                 let xy = cache.final;
                 var info = {
                     "x": xy.x,
@@ -127,7 +127,7 @@ onmessage = function(msg) {
                 };
   
                 var transfer = [];
-                scran_utils.extractBuffers(info, transfer);
+                utils.extractBuffers(info, transfer);
                 postMessage({
                     "id": id,
                     "type": "tsne_fetch",

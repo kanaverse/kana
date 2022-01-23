@@ -8,7 +8,7 @@ var parameters = {};
 
 export var changed = false;
 
-function fetchPCsAsWasmArray(wasm) {
+function fetchPCsAsWasmArray() {
     if ("reloaded" in cache) {
         return cache.reloaded.pcs;
     } else {
@@ -43,7 +43,7 @@ export function compute(args) {
     return;
 }
 
-export function results(wasm) {
+export function results() {
     var var_exp;
 
     if ("reloaded" in cache) {
