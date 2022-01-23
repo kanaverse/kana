@@ -67,7 +67,7 @@ export function allocateCachedArray(size, type, cache, name = "buffer") {
     return cache[name];
 }
 
-function extractBuffers(object, store) {
+export function extractBuffers(object, store) {
     if (Array.isArray(object)) {
         for (const element of object) {
             extractBuffers(element, store);

@@ -14,7 +14,7 @@ function rawCompute(args) {
 
     // TODO: add more choices.
     var nsubsets = 1;
-    var subsets = utils.allocateCachedBuffer(mat.numberOfRows() * nsubsets, "Uint8Array", cache);
+    var subsets = utils.allocateCachedArray(mat.numberOfRows() * nsubsets, "Uint8Array", cache);
     subsets.fill(0);
 
     var gene_info = inputs.fetchGenes();

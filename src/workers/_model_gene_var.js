@@ -22,7 +22,7 @@ export function compute(args) {
         changed = false;
     } else {
         var mat = normalization.fetchNormalizedMatrix();
-        cache.raw = scran.model_gene_var(mat, { span: args.span });
+        cache.raw = scran.modelGeneVar(mat, { span: args.span });
 
         cache.sorted_residuals = cache.raw.residuals().slice(); // a separate copy.
         cache.sorted_residuals.sort();

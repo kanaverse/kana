@@ -11,7 +11,7 @@ export var changed = false;
 
 function rawCompute() {
     var mat = filter.fetchFilteredMatrix();
-    var buffer = utils.allocateCacheBuffer(mat.numberOfColumns(), "Float64Array", cache);
+    var buffer = utils.allocateCachedArray(mat.numberOfColumns(), "Float64Array", cache);
 
     // Better not have any more allocations in between now and filling of size_factors!
     var sums = metrics.fetchSums({ unsafe: true });
@@ -74,7 +74,7 @@ export function fetchNormalizedMatrix() {
 }
 
 export function fetchExpression(index) {
-    var buffer = utils.allocateCachedBuffer(mat.numberOfColumns(), "Float64Array", cache); // re-using the buffer.
+    var buffer = utils.allocateCachedArray(mat.numberOfColumns(), "Float64Array", cache); // re-using the buffer.
     var mat = x.fetchNormalizedMatrix();
     mat.row(index, { buffer: buffer });
     return buffer.slice();
