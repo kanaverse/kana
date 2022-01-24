@@ -115,7 +115,7 @@ const App = () => {
 
   const { setWasmInitialized, wasmInitialized,
     setGenesInfo, initLoadState, tabSelected,
-    datasetName, params,
+    datasetName, params, loadParams,
     setGeneColSel, setLoadParams,
     setInitLoadState, inputFiles } = useContext(AppContext);
 
