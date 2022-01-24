@@ -17,7 +17,12 @@ import Spinner2 from './components/Spinners/Spinner2';
 // App is the single point of contact with the web workers
 // All requests and responses are received here
 
-function App() {
+var scranWorker = new Worker(new URL('./workers/scran.worker.js', import.meta.url), { type: "module" });;
+
+const App = () => {
+  // if (scranWorker === null) {
+  //   scranWorker = new Worker(new URL('./workers/scranWorker.js', import.meta.url), { type: "module" });
+  // }
 
   // show loading screen ?
   const [loading, setLoading] = useState(true);
@@ -108,9 +113,9 @@ function App() {
     useTallContent: false,
   };
 
-  const { setWasmInitialized,
-    setGenesInfo,
-    datasetName, params,
+  const { setWasmInitialized, wasmInitialized,
+    setGenesInfo, initLoadState, tabSelected,
+    datasetName, params, loadParams,
     setGeneColSel, setLoadParams,
     setInitLoadState, inputFiles } = useContext(AppContext);
 
@@ -194,7 +199,7 @@ function App() {
 
   // initializes various things on the worker side
   useEffect(() => {
-    window.scranWorker.postMessage({
+    scranWorker.postMessage({
       "type": "INIT",
       "msg": "Initial Load"
     });
@@ -207,7 +212,7 @@ function App() {
     if (selectedCluster !== null) {
       let type = String(selectedCluster).startsWith("cs") ?
         "getMarkersForSelection" : "getMarkersForCluster";
-      window.scranWorker.postMessage({
+      scranWorker.postMessage({
         "type": type,
         "payload": {
           "cluster": selectedCluster,
@@ -224,7 +229,7 @@ function App() {
     if (customSelection !== null && Object.keys(customSelection).length > 0) {
       let csLen = `cs${Object.keys(customSelection).length}`;
       var cs = customSelection[csLen];
-      window.scranWorker.postMessage({
+      scranWorker.postMessage({
         "type": "computeCustomMarkers",
         "payload": {
           "selection": cs,
@@ -237,7 +242,7 @@ function App() {
   // Remove a custom selection from cache
   useEffect(() => {
     if (delCustomSelection !== null) {
-      window.scranWorker.postMessage({
+      scranWorker.postMessage({
         "type": "removeCustomMarkers",
         "payload": {
           "id": delCustomSelection
@@ -251,7 +256,7 @@ function App() {
   // get expression for a gene from worker
   useEffect(() => {
 
-    reqGene !== null && window.scranWorker.postMessage({
+    reqGene !== null && scranWorker.postMessage({
       "type": "getGeneExpression",
       "payload": {
         "gene": reqGene
@@ -260,7 +265,7 @@ function App() {
   }, [reqGene]);
 
   useEffect(() => {
-    triggerAnimation && defaultRedDims && window.scranWorker.postMessage({
+    triggerAnimation && defaultRedDims && scranWorker.postMessage({
       "type": "animate" + defaultRedDims,
       payload: {
         params: params[defaultRedDims.toLowerCase()]
@@ -272,7 +277,7 @@ function App() {
   useEffect(() => {
 
     if (exportState) {
-      window.scranWorker.postMessage({
+      scranWorker.postMessage({
         "type": "EXPORT",
         "payload": {
           "files": inputFiles,
@@ -290,7 +295,7 @@ function App() {
   useEffect(() => {
 
     if (indexedDBState) {
-      window.scranWorker.postMessage({
+      scranWorker.postMessage({
         "type": "SAVEKDB",
         "payload": {
           "title": datasetName,
@@ -304,9 +309,45 @@ function App() {
     }
   }, [indexedDBState]);
 
+  useEffect(() => {
+
+    if (wasmInitialized && inputFiles.files != null && !initLoadState) {
+      if (tabSelected === "new") {
+        scranWorker.postMessage({
+          "type": "RUN",
+          "payload": {
+            "files": inputFiles,
+            "params": params
+          },
+          "msg": "not much to pass"
+        });
+      } else if (tabSelected === "load") {
+        if (loadParams == null || inputFiles?.reset) {
+          scranWorker.postMessage({
+            "type": "LOAD",
+            "payload": {
+              "files": inputFiles
+            },
+            "msg": "not much to pass"
+          });
+        } else {
+          scranWorker.postMessage({
+            "type": "RUN",
+            "payload": {
+              "files": inputFiles,
+              "params": params
+            },
+            "msg": "not much to pass"
+          });
+        }
+        setInitLoadState(true);
+      }
+    }
+  }, [inputFiles, params, wasmInitialized]);
+
   // callback for all responses from workers
   // all interactions are logged and shown on the UI
-  window.scranWorker.onmessage = (msg) => {
+  scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
     if (payload?.msg) {
@@ -456,15 +497,15 @@ function App() {
         setIndexedDBState={setIndexedDBState}
         initDims={initDims}
         qcDims={qcDims}
-        logs={logs} 
+        logs={logs}
         kanaIDBRecs={kanaIDBRecs}
         setKanaIDBRecs={setKanaIDBRecs}
         deletekdb={deletekdb}
-        setDeletekdb={setDeletekdb}/>
+        setDeletekdb={setDeletekdb} />
       <div className="App-content">
         <div className="plot">
           {
-            defaultRedDims ?
+            defaultRedDims && clusterData ?
               <DimPlot
                 tsneData={tsneData} umapData={umapData}
                 animateData={animateData}
@@ -552,11 +593,11 @@ function App() {
             qcData={qcData}
             pcaVarExp={pcaVarExp}
             savedPlot={savedPlot}
-            setSavedPlot={setSavedPlot} 
+            setSavedPlot={setSavedPlot}
             clusterData={clusterData}
             clusterColors={clusterColors}
             gene={gene}
-            />
+          />
         </div>
       </div>
       <Overlay
@@ -576,15 +617,15 @@ function App() {
         icon="warning-sign"
         intent="danger"
         isOpen={scranError != null}
-        onConfirm={() => window.location.reload()}
+        onConfirm={() => location.reload()}
       >
         <h3>{scranError?.type.replace("_", " ").toUpperCase()}</h3>
-        <Divider/>
+        <Divider />
         <p>
           {scranError?.msg}
         </p>
-        <Divider/>
-        <p>If the error is related to input data, we support <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/output/matrices">Matrix Market</a>, 
+        <Divider />
+        <p>If the error is related to input data, we support <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/output/matrices">Matrix Market</a>,
           <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices">10X V3 HDF5</a> or H5AD formats.</p>
         <p>
           If not, please report the issue on <a href='https://github.com/jkanche/kana/issues' target="_blank">GitHub</a>.

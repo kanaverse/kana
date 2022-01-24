@@ -68,42 +68,6 @@ const AppContextProvider = ({ children }) => {
   // default column to show in markers table
   const [geneColSel, setGeneColSel] = useState("id");
 
-  useEffect(() => {
-
-    if (wasmInitialized && inputFiles.files != null && !initLoadState) {
-      if (tabSelected === "new") {
-        window.scranWorker.postMessage({
-          "type": "RUN",
-          "payload": {
-            "files": inputFiles,
-            "params": params
-          },
-          "msg": "not much to pass"
-        });
-      } else if (tabSelected === "load") {
-        if (loadParams == null || inputFiles?.reset) {
-          window.scranWorker.postMessage({
-            "type": "LOAD",
-            "payload": {
-              "files": inputFiles
-            },
-            "msg": "not much to pass"
-          });
-        } else {
-          window.scranWorker.postMessage({
-            "type": "RUN",
-            "payload": {
-              "files": inputFiles,
-              "params": params
-            },
-            "msg": "not much to pass"
-          });
-        }
-        setInitLoadState(true);
-      }
-    }
-  }, [inputFiles, params, wasmInitialized]);
-
   return (
     <AppContext.Provider
       value={{

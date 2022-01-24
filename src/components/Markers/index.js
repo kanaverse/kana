@@ -177,7 +177,7 @@ const MarkerPlot = (props) => {
     return (
         <div className='marker-container'>
             <Popover2
-                popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                popoverClassName={Classes.POPOVER_CONTENT_SIZING}
                 hasBackdrop={false}
                 interactionKind="hover"
                 placement='left'
@@ -242,7 +242,7 @@ const MarkerPlot = (props) => {
                                 cursor: "help"
                             }}>
                                 <Popover2
-                                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                    popoverClassName={Classes.POPOVER_CONTENT_SIZING}
                                     hasBackdrop={false}
                                     interactionKind="hover"
                                     placement='left'
@@ -318,7 +318,7 @@ const MarkerPlot = (props) => {
                                             </HTMLSelect>
                                         </span>
                                         <Popover2
-                                            popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
                                             hasBackdrop={false}
                                             interactionKind="hover"
                                             placement='auto'
@@ -344,7 +344,7 @@ const MarkerPlot = (props) => {
                                             </span>
                                         </Popover2>
                                         <Popover2
-                                            popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
                                             hasBackdrop={false}
                                             interactionKind="hover"
                                             placement='auto'
@@ -370,7 +370,7 @@ const MarkerPlot = (props) => {
                                             </span>
                                         </Popover2>
                                         <Popover2
-                                            popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
                                             hasBackdrop={false}
                                             interactionKind="hover"
                                             placement='auto'
@@ -416,7 +416,7 @@ const MarkerPlot = (props) => {
                                                 className={row.gene === props?.gene ? 'marker-gene-title-selected' : 'marker-gene-title'}>{genesInfo[geneColSel][row.gene]}</span>
                                             {
                                                 <Popover2
-                                                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                                    popoverClassName={Classes.POPOVER_CONTENT_SIZING}
                                                     hasBackdrop={false}
                                                     interactionKind="hover"
                                                     placement='auto'
@@ -462,7 +462,7 @@ const MarkerPlot = (props) => {
                                             }
                                             {
                                                 <Popover2
-                                                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                                    popoverClassName={Classes.POPOVER_CONTENT_SIZING}
                                                     hasBackdrop={false}
                                                     interactionKind="hover"
                                                     placement='auto'
@@ -507,7 +507,7 @@ const MarkerPlot = (props) => {
                                                 </Popover2>}
                                             {
                                                 <Popover2
-                                                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                                    popoverClassName={Classes.POPOVER_CONTENT_SIZING}
                                                     hasBackdrop={false}
                                                     interactionKind="hover"
                                                     placement='auto'
@@ -603,7 +603,7 @@ const MarkerPlot = (props) => {
                         <div className='marker-footer'>
                             <H5>
                                 <Popover2
-                                    popoverClassName={Classes.POPOVER2_CONTENT_SIZING}
+                                    popoverClassName={Classes.POPOVER_CONTENT_SIZING}
                                     hasBackdrop={false}
                                     interactionKind="hover"
                                     placement='left'
