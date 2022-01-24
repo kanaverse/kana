@@ -505,7 +505,7 @@ const App = () => {
       <div className="App-content">
         <div className="plot">
           {
-            defaultRedDims ?
+            defaultRedDims && clusterData ?
               <DimPlot
                 tsneData={tsneData} umapData={umapData}
                 animateData={animateData}
