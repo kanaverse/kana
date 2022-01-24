@@ -49,7 +49,10 @@ const AnalysisDialog =({
 
     function handleImport() {
         // convert cluster res to number
-        tmpInputParams["cluster"]["clus-res"] = Number(tmpInputParams["cluster"]["clus-res"])
+        tmpInputParams["cluster"]["clus-res"] = Number(tmpInputParams["cluster"]["clus-res"]);
+        tmpInputParams["fSelection"]["fsel-span"] = Number(tmpInputParams["fSelection"]["fsel-span"]);
+        tmpInputParams["umap"]["umap-min_dist"] = Number(tmpInputParams["umap"]["umap-min_dist"]);
+
         setParams(tmpInputParams);
 
         if (tabSelected === "load") {
@@ -447,8 +450,10 @@ const AnalysisDialog =({
                                 </span>
                             </Text>
                             <NumericInput
-                                placeholder="0.3" value={tmpInputParams["fSelection"]["fsel-span"]}
-                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "fSelection": { ...tmpInputParams["fSelection"], "fsel-span": nval } }) }} />
+                                placeholder="0.3" 
+                                stepSize={0.1}
+                                value={tmpInputParams["fSelection"]["fsel-span"]}
+                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "fSelection": { ...tmpInputParams["fSelection"], "fsel-span": val } }) }} />
                         </Label>
                     </div>
                 </div>
@@ -639,8 +644,10 @@ const AnalysisDialog =({
                                 </span>
                             </Text>
                             <NumericInput
-                                placeholder="0.01" value={tmpInputParams["umap"]["umap-min_dist"]}
-                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-min_dist": nval } }) }} />
+                                placeholder="0.01" 
+                                stepSize={0.01}
+                                value={tmpInputParams["umap"]["umap-min_dist"]}
+                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-min_dist": val } }) }} />
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
