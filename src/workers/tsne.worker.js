@@ -119,7 +119,7 @@ onmessage = function(msg) {
     } else if (msg.data.cmd == "FETCH") {
         loaded
             .then(x => {
-                let xy = cache.final;
+                let xy = vizutils.cloneXY(cache.final);
                 var info = {
                     "x": xy.x,
                     "y": xy.y,
