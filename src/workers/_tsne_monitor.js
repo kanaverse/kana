@@ -45,7 +45,7 @@ export function results() {
 }
 
 export async function serialize() {
-    var contents = await vizutils.retrieveCoordinates(worker, cache)
+    var contents = await vizutils.retrieveCoordinates(worker, cache);
     return {
         "parameters": parameters,
         "contents": contents
