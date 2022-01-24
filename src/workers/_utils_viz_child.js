@@ -44,14 +44,3 @@ export function recreateNeighbors(neighbors) {
 
     return output;
 };
-
-// need this to transfer new typed arrays rather than the existing one's
-// since a typed array can only be transferred once
-export function cloneXY(buffer) {
-    var x = new Float64Array(buffer.x.length);
-    var y = new Float64Array(buffer.y.length);
-
-    x.set(buffer.x);
-    y.set(buffer.y);
-    return { "x": x, "y": y };
-  }
