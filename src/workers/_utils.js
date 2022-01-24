@@ -39,7 +39,7 @@ export function allocateCachedArray(size, type, cache, name = "buffer") {
     var reallocate = true;
     if (name in cache) {
         var candidate = cache[name];
-        if (candidate.size != size || candidate.constructor.name != type) {
+        if (candidate.size != size || candidate.constructor.className != type) {
             candidate.free();
         } else {
             reallocate = false;
