@@ -1,4 +1,6 @@
 import * as pako from "pako";
+import * as hashwasm from "hash-wasm";
+import * as kana_db from "./KanaDBHandler.js";
 
 // Must be integers!
 const FORMAT_EMBEDDED_FILES = 0;

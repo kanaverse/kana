@@ -106,6 +106,7 @@ export async function saveFile(id, buffer) {
     let meta_store = trans.objectStore("file_meta");
 
     var meta = await loadContent(id, meta_store);
+    var refcount;
     if (meta === null) {
         refcount = 0;
     } else {
