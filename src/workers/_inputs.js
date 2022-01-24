@@ -231,7 +231,7 @@ function loadHDF5Raw(files) {
 
     // In theory, we could support multiple HDF5 buffers.
     var first_file = files[0];
-    var f = hdf5.File(first_file.buffer);
+    var f = new hdf5.File(first_file.buffer);
     var path = guessPath(f); 
     cache.matrix = scran.initializeSparseMatrixFromHDF5Buffer(f, path);
 
