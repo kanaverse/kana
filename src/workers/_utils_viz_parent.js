@@ -5,7 +5,7 @@ import * as utils from "./_utils.js";
 export function computeNeighbors(k) {
     var nn_index = index.fetchIndex();
 
-    var output = { "num_obs": nn_index.index.num_obs() }; // TODO: expose in scran.js.
+    var output = { "num_obs": nn_index.numberOfCells() };
     var results = null, rbuf = null, ibuf = null, dbuf = null;
     try {
         results = scran.findNearestNeighbors(nn_index, k);

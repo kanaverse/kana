@@ -36,7 +36,7 @@ export function serialize() {
         contents = cache.reloaded;
     } else {
         var contents = [];
-        var num = cache.raw.numberOfGroups(); /** TODO: get the number of groups. **/
+        var num = cache.raw.numberOfGroups();
         for (var i = 0; i < num; i++) {
             contents.push(markers.serializeGroupStats(cache.raw, i));
         }
