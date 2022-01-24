@@ -1,4 +1,3 @@
-import * as scran from "scran.js";
 import * as vizutils from "./_utils_viz_parent.js";
 import * as index from "./_neighbor_index.js";
 import * as utils from "./_utils.js";
@@ -42,14 +41,12 @@ export function results() {
     return vizutils.retrieveCoordinates(worker, cache);
 }
 
-export function serialize() {
-    return vizutils.retrieveCoordinates(worker, cache)
-        then(contents => {
-            return {
-                "parameters": parameters,
-                "contents": contents
-            };
-        });
+export async function serialize() {
+    var contents = await vizutils.retrieveCoordinates(worker, cache)
+    return {
+        "parameters": parameters,
+        "contents": contents
+    };
 }
 
 export function unserialize(saved) {
