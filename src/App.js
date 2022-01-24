@@ -408,6 +408,13 @@ const App = () => {
 
       setClusterData(resp);
 
+      // Only really need to do this if we detect that 
+      // we're not coloring by expression.
+      if (gene === null) {
+        setTsneData(tsneData);
+        setUmapData(umapData);
+      }
+
       // show markers for the first cluster
       setSelectedCluster(0);
     } else if (payload.type === "tsne_DATA") {

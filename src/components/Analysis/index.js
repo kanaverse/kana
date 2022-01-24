@@ -551,10 +551,13 @@ const AnalysisDialog =({
                                     Weighting scheme
                                 </span>
                             </Text>
-                            <HTMLSelect onChange={(nval, val) => setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-scheme": parseInt(nval?.currentTarget?.value) } })}>
-                                <option key="0">Rank</option>
-                                <option key="1">Number</option>
-                                <option key="2">Jaccard</option>
+                            <HTMLSelect
+                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-scheme": parseInt(e.target.value) } }) }}
+                                defaultValue={tmpInputParams["cluster"]["clus-scheme"]}
+                            >
+                                <option value="0">Rank</option>
+                                <option value="1">Number</option>
+                                <option value="2">Jaccard</option>
                             </HTMLSelect>
                         </Label>
                         <Label className="row-input">
