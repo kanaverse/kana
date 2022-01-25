@@ -10,14 +10,19 @@ import React, { useContext, useState, useCallback, useEffect } from "react";
 import { AppContext } from "../../context/AppContext";
 import "./Analysis.css";
 
-const AnalysisDialog =({
+const AnalysisDialog = ({
     buttonText,
     includeFooter,
     ...props
 }) => {
+    
     const [isOpen, setIsOpen] = useState(false);
     const [showStepHelper, setShowStepHelper] = useState(1);
-    const handleButtonClick = useCallback(() => setIsOpen(!isOpen), [isOpen]);
+    const handleButtonClick = useCallback(() => {
+        setTmpInputParams(tabSelected === "new" ? params : loadParams);
+        setIsOpen(!isOpen);
+    }, [isOpen]);
+
     const handleClose = useCallback(() => setIsOpen(false), []);
 
     const { inputFiles, setInputFiles,
@@ -217,7 +222,7 @@ const AnalysisDialog =({
 
     function parseKanaDate(x) {
         let d = new Date(x);
-        return d.toDateString() + ", " + d.toLocaleTimeString(); 
+        return d.toDateString() + ", " + d.toLocaleTimeString();
     }
 
     const get_common_tooltips = () => {
@@ -450,7 +455,7 @@ const AnalysisDialog =({
                                 </span>
                             </Text>
                             <NumericInput
-                                placeholder="0.3" 
+                                placeholder="0.3"
                                 stepSize={0.1}
                                 value={tmpInputParams["fSelection"]["fsel-span"]}
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "fSelection": { ...tmpInputParams["fSelection"], "fsel-span": val } }) }} />
@@ -647,7 +652,7 @@ const AnalysisDialog =({
                                 </span>
                             </Text>
                             <NumericInput
-                                placeholder="0.01" 
+                                placeholder="0.01"
                                 stepSize={0.01}
                                 value={tmpInputParams["umap"]["umap-min_dist"]}
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-min_dist": val } }) }} />
