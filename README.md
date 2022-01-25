@@ -105,6 +105,4 @@ npm run start # if using npm
 
 This usually runs on port 3000 unless something else is already running on the same port.
 
-Developers can pull down the latest **scran.js** files by entering `public/scran` and running `transplant.sh`.
-
 For the curious: this project was bootstrapped with the [Create React App](https://github.com/facebook/create-react-app).
