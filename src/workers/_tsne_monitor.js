@@ -7,21 +7,26 @@ var cache = { "counter": 0, "promises": {} };
 var parameters = {};
 var worker = null;
 
+export function initialize() {
+    worker = new Worker(new URL("./tsne.worker.js", import.meta.url), { type: "module" });
+    return vizutils.initializeWorker(worker, cache);
+}
+
 export var changed = false;
 
 function core(args, reneighbor) {
-    if (worker == null) {
-        worker = new Worker(new URL("./tsne.worker.js", import.meta.url), { type: "module" });
-        cache.initialized = vizutils.initializeWorker(worker, cache);
-    }
-    
     var nn_out = null;
     if (reneighbor) {
         var k = scran.perplexityToNeighbors(args.perplexity);
         nn_out = vizutils.computeNeighbors(k);
     }
 
-    cache.run = cache.initialized.then(x => vizutils.runWithNeighbors(worker, args, nn_out, cache));
+    // This returns a promise but the message itself is sent synchronously,
+    // which is important to ensure that the t-SNE runs in its worker in
+    // parallel with other analysis steps. Do NOT put the runWithNeighbors
+    // call in a .then() as this may defer the message sending until 
+    // the current thread is completely done processing.
+    cache.run = vizutils.runWithNeighbors(worker, args, nn_out, cache);
     return;
 }
 
