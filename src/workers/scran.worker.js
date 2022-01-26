@@ -217,7 +217,8 @@ function runAllSteps(mode = "run", state = null) {
         }
     }
 
-    // Need to handle async promises in responses here.
+    // Need to handle promises in serialize(), results() output,
+    // as these are coming from other workers and are inherently async.
     var tsne_res;
     {
         let step = "tsne";

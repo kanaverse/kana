@@ -21,6 +21,11 @@ function core(args, reneighbor) {
         nn_out = vizutils.computeNeighbors(k);
     }
 
+    // This returns a promise but the message itself is sent synchronously,
+    // which is important to ensure that the t-SNE runs in its worker in
+    // parallel with other analysis steps. Do NOT put the runWithNeighbors
+    // call in a .then() as this may defer the message sending until 
+    // the current thread is completely done processing.
     cache.run = vizutils.runWithNeighbors(worker, args, nn_out, cache);
     return;
 }
