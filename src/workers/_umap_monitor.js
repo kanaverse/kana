@@ -6,20 +6,19 @@ var cache = { "counter": 0, "promises": {} };
 var parameters = {};
 var worker = null;
 
+export function initialize() {
+    worker = new Worker(new URL("./umap.worker.js", import.meta.url), { type: "module" });
+    cache.initialized = vizutils.initializeWorker(worker, cache);
+}
+
 export var changed = false;
 
 function core(args, reneighbor) {
-    if (worker == null) {
-        worker = new Worker(new URL("./umap.worker.js", import.meta.url), { type: "module" });
-        cache.initialized = vizutils.initializeWorker(worker, cache);
-    }
-
     var nn_out = null;
     if (reneighbor) {
         nn_out = vizutils.computeNeighbors(args.num_neighbors);
     }
-
-    cache.run = cache.initialized.then(x => vizutils.runWithNeighbors(worker, args, nn_out, cache));
+    cache.run = vizutils.runWithNeighbors(worker, args, nn_out, cache);
     return;
 }
 

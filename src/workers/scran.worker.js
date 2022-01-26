@@ -392,8 +392,8 @@ onmessage = function (msg) {
     const payload = msg.data;
     if (payload.type == "INIT") {
         let nthreads = Math.round(navigator.hardwareConcurrency * 2 / 3);
-        loaded = scran.initialize({ numberOfThreads: nthreads });
-        loaded
+        let scran_init = scran.initialize({ numberOfThreads: nthreads });
+        scran_init 
             .then(x => {
                 postMessage({
                     type: payload.type,
@@ -401,7 +401,8 @@ onmessage = function (msg) {
                 });
             });
 
-        kana_db.initialize()
+        let kana_init = kana_db.initialize();
+        kana_init
             .then(result => {
                 if (result !== null) {
                     postMessage({
@@ -417,6 +418,16 @@ onmessage = function (msg) {
                     });
                 }
             });
+
+        let tsne_init = tsne.initialize();
+        let umap_init = umap.initialize();
+
+        loaded = Promise.all([
+            scran_init,
+            kana_init,
+            tsne_init,
+            umap_init
+        ]);
 
     } else if (payload.type == "RUN") {
         loaded
