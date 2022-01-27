@@ -52,7 +52,7 @@ const IntroDialog = ({
                             showClose ? <Button icon="cross" onClick={handleClose}>Close</Button>
                                 :
                                 <Tooltip2 content="行くぞ!">
-                                    <Button icon="bring-data" onClick={handleInputs}>Get started</Button>
+                                    <Button id="introSubmit" icon="bring-data" onClick={handleInputs}>Get started</Button>
                                 </Tooltip2>
                         }
                     </div>

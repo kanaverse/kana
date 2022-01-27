@@ -978,7 +978,7 @@ const AnalysisDialog = ({
                         <div className={Classes.DIALOG_FOOTER} >
                             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
                                 <Tooltip2 content="Run Analysis">
-                                    <Button disabled={!tmpInputValid} icon="function" onClick={handleImport}>Analyze</Button>
+                                    <Button id="analysisSubmit" disabled={!tmpInputValid} icon="function" onClick={handleImport}>Analyze</Button>
                                 </Tooltip2>
                             </div>
                         </div>
