@@ -20,17 +20,17 @@ const puppeteer = require('puppeteer');
 
     // continue on the intro modal
     await page.waitForSelector('#introSubmit');
-    await page.waitFor(1000);
+    await page.waitFor(3000);
     await page.evaluate(() => document.getElementById('introSubmit').click());
 
     console.log("click intro submit");
     // click the 10x tab
     await page.evaluate(() => document.getElementById('bp3-tab-title_undefined_tenx').click());
-    await page.waitFor(1000);
+    await page.waitFor(2000);
 
     const inputUploadHandle = await page.$('#bp3-tab-panel_undefined_tenx > div > label > label > input[type=file]');
     inputUploadHandle.uploadFile("tenx.h5");
-    await page.waitFor(1000);
+    await page.waitFor(2000);
 
     console.log("upload file");
 
@@ -55,12 +55,16 @@ const puppeteer = require('puppeteer');
     }
 
     console.log("waiting for the kana-done event...");
-    await waitForEvent("kana-done", 25000);
+    await waitForEvent("kana-done", 50000);
     console.log("done!!!");
 
+    console.log("Capture session metrics");
     const metrics = await page.metrics();
     console.log(JSON.stringify(metrics));
+
+    console.log("Capture screenshot before closing the browser");
     await page.screenshot({path: 'test.png'});
+    console.log("screenshot stored as test.png");
 
     // close the browser
     await browser.close();
