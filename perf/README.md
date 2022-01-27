@@ -1,4 +1,5 @@
-- generate build 
+From the App directory
+- generate App build 
     `npm run build`
 - copy any dataset to the perf directory
     I'm using the tenx.h5 for this
@@ -7,7 +8,7 @@
 - serve the html pages
     `serve -s build`
 
-- cd to the perf directory
+From the perf directory
 - run the puppeteer script
     `node puppt.js`
 
