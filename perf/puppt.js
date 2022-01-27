@@ -20,17 +20,17 @@ const puppeteer = require('puppeteer');
 
     // continue on the intro modal
     await page.waitForSelector('#introSubmit');
-    await page.waitFor(3000);
+    await page.waitFor(1000);
     await page.evaluate(() => document.getElementById('introSubmit').click());
 
     console.log("click intro submit");
     // click the 10x tab
     await page.evaluate(() => document.getElementById('bp3-tab-title_undefined_tenx').click());
-    await page.waitFor(5000);
+    await page.waitFor(1000);
 
     const inputUploadHandle = await page.$('#bp3-tab-panel_undefined_tenx > div > label > label > input[type=file]');
     inputUploadHandle.uploadFile("tenx.h5");
-    await page.waitFor(5000);
+    await page.waitFor(1000);
 
     console.log("upload file");
 
