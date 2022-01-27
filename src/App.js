@@ -452,6 +452,16 @@ const App = () => {
       tmp.push("UMAP");
       setRedDims(tmp);
 
+      // // both dims are loaded let tests know its done
+      // console.log("time: ", performance.now() - startTime);
+      // const event = new CustomEvent('kana-done', {
+      //   bubbles: true,
+      //   detail: {"total_time": performance.now() - startTime}
+      // });
+
+      // // Dispatch the event.
+      // document.dispatchEvent(event);
+
       setShowAnimation(false);
       setTriggerAnimation(false);
     } else if (payload.type === "markerGene_DATA") {
@@ -503,8 +513,11 @@ const App = () => {
       }, 1000);
     }
 
-    if (redDims.length == 2) {
+    console.log(redDims);
+    console.log("RED DIMS: ", redDims.length);
+    if (redDims.length == 1) {
       // both dims are loaded let tests know its done
+      console.log("time: ", performance.now() - startTime);
       const event = new CustomEvent('kana-done', {
         bubbles: true,
         detail: {"total_time": performance.now() - startTime}

@@ -5,7 +5,7 @@ const puppeteer = require('puppeteer');
 (async () => {
     console.log("tenx.h5");
 
-    let launchOptions = { headless: false, args: ['--start-maximized'] };
+    let launchOptions = { headless: false, args: ['--start-maximized', "--enable-features=SharedArrayBuffer"] };
 
     const browser = await puppeteer.launch(launchOptions);
     const page = await browser.newPage();
@@ -20,15 +20,17 @@ const puppeteer = require('puppeteer');
 
     // continue on the intro modal
     await page.waitForSelector('#introSubmit');
-    await page.waitFor(1000);
+    await page.waitFor(3000);
     await page.evaluate(() => document.getElementById('introSubmit').click());
 
     console.log("click intro submit");
     // click the 10x tab
     await page.evaluate(() => document.getElementById('bp3-tab-title_undefined_tenx').click());
+    await page.waitFor(5000);
 
     const inputUploadHandle = await page.$('#bp3-tab-panel_undefined_tenx > div > label > label > input[type=file]');
     inputUploadHandle.uploadFile("tenx.h5");
+    await page.waitFor(5000);
 
     console.log("upload file");
 
@@ -55,6 +57,10 @@ const puppeteer = require('puppeteer');
     console.log("waiting for the kana-done event...");
     await waitForEvent("kana-done", 25000);
     console.log("done!!!");
+
+    const metrics = await page.metrics();
+    console.log(JSON.stringify(metrics));
+    await page.screenshot({path: 'test.png'});
 
     // close the browser
     await browser.close();
