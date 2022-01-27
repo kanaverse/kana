@@ -102,6 +102,10 @@ const App = () => {
   // error message caught from the worker 
   const [scranError, setScranError] = useState(null);
 
+  // time tracker for metrics
+  const [startTime, setStartTime] = useState(null);
+
+
   // props for dialogs
   const loadingProps = {
     autoFocus: true,
@@ -343,6 +347,9 @@ const App = () => {
         setInitLoadState(true);
       }
     }
+
+    setStartTime(performance.now());
+
   }, [inputFiles, params, wasmInitialized]);
 
   // callback for all responses from workers
@@ -494,6 +501,17 @@ const App = () => {
       setTimeout(() => {
         setInitLoadState(false);
       }, 1000);
+    }
+
+    if (redDims.length == 2) {
+      // both dims are loaded let tests know its done
+      const event = new CustomEvent('kana-done', {
+        bubbles: true,
+        detail: {"total_time": performance.now() - startTime}
+      });
+
+      // Dispatch the event.
+      document.dispatchEvent(event);
     }
   }
 
