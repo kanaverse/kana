@@ -513,11 +513,8 @@ const App = () => {
       }, 1000);
     }
 
-    console.log(redDims);
-    console.log("RED DIMS: ", redDims.length);
     if (redDims.length == 1) {
       // both dims are loaded let tests know its done
-      console.log("time: ", performance.now() - startTime);
       const event = new CustomEvent('kana-done', {
         bubbles: true,
         detail: {"total_time": performance.now() - startTime}
