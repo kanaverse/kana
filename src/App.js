@@ -13,6 +13,7 @@ import DimPlot from './components/Plots/DimPlot.js';
 import MarkerPlot from './components/Markers';
 import Pong from './components/Spinners/Pong';
 import Spinner2 from './components/Spinners/Spinner2';
+import { getMinMax } from './components/Plots/utils';
 
 // App is the single point of contact with the web workers
 // All requests and responses are received here
@@ -394,7 +395,7 @@ const App = () => {
     } else if (payload.type === "snn_cluster_graph_DATA") {
       const { resp } = payload;
 
-      let cluster_count = Math.max(...resp?.clusters) + 1;
+      let cluster_count = getMinMax(resp?.clusters)[1] + 1;
       if (customSelection) {
         cluster_count += Object.keys(customSelection).length;
       }
