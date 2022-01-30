@@ -12,6 +12,8 @@ import StackedHistogram from '../Plots/StackedHistogram';
 
 import Cell from '../Plots/Cell.js';
 import HeatmapCell from '../Plots/HeatmapCell';
+
+import { getMinMax } from '../Plots/utils';
 // import Histogram from '../Plots/Histogram';
 import './markers.css';
 
@@ -118,7 +120,7 @@ const MarkerPlot = (props) => {
     // update clusters when custom selection is made in the UI
     useEffect(() => {
         if (props?.clusterData?.clusters) {
-            let max_clusters = Math.max(...props?.clusterData.clusters);
+            let max_clusters = getMinMax(props?.clusterData.clusters)[1];
 
             let clus = [];
             for (let i = 0; i < max_clusters + 1; i++) {
@@ -410,7 +412,7 @@ const MarkerPlot = (props) => {
                                         <div className='row-container'>
                                             <span style={{
                                                 color: row.gene === props?.gene ?
-                                                    String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[Math.max(...props?.clusterData?.clusters) + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
+                                                    String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
                                                     : 'black'
                                             }}
                                                 className={row.gene === props?.gene ? 'marker-gene-title-selected' : 'marker-gene-title'}>{genesInfo[geneColSel][row.gene]}</span>
@@ -583,7 +585,7 @@ const MarkerPlot = (props) => {
                                                 >
                                                     <Icon icon={'tint'}
                                                         color={row.gene === props?.gene ?
-                                                            String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[Math.max(...props?.clusterData?.clusters) + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
+                                                            String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
                                                             : ''}
                                                     ></Icon>
                                                 </Button>
@@ -592,7 +594,7 @@ const MarkerPlot = (props) => {
                                         <Collapse isOpen={rowexp}>
                                             {/* <Histogram data={rowExpr} color={clusterColors[selectedCluster]} /> */}
                                             {rowExpr && <StackedHistogram data={rowExpr}
-                                                color={String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[Math.max(...props?.clusterData?.clusters) + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]}
+                                                color={String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]}
                                                 clusterlabel={String(props?.selectedCluster).startsWith("cs") ? `Custom Selection ${props?.selectedCluster}` : `Cluster ${parseInt(props?.selectedCluster + 1)}`}
                                                 clusters={clusArrayStacked} />}
                                         </Collapse>
