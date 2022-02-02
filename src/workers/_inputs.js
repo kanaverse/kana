@@ -1,6 +1,6 @@
 import * as scran from "scran.js";
 import * as utils from "./_utils.js";
-import * as hdf5 from "jsfive";
+import * as hdf5 from "h5wasm";
 import * as d3 from "d3-dsv";
 import * as pako from "pako";
 
@@ -129,24 +129,25 @@ function loadMatrixMarket(args) {
 /** HDF5 **/
 
 function guessPath(f) {
-    if (f.keys.indexOf("X") != -1) {
+    var fkeys = f.keys();
+    if (fkeys.indexOf("X") != -1) {
         return "X";
-    } else if (f.keys.indexOf("matrix") != -1) {
+    } else if (fkeys.indexOf("matrix") != -1) {
         return "matrix";
     } else {
         var sparse_opts = [];
         var dense_opts = [];
 
         // Try to pick out sparse formats.
-        for (var i = 0; i < f.keys.length; i++) {
-            var current = f.values[i];
+        for (const key of fkeys) {
+            var current = f.get(key);
             if (current instanceof hdf5.Group) {
-                var cur_keys = current.keys;
+                var cur_keys = current.keys();
                 if (cur_keys.indexOf("data") != -1 && cur_keys.indexOf("indices") && cur_keys.indexOf("indptr")) {
-                    sparse_opts.push(f.keys[i]);
+                    sparse_opts.push(key);
                 }
             } else if (current instanceof hdf5.Dataset && current.shape.length == 2) {
-                dense_opts.push(f.keys[i]);
+                dense_opts.push(key);
             }
         }
 
@@ -162,67 +163,109 @@ function guessPath(f) {
     return null;
 }
 
-function guessGenesFromHDF5(f) {
+function guessGenesFromH5AD(f) {
+    var fkeys = f.keys();
+
     // Does it have a 'var' group?
-    var index = f.keys.indexOf("var");
-    if (index != -1) {
-        var vars = f.values[index];
-        if (! (vars instanceof hdf5.Group)) {
-            throw "expected 'var' to be a HDF5 group";
-        }
-
-        var index2 = vars.keys.indexOf("_index");
-        if (index2 == -1 || ! (vars.values[index2] instanceof hdf5.Dataset)) {
-            throw "expected 'var' to contain an '_index' dataset";
-        }
-
-        var output = {};
-        output._index = vars.values[index2].value;
-
-        // Also include anything else that might be a gene symbol.
-        for (var i = 0; i < vars.keys.length; i++) {
-            if (i == index2) {
-                continue;
-            }
- 
-            var field = vars.keys[i];
-            if (field.match(/name/i) || field.match(/symbol/i)) {
-                output[field] = vars.values[i].value;
-            }
-        }
- 
-        return output;
+    if (fkeys.indexOf("var") == -1) {
+        return null;
     }
- 
+
+    var vars = f.get("var");
+    if (!(vars instanceof hdf5.Group)) {
+        return null;
+    }
+
+    var vkeys = vars.keys();
+    if (vkeys.indexOf("_index") == -1) {
+        return null;
+    }
+
+    let index = vars.get("_index");
+    if (!(index instanceof hdf5.Dataset)) {
+        return null;
+    }
+
+    let output = { "_index": index.value };
+
+    // Also include anything else that might be a gene symbol.
+    for (const key of vkeys) {
+        if (key == "_index") {
+            continue;
+        }
+
+        if (key.match(/name/i) || key.match(/symbol/i)) {
+            let current = vars.get(key);
+            if (current instanceof hdf5.Dataset) {
+                output[field] = current.value;
+            }
+        }
+    }
+
+    return output;
+}
+
+function guessGenesFrom10x(f) {
+    var fkeys = f.keys();
+    
     // Does it have a 'matrix' group with a "features" subgroup?
-    var index = f.keys.indexOf("matrix");
-    if (index != -1) {
-        var mat = f.values[index];
-        index = mat.keys.indexOf("features");
+    if (fkeys.indexOf("matrix") == -1) {
+        return null;
+    }
+
+    var mat = f.get("matrix");
+    if (!(mat instanceof hdf5.Group)) {
+        return null;
+    }
+
+    var mkeys = mat.keys();
+    if (mkeys.indexOf("features") == -1) {
+        return null;
+    }
+
+    var feats = mat.get("features");
+    if (!(feats instanceof hdf5.Group)) {
+        return null;
+    }
+
+    var featkeys = feats.keys();
+    if (featkeys.indexOf("id") == -1) {
+        return null;
+    }
+
+    var featid = feats.get("id");
+    if (!(featid instanceof hdf5.Dataset)) {
+        return null;
+    }
+
+    var output = { id: featid.value };
+
+    var name_index = featkeys.indexOf("name");
+    if (name_index != -1) {
+        var featname = feats.get("name");
+        if (featname instanceof hdf5.Dataset) {
+            output.name = featname.value;
+        }
+    }
     
-        if (index != -1) {
-            var feats = mat.values[index];
-            if (! (feats instanceof hdf5.Group)) {
-                throw "expected 'features' to be a HDF5 group";
-            }
-    
-            var id_index = feats.keys.indexOf("id");
-            if (id_index == -1 || ! (feats.values[id_index] instanceof hdf5.Dataset)) {
-                throw "expected 'features' to contain a 'id' dataset";
-            }
-    
-            var name_index = feats.keys.indexOf("name");
-            if (name_index == -1 || ! (feats.values[name_index] instanceof hdf5.Dataset)) {
-                throw "expected 'features' to contain a 'name' dataset";
-            }
-    
-            var output = {};
-            output.id = feats.values[id_index].value;
-            output.name = feats.values[name_index].value;
+    return output;
+}
+
+function guessGenesFromHDF5(f) {
+    {
+        let output = guessGenesFromH5AD(f);
+        if (output !== null) {
             return output;
         }
     }
-  
+
+    {
+        let output = guessGenesFrom10x(f);
+        if (output !== null) {
+            return output;
+        }
+    }
+
     return null;
 }
 
@@ -231,17 +274,24 @@ function loadHDF5Raw(files) {
 
     // In theory, we could support multiple HDF5 buffers.
     var first_file = files[0];
-    var f = new hdf5.File(first_file.buffer);
-    var path = guessPath(f); 
-    cache.matrix = scran.initializeSparseMatrixFromHDF5Buffer(f, path);
-
-    var genes = guessGenesFromHDF5(f);
-    if (genes === null) {
-        cache.genes = dummyGenes(cache.matrix.numberOfRows());
-    } else {
-        cache.genes = genes;
+    var tmppath = "rabbit-temp.h5";
+    try {
+        hdf5.FS.writeFile(tmppath, new Uint8Array(first_file.buffer));
+        var f = new hdf5.File(tmppath, "r");
+        try {
+            var path = guessPath(f); 
+            cache.matrix = scran.initializeSparseMatrixFromHDF5Buffer(f, path);
+            cache.genes = guessGenesFromHDF5(f);
+        } finally {
+            f.close();
+        }
+    } finally {
+        hdf5.FS.unlink(tmppath);
     }
-    
+
+    if (cache.genes === null) {
+        cache.genes = dummyGenes(cache.matrix.numberOfRows());
+    }
     permuteGenes(cache.genes);
     return;
 }
