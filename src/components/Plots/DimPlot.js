@@ -42,7 +42,7 @@ const DimPlot = (props) => {
     // set mode for plot
     const [plotMode, setPlotMode] = useState('PAN');
 
-    const max = Math.max(...props?.clusterData?.clusters);
+    const max = getMinMax(props?.clusterData.clusters)[1];
 
     // if either gene or expression changes, compute gradients and min/max
     useEffect(() => {
@@ -376,7 +376,7 @@ const DimPlot = (props) => {
                                                 {Object.keys(props?.customSelection)?.map((x, i) => {
                                                     return (<li key={x}
                                                         className={clusHighlight === x ? 'legend-highlight' : ''}
-                                                        style={{ color: props?.clusterColors[Math.max(...props?.clusterData?.clusters) + 1 + i] }}
+                                                        style={{ color: props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + 1 + i] }}
                                                     >
                                                         <div style={{
                                                             display: 'inline-flex',
