@@ -720,9 +720,9 @@ const AnalysisDialog = ({
                                                         <Label className="row-input">
                                                             <FileInput text={inputText.gene} onInputChange={(msg) => { setInputText({ ...inputText, "gene": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "gene": msg.target.files }) }} />
                                                         </Label>
-                                                        {/* <Label className="row-input">
+                                                        <Label className="row-input">
                                                             <FileInput text={inputText.barcode} onInputChange={(msg) => { setInputText({ ...inputText, "barcode": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "barcode": msg.target.files }) }} />
-                                                        </Label> */}
+                                                        </Label>
                                                     </div>
                                                 } />
                                                 <Tab id="tenx" title="10x HDF5 matrix" panel={

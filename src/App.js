@@ -15,6 +15,7 @@ import Pong from './components/Spinners/Pong';
 import Spinner2 from './components/Spinners/Spinner2';
 import { getMinMax } from './components/Plots/utils';
 
+import { palette } from './components/Plots/utils';
 // App is the single point of contact with the web workers
 // All requests and responses are received here
 
@@ -103,6 +104,9 @@ const App = () => {
   // error message caught from the worker 
   const [scranError, setScranError] = useState(null);
 
+  // request annotation column
+  const [reqAnnotation, setReqAnnotation] = useState(null);
+
   // props for dialogs
   const loadingProps = {
     autoFocus: true,
@@ -118,85 +122,8 @@ const App = () => {
     setGenesInfo, initLoadState, tabSelected,
     datasetName, params, loadParams,
     setGeneColSel, setLoadParams,
-    setInitLoadState, inputFiles } = useContext(AppContext);
-
-  const palette = {
-    1: ['#1b9e77'],
-    2: ['#1b9e77', '#d95f02'],
-    3: ['#1b9e77', '#d95f02', '#7570b3'],
-    4: ['#1b9e77', '#d95f02', '#7570b3', '#e7298a'],
-    5: ['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'],
-    6: ['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e', '#e6ab02'],
-    7: [
-      '#1b9e77',
-      '#d95f02',
-      '#7570b3',
-      '#e7298a',
-      '#66a61e',
-      '#e6ab02',
-      '#a6761d',
-    ],
-    8: [
-      '#1b9e77',
-      '#d95f02',
-      '#7570b3',
-      '#e7298a',
-      '#66a61e',
-      '#e6ab02',
-      '#a6761d',
-      '#666666',
-    ],
-    9: [
-      '#a6cee3',
-      '#1f78b4',
-      '#b2df8a',
-      '#33a02c',
-      '#fb9a99',
-      '#e31a1c',
-      '#fdbf6f',
-      '#ff7f00',
-      '#cab2d6',
-    ],
-    10: [
-      '#a6cee3',
-      '#1f78b4',
-      '#b2df8a',
-      '#33a02c',
-      '#fb9a99',
-      '#e31a1c',
-      '#fdbf6f',
-      '#ff7f00',
-      '#cab2d6',
-      '#6a3d9a',
-    ],
-    11: [
-      '#a6cee3',
-      '#1f78b4',
-      '#b2df8a',
-      '#33a02c',
-      '#fb9a99',
-      '#e31a1c',
-      '#fdbf6f',
-      '#ff7f00',
-      '#cab2d6',
-      '#6a3d9a',
-      '#ffff99',
-    ],
-    12: [
-      '#a6cee3',
-      '#1f78b4',
-      '#b2df8a',
-      '#33a02c',
-      '#fb9a99',
-      '#e31a1c',
-      '#fdbf6f',
-      '#ff7f00',
-      '#cab2d6',
-      '#6a3d9a',
-      '#ffff99',
-      '#b15928',
-    ],
-  };
+    setInitLoadState, inputFiles, annotationCols, setAnnotationCols, 
+    annotationObj, setAnnotationObj } = useContext(AppContext);
 
   // initializes various things on the worker side
   useEffect(() => {
@@ -310,6 +237,17 @@ const App = () => {
     }
   }, [indexedDBState]);
 
+    // get annotation for a column from worker
+    useEffect(() => {
+
+      reqAnnotation !== null && scranWorker.postMessage({
+        "type": "getAnnotation",
+        "payload": {
+          "annotation": reqAnnotation
+        }
+      });
+    }, [reqAnnotation]);
+
   useEffect(() => {
 
     if (wasmInitialized && inputFiles.files != null && !initLoadState) {
@@ -376,6 +314,8 @@ const App = () => {
       setInitDims(`${payload.resp.dimensions.num_genes} genes, ${payload.resp.dimensions.num_cells} cells`);
       setGenesInfo(payload.resp.genes);
       setGeneColSel(Object.keys(payload.resp.genes)[0]);
+
+      setAnnotationCols(Object.values(payload.resp.annotations));
     } else if (payload.type === "quality_control_metrics_DATA") {
       const { resp } = payload;
       setQcData(resp);
@@ -394,6 +334,11 @@ const App = () => {
       setPcaVarExp(resp);
     } else if (payload.type === "snn_cluster_graph_DATA") {
       const { resp } = payload;
+
+      let t_annots = [...annotationCols];
+      t_annots.push("CLUSTERS");
+
+      setAnnotationCols(t_annots);
 
       let cluster_count = getMinMax(resp?.clusters)[1] + 1;
       if (customSelection) {
@@ -495,6 +440,13 @@ const App = () => {
       setTimeout(() => {
         setInitLoadState(false);
       }, 1000);
+    } else if (payload.type === "setAnnotation") {
+      const { resp } = payload;
+      let tmp = {...annotationObj};
+      tmp[resp.annotation] = resp.values;
+      setAnnotationObj(tmp);
+
+      setReqAnnotation(null);
     }
   }
 
@@ -537,6 +489,7 @@ const App = () => {
                 clusterColors={clusterColors}
                 setClusterColors={setClusterColors}
                 setDelCustomSelection={setDelCustomSelection}
+                setReqAnnotation={setReqAnnotation}
               /> :
               showGame ?
                 <div style={{
