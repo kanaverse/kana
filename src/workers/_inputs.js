@@ -37,7 +37,7 @@ function dummyGenes(numberOfRowss) {
     return { "id": genes };
 }
 
-function readDSVFromBuffer(content, fname, delim="\t") {
+function readDSVFromBuffer(content, fname, delim = "\t") {
 
     var ext = fname.name.split('.').pop();
 
@@ -117,7 +117,7 @@ function loadMatrixMarketRaw(files) {
         }
 
         cache.annotations = {}
-        headers.forEach((x,i) => {
+        headers.forEach((x, i) => {
             cache.annotations[x] = parsed[i];
         });
 
@@ -262,7 +262,7 @@ function guessGenesFromH5AD(f) {
 
 function guessGenesFrom10x(f) {
     var fkeys = f.keys();
-    
+
     // Does it have a 'matrix' group with a "features" subgroup?
     if (fkeys.indexOf("matrix") == -1) {
         return null;
@@ -302,7 +302,7 @@ function guessGenesFrom10x(f) {
             output.name = featname.value;
         }
     }
-    
+
     return output;
 }
 
@@ -327,23 +327,23 @@ function guessGenesFromHDF5(f) {
 function guessAnnotationsFromH5AD(f) {
     var fkeys = f.keys();
 
-    // Does it have a 'var' group?
     if (fkeys.indexOf("obs") == -1) {
         return null;
     }
 
     var obs = f.get("obs");
     if (obs instanceof hdf5.Dataset) {
+        // this is the only place i found where it contains names
         let colnames = obs.dtype?.compound?.members?.map(x => x.name);
         let parsed = obs.value;
 
         let annots = {}
-        colnames.forEach((x,i) => {
+        colnames.forEach((x, i) => {
             annots[x] = parsed.map(y => y[i]);
         });
 
         return annots;
-    } 
+    }
 
     return null;
 }
@@ -369,7 +369,7 @@ function loadHDF5Raw(files) {
         hdf5.FS.writeFile(tmppath, new Uint8Array(first_file.buffer));
         var f = new hdf5.File(tmppath, "r");
         try {
-            var path = guessPath(f); 
+            var path = guessPath(f);
             cache.matrix = scran.initializeSparseMatrixFromHDF5Buffer(f, path);
             cache.genes = guessGenesFromHDF5(f);
             cache.annotations = guessAnnotationsFromHDF5(f);
@@ -456,7 +456,7 @@ export function results() {
         output.genes = { ...cache.genes };
         if (cache.annotations) {
             output.annotations = Object.keys(cache.annotations);
-        }    
+        }
     }
     return output;
 }
@@ -549,7 +549,7 @@ export function fetchAnnotations(col) {
 
     let uvals = {};
     let uTypedAray = new Uint8Array(asize);
-    annots[col].map((x,i) => {
+    annots[col].map((x, i) => {
         if (!(x in uvals)) {
             uvals[x] = Object.keys(uvals).length;
         }
