@@ -118,7 +118,7 @@ function loadMatrixMarketRaw(files) {
 
         cache.annotations = {}
         headers.forEach((x, i) => {
-            cache.annotations[x] = parsed[i];
+            cache.annotations[x] = parsed.map(y => y[i]);
         });
 
     } else {
