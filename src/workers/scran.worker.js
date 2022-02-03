@@ -630,6 +630,23 @@ onmessage = function (msg) {
             var res = await umap.results();
             postSuccess_(res, "umap", "Resending UMAP coordinates");
         });
+
+    } else if (payload.type == "getAnnotation") {
+        loaded.then(x => {
+            let annot = payload.payload.annotation;
+            var vec = inputs.fetchAnnotations(annot);
+            postMessage({
+                type: "setAnnotation",
+                resp: {
+                    annotation: annot,
+                    values: {
+                        "index": vec.index,
+                        "factor": vec.factor
+                    }
+                },
+                msg: "Success: GET_ANNOTATION done"
+            }, [vec.factor.buffer]);
+        });
   
     } else {
         console.log("MIM:::msg type incorrect")

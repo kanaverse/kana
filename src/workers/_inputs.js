@@ -37,6 +37,22 @@ function dummyGenes(numberOfRowss) {
     return { "id": genes };
 }
 
+function readDSVFromBuffer(content, fname, delim = "\t") {
+
+    var ext = fname.name.split('.').pop();
+
+    if (ext == "gz") {
+        content = pako.ungzip(content);
+    }
+
+    const dec = new TextDecoder();
+    let decoded = dec.decode(content);
+    const tsv = d3.dsvFormat(delim);
+    let parsed = tsv.parseRows(decoded);
+
+    return parsed;
+}
+
 /** Matrix Market **/
 function loadMatrixMarketRaw(files) {
     utils.freeCache(cache.matrix);
@@ -51,17 +67,11 @@ function loadMatrixMarketRaw(files) {
 
     var genes_file = files.filter(x => x.type == "genes");
     if (genes_file.length == 1) {
-        var genes_file = genes_file[0] 
+        var genes_file = genes_file[0]
         var content = new Uint8Array(genes_file.buffer);
-        var ext = genes_file.name.split('.').pop();
-        if (ext == "gz") {
-            content = pako.ungzip(content);
-        }
 
-        const dec = new TextDecoder();
-        let genes_str = dec.decode(content);
-        const tsv = d3.dsvFormat("\t");
-        let parsed = tsv.parseRows(genes_str);
+        let parsed = readDSVFromBuffer(content, genes_file);
+
         if (parsed.length != cache.matrix.numberOfRows()) {
             throw "number of matrix rows is not equal to the number of genes in '" + genes_file.name + "'";
         }
@@ -78,6 +88,43 @@ function loadMatrixMarketRaw(files) {
     }
 
     permuteGenes(cache.genes);
+
+    var annotations_file = files.filter(x => x.type == "annotations");
+    if (annotations_file.length == 1) {
+        var annotations_file = annotations_file[0]
+        var content = new Uint8Array(annotations_file.buffer);
+
+        let parsed = readDSVFromBuffer(content, annotations_file);
+
+        let diff = cache.matrix.numberOfColumns() - parsed.length;
+        // check if a header is present or not
+        let headerFlag = false;
+        if (diff === 0) {
+            headerFlag = false;
+        } else if (diff === -1) {
+            headerFlag = true;
+        } else {
+            throw "number of annotations rows is not equal to the number of cells in '" + annotations_file.name + "'";
+        }
+
+        let headers = [];
+        if (headerFlag) {
+            headers = parsed.shift();
+        } else {
+            parsed[0].forEach((x, i) => {
+                headers.push(`Column_${i + 1}`);
+            })
+        }
+
+        cache.annotations = {}
+        headers.forEach((x, i) => {
+            cache.annotations[x] = parsed.map(y => y[i]);
+        });
+
+    } else {
+        cache.annotations = null;
+    }
+
     return;
 }
 
@@ -106,6 +153,14 @@ function loadMatrixMarket(args) {
             }
             var genes_file = args.gene[0];
             formatted.files.push({ "type": "genes", "name": genes_file.name, "buffer": bufferFun(genes_file) });
+        }
+
+        if (args.barcode !== null) {
+            if (args.barcode.length !== 1) {
+                throw "expected no more than one cell annotation file";
+            }
+            var annotations_file = args.barcode[0];
+            formatted.files.push({ "type": "annotations", "name": annotations_file.name, "buffer": bufferFun(annotations_file) });
         }
 
         if (it == 0) {
@@ -207,7 +262,7 @@ function guessGenesFromH5AD(f) {
 
 function guessGenesFrom10x(f) {
     var fkeys = f.keys();
-    
+
     // Does it have a 'matrix' group with a "features" subgroup?
     if (fkeys.indexOf("matrix") == -1) {
         return null;
@@ -247,7 +302,7 @@ function guessGenesFrom10x(f) {
             output.name = featname.value;
         }
     }
-    
+
     return output;
 }
 
@@ -269,6 +324,41 @@ function guessGenesFromHDF5(f) {
     return null;
 }
 
+function guessAnnotationsFromH5AD(f) {
+    var fkeys = f.keys();
+
+    if (fkeys.indexOf("obs") == -1) {
+        return null;
+    }
+
+    var obs = f.get("obs");
+    if (obs instanceof hdf5.Dataset) {
+        // this is the only place i found where it contains names
+        let colnames = obs.dtype?.compound?.members?.map(x => x.name);
+        let parsed = obs.value;
+
+        let annots = {}
+        colnames.forEach((x, i) => {
+            annots[x] = parsed.map(y => y[i]);
+        });
+
+        return annots;
+    }
+
+    return null;
+}
+
+function guessAnnotationsFromHDF5(f) {
+    {
+        let output = guessAnnotationsFromH5AD(f);
+        if (output !== null) {
+            return output;
+        }
+    }
+
+    return null;
+}
+
 function loadHDF5Raw(files) {
     utils.freeCache(cache.matrix);
 
@@ -279,9 +369,10 @@ function loadHDF5Raw(files) {
         hdf5.FS.writeFile(tmppath, new Uint8Array(first_file.buffer));
         var f = new hdf5.File(tmppath, "r");
         try {
-            var path = guessPath(f); 
+            var path = guessPath(f);
             cache.matrix = scran.initializeSparseMatrixFromHDF5Buffer(f, path);
             cache.genes = guessGenesFromHDF5(f);
+            cache.annotations = guessAnnotationsFromHDF5(f);
         } finally {
             f.close();
         }
@@ -357,8 +448,15 @@ export function results() {
     var output = { "dimensions": fetchDimensions() }
     if ("reloaded" in cache) {
         output.genes = { ...cache.reloaded.genes };
+
+        if (cache.annotations) {
+            output.annotations = Object.keys(cache.reloaded.annotations);
+        }
     } else {
         output.genes = { ...cache.genes };
+        if (cache.annotations) {
+            output.annotations = Object.keys(cache.annotations);
+        }
     }
     return output;
 }
@@ -368,9 +466,15 @@ export function serialize() {
     if ("reloaded" in cache) {
         contents.genes = { ...cache.reloaded.genes };
         contents.num_cells = cache.reloaded.num_cells;
+        if (cache.reloaded.annotations) {
+            contents.annotations = cache.reloaded.annotations;
+        }
     } else {
         contents.genes = { ...cache.genes };
         contents.num_cells = cache.matrix.numberOfColumns();
+        if (cache.annotations) {
+            contents.annotations = cache.annotations;
+        }
     }
 
     // Making a deep-ish clone of the parameters so that any fiddling with
@@ -379,8 +483,8 @@ export function serialize() {
     parameters2.files = parameters.files.map(x => { return { ...x }; });
 
     return {
-      "parameters": parameters2,
-      "contents": contents
+        "parameters": parameters2,
+        "contents": contents
     };
 }
 
@@ -394,9 +498,11 @@ export function unserialize(saved) {
 export function fetchCountMatrix() {
     if ("reloaded" in cache) {
         if (parameters.type == "MatrixMarket") {
-            loadMatrixMarketRaw(parameters.files); 
-        } else {
+            loadMatrixMarketRaw(parameters.files);
+        } else if (parameters.type == "HDF5") {
             loadHDF5Raw(parameters.files);
+        } else {
+            throw `unrecognized count matrix format, ${parameters.type}`;
         }
     }
     return cache.matrix;
@@ -424,5 +530,35 @@ export function fetchGenes() {
         return cache.reloaded.genes;
     } else {
         return cache.genes;
+    }
+}
+
+export function fetchAnnotations(col) {
+    let annots, asize;
+    if ("reloaded" in cache) {
+        annots = cache.reloaded.annotations;
+        asize = cache.reloaded.matrix.numberOfColumns();
+    } else {
+        annots = cache.annotations;
+        asize = cache.matrix.numberOfColumns();
+    }
+
+    if (!(col in annots)) {
+        throw `column ${col} does not exist in col.tsv`;
+    }
+
+    let uvals = {};
+    let uTypedAray = new Uint8Array(asize);
+    annots[col].map((x, i) => {
+        if (!(x in uvals)) {
+            uvals[x] = Object.keys(uvals).length;
+        }
+
+        uTypedAray[i] = uvals[x];
+    });
+
+    return {
+        "index": Object.keys(uvals),
+        "factor": uTypedAray
     }
 }

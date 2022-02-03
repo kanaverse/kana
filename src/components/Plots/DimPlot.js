@@ -2,9 +2,7 @@ import { ScatterGL } from 'scatter-gl';
 import React, { useEffect, useRef, useContext, useState } from 'react';
 import {
     ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider,
-    Divider,
-    Label,
-    Tag
+    Divider, Label, Tag, HTMLSelect
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
@@ -13,6 +11,7 @@ import { getMinMax } from './utils';
 
 import Rainbow from './rainbowvis';
 import { randomColor } from 'randomcolor';
+import { palette } from './utils';
 
 import "./DimPlot.css";
 import { AppToaster } from "../Spinners/AppToaster";
@@ -35,12 +34,20 @@ const DimPlot = (props) => {
     // first render ?
     const [renderCount, setRenderCount] = useState(true);
 
-    const { genesInfo, geneColSel } = useContext(AppContext);
+    const { genesInfo, geneColSel, annotationCols, annotationObj } = useContext(AppContext);
 
     // keeps track of what points were selected in lasso selections
     const [selectedPoints, setSelectedPoints] = useState(null);
     // set mode for plot
     const [plotMode, setPlotMode] = useState('PAN');
+
+    // selected colorBy
+    const [colorByAnotation, setColorByAnnotation] = useState("clusters");
+
+    // dim plot color mappins & groups
+    const [plotColorMappings, setPlotColorMappings] = useState(null);
+    const [plotGroups, setPlotGroups] = useState(null);
+    const [plotFactors, setPlotFactors] = useState(null);
 
     const max = getMinMax(props?.clusterData.clusters)[1];
 
@@ -70,9 +77,9 @@ const DimPlot = (props) => {
             }
             setGradient(tmpgradient);
         }
-    }, [props?.selectedClusterIndex?.[props?.gene], 
-        props?.selectedClusterSummary?.[props?.selectedClusterIndex?.[props?.gene]]?.expr,
-        props?.gene]);
+    }, [props?.selectedClusterIndex?.[props?.gene],
+    props?.selectedClusterSummary?.[props?.selectedClusterIndex?.[props?.gene]]?.expr,
+    props?.gene]);
 
     // hook to also react when user changes the slider
     useEffect(() => {
@@ -137,10 +144,10 @@ const DimPlot = (props) => {
             }
 
             // if dimensions are available
-            if (data) {
-
-                let cluster_mappings = props?.clusterData?.clusters;
-                const cluster_colors = props?.clusterColors;
+            if (data && plotFactors && plotColorMappings) {
+                
+                const cluster_mappings = plotFactors;
+                const cluster_colors = plotColorMappings;
 
                 let points = []
                 data.x.forEach((x, i) => {
@@ -148,7 +155,7 @@ const DimPlot = (props) => {
                 });
 
                 let metadata = {
-                    clusters: cluster_mappings
+                    // clusters: cluster_mappings
                 };
                 const dataset = new ScatterGL.Dataset(points, metadata);
 
@@ -210,8 +217,38 @@ const DimPlot = (props) => {
                 });
             }
         }
-    }, [props?.tsneData, props?.umapData, props?.animateData, props?.defaultRedDims, 
-            gradient, clusHighlight, props?.clusterData]);
+    }, [props?.tsneData, props?.umapData, props?.animateData, props?.defaultRedDims,
+        gradient, clusHighlight, plotColorMappings, plotGroups, plotFactors]);
+
+    useEffect(() => {
+        if (colorByAnotation.toLowerCase() == "clusters")  {
+            
+            setPlotColorMappings(props?.clusterColors);
+            let clus_names = [];
+            for (let i=0; i< max; i++) {
+                clus_names.push(`Cluster ${i+1}`);
+            }
+            setPlotGroups(clus_names);
+            setPlotFactors(props?.clusterData?.clusters);
+        } else {
+            if (!(colorByAnotation in annotationObj)) {
+                props?.setReqAnnotation(colorByAnotation);
+            } else {
+                let tmp = annotationObj[colorByAnotation];
+                setPlotGroups(tmp.index);
+
+                let cluster_colors;
+                if (tmp.index.length > Object.keys(palette).length) {
+                  cluster_colors = randomColor({ luminosity: 'dark', count: tmp.index.length + 1 });
+                } else {
+                  cluster_colors = palette[tmp.index.length.toString()];
+                }
+                setPlotColorMappings(cluster_colors);
+                setPlotFactors(tmp.factor);
+            }
+        }
+
+    }, [colorByAnotation, annotationObj, props?.clusterData,]);
 
     const setInteraction = (x) => {
         if (x === "SELECT") {
@@ -346,9 +383,35 @@ const DimPlot = (props) => {
                 <div style={{ width: '100%' }}>
                     {
                         <div className='right-sidebar-cluster'>
-                            <Callout title="CLUSTERS">
+                            <Callout>
+                                <p>NOTE: Clusters identified by Kana can be found under <strong>CLUSTERS</strong></p>
+                                <HTMLSelect large={false} minimal={true} defaultValue={"CLUSTERS"}
+                                    onChange={(nval, val) => setColorByAnnotation(nval?.currentTarget?.value)}>
+                                    {
+                                        annotationCols.map((x, i) => (
+                                            <option key={i}>{x}</option>
+                                        ))
+                                    }
+                                </HTMLSelect>
                                 <ul>
-                                    {props?.clusterColors?.map((x, i) => {
+                                    {
+                                        plotGroups && plotGroups.map((x,i) => {
+                                            return (
+                                                <li key={i}
+                                                className={clusHighlight === i ? 'legend-highlight' : ''}
+                                                style={{ color: plotColorMappings[i] }}
+                                                onClick={() => {
+                                                    if (i === clusHighlight) {
+                                                        setClusHighlight(null);
+                                                    } else {
+                                                        setClusHighlight(i);
+                                                    }
+                                                }}
+                                            > {x ? x: "NA"} </li>
+                                            )
+                                        })
+                                    }
+                                    {/* {props?.clusterColors?.map((x, i) => {
                                         return i < props?.clusterColors.length - Object.keys(props?.customSelection).length ?
                                             (<li key={i}
                                                 className={clusHighlight === i ? 'legend-highlight' : ''}
@@ -362,7 +425,7 @@ const DimPlot = (props) => {
                                                 }}
                                             > Cluster {i + 1} </li>)
                                             : ""
-                                    })}
+                                    })} */}
                                 </ul>
                             </Callout>
                             {

@@ -68,6 +68,10 @@ const AppContextProvider = ({ children }) => {
   // default column to show in markers table
   const [geneColSel, setGeneColSel] = useState("id");
 
+  // all cell annotations available
+  const [annotationCols, setAnnotationCols] = useState([]);
+  const [annotationObj, setAnnotationObj] = useState({});
+
   return (
     <AppContext.Provider
       value={{
@@ -81,7 +85,9 @@ const AppContextProvider = ({ children }) => {
         loadParams, setLoadParams,
         geneColSel, setGeneColSel,
         initLoadState, setInitLoadState,
-        loadParamsFor, setLoadParamsFor
+        loadParamsFor, setLoadParamsFor,
+        annotationCols, setAnnotationCols,
+        annotationObj, setAnnotationObj
       }}
     >
       {children}

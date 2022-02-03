@@ -40,6 +40,8 @@
 
 .right-sidebar-cluster, .right-sidebar-slider {
   padding-top: 5px;
+  overflow-y: auto;
+  height: calc(100vh - 600px);
 }
 
 .right-sidebar ul > li {
