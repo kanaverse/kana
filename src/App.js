@@ -315,7 +315,9 @@ const App = () => {
       setGenesInfo(payload.resp.genes);
       setGeneColSel(Object.keys(payload.resp.genes)[0]);
 
-      setAnnotationCols(Object.values(payload.resp.annotations));
+      if (payload.resp?.annotations) {
+        setAnnotationCols(Object.values(payload.resp.annotations));
+      }
     } else if (payload.type === "quality_control_metrics_DATA") {
       const { resp } = payload;
       setQcData(resp);

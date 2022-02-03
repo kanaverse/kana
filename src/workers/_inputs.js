@@ -37,14 +37,17 @@ function dummyGenes(numberOfRowss) {
     return { "id": genes };
 }
 
-function readCSVFromBuffer(content, compressed) {
-    if (compressed) {
+function readDSVFromBuffer(content, fname, delim="\t") {
+
+    var ext = fname.name.split('.').pop();
+
+    if (ext == "gz") {
         content = pako.ungzip(content);
     }
 
     const dec = new TextDecoder();
     let decoded = dec.decode(content);
-    const tsv = d3.dsvFormat("\t");
+    const tsv = d3.dsvFormat(delim);
     let parsed = tsv.parseRows(decoded);
 
     return parsed;
@@ -66,14 +69,8 @@ function loadMatrixMarketRaw(files) {
     if (genes_file.length == 1) {
         var genes_file = genes_file[0]
         var content = new Uint8Array(genes_file.buffer);
-        var ext = genes_file.name.split('.').pop();
-        let compressed = false;
 
-        if (ext == "gz") {
-            compressed = true;
-        }
-
-        let parsed = readCSVFromBuffer(content, compressed = compressed);
+        let parsed = readDSVFromBuffer(content, genes_file);
 
         if (parsed.length != cache.matrix.numberOfRows()) {
             throw "number of matrix rows is not equal to the number of genes in '" + genes_file.name + "'";
@@ -96,14 +93,8 @@ function loadMatrixMarketRaw(files) {
     if (annotations_file.length == 1) {
         var annotations_file = annotations_file[0]
         var content = new Uint8Array(annotations_file.buffer);
-        var ext = annotations_file.name.split('.').pop();
-        let compressed = false;
 
-        if (ext == "gz") {
-            compressed = true;
-        }
-
-        let parsed = readCSVFromBuffer(content, compressed = compressed);
+        let parsed = readDSVFromBuffer(content, annotations_file);
 
         let diff = cache.matrix.numberOfColumns() - parsed.length;
         // check if a header is present or not
@@ -113,7 +104,7 @@ function loadMatrixMarketRaw(files) {
         } else if (diff === -1) {
             headerFlag = true;
         } else {
-            throw "number of matrix cols is not equal to the number of cells in '" + annotations_file.name + "'";
+            throw "number of annotations rows is not equal to the number of cells in '" + annotations_file.name + "'";
         }
 
         let headers = [];
@@ -125,10 +116,11 @@ function loadMatrixMarketRaw(files) {
             })
         }
 
-        cache.annotations = {
-            "headers": headers,
-            "rows": parsed
-        };
+        cache.annotations = {}
+        headers.forEach((x,i) => {
+            cache.annotations[x] = parsed[i];
+        });
+
     } else {
         cache.annotations = null;
     }
@@ -332,6 +324,41 @@ function guessGenesFromHDF5(f) {
     return null;
 }
 
+function guessAnnotationsFromH5AD(f) {
+    var fkeys = f.keys();
+
+    // Does it have a 'var' group?
+    if (fkeys.indexOf("obs") == -1) {
+        return null;
+    }
+
+    var obs = f.get("obs");
+    if (obs instanceof hdf5.Dataset) {
+        let colnames = obs.dtype?.compound?.members?.map(x => x.name);
+        let parsed = obs.value;
+
+        let annots = {}
+        colnames.forEach((x,i) => {
+            annots[x] = parsed.map(y => y[i]);
+        });
+
+        return annots;
+    } 
+
+    return null;
+}
+
+function guessAnnotationsFromHDF5(f) {
+    {
+        let output = guessAnnotationsFromH5AD(f);
+        if (output !== null) {
+            return output;
+        }
+    }
+
+    return null;
+}
+
 function loadHDF5Raw(files) {
     utils.freeCache(cache.matrix);
 
@@ -345,6 +372,7 @@ function loadHDF5Raw(files) {
             var path = guessPath(f); 
             cache.matrix = scran.initializeSparseMatrixFromHDF5Buffer(f, path);
             cache.genes = guessGenesFromHDF5(f);
+            cache.annotations = guessAnnotationsFromHDF5(f);
         } finally {
             f.close();
         }
@@ -420,10 +448,15 @@ export function results() {
     var output = { "dimensions": fetchDimensions() }
     if ("reloaded" in cache) {
         output.genes = { ...cache.reloaded.genes };
-        output.annotations = { ...cache.reloaded.annotations.headers };
+
+        if (cache.annotations) {
+            output.annotations = Object.keys(cache.reloaded.annotations);
+        }
     } else {
         output.genes = { ...cache.genes };
-        output.annotations = { ...cache.annotations.headers };
+        if (cache.annotations) {
+            output.annotations = Object.keys(cache.annotations);
+        }    
     }
     return output;
 }
@@ -433,11 +466,15 @@ export function serialize() {
     if ("reloaded" in cache) {
         contents.genes = { ...cache.reloaded.genes };
         contents.num_cells = cache.reloaded.num_cells;
-        contents.annotations = cache.reloaded.annotations.header;
+        if (cache.reloaded.annotations) {
+            contents.annotations = cache.reloaded.annotations;
+        }
     } else {
         contents.genes = { ...cache.genes };
         contents.num_cells = cache.matrix.numberOfColumns();
-        contents.annotations = cache.annotations.header;
+        if (cache.annotations) {
+            contents.annotations = cache.annotations;
+        }
     }
 
     // Making a deep-ish clone of the parameters so that any fiddling with
@@ -464,6 +501,8 @@ export function fetchCountMatrix() {
             loadMatrixMarketRaw(parameters.files);
         } else if (parameters.type == "HDF5") {
             loadHDF5Raw(parameters.files);
+        } else {
+            throw `unrecognized count matrix format, ${parameters.type}`;
         }
     }
     return cache.matrix;
@@ -495,32 +534,31 @@ export function fetchGenes() {
 }
 
 export function fetchAnnotations(col) {
-    let annots;
+    let annots, asize;
     if ("reloaded" in cache) {
         annots = cache.reloaded.annotations;
+        asize = cache.reloaded.matrix.numberOfColumns();
     } else {
         annots = cache.annotations;
+        asize = cache.matrix.numberOfColumns();
     }
 
-    if (!annots.headers.includes(col)) {
+    if (!(col in annots)) {
         throw `column ${col} does not exist in col.tsv`;
     }
 
-    let colIdx = annots.headers.indexOf(col);
-    let uvals = [];
-    let vals = annots.rows.map(x => {
-        let elemIdx = uvals.indexOf(x[colIdx]);
-
-        if (elemIdx === -1) {
-            uvals.push(x[colIdx]);
-            elemIdx = uvals.indexOf(x[colIdx]);
+    let uvals = {};
+    let uTypedAray = new Uint8Array(asize);
+    annots[col].map((x,i) => {
+        if (!(x in uvals)) {
+            uvals[x] = Object.keys(uvals).length;
         }
 
-        return elemIdx;
+        uTypedAray[i] = uvals[x];
     });
 
     return {
-        "index": uvals,
-        "factor": vals
+        "index": Object.keys(uvals),
+        "factor": uTypedAray
     }
 }

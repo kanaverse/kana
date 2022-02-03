@@ -645,7 +645,7 @@ onmessage = function (msg) {
                     }
                 },
                 msg: "Success: GET_ANNOTATION done"
-            });
+            }, [vec.factor.buffer]);
         });
   
     } else {

@@ -69,7 +69,7 @@ const AppContextProvider = ({ children }) => {
   const [geneColSel, setGeneColSel] = useState("id");
 
   // all cell annotations available
-  const [annotationCols, setAnnotationCols] = useState(null);
+  const [annotationCols, setAnnotationCols] = useState([]);
   const [annotationObj, setAnnotationObj] = useState({});
 
   return (
