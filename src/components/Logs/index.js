@@ -4,9 +4,7 @@ import {
     Drawer,
     Position,
 } from "@blueprintjs/core";
-import React, { useState, useContext } from 'react';
-
-import { AppContext } from '../../context/AppContext';
+import React, { useState } from 'react';
 
 const Logs = (props) => {
 
