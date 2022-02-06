@@ -2,7 +2,8 @@ import {
     Button, Classes, Dialog, Text, FileInput, NumericInput,
     Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
     RadioGroup, Radio, Icon, Position,
-    InputGroup
+    InputGroup,
+    Drawer
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import React, { useContext, useState, useCallback, useEffect } from "react";
@@ -388,7 +389,7 @@ const AnalysisDialog = ({
             <div className="col">
                 <div>
                     <H5><Tag round={true}>2</Tag>
-                        <span className="row-tooltip"
+                        <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(2)}>
                             Quality control
                         </span>
@@ -396,7 +397,7 @@ const AnalysisDialog = ({
                     <div className="row">
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(2)}>
                                     Number of MADs
                                 </span>
@@ -407,7 +408,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(2)}>
                                     Use default mitochondrial list ?
                                 </span>
@@ -418,7 +419,7 @@ const AnalysisDialog = ({
                         </Label>
                         {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(2)}>
                                     Mitochondrial gene prefix
                                 </span>
@@ -441,7 +442,7 @@ const AnalysisDialog = ({
             <div className="col">
                 <div>
                     <H5><Tag round={true}>3</Tag>
-                        <span className="row-tooltip"
+                        <span className={showStepHelper == 3 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(3)}>
                             Feature Selection
                         </span>
@@ -449,7 +450,7 @@ const AnalysisDialog = ({
                     <div className="row">
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 3 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(3)}>
                                     Lowess span
                                 </span>
@@ -471,7 +472,7 @@ const AnalysisDialog = ({
             <div className="col">
                 <div>
                     <H5><Tag round={true}>4</Tag>
-                        <span className="row-tooltip"
+                        <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(4)}>
                             Principal components analysis
                         </span>
@@ -479,7 +480,7 @@ const AnalysisDialog = ({
                     <div className="row">
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(4)}>
                                     Number of HVGs
                                 </span>
@@ -490,7 +491,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(4)}>
                                     Number of PCs
                                 </span>
@@ -510,7 +511,7 @@ const AnalysisDialog = ({
             <div className="col">
                 <div>
                     <H5><Tag round={true}>5</Tag>
-                        <span className="row-tooltip"
+                        <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(5)}>
                             Clustering
                         </span>
@@ -518,7 +519,7 @@ const AnalysisDialog = ({
                     <div className="row">
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(5)}>
                                     Method
                                 </span>
@@ -529,7 +530,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(5)}>
                                     Number of neighbors
                                 </span>
@@ -540,7 +541,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(5)}>
                                     Use ANN
                                 </span>
@@ -551,7 +552,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(5)}>
                                     Weighting scheme
                                 </span>
@@ -567,7 +568,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(5)}>
                                     Resolution
                                 </span>
@@ -588,7 +589,7 @@ const AnalysisDialog = ({
             <div className="col">
                 <div>
                     <H5><Tag round={true}>6</Tag>
-                        <span className="row-tooltip"
+                        <span className={showStepHelper == 6 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(6)}>
                             t-SNE
                         </span>
@@ -596,7 +597,7 @@ const AnalysisDialog = ({
                     <div className="row">
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 6 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(6)}>
                                     Perplexity
                                 </span>
@@ -607,7 +608,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 6 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(6)}>
                                     Iterations
                                 </span>
@@ -627,7 +628,7 @@ const AnalysisDialog = ({
             <div className="col">
                 <div>
                     <H5><Tag round={true}>7</Tag>
-                        <span className="row-tooltip"
+                        <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(7)}>
                             UMAP
                         </span>
@@ -635,7 +636,7 @@ const AnalysisDialog = ({
                     <div className="row">
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(7)}>
                                     Number of neighbors
                                 </span>
@@ -646,7 +647,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(7)}>
                                     Minimum distance
                                 </span>
@@ -659,7 +660,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className="row-tooltip"
+                                <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(7)}>
                                     Epochs
                                 </span>
@@ -679,9 +680,9 @@ const AnalysisDialog = ({
             <Tooltip2 content="Start new analysis or modify parameters" position={Position.BOTTOM}>
                 <Button onClick={handleButtonClick} icon="social-media" intent="primary" text={buttonText} />
             </Tooltip2>
-            <Dialog className="analysis-dialog" {...props} isOpen={isOpen} onClose={handleClose}>
+            <Drawer className="analysis-dialog" {...props} isOpen={isOpen} onClose={handleClose}>
 
-                <div className={Classes.DIALOG_BODY}>
+                <div style={{overflow: "scroll"}} className={Classes.DIALOG_BODY}>
                     <Tabs
                         animate={true}
                         renderActiveTabPanelOnly={true}
@@ -699,7 +700,7 @@ const AnalysisDialog = ({
                                         }}>
                                         <div>
                                             <H5><Tag round={true}>1</Tag>
-                                                <span className="row-tooltip"
+                                                <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                                     onMouseEnter={() => setShowStepHelper(1)}>
                                                     Load input files
                                                 </span>
@@ -741,7 +742,7 @@ const AnalysisDialog = ({
 
                                                         {/* <Label className="row-input">
                                                             <Text className="text-100">
-                                                                <span className="row-tooltip">
+                                                                <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}>
                                                                     HDF5 format
                                                                 </span>
                                                             </Text>
@@ -838,7 +839,7 @@ const AnalysisDialog = ({
                                             <Tab id="kana" title="Load from file" panel={
                                                 <div>
                                                     <H5><Tag round={true}>1</Tag>
-                                                        <span className="row-tooltip">
+                                                        <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}>
                                                             Load analysis from file
                                                         </span>
                                                     </H5>
@@ -852,7 +853,7 @@ const AnalysisDialog = ({
                                             {<Tab id="kanadb" title="Load from browser" panel={
                                                 <div>
                                                     <H5><Tag round={true}>1</Tag>
-                                                        <span className="row-tooltip">
+                                                        <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}>
                                                             Load analysis from browser cache
                                                         </span>
                                                     </H5>
@@ -975,7 +976,7 @@ const AnalysisDialog = ({
 
                 {
                     includeFooter ? (
-                        <div className={Classes.DIALOG_FOOTER} >
+                        <div style={{marginBottom: "10px"}} className={Classes.DIALOG_FOOTER} >
                             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
                                 <Tooltip2 content="Run Analysis">
                                     <Button disabled={!tmpInputValid} icon="function" onClick={handleImport}>Analyze</Button>
@@ -987,7 +988,7 @@ const AnalysisDialog = ({
                         </div>
                     )
                 }
-            </Dialog >
+            </Drawer>
         </>
     );
 }

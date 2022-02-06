@@ -39,6 +39,12 @@
     display: inline;
     text-decoration: underline;
     cursor: help;
+    font-style: normal;
+}
+
+.row-tooltip-highlight {
+    color: #137CBD;
+    font-style: italic;
 }
 
 .analysis-dialog {

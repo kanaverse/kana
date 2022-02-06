@@ -29,8 +29,12 @@ const Header = (props) => {
     autoFocus: true,
     canEscapeKeyClose: true,
     canOutsideClickClose: false,
-    enforceFocus: false,
+    enforceFocus: true,
     shouldReturnFocusOnClose: true,
+    hasBackdrop: true,
+    position: Position.LEFT,
+    usePortal: true,
+    size: '75vw',
   });
 
   const { datasetName, setDatasetName } = useContext(AppContext);
