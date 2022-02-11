@@ -90,7 +90,7 @@
 
 .row-container {
     display: grid;
-    grid-template-columns: 25% 15% 18% 25% 17%;
+    grid-template-columns: 25% 14% 17% 25% 17%;
     gap: 2px;
     align-items: center;
 }
@@ -123,4 +123,5 @@
 .marker-gene-title-selected {
     font-style: italic;
     font-weight: bold;
+    overflow-wrap: break-word;
 }

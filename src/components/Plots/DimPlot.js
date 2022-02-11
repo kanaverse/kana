@@ -145,7 +145,7 @@ const DimPlot = (props) => {
 
             // if dimensions are available
             if (data && plotFactors && plotColorMappings) {
-                
+
                 const cluster_mappings = plotFactors;
                 const cluster_colors = plotColorMappings;
 
@@ -221,12 +221,12 @@ const DimPlot = (props) => {
         gradient, clusHighlight, plotColorMappings, plotGroups, plotFactors]);
 
     useEffect(() => {
-        if (colorByAnotation.toLowerCase() == "clusters")  {
-            
+        if (colorByAnotation.toLowerCase() == "clusters") {
+
             setPlotColorMappings(props?.clusterColors);
             let clus_names = [];
-            for (let i=0; i< max; i++) {
-                clus_names.push(`Cluster ${i+1}`);
+            for (let i = 0; i < max; i++) {
+                clus_names.push(`Cluster ${i + 1}`);
             }
             setPlotGroups(clus_names);
             setPlotFactors(props?.clusterData?.clusters);
@@ -239,9 +239,9 @@ const DimPlot = (props) => {
 
                 let cluster_colors;
                 if (tmp.index.length > Object.keys(palette).length) {
-                  cluster_colors = randomColor({ luminosity: 'dark', count: tmp.index.length + 1 });
+                    cluster_colors = randomColor({ luminosity: 'dark', count: tmp.index.length + 1 });
                 } else {
-                  cluster_colors = palette[tmp.index.length.toString()];
+                    cluster_colors = palette[tmp.index.length.toString()];
                 }
                 setPlotColorMappings(cluster_colors);
                 setPlotFactors(tmp.factor);
@@ -380,24 +380,23 @@ const DimPlot = (props) => {
                 }
             </div>
             <div className='right-sidebar'>
-                <div style={{ width: '100%' }}>
-                    {
-                        <div className='right-sidebar-cluster'>
-                            <Callout>
-                                <p>NOTE: Clusters identified by Kana can be found under <strong>CLUSTERS</strong></p>
-                                <HTMLSelect large={false} minimal={true} defaultValue={"CLUSTERS"}
-                                    onChange={(nval, val) => setColorByAnnotation(nval?.currentTarget?.value)}>
-                                    {
-                                        annotationCols.map((x, i) => (
-                                            <option key={i}>{x}</option>
-                                        ))
-                                    }
-                                </HTMLSelect>
-                                <ul>
-                                    {
-                                        plotGroups && plotGroups.map((x,i) => {
-                                            return (
-                                                <li key={i}
+                {
+                    <div className='right-sidebar-cluster'>
+                        <Callout>
+                            <p>NOTE: Clusters identified by Kana can be found under <strong>CLUSTERS</strong></p>
+                            <HTMLSelect large={false} minimal={true} defaultValue={"CLUSTERS"}
+                                onChange={(nval, val) => setColorByAnnotation(nval?.currentTarget?.value)}>
+                                {
+                                    annotationCols.map((x, i) => (
+                                        <option key={i}>{x}</option>
+                                    ))
+                                }
+                            </HTMLSelect>
+                            <ul>
+                                {
+                                    plotGroups && plotGroups.map((x, i) => {
+                                        return (
+                                            <li key={i}
                                                 className={clusHighlight === i ? 'legend-highlight' : ''}
                                                 style={{ color: plotColorMappings[i] }}
                                                 onClick={() => {
@@ -407,11 +406,11 @@ const DimPlot = (props) => {
                                                         setClusHighlight(i);
                                                     }
                                                 }}
-                                            > {x ? x: "NA"} </li>
-                                            )
-                                        })
-                                    }
-                                    {/* {props?.clusterColors?.map((x, i) => {
+                                            > {x ? x : "NA"} </li>
+                                        )
+                                    })
+                                }
+                                {/* {props?.clusterColors?.map((x, i) => {
                                         return i < props?.clusterColors.length - Object.keys(props?.customSelection).length ?
                                             (<li key={i}
                                                 className={clusHighlight === i ? 'legend-highlight' : ''}
@@ -426,128 +425,127 @@ const DimPlot = (props) => {
                                             > Cluster {i + 1} </li>)
                                             : ""
                                     })} */}
-                                </ul>
-                            </Callout>
-                            {
-                                (Object.keys(props?.customSelection).length > 0 || (selectedPoints && selectedPoints.length > 0)) ?
-                                    <Callout title="CUSTOM SELECTIONS">
-                                        <div
-                                            style={{
-                                                paddingTop: '5px'
-                                            }}>
-                                            <ul>
-                                                {Object.keys(props?.customSelection)?.map((x, i) => {
-                                                    return (<li key={x}
-                                                        className={clusHighlight === x ? 'legend-highlight' : ''}
-                                                        style={{ color: props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + 1 + i] }}
-                                                    >
-                                                        <div style={{
-                                                            display: 'inline-flex',
-                                                            alignItems: 'center',
-                                                            flexDirection: 'row'
-                                                        }}>
-                                                            <span
-                                                                style={{
-                                                                    alignSelf: 'center'
-                                                                }}
-                                                                onClick={() => {
-                                                                    if (x === clusHighlight) {
-                                                                        setClusHighlight(null);
-                                                                    } else {
-                                                                        setClusHighlight(x);
-                                                                    }
-                                                                }}>Custom Selection {x.replace("cs", "")}
-                                                            </span>
-                                                            <Icon
-                                                                size={12}
-                                                                icon="trash"
-                                                                style={{
-                                                                    paddingLeft: '2px'
-                                                                }}
-                                                                onClick={() => {
-                                                                    let tmpSel = { ...props?.customSelection };
-                                                                    delete tmpSel[x];
-                                                                    props?.setCustomSelection(tmpSel);
+                            </ul>
+                        </Callout>
+                        {
+                            (Object.keys(props?.customSelection).length > 0 || (selectedPoints && selectedPoints.length > 0)) ?
+                                <Callout title="CUSTOM SELECTIONS">
+                                    <div
+                                        style={{
+                                            paddingTop: '5px'
+                                        }}>
+                                        <ul>
+                                            {Object.keys(props?.customSelection)?.map((x, i) => {
+                                                return (<li key={x}
+                                                    className={clusHighlight === x ? 'legend-highlight' : ''}
+                                                    style={{ color: props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + 1 + i] }}
+                                                >
+                                                    <div style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        flexDirection: 'row'
+                                                    }}>
+                                                        <span
+                                                            style={{
+                                                                alignSelf: 'center'
+                                                            }}
+                                                            onClick={() => {
+                                                                if (x === clusHighlight) {
+                                                                    setClusHighlight(null);
+                                                                } else {
+                                                                    setClusHighlight(x);
+                                                                }
+                                                            }}>Custom Selection {x.replace("cs", "")}
+                                                        </span>
+                                                        <Icon
+                                                            size={12}
+                                                            icon="trash"
+                                                            style={{
+                                                                paddingLeft: '2px'
+                                                            }}
+                                                            onClick={() => {
+                                                                let tmpSel = { ...props?.customSelection };
+                                                                delete tmpSel[x];
+                                                                props?.setCustomSelection(tmpSel);
 
-                                                                    let tmpcolors = [...props?.clusterColors];
-                                                                    tmpcolors = tmpcolors.slice(0, tmpcolors.length - 1);
-                                                                    props?.setClusterColors(tmpcolors);
+                                                                let tmpcolors = [...props?.clusterColors];
+                                                                tmpcolors = tmpcolors.slice(0, tmpcolors.length - 1);
+                                                                props?.setClusterColors(tmpcolors);
 
-                                                                    props?.setDelCustomSelection(x);
+                                                                props?.setDelCustomSelection(x);
 
-                                                                    if (clusHighlight === x) {
-                                                                        setClusHighlight(null);
-                                                                    }
-                                                                }}></Icon>
-                                                        </div>
-                                                    </li>)
-                                                })}
-                                            </ul>
-                                        </div>
-                                        {
-                                            selectedPoints && selectedPoints.length > 0 ?
-                                                <div>
-                                                    <Divider />
-                                                    <div className='selection-container'>
-                                                        <span>{selectedPoints.length} cells selected</span>
-                                                        <div className='selection-button-container'>
-                                                            <Button small={true} intent='primary'
-                                                                onClick={savePoints}>Save</Button>
-                                                            <Button small={true}
-                                                                onClick={clearPoints}>Clear</Button>
-                                                        </div>
+                                                                if (clusHighlight === x) {
+                                                                    setClusHighlight(null);
+                                                                }
+                                                            }}></Icon>
+                                                    </div>
+                                                </li>)
+                                            })}
+                                        </ul>
+                                    </div>
+                                    {
+                                        selectedPoints && selectedPoints.length > 0 ?
+                                            <div>
+                                                <Divider />
+                                                <div className='selection-container'>
+                                                    <span>{selectedPoints.length} cells selected</span>
+                                                    <div className='selection-button-container'>
+                                                        <Button small={true} intent='primary'
+                                                            onClick={savePoints}>Save</Button>
+                                                        <Button small={true}
+                                                            onClick={clearPoints}>Clear</Button>
                                                     </div>
                                                 </div>
-                                                :
-                                                ""
-                                        }
-                                    </Callout>
-                                    :
-                                    ""
-                            }
-                        </div>
-                    }
-                    {showGradient ?
-                        <div className='right-sidebar-slider'>
-                            <Callout>
-                                <span>Gradient for <Tag
-                                    minimal={true}
-                                    intent='primary' onRemove={() => {
-                                        props?.setGene(null);
-                                    }}>{genesInfo[geneColSel][props?.gene]}</Tag>&nbsp;
-                                    <Tooltip2 content="Use the slider to adjust the color gradient of the plot. Useful when data is skewed
+                                            </div>
+                                            :
+                                            ""
+                                    }
+                                </Callout>
+                                :
+                                ""
+                        }
+                    </div>
+                }
+                {showGradient ?
+                    <div className='right-sidebar-slider'>
+                        <Callout>
+                            <span>Gradient for <Tag
+                                minimal={true}
+                                intent='primary' onRemove={() => {
+                                    props?.setGene(null);
+                                }}>{genesInfo[geneColSel][props?.gene]}</Tag>&nbsp;
+                                <Tooltip2 content="Use the slider to adjust the color gradient of the plot. Useful when data is skewed
                                 by either a few lowly or highly expressed cells" openOnTargetFocus={false}>
-                                        <Icon icon="help"></Icon>
-                                    </Tooltip2>
-                                </span>
-                                <div className='dim-slider-container'>
-                                    <div className='dim-slider-gradient'>
-                                        {/* <span>{Math.round(exprMinMax[0])}</span>&nbsp; */}
-                                        <div
-                                            style={{
-                                                backgroundImage: `linear-gradient(to right, #F5F8FA ${(sliderMinMax[0] - exprMinMax[0]) * 100 / (exprMinMax[1] - exprMinMax[0])}%, ${((sliderMinMax[1] + sliderMinMax[0] - (2 * exprMinMax[0]))) * 100 / (2 * (exprMinMax[1] - exprMinMax[0]))}%, #2965CC ${(100 - (exprMinMax[1] - sliderMinMax[1]) * 100 / (exprMinMax[1] - exprMinMax[0]))}%)`,
-                                                width: '175px', height: '15px',
-                                            }}></div>&nbsp;
-                                        {/* <span>{Math.round(exprMinMax[1])}</span> */}
-                                    </div>
-                                    <div className='dim-range-slider'>
-                                        <RangeSlider
-                                            min={Math.round(exprMinMax[0])}
-                                            max={Math.round(exprMinMax[1])}
-                                            stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 10}
-                                            labelValues={[Math.round(exprMinMax[0]), Math.round(exprMinMax[1])]}
-                                            onChange={(range) => { setSliderMinMax(range) }}
-                                            value={[Math.round(sliderMinMax[0]), Math.round(sliderMinMax[1])]}
-                                            vertical={false}
-                                        />
-                                    </div>
+                                    <Icon icon="help"></Icon>
+                                </Tooltip2>
+                            </span>
+                            <div className='dim-slider-container'>
+                                <div className='dim-slider-gradient'>
+                                    {/* <span>{Math.round(exprMinMax[0])}</span>&nbsp; */}
+                                    <div
+                                        style={{
+                                            backgroundImage: `linear-gradient(to right, #F5F8FA ${(sliderMinMax[0] - exprMinMax[0]) * 100 / (exprMinMax[1] - exprMinMax[0])}%, ${((sliderMinMax[1] + sliderMinMax[0] - (2 * exprMinMax[0]))) * 100 / (2 * (exprMinMax[1] - exprMinMax[0]))}%, #2965CC ${(100 - (exprMinMax[1] - sliderMinMax[1]) * 100 / (exprMinMax[1] - exprMinMax[0]))}%)`,
+                                            width: '175px', height: '15px',
+                                        }}></div>&nbsp;
+                                    {/* <span>{Math.round(exprMinMax[1])}</span> */}
                                 </div>
-                            </Callout>
-                        </div>
-                        :
-                        ""
-                    }
-                </div>
+                                <div className='dim-range-slider'>
+                                    <RangeSlider
+                                        min={Math.round(exprMinMax[0])}
+                                        max={Math.round(exprMinMax[1])}
+                                        stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 10}
+                                        labelValues={[Math.round(exprMinMax[0]), Math.round(exprMinMax[1])]}
+                                        onChange={(range) => { setSliderMinMax(range) }}
+                                        value={[Math.round(sliderMinMax[0]), Math.round(sliderMinMax[1])]}
+                                        vertical={false}
+                                    />
+                                </div>
+                            </div>
+                        </Callout>
+                    </div>
+                    :
+                    ""
+                }
             </div>
         </div>
     );
