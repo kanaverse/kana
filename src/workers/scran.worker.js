@@ -18,6 +18,7 @@ import * as custom_markers from "./_custom_markers.js";
 import * as kana_db from "./KanaDBHandler.js";
 import * as utils from "./_utils.js";
 import * as serialize_utils from "./_utils_serialize.js";
+import * as hdf5 from "h5wasm";
 
 /***************************************/
 
@@ -427,7 +428,8 @@ onmessage = function (msg) {
             scran_init,
             kana_init,
             tsne_init,
-            umap_init
+            umap_init,
+            hdf5.ready
         ]);
 
     } else if (payload.type == "RUN") {
