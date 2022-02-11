@@ -194,17 +194,21 @@ function load10XRaw(files) {
         cache.matrix = scran.initializeSparseMatrixFromHDF5(tmppath, "matrix");
 
         // Fetching the gene IDs and names.
-        fkeys = scran.extractHDF5ObjectNames(tmppath);
-        if ("features/id" in fkeys && fkeys["features/id"] === "string dataset") {
-            cache.genes = { id: scran.loadHDF5Dataset(tmppath, "features/id") };
-            if ("features/name" in fkeys && fkeys["features/name"] === "string dataset") {
-                cache.genes.names = scran.loadHDF5Dataset(tmppath, "features/name");
+        cache.genes = null;
+        let objects = scran.extractHDF5ObjectNames(tmppath);
+        if ("features" in objects["matrix"]) {
+            let fobjects = objects["matrix"]["features"];
+            if ("id" in fobjects && fobjects["id"] === "string dataset") {
+                cache.genes = { id: scran.loadHDF5Dataset(tmppath, "matrix/features/id").contents };
+                if ("name" in fobjects && fobjects["name"] === "string dataset") {
+                    cache.genes.names = scran.loadHDF5Dataset(tmppath, "matrix/features/name").contents;
+                }
             }
-        } else {
-            cache.genes = null;
         }
+        console.log(cache.genes);
 
-        cache.annotations = null; // TODO: pull out sample IDs from the HDF5 file, if they exist.
+        // TODO: pull out sample IDs from the HDF5 file, if they exist.
+        cache.annotations = null;
 
     } finally {
         scran.removeFile(tmppath);
@@ -227,33 +231,39 @@ function loadH5ADRaw(files, name) {
 
     try {
         cache.matrix = scran.initializeSparseMatrixFromHDF5(tmppath, "X");
+        let objects = scran.extractHDF5ObjectNames(tmppath);
 
         // Trying to guess the gene names.
-        fkeys = scran.extractHDF5ObjectNames(tmppath, { group: "var", recursive: false });
-        if ("_index" in fkeys && fkeys["_index"] == "string dataset") {
-            cache.genes = { "_index": scran.loadHDF5Dataset(tmppath, "var/_index") };
-            for (const [key, val] of Object.entries(fkeys)) {
-                if (val == "string dataset" && (key.match(/name/i) || key.match(/symb/i))) {
-                    cache.genes[key] = scran.loadHDF5Dataset(tmppath, "var/" + key);
+        cache.genes = null;
+        if ("var" in objects) {
+            let vobjects = objects["var"];
+            if ("_index" in vobjects && vobjects["_index"] == "string dataset") {
+                cache.genes = { "_index": scran.loadHDF5Dataset(tmppath, "var/_index").contents };
+                for (const [key, val] of Object.entries(vobjects)) {
+                    if (val === "string dataset" && (key.match(/name/i) || key.match(/symb/i))) {
+                        cache.genes[key] = scran.loadHDF5Dataset(tmppath, "var/" + key).contents;
+                    }
                 }
             }
-        } else {
-            cache.genes = null;
         }
 
         // Adding the annotations.
-        var obs = f.get("obs");
-        if (obs instanceof hdf5.Dataset) {
-            // this is the only place i found where it contains names
-            let colnames = obs.dtype?.compound?.members?.map(x => x.name);
-            let parsed = obs.value;
+        cache.annotations = null;
+        if ("obs" in objects) {
+            let bobjects = objects["obs"];
+            cache.annotations = {};
 
-            let annots = {}
-            colnames.forEach((x, i) => {
-                annots[x] = parsed.map(y => y[i]);
-            });
+            // Maybe it has names, maybe not, who knows; let's just add what's there.
+            if ("_index" in bobjects && bobjects["_index"] == "string dataset") {
+                cache.annotations["_index"] = scran.loadHDF5Dataset(tmppath, "obs/_index").contents;
+            }
 
-            return annots;
+            for (const [key, val] of Object.entries(bobjects)) {
+                // TODO: handle factors properly.
+                if (val === "string dataset" || val === "integer dataset" || val === "float dataset") { 
+                    cache.annotations[key] = scran.loadHDF5Dataset(tmppath, "obs/" + key).contents;
+                }
+            }
         }
 
     } finally {
