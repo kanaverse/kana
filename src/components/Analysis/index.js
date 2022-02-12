@@ -458,6 +458,7 @@ const AnalysisDialog = ({
                             <NumericInput
                                 placeholder="0.3"
                                 stepSize={0.1}
+                                minorStepSize={0.1}
                                 value={tmpInputParams["fSelection"]["fsel-span"]}
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "fSelection": { ...tmpInputParams["fSelection"], "fsel-span": val } }) }} />
                         </Label>
@@ -576,6 +577,7 @@ const AnalysisDialog = ({
                             <NumericInput
                                 placeholder="0.5" value={tmpInputParams["cluster"]["clus-res"]}
                                 stepSize={0.1}
+                                minorStepSize={0.1}
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-res": val } }) }} />
                         </Label>
                     </div>
@@ -655,6 +657,7 @@ const AnalysisDialog = ({
                             <NumericInput
                                 placeholder="0.01"
                                 stepSize={0.01}
+                                minorStepSize={0.01}
                                 value={tmpInputParams["umap"]["umap-min_dist"]}
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "umap": { ...tmpInputParams["umap"], "umap-min_dist": val } }) }} />
                         </Label>
