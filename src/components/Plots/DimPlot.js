@@ -283,8 +283,6 @@ const DimPlot = (props) => {
     }
 
     function handleSaveEmbedding() {
-        console.log("handleSaveEmbedding");
-
         const containerEl = container.current;
         if (containerEl) {
             // preserve drawing buffers is false, so render and capture state right away

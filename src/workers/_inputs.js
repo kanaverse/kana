@@ -204,7 +204,6 @@ function load10XRaw(files) {
                 }
             }
         }
-        console.log(cache.genes);
 
         // TODO: pull out sample IDs from the HDF5 file, if they exist.
         cache.annotations = null;
