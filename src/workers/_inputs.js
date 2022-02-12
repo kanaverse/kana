@@ -186,7 +186,7 @@ function load10XRaw(files) {
 
     // In theory, we could support multiple HDF5 buffers.
     var first_file = files[0];
-    var tmppath = "rabbit-temp.h5";
+    var tmppath = first_file.name;
     scran.writeFile(tmppath, new Uint8Array(first_file.buffer));
 
     try {
@@ -225,7 +225,7 @@ function loadH5ADRaw(files, name) {
 
     // In theory, we could support multiple HDF5 buffers.
     var first_file = files[0];
-    var tmppath = "rabbit-temp.h5";
+    var tmppath = first_file.name;
     scran.writeFile(tmppath, new Uint8Array(first_file.buffer));
 
     try {
@@ -236,11 +236,13 @@ function loadH5ADRaw(files, name) {
         cache.genes = null;
         if ("var" in objects) {
             let vobjects = objects["var"];
-            if ("_index" in vobjects && vobjects["_index"] == "string dataset") {
-                cache.genes = { "_index": scran.loadHDF5Dataset(tmppath, "var/_index").contents };
-                for (const [key, val] of Object.entries(vobjects)) {
-                    if (val === "string dataset" && (key.match(/name/i) || key.match(/symb/i))) {
-                        cache.genes[key] = scran.loadHDF5Dataset(tmppath, "var/" + key).contents;
+            if (utils.isObject(vobjects)) {
+                if ("_index" in vobjects && vobjects["_index"] == "string dataset") {
+                    cache.genes = { "_index": scran.loadHDF5Dataset(tmppath, "var/_index").contents };
+                    for (const [key, val] of Object.entries(vobjects)) {
+                        if (val === "string dataset" && (key.match(/name/i) || key.match(/symb/i))) {
+                            cache.genes[key] = scran.loadHDF5Dataset(tmppath, `var/${key}`).contents;
+                        }
                     }
                 }
             }
@@ -252,15 +254,27 @@ function loadH5ADRaw(files, name) {
             let bobjects = objects["obs"];
             cache.annotations = {};
 
-            // Maybe it has names, maybe not, who knows; let's just add what's there.
-            if ("_index" in bobjects && bobjects["_index"] == "string dataset") {
-                cache.annotations["_index"] = scran.loadHDF5Dataset(tmppath, "obs/_index").contents;
-            }
+            if (utils.isObject(bobjects)) {
+                // Maybe it has names, maybe not, who knows; let's just add what's there.
+                if ("_index" in bobjects && bobjects["_index"] == "string dataset") {
+                    cache.annotations["_index"] = scran.loadHDF5Dataset(tmppath, "obs/_index").contents;
+                }
 
-            for (const [key, val] of Object.entries(bobjects)) {
-                // TODO: handle factors properly.
-                if (val === "string dataset" || val === "integer dataset" || val === "float dataset") { 
-                    cache.annotations[key] = scran.loadHDF5Dataset(tmppath, "obs/" + key).contents;
+                for (const [key, val] of Object.entries(bobjects)) {
+                    if (val === "string dataset" || val === "integer dataset" || val === "float dataset") {
+                        let bobj_factors = scran.loadHDF5Dataset(tmppath, `obs/${key}`).contents;
+
+                        if ("__categories" in bobjects && bobjects["__categories"][key] == "string dataset") {
+                            let bobj_index = scran.loadHDF5Dataset(tmppath, `obs/__categories/${key}`).contents;
+                            cache.annotations[key] = {
+                                "type": "factor",
+                                "index": bobj_index,
+                                "factor": bobj_factors
+                            }
+                        } else {
+                            cache.annotations[key] = bobj_factors;
+                        }
+                    }
                 }
             }
         }
@@ -453,6 +467,10 @@ export function fetchAnnotations(col) {
 
     if (!(col in annots)) {
         throw `column ${col} does not exist in col.tsv`;
+    }
+
+    if (utils.isObject(annots[col]) && "type" in annots[col]) {
+        return annots[col];
     }
 
     let uvals = {};
