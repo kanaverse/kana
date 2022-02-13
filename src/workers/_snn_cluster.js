@@ -42,8 +42,7 @@ export function compute(args) {
 }
 
 export function results() {
-    var clusters = fetchClustersAsWasmArray();
-    return { "clusters": clusters.slice() };
+    return {};
 }
 
 export function serialize() {
