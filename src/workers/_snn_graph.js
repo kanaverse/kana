@@ -16,13 +16,11 @@ function rawCompute(args) {
 }
 
 export function compute(args) {
-    if (neighbors.changed === null) {
-        // If my upstream was skipped, then I am also skipped.
+    if (neighbors.changed === null) { // If my upstream was skipped, then I am also skipped.
         changed = null;
-
-        // Clearing out memory as a courtesy.
-        utils.freeCache(cache.raw);
+        utils.freeCache(cache.raw); // Clearing out memory as a courtesy.
         delete cache.reloaded;
+        parameters = args;
 
     } else if (changed !== null && !neighbors.changed && !utils.changedParameters(parameters, args)) {
         changed = false;
@@ -41,21 +39,28 @@ export function results() {
 }
 
 export function serialize() {
-    if (changed == null) {
-        return null;
+    let output = { 
+        "parameters": parameters
+    };
+
+    if (changed === null) {
+        output.contents = null;
     } else {
-        return {
-            "parameters": parameters,
-            "contents": results()
-        };
+        output.contents = results();
     }
+
+    return output;
 }
 
 export function unserialize(saved) {
+    parameters = saved.parameters;
+
     if (saved !== undefined) {
-        parameters = saved.parameters;
         cache.reloaded = saved.contents;
+    } else {
+        changed = null;
     }
+
     return;
 }
 

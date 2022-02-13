@@ -11,19 +11,16 @@ export function fetchClustersAsWasmArray() {
     if ("reloaded" in cache) {
         return cache.reloaded.clusters;
     } else {
-        var tmp = cache.raw.membership({ copy: false });
-        return new scran.Int32WasmArray(tmp.length, tmp.byteOffset);
+        return cache.raw.membership({ copy: "view" });
     }
 }
 
 export function compute(args) {
-    if (graph.changed === null) {
-        // If my upstream was skipped, then I am also skipped.
+    if (graph.changed === null) { // If my upstream was skipped, then I am also skipped.
         changed = null;
-
-        // Also freeing some memory as a courtesy.
-        utils.freeCache(cache.raw);
+        utils.freeCache(cache.raw); // Also freeing some memory as a courtesy.
         utils.freeReloaded(cache);
+        parameters = args;
 
     } else if (changed !== null && !graph.changed && !utils.changedParameters(parameters, args)) {
         changed = false;
@@ -42,30 +39,39 @@ export function compute(args) {
 }
 
 export function results() {
+    // Cluster IDs will be passed to main thread in 
+    // choose_clustering, so no need to do it here.
     return {};
 }
 
 export function serialize() {
+    let output = { 
+        "parameters": parameters
+    };
+
     if (changed === null) {
-        return null;
+        output.contents = null;
     } else {
-        return {
-          "parameters": parameters,
-          "contents": results()
+        output.contents = {
+            "clusters": fetchClustersAsWasmArray().slice()
         };
     }
+
+    return output;
 }
 
 export function unserialize(saved) {
-    if (saved !== undefined) {
-        parameters = saved.parameters;
+    parameters = saved.parameters;
 
+    if (saved !== undefined) {
         utils.freeReloaded(cache);
         cache.reloaded = saved.contents;
 
         var out = new scran.Int32WasmArray(cache.reloaded.clusters.length);
         out.set(cache.reloaded.clusters);
         cache.reloaded.clusters = out;
+    } else {
+        changed = null;
     }
 
     return;

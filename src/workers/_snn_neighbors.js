@@ -30,6 +30,7 @@ export function compute(args) {
         changed = null; // neither changed or unchanged, just skipped.
         utils.freeCache(cache.raw); // freeing some memory as a courtesy.
         delete cache.reloaded;
+        parameters = args;
 
     } else {
         rawCompute(args);
@@ -45,21 +46,28 @@ export function results() {
 }
 
 export function serialize() {
+    let output = { 
+        "parameters": parameters
+    };
+
     if (changed === null) {
-        return null;
+        output.contents = null;
     } else {
-        return {
-            "parameters": parameters,
-            "contents": results()
-        };
+        output.contents = results();
     }
+    
+    return output;
 };
 
 export function unserialize(saved) {
-    if (saved !== undefined) {
-        parameters = saved.parameters;
+    parameters = saved.parameters;
+
+    if (saved.contents !== null) {
         cache.reloaded = saved.contents;
+    } else {
+        changed = null;
     }
+
     return;
 }
 

@@ -30,6 +30,7 @@ export function compute(args) {
         changed = null; // neither changed or unchanged, just skipped.
         utils.freeCache(cache.raw); // free up some memory as a courtesy.
         utils.freeReloaded(cache);
+        parameters = args;
 
     } else {
         utils.freeCache(cache.raw);
@@ -44,31 +45,40 @@ export function compute(args) {
 }
 
 export function results() {
-    var clusters = fetchClustersAsWasmArray();
-    return { "clusters": clusters.slice() };
+    // Cluster IDs will be passed to main thread in 
+    // choose_clustering, so no need to do it here.
+    return {};
 }
 
 export function serialize() {
+    let output = { 
+        "parameters": parameters
+    };
+
     if (changed === null) {
-        return null;
+        output.contents = null;
     } else {
-        return {
-          "parameters": parameters,
-          "contents": results()
+        output.contents = {
+            "clusters": fetchClustersAsWasmArray().slice()
         };
     }
+
+    return output;
 }
 
 export function unserialize(saved) {
-    if (saved !== undefined) {
-        parameters = saved.parameters;
+    parameters = saved.parameters;
 
+    if (saved.contents !== null) {
         utils.freeReloaded(cache); // free anything that might have been there previously.
         cache.reloaded = saved.contents;
 
         var out = new scran.Int32WasmArray(cache.reloaded.clusters.length);
         out.set(cache.reloaded.clusters);
         cache.reloaded.clusters = out;
+    } else {
+        changed = null;
     }
+
     return;
 }

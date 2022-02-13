@@ -39,9 +39,11 @@ export function results() {
 }
 
 export function serialize() {
+    // No need to serialize the cluster IDs,
+    // as this is done for each step.
     return {
         "parameters": parameters,
-        "contents": results()
+        "contents": {}
     };
 }
 
