@@ -321,28 +321,34 @@ const AnalysisDialog = ({
                         <p>
                             <strong>Method</strong>:
                             Clustering algorithm to use.
-                            Currently, we only support multi-level community detection on an shared nearest neighbor (SNN) graph,
-                            where cells are the nodes and edges are created between neighboring cells.
+                            Currently, we support k-means clustering with kmeans++ initialization and Hartigon-Wong refinement;
+                            or multi-level community detection on an shared nearest neighbor (SNN) graph,
+                            where the cells are the nodes and edges are created between neighboring cells.
                         </p>
                         <p>
-                            <strong>Number of neighbors</strong>:
+                            <strong>Number of clusters (k-means)</strong>:
+                            Number of clusters to create in k-means clustering.
+                            This is capped at 40 for performance purposes.
+                        </p>
+                        <p>
+                            <strong>Number of neighbors (SNN)</strong>:
                             Number of neighbors to use to construct the SNN graph.
                             Larger values result in broader clusters.
                         </p>
                         <p>
-                            <strong>Use ANN</strong>:
+                            <strong>Use ANN (SNN)</strong>:
                             Use an approximate method to speed up the nearest neighbor search.
                             This sacrifices some accuracy for speed in larger datasets.
                         </p>
                         <p>
-                            <strong>Weighting scheme</strong>:
+                            <strong>Weighting scheme (SNN)</strong>:
                             Weighting scheme to use for the edges of the SNN graph.
                             The <em>Rank</em> approach derives a weight from the rank of the closest shared neighbor;
                             the <em>Number</em> approach uses the number of shared neighbors;
                             and the Jaccard approach uses the <em>Jaccard</em> index of the neighbor sets.
                         </p>
                         <p>
-                            <strong>Resolution</strong>:
+                            <strong>Resolution (SNN)</strong>:
                             Resolution parameter for the multi-level clustering, used to adjust the modularity calculation during community optimization.
                             Larger values yield more fine-grained clusters.
                         </p>
