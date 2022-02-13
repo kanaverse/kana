@@ -16,13 +16,27 @@ export function rawCompute(args) {
 }
 
 export function compute(args) {
-    if (!index.changed && !utils.changedParameters(parameters, args)) {
+    // Setting the existing cluster_method to the new method so that we don't
+    // pick up changes in the method in the changedParameters() call. This aims
+    // to preserve the state if only the clustering method choice changed, such
+    // that a user avoids recomputation when they switch back to this method.
+    let method = args.cluster_method;
+    delete args.cluster_method;
+
+    if (changed !== null && !index.changed && !utils.changedParameters(parameters, args)) {
         changed = false;
+
+    } else if (!method.startsWith("snn_")) {
+        changed = null; // neither changed or unchanged, just skipped.
+        utils.freeCache(cache.raw); // freeing some memory as a courtesy.
+        delete cache.reloaded;
+
     } else {
         rawCompute(args);
         parameters = args;
         changed = true;
     }
+
     return;
 }
 
@@ -31,15 +45,21 @@ export function results() {
 }
 
 export function serialize() {
-    return {
-        "parameters": parameters,
-        "contents": results()
-    };
+    if (changed === null) {
+        return null;
+    } else {
+        return {
+            "parameters": parameters,
+            "contents": results()
+        };
+    }
 };
 
 export function unserialize(saved) {
-    parameters = saved.parameters;
-    cache.reloaded = saved.contents;
+    if (saved !== undefined) {
+        parameters = saved.parameters;
+        cache.reloaded = saved.contents;
+    }
     return;
 }
 

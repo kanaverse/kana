@@ -277,8 +277,12 @@ function runAllSteps(mode = "run", state = null) {
             response[step] = kmeans_cluster.serialize();
         } else {
             if (mode == "run") {
+                // Only reporting the method to decide whether to execute this
+                // step; this does not need to be unserialized, as it is 
+                // remembered by the choose_clustering step.
                 kmeans_cluster.compute({
-                    "k": state.params.cluster["kmeans-k"]
+                    "k": state.params.cluster["kmeans-k"],
+                    "cluster_method": state.params.cluster["clus-method"] 
                 });
             } else {
                 kmeans_cluster.unserialize(state[step]);
@@ -296,8 +300,12 @@ function runAllSteps(mode = "run", state = null) {
             response[step] = snn_neighbors.serialize();
         } else {
             if (mode == "run") {
+                // Only reporting the method to decide whether to execute this
+                // step; this does not need to be unserialized, as it is 
+                // remembered by the choose_clustering step.
                 snn_neighbors.compute({
-                    "k": state.params.cluster["clus-k"]
+                    "k": state.params.cluster["clus-k"],
+                    "cluster_method": state.params.cluster["clus-method"]
                 });
             } else {
                 snn_neighbors.unserialize(state[step]);

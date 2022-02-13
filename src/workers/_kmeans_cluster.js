@@ -17,17 +17,30 @@ export function fetchClustersAsWasmArray() {
 }
 
 export function compute(args) {
-    if (!pca.changed && !utils.changedParameters(parameters, args)) {
+    // Removing the cluster_method so that we don't pick up changes in the
+    // method in the changedParameters() call. This aims to preserve the state
+    // if only the clustering method choice changed, such that a user avoids
+    // recomputation when they switch back to this method.
+    let method = args.cluster_method;
+    delete args.cluster_method;
+
+    if (changed !== null && !pca.changed && !utils.changedParameters(parameters, args)) {
         changed = false;
+
+    } else if (method !== "kmeans") {
+        changed = null; // neither changed or unchanged, just skipped.
+        utils.freeCache(cache.raw); // free up some memory as a courtesy.
+        utils.freeReloaded(cache);
+
     } else {
         utils.freeCache(cache.raw);
         var pcs = pca.fetchPCs();
-        cache.raw = scran.clusterKmeans(pcs.pcs, args.kmeans_clusters, { numberOfDims: pcs.num_pcs, numberOfCells: pcs.num_obs });
-
+        cache.raw = scran.clusterKmeans(pcs.pcs, args.k, { numberOfDims: pcs.num_pcs, numberOfCells: pcs.num_obs });
         parameters = args;
         changed = true;
         utils.freeReloaded(cache);
     }
+
     return;
 }
 
@@ -37,21 +50,26 @@ export function results() {
 }
 
 export function serialize() {
-    return {
-      "parameters": parameters,
-      "contents": results()
-    };
+    if (changed === null) {
+        return null;
+    } else {
+        return {
+          "parameters": parameters,
+          "contents": results()
+        };
+    }
 }
 
 export function unserialize(saved) {
-    parameters = saved.parameters;
+    if (saved !== undefined) {
+        parameters = saved.parameters;
 
-    utils.freeReloaded(cache);
-    cache.reloaded = saved.contents;
+        utils.freeReloaded(cache); // free anything that might have been there previously.
+        cache.reloaded = saved.contents;
 
-    var out = new scran.Int32WasmArray(cache.reloaded.clusters.length);
-    out.set(cache.reloaded.clusters);
-    cache.reloaded.clusters = out;
-
+        var out = new scran.Int32WasmArray(cache.reloaded.clusters.length);
+        out.set(cache.reloaded.clusters);
+        cache.reloaded.clusters = out;
+    }
     return;
 }

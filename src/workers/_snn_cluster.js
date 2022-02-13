@@ -17,8 +17,17 @@ export function fetchClustersAsWasmArray() {
 }
 
 export function compute(args) {
-    if (!graph.changed && !utils.changedParameters(parameters, args)) {
+    if (graph.changed === null) {
+        // If my upstream was skipped, then I am also skipped.
+        changed = null;
+
+        // Also freeing some memory as a courtesy.
+        utils.freeCache(cache.raw);
+        utils.freeReloaded(cache);
+
+    } else if (changed !== null && !graph.changed && !utils.changedParameters(parameters, args)) {
         changed = false;
+        
     } else {
         utils.freeCache(cache.raw);
         var g = graph.fetchGraph();
@@ -28,6 +37,7 @@ export function compute(args) {
         changed = true;
         utils.freeReloaded(cache);
     }
+
     return;
 }
 
@@ -37,21 +47,27 @@ export function results() {
 }
 
 export function serialize() {
-    return {
-      "parameters": parameters,
-      "contents": results()
-    };
+    if (changed === null) {
+        return null;
+    } else {
+        return {
+          "parameters": parameters,
+          "contents": results()
+        };
+    }
 }
 
 export function unserialize(saved) {
-    parameters = saved.parameters;
+    if (saved !== undefined) {
+        parameters = saved.parameters;
 
-    utils.freeReloaded(cache);
-    cache.reloaded = saved.contents;
+        utils.freeReloaded(cache);
+        cache.reloaded = saved.contents;
 
-    var out = new scran.Int32WasmArray(cache.reloaded.clusters.length);
-    out.set(cache.reloaded.clusters);
-    cache.reloaded.clusters = out;
+        var out = new scran.Int32WasmArray(cache.reloaded.clusters.length);
+        out.set(cache.reloaded.clusters);
+        cache.reloaded.clusters = out;
+    }
 
     return;
 }

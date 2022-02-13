@@ -1,6 +1,7 @@
 import * as scran from "scran.js";
 import * as utils from "./_utils.js";
-import * as cluster from "./_snn_cluster.js";
+import * as snn_cluster from "./_snn_cluster.js";
+import * as kmeans_cluster from "./_kmeans_cluster.js";
 
 var cache = {};
 var parameters = {};
@@ -12,8 +13,14 @@ export function compute(args) {
     changed = true;
     
     if (!utils.changedParameters(parameters, args)) {
-        if (args.method == "snn_graph" && !cluster.changed) {
-            changed = false;
+        if (args.method == "snn_graph") {
+            if (!snn_cluster.changed) {
+                changed = false;
+            }
+        } else if (args.method == "kmeans") {
+            if (!kmeans_cluster.changed) {
+                changed = false;
+            }
         }
     }
 
@@ -45,7 +52,9 @@ export function unserialize(saved) {
 
 /** Non-standard functions **/
 export function fetchClustersAsWasmArray() {
-//    if (parameters.method == "snn_graph") {
-    return cluster.fetchClustersAsWasmArray(); // really the only option right now.
-//  }
+    if (parameters.method == "snn_graph") {
+        return snn_cluster.fetchClustersAsWasmArray();
+    } else if (parameters.method == "kmeans") {
+        return kmeans_cluster.fetchClustersAsWasmArray();
+    }
 }
