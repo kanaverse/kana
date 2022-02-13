@@ -533,7 +533,7 @@ const AnalysisDialog = ({
                                 <option value="snn_graph">SNN graph</option>
                             </HTMLSelect>
                         </Label>
-                        <Label className="row-input">
+                        {tmpInputParams["cluster"]["clus-method"] == "kmeans" && <Label className="row-input">
                             <Text className="text-100">
                                 <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(5)}>
@@ -544,6 +544,8 @@ const AnalysisDialog = ({
                                 placeholder="10" value={tmpInputParams["cluster"]["kmeans-k"]}
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "kmeans-k": nval } }) }} />
                         </Label>
+                        }
+                        {tmpInputParams["cluster"]["clus-method"] == "snn_graph" && <>
                         <Label className="row-input">
                             <Text className="text-100">
                                 <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
@@ -595,6 +597,7 @@ const AnalysisDialog = ({
                                 minorStepSize={0.1}
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-res": val } }) }} />
                         </Label>
+                        </>}
                     </div>
                 </div>
             </div>
