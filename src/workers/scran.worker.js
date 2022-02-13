@@ -8,6 +8,7 @@ import * as variance from "./_model_gene_var.js";
 import * as pca from "./_pca.js";
 import * as index from "./_neighbor_index.js";
 import * as cluster_choice from "./_choose_clustering.js";
+import * as kmeans_cluster from "./_kmeans_cluster.js";
 import * as snn_cluster from "./_snn_cluster.js";
 import * as snn_graph from "./_snn_graph.js";
 import * as snn_neighbors from "./_snn_neighbors.js";
@@ -270,6 +271,25 @@ function runAllSteps(mode = "run", state = null) {
     }
   
     // Back to normal programming.
+    {
+        let step = "kmeans_cluster";
+        if (mode == "serialize") {
+            response[step] = kmeans_cluster.serialize();
+        } else {
+            if (mode == "run") {
+                kmeans_cluster.compute({
+                    "k": state.params.cluster["kmeans-k"]
+                });
+            } else {
+                kmeans_cluster.unserialize(state[step]);
+                addToObject(response["params"], "cluster", {
+                    "kmeans-k": state[step].parameters.k
+                });
+            }
+            postSuccess(kmeans_cluster, step, "K-means clustering completed");
+        }
+    }
+
     {
         let step = "snn_find_neighbors";
         if (mode == "serialize") {
