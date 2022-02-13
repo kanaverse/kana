@@ -83,3 +83,7 @@ export function extractBuffers(object, store) {
         store.push(object.buffer);
     }
 }
+
+export function isObject(object) {
+    return typeof object === 'object' && Array.isArray(object) === false;
+}

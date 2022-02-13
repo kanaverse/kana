@@ -1,6 +1,5 @@
 import * as scran from "scran.js";
 import * as utils from "./_utils.js";
-import * as hdf5 from "h5wasm";
 import * as d3 from "d3-dsv";
 import * as pako from "pako";
 
@@ -38,7 +37,6 @@ function dummyGenes(numberOfRowss) {
 }
 
 function readDSVFromBuffer(content, fname, delim = "\t") {
-
     var ext = fname.name.split('.').pop();
 
     if (ext == "gz") {
@@ -183,201 +181,35 @@ function loadMatrixMarket(args) {
 
 /** HDF5 **/
 
-function guessPath(f) {
-    var fkeys = f.keys();
-    if (fkeys.indexOf("X") != -1) {
-        return "X";
-    } else if (fkeys.indexOf("matrix") != -1) {
-        return "matrix";
-    } else {
-        var sparse_opts = [];
-        var dense_opts = [];
-
-        // Try to pick out sparse formats.
-        for (const key of fkeys) {
-            var current = f.get(key);
-            if (current instanceof hdf5.Group) {
-                var cur_keys = current.keys();
-                if (cur_keys.indexOf("data") != -1 && cur_keys.indexOf("indices") && cur_keys.indexOf("indptr")) {
-                    sparse_opts.push(key);
-                }
-            } else if (current instanceof hdf5.Dataset && current.shape.length == 2) {
-                dense_opts.push(key);
-            }
-        }
-
-        if (sparse_opts.length) {
-            return sparse_opts[0];
-        } else if (dense_opts.length) {
-            return dense_opts[0];
-        } else {
-            throw "could not automatically find a suitable 'path' inside the HDF5 file";
-        }
-    }
-
-    return null;
-}
-
-function guessGenesFromH5AD(f) {
-    var fkeys = f.keys();
-
-    // Does it have a 'var' group?
-    if (fkeys.indexOf("var") == -1) {
-        return null;
-    }
-
-    var vars = f.get("var");
-    if (!(vars instanceof hdf5.Group)) {
-        return null;
-    }
-
-    var vkeys = vars.keys();
-    if (vkeys.indexOf("_index") == -1) {
-        return null;
-    }
-
-    let index = vars.get("_index");
-    if (!(index instanceof hdf5.Dataset)) {
-        return null;
-    }
-
-    let output = { "_index": index.value };
-
-    // Also include anything else that might be a gene symbol.
-    for (const key of vkeys) {
-        if (key == "_index") {
-            continue;
-        }
-
-        if (key.match(/name/i) || key.match(/symbol/i)) {
-            let current = vars.get(key);
-            if (current instanceof hdf5.Dataset) {
-                output[field] = current.value;
-            }
-        }
-    }
-
-    return output;
-}
-
-function guessGenesFrom10x(f) {
-    var fkeys = f.keys();
-
-    // Does it have a 'matrix' group with a "features" subgroup?
-    if (fkeys.indexOf("matrix") == -1) {
-        return null;
-    }
-
-    var mat = f.get("matrix");
-    if (!(mat instanceof hdf5.Group)) {
-        return null;
-    }
-
-    var mkeys = mat.keys();
-    if (mkeys.indexOf("features") == -1) {
-        return null;
-    }
-
-    var feats = mat.get("features");
-    if (!(feats instanceof hdf5.Group)) {
-        return null;
-    }
-
-    var featkeys = feats.keys();
-    if (featkeys.indexOf("id") == -1) {
-        return null;
-    }
-
-    var featid = feats.get("id");
-    if (!(featid instanceof hdf5.Dataset)) {
-        return null;
-    }
-
-    var output = { id: featid.value };
-
-    var name_index = featkeys.indexOf("name");
-    if (name_index != -1) {
-        var featname = feats.get("name");
-        if (featname instanceof hdf5.Dataset) {
-            output.name = featname.value;
-        }
-    }
-
-    return output;
-}
-
-function guessGenesFromHDF5(f) {
-    {
-        let output = guessGenesFromH5AD(f);
-        if (output !== null) {
-            return output;
-        }
-    }
-
-    {
-        let output = guessGenesFrom10x(f);
-        if (output !== null) {
-            return output;
-        }
-    }
-
-    return null;
-}
-
-function guessAnnotationsFromH5AD(f) {
-    var fkeys = f.keys();
-
-    if (fkeys.indexOf("obs") == -1) {
-        return null;
-    }
-
-    var obs = f.get("obs");
-    if (obs instanceof hdf5.Dataset) {
-        // this is the only place i found where it contains names
-        let colnames = obs.dtype?.compound?.members?.map(x => x.name);
-        let parsed = obs.value;
-
-        let annots = {}
-        colnames.forEach((x, i) => {
-            annots[x] = parsed.map(y => y[i]);
-        });
-
-        return annots;
-    }
-
-    return null;
-}
-
-function guessAnnotationsFromHDF5(f) {
-    {
-        let output = guessAnnotationsFromH5AD(f);
-        if (output !== null) {
-            return output;
-        }
-    }
-
-    return null;
-}
-
-function loadHDF5Raw(files) {
+function load10XRaw(files) {
     utils.freeCache(cache.matrix);
 
     // In theory, we could support multiple HDF5 buffers.
     var first_file = files[0];
-    var tmppath = "rabbit-temp.h5";
+    var tmppath = first_file.name;
+    scran.writeFile(tmppath, new Uint8Array(first_file.buffer));
+
     try {
-        hdf5.FS.writeFile(tmppath, new Uint8Array(first_file.buffer));
-        var f = new hdf5.File(tmppath, "r");
-        try {
-            var path = guessPath(f);
-            cache.matrix = scran.initializeSparseMatrixFromHDF5Buffer(f, path);
-            cache.genes = guessGenesFromHDF5(f);
-            cache.annotations = guessAnnotationsFromHDF5(f);
-        } finally {
-            f.close();
+        cache.matrix = scran.initializeSparseMatrixFromHDF5(tmppath, "matrix");
+
+        // Fetching the gene IDs and names.
+        cache.genes = null;
+        let objects = scran.extractHDF5ObjectNames(tmppath);
+        if ("features" in objects["matrix"]) {
+            let fobjects = objects["matrix"]["features"];
+            if ("id" in fobjects && fobjects["id"] === "string dataset") {
+                cache.genes = { id: scran.loadHDF5Dataset(tmppath, "matrix/features/id").contents };
+                if ("name" in fobjects && fobjects["name"] === "string dataset") {
+                    cache.genes.names = scran.loadHDF5Dataset(tmppath, "matrix/features/name").contents;
+                }
+            }
         }
+
+        // TODO: pull out sample IDs from the HDF5 file, if they exist.
+        cache.annotations = null;
+
     } finally {
-        hdf5.FS.unlink(tmppath);
+        scran.removeFile(tmppath);
     }
 
     if (cache.genes === null) {
@@ -387,13 +219,83 @@ function loadHDF5Raw(files) {
     return;
 }
 
-function loadHDF5(args) {
+function loadH5ADRaw(files, name) {
+    utils.freeCache(cache.matrix);
+
+    // In theory, we could support multiple HDF5 buffers.
+    var first_file = files[0];
+    var tmppath = first_file.name;
+    scran.writeFile(tmppath, new Uint8Array(first_file.buffer));
+
+    try {
+        cache.matrix = scran.initializeSparseMatrixFromHDF5(tmppath, "X");
+        let objects = scran.extractHDF5ObjectNames(tmppath);
+
+        // Trying to guess the gene names.
+        cache.genes = null;
+        if ("var" in objects) {
+            let vobjects = objects["var"];
+            if (utils.isObject(vobjects)) {
+                if ("_index" in vobjects && vobjects["_index"] == "string dataset") {
+                    cache.genes = { "_index": scran.loadHDF5Dataset(tmppath, "var/_index").contents };
+                    for (const [key, val] of Object.entries(vobjects)) {
+                        if (val === "string dataset" && (key.match(/name/i) || key.match(/symb/i))) {
+                            cache.genes[key] = scran.loadHDF5Dataset(tmppath, `var/${key}`).contents;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Adding the annotations.
+        cache.annotations = null;
+        if ("obs" in objects) {
+            let bobjects = objects["obs"];
+            cache.annotations = {};
+
+            if (utils.isObject(bobjects)) {
+                // Maybe it has names, maybe not, who knows; let's just add what's there.
+                if ("_index" in bobjects && bobjects["_index"] == "string dataset") {
+                    cache.annotations["_index"] = scran.loadHDF5Dataset(tmppath, "obs/_index").contents;
+                }
+
+                for (const [key, val] of Object.entries(bobjects)) {
+                    if (val === "string dataset" || val === "integer dataset" || val === "float dataset") {
+                        let bobj_factors = scran.loadHDF5Dataset(tmppath, `obs/${key}`).contents;
+
+                        if ("__categories" in bobjects && bobjects["__categories"][key] == "string dataset") {
+                            let bobj_index = scran.loadHDF5Dataset(tmppath, `obs/__categories/${key}`).contents;
+                            cache.annotations[key] = {
+                                "type": "factor",
+                                "index": bobj_index,
+                                "factor": bobj_factors
+                            }
+                        } else {
+                            cache.annotations[key] = bobj_factors;
+                        }
+                    }
+                }
+            }
+        }
+
+    } finally {
+        scran.removeFile(tmppath);
+    }
+
+    if (cache.genes === null) {
+        cache.genes = dummyGenes(cache.matrix.numberOfRows());
+    }
+    permuteGenes(cache.genes);
+    return;
+}
+
+function loadHDF5(args, format) {
     var reader = new FileReaderSync();
 
     // First pass computes an abbreviated version to quickly check for changes.
     // Second pass does the actual readArrayBuffer.
     for (var it = 0; it < 2; it++) {
-        var formatted = { "type": "HDF5", "files": [] };
+        var formatted = { "type": format, "files": [] };
 
         var bufferFun;
         if (it == 0) {
@@ -416,7 +318,11 @@ function loadHDF5(args) {
             }
         } else {
             parameters = formatted;
-            loadHDF5Raw(formatted.files);
+            if (format == "10X") {
+                load10XRaw(formatted.files);
+            } else {
+                loadH5ADRaw(formatted.files);
+            }
             delete cache.reloaded;
         }
     }
@@ -432,8 +338,10 @@ export function compute(args) {
             break;
         case "hdf5":
         case "tenx":
+            loadHDF5(args.files, "10X");
+            break;
         case "h5ad":
-            loadHDF5(args.files);
+            loadHDF5(args.files, "H5AD");
             break;
         case "kana":
             // do nothing, this is handled by unserialize.
@@ -499,8 +407,21 @@ export function fetchCountMatrix() {
     if ("reloaded" in cache) {
         if (parameters.type == "MatrixMarket") {
             loadMatrixMarketRaw(parameters.files);
+
+        } else if (parameters.type == "H5AD") {
+            loadH5ADRaw(parameters.files);
+
+        } else if (parameters.type == "10X") {
+            load10XRaw(parameters.files);
+
         } else if (parameters.type == "HDF5") {
-            loadHDF5Raw(parameters.files);
+            // legacy support: trying to guess what it is based on its extension.
+            if (parameters.files[0].name.match(/h5ad$/i)) {
+                loadH5ADRaw(parameters.files);
+            } else {
+                load10XRaw(parameters.files);
+            }
+
         } else {
             throw `unrecognized count matrix format, ${parameters.type}`;
         }
@@ -545,6 +466,10 @@ export function fetchAnnotations(col) {
 
     if (!(col in annots)) {
         throw `column ${col} does not exist in col.tsv`;
+    }
+
+    if (utils.isObject(annots[col]) && "type" in annots[col]) {
+        return annots[col];
     }
 
     let uvals = {};
