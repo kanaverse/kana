@@ -412,7 +412,7 @@ onmessage = function (msg) {
                         msg: "Success"
                     });
                 } else {
-                    console.log(error);
+                    console.error(error);
                     postMessage({
                         type: "KanaDB_ERROR",
                         msg: `Fail: Cannot initialize DB`
@@ -436,7 +436,7 @@ onmessage = function (msg) {
                 runAllSteps("run", payload.payload)
             })
             .catch(error => {
-                console.log(error);
+                console.error(error);
                 postMessage({
                     type: "run_ERROR",
                     msg: error.toString()
@@ -458,7 +458,7 @@ onmessage = function (msg) {
                     });
                 })
                 .catch(error => {
-                    console.log(error);
+                    console.error(error);
                     postMessage({
                         type: "load_ERROR",
                         msg: error.toString()
@@ -484,7 +484,7 @@ onmessage = function (msg) {
                     }
                 })
                 .catch(error => {
-                    console.log(error);
+                    console.error(error);
                     postMessage({
                         type: "load_ERROR",
                         msg: error.toString()
@@ -504,7 +504,7 @@ onmessage = function (msg) {
                 }, [output]);
             })
             .catch(error => {
-                console.log(error);
+                console.error(error);
                 postMessage({
                     type: "export_ERROR",
                     msg: error.toString()
@@ -526,7 +526,7 @@ onmessage = function (msg) {
                         msg: `Success: Saved analysis to cache (${id})`
                     });
                 } else {
-                    console.log(error);
+                    console.error(error);
                     postMessage({
                         type: "KanaDB_ERROR",
                         msg: `Fail: Cannot save analysis to cache (${id})`
@@ -534,7 +534,7 @@ onmessage = function (msg) {
                 }
             })
             .catch(error => {
-                console.log(error);
+                console.error(error);
                 postMessage({
                     type: "export_ERROR",
                     msg: error.toString()
@@ -553,7 +553,7 @@ onmessage = function (msg) {
                         msg: `Success: Removed file from cache (${id})`
                     });
                 } else {
-                    console.log(error);
+                    console.error(error);
                     postMessage({
                         type: "KanaDB_ERROR",
                         msg: `fail: cannot remove file from cache (${id})`
@@ -649,6 +649,6 @@ onmessage = function (msg) {
         });
   
     } else {
-        console.log("MIM:::msg type incorrect")
+        console.error("MIM:::msg type incorrect")
     }
 }
