@@ -525,15 +525,30 @@ const AnalysisDialog = ({
                                     Method
                                 </span>
                             </Text>
-                            <HTMLSelect defaultValue={tmpInputParams["cluster"]["clus-method"]}>
-                                <option>{tmpInputParams["cluster"]["clus-method"]}</option>
+                            <HTMLSelect 
+                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-method": e.target.value } }) }}
+                                defaultValue={tmpInputParams["cluster"]["clus-method"]}
+                            >
+                                <option value="kmeans">K-means</option>
+                                <option value="snn_graph">SNN graph</option>
                             </HTMLSelect>
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
                                 <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(5)}>
-                                    Number of neighbors
+                                    Number of clusters 
+                                </span>
+                            </Text>
+                            <NumericInput
+                                placeholder="10" value={tmpInputParams["cluster"]["kmeans-k"]}
+                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "kmeans-k": nval } }) }} />
+                        </Label>
+                        <Label className="row-input">
+                            <Text className="text-100">
+                                <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                    onMouseEnter={() => setShowStepHelper(5)}>
+                                    Number of neighbors 
                                 </span>
                             </Text>
                             <NumericInput

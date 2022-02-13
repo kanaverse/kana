@@ -1,6 +1,6 @@
 import * as scran from "scran.js"; 
 import * as utils from "./_utils.js";
-import * as graph from "./_pca.js";
+import * as pca from "./_pca.js";
 
 var cache = {};
 var parameters = {};
@@ -11,8 +11,7 @@ export function fetchClustersAsWasmArray() {
     if ("reloaded" in cache) {
         return cache.reloaded.clusters;
     } else {
-        var tmp = cache.raw.clusters({ copy: false });
-        return new scran.Int32WasmArray(tmp.length, tmp.byteOffset);
+        return cache.raw.clusters({ copy: "view" });
     }
 }
 
