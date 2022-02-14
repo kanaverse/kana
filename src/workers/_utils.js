@@ -2,7 +2,10 @@ import * as scran from "scran.js";
 
 export function freeCache(object) {
     if (object !== undefined && object !== null) {
-        object.free();
+        try { // placeholder try() for now, because older scran.js don't work with double-free.
+            object.free();
+        } catch (e) {
+        }
     }
     return;
 }

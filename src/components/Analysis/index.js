@@ -54,10 +54,14 @@ const AnalysisDialog = ({
     const handleClose = useCallback(() => setIsOpen(false), []);
 
     function handleImport() {
-        // convert cluster res to number
+        // convert numeric inputs to number (especially with decimals)
         tmpInputParams["cluster"]["clus-res"] = Number(tmpInputParams["cluster"]["clus-res"]);
         tmpInputParams["fSelection"]["fsel-span"] = Number(tmpInputParams["fSelection"]["fsel-span"]);
         tmpInputParams["umap"]["umap-min_dist"] = Number(tmpInputParams["umap"]["umap-min_dist"]);
+
+        tmpInputParams["cluster"]["kmeans-k"] = Number(tmpInputParams["cluster"]["kmeans-k"]);
+        tmpInputParams["cluster"]["clus-k"] = Number(tmpInputParams["cluster"]["clus-k"]);
+        tmpInputParams["cluster"]["clus-res"] = Number(tmpInputParams["cluster"]["clus-res"]);
 
         setParams(tmpInputParams);
 
@@ -69,9 +73,6 @@ const AnalysisDialog = ({
             }
         }
 
-        // if (tabSelected === "load") {
-        //     // setLoadParams(tmpInputParams);
-        // }
         setInputFiles({
             "format": tabSelected === "new" ?
                 newImportFormat : loadImportFormat,
@@ -262,28 +263,34 @@ const AnalysisDialog = ({
                         <p>
                             <strong>Method</strong>:
                             Clustering algorithm to use.
-                            Currently, we only support multi-level community detection on an shared nearest neighbor (SNN) graph,
-                            where cells are the nodes and edges are created between neighboring cells.
+                            Currently, we support k-means clustering with kmeans++ initialization and Hartigon-Wong refinement;
+                            or multi-level community detection on an shared nearest neighbor (SNN) graph,
+                            where the cells are the nodes and edges are created between neighboring cells.
                         </p>
                         <p>
-                            <strong>Number of neighbors</strong>:
+                            <strong>Number of clusters (k-means)</strong>:
+                            Number of clusters to create in k-means clustering.
+                            This is capped at 40 for performance purposes.
+                        </p>
+                        <p>
+                            <strong>Number of neighbors (SNN)</strong>:
                             Number of neighbors to use to construct the SNN graph.
                             Larger values result in broader clusters.
                         </p>
                         <p>
-                            <strong>Use ANN</strong>:
+                            <strong>Use ANN (SNN)</strong>:
                             Use an approximate method to speed up the nearest neighbor search.
                             This sacrifices some accuracy for speed in larger datasets.
                         </p>
                         <p>
-                            <strong>Weighting scheme</strong>:
+                            <strong>Weighting scheme (SNN)</strong>:
                             Weighting scheme to use for the edges of the SNN graph.
                             The <em>Rank</em> approach derives a weight from the rank of the closest shared neighbor;
                             the <em>Number</em> approach uses the number of shared neighbors;
                             and the Jaccard approach uses the <em>Jaccard</em> index of the neighbor sets.
                         </p>
                         <p>
-                            <strong>Resolution</strong>:
+                            <strong>Resolution (SNN)</strong>:
                             Resolution parameter for the multi-level clustering, used to adjust the modularity calculation during community optimization.
                             Larger values yield more fine-grained clusters.
                         </p>
@@ -342,7 +349,7 @@ const AnalysisDialog = ({
             <div className="col">
                 <div>
                     <H5><Tag round={true}>2</Tag>
-                        <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                        <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(2)}>
                             Quality control
                         </span>
@@ -350,7 +357,7 @@ const AnalysisDialog = ({
                     <div className="row">
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(2)}>
                                     Number of MADs
                                 </span>
@@ -361,7 +368,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(2)}>
                                     Use default mitochondrial list ?
                                 </span>
@@ -372,7 +379,7 @@ const AnalysisDialog = ({
                         </Label>
                         {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(2)}>
                                     Mitochondrial gene prefix
                                 </span>
@@ -395,7 +402,7 @@ const AnalysisDialog = ({
             <div className="col">
                 <div>
                     <H5><Tag round={true}>3</Tag>
-                        <span className={showStepHelper == 3 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                        <span className={showStepHelper == 3 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(3)}>
                             Feature Selection
                         </span>
@@ -403,7 +410,7 @@ const AnalysisDialog = ({
                     <div className="row">
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 3 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                <span className={showStepHelper == 3 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(3)}>
                                     Lowess span
                                 </span>
@@ -426,7 +433,7 @@ const AnalysisDialog = ({
             <div className="col">
                 <div>
                     <H5><Tag round={true}>4</Tag>
-                        <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                        <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(4)}>
                             Principal components analysis
                         </span>
@@ -434,7 +441,7 @@ const AnalysisDialog = ({
                     <div className="row">
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(4)}>
                                     Number of HVGs
                                 </span>
@@ -445,7 +452,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(4)}>
                                     Number of PCs
                                 </span>
@@ -465,7 +472,7 @@ const AnalysisDialog = ({
             <div className="col">
                 <div>
                     <H5><Tag round={true}>5</Tag>
-                        <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                        <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(5)}>
                             Clustering
                         </span>
@@ -473,66 +480,85 @@ const AnalysisDialog = ({
                     <div className="row">
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(5)}>
                                     Method
                                 </span>
                             </Text>
-                            <HTMLSelect defaultValue={tmpInputParams["cluster"]["clus-method"]}>
-                                <option>{tmpInputParams["cluster"]["clus-method"]}</option>
-                            </HTMLSelect>
-                        </Label>
-                        <Label className="row-input">
-                            <Text className="text-100">
-                                <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(5)}>
-                                    Number of neighbors
-                                </span>
-                            </Text>
-                            <NumericInput
-                                placeholder="10" value={tmpInputParams["cluster"]["clus-k"]}
-                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-k": nval } }) }} />
-                        </Label>
-                        <Label className="row-input">
-                            <Text className="text-100">
-                                <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(5)}>
-                                    Use ANN
-                                </span>
-                            </Text>
-                            <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["cluster"]["clus-approx"]}
-                                innerLabelChecked="yes" innerLabel="no"
-                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-approx": e.target.checked } }) }} />
-                        </Label>
-                        <Label className="row-input">
-                            <Text className="text-100">
-                                <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(5)}>
-                                    Weighting scheme
-                                </span>
-                            </Text>
                             <HTMLSelect
-                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-scheme": parseInt(e.target.value) } }) }}
-                                defaultValue={tmpInputParams["cluster"]["clus-scheme"]}
+                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-method": e.target.value } }) }}
+                                defaultValue={tmpInputParams["cluster"]["clus-method"]}
                             >
-                                <option value="0">Rank</option>
-                                <option value="1">Number</option>
-                                <option value="2">Jaccard</option>
+                                <option value="kmeans">K-means</option>
+                                <option value="snn_graph">SNN graph</option>
                             </HTMLSelect>
                         </Label>
-                        <Label className="row-input">
+                        {tmpInputParams["cluster"]["clus-method"] == "kmeans" && <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(5)}>
-                                    Resolution
+                                    Number of clusters
                                 </span>
                             </Text>
                             <NumericInput
-                                placeholder="0.5" value={tmpInputParams["cluster"]["clus-res"]}
-                                stepSize={0.1}
-                                minorStepSize={0.1}
-                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-res": val } }) }} />
+                                placeholder="10" max="40"
+                                value={tmpInputParams["cluster"]["kmeans-k"]}
+                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "kmeans-k": nval } }) }} />
                         </Label>
+                        }
+                        {tmpInputParams["cluster"]["clus-method"] == "snn_graph" && <>
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(5)}>
+                                        Number of neighbors
+                                    </span>
+                                </Text>
+                                <NumericInput
+                                    placeholder="10" value={tmpInputParams["cluster"]["clus-k"]}
+                                    onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-k": nval } }) }} />
+                            </Label>
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(5)}>
+                                        Use ANN
+                                    </span>
+                                </Text>
+                                <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["cluster"]["clus-approx"]}
+                                    innerLabelChecked="yes" innerLabel="no"
+                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-approx": e.target.checked } }) }} />
+                            </Label>
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(5)}>
+                                        Weighting scheme
+                                    </span>
+                                </Text>
+                                <HTMLSelect
+                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-scheme": parseInt(e.target.value) } }) }}
+                                    defaultValue={tmpInputParams["cluster"]["clus-scheme"]}
+                                >
+                                    <option value="0">Rank</option>
+                                    <option value="1">Number</option>
+                                    <option value="2">Jaccard</option>
+                                </HTMLSelect>
+                            </Label>
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(5)}>
+                                        Resolution
+                                    </span>
+                                </Text>
+                                <NumericInput
+                                    placeholder="0.5" value={tmpInputParams["cluster"]["clus-res"]}
+                                    stepSize={0.1}
+                                    minorStepSize={0.1}
+                                    onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-res": val } }) }} />
+                            </Label>
+                        </>}
                     </div>
                 </div>
             </div>
@@ -544,7 +570,7 @@ const AnalysisDialog = ({
             <div className="col">
                 <div>
                     <H5><Tag round={true}>6</Tag>
-                        <span className={showStepHelper == 6 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                        <span className={showStepHelper == 6 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(6)}>
                             t-SNE
                         </span>
@@ -552,7 +578,7 @@ const AnalysisDialog = ({
                     <div className="row">
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 6 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                <span className={showStepHelper == 6 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(6)}>
                                     Perplexity
                                 </span>
@@ -563,7 +589,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 6 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                <span className={showStepHelper == 6 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(6)}>
                                     Iterations
                                 </span>
@@ -583,7 +609,7 @@ const AnalysisDialog = ({
             <div className="col">
                 <div>
                     <H5><Tag round={true}>7</Tag>
-                        <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                        <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(7)}>
                             UMAP
                         </span>
@@ -591,7 +617,7 @@ const AnalysisDialog = ({
                     <div className="row">
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(7)}>
                                     Number of neighbors
                                 </span>
@@ -602,7 +628,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(7)}>
                                     Minimum distance
                                 </span>
@@ -616,7 +642,7 @@ const AnalysisDialog = ({
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(7)}>
                                     Epochs
                                 </span>
@@ -638,7 +664,7 @@ const AnalysisDialog = ({
             </Tooltip2>
             <Drawer className="analysis-dialog" {...props} isOpen={isOpen} onClose={handleClose}>
 
-                <div style={{overflow: "scroll"}} className={Classes.DIALOG_BODY}>
+                <div style={{ overflow: "scroll" }} className={Classes.DIALOG_BODY}>
                     <Tabs
                         animate={true}
                         renderActiveTabPanelOnly={true}
@@ -656,7 +682,7 @@ const AnalysisDialog = ({
                                         }}>
                                         <div>
                                             <H5><Tag round={true}>1</Tag>
-                                                <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}
+                                                <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                                     onMouseEnter={() => setShowStepHelper(1)}>
                                                     Load input files
                                                 </span>
@@ -795,7 +821,7 @@ const AnalysisDialog = ({
                                             <Tab id="kana" title="Load from file" panel={
                                                 <div>
                                                     <H5><Tag round={true}>1</Tag>
-                                                        <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}>
+                                                        <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}>
                                                             Load analysis from file
                                                         </span>
                                                     </H5>
@@ -809,7 +835,7 @@ const AnalysisDialog = ({
                                             {<Tab id="kanadb" title="Load from browser" panel={
                                                 <div>
                                                     <H5><Tag round={true}>1</Tag>
-                                                        <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}>
+                                                        <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}>
                                                             Load analysis from browser cache
                                                         </span>
                                                     </H5>
@@ -932,7 +958,7 @@ const AnalysisDialog = ({
 
                 {
                     includeFooter ? (
-                        <div style={{marginBottom: "10px"}} className={Classes.DIALOG_FOOTER} >
+                        <div style={{ marginBottom: "10px" }} className={Classes.DIALOG_FOOTER} >
                             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
                                 <Tooltip2 content="Run Analysis">
                                     <Button disabled={!tmpInputValid} icon="function" onClick={handleImport}>Analyze</Button>

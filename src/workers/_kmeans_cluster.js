@@ -1,6 +1,6 @@
 import * as scran from "scran.js"; 
 import * as utils from "./_utils.js";
-import * as graph from "./_snn_graph.js";
+import * as pca from "./_pca.js";
 
 var cache = {};
 var parameters = {};
@@ -11,25 +11,31 @@ export function fetchClustersAsWasmArray() {
     if ("reloaded" in cache) {
         return cache.reloaded.clusters;
     } else {
-        return cache.raw.membership({ copy: "view" });
+        return cache.raw.clusters({ copy: "view" });
     }
 }
 
 export function compute(args) {
-    if (graph.changed === null) { // If my upstream was skipped, then I am also skipped.
-        changed = null;
-        utils.freeCache(cache.raw); // Also freeing some memory as a courtesy.
+    // Removing the cluster_method so that we don't pick up changes in the
+    // method in the changedParameters() call. This aims to preserve the state
+    // if only the clustering method choice changed, such that a user avoids
+    // recomputation when they switch back to this method.
+    let method = args.cluster_method;
+    delete args.cluster_method;
+
+    if (changed !== null && !pca.changed && !utils.changedParameters(parameters, args)) {
+        changed = false;
+
+    } else if (method !== "kmeans") {
+        changed = null; // neither changed or unchanged, just skipped.
+        utils.freeCache(cache.raw); // free up some memory as a courtesy.
         utils.freeReloaded(cache);
         parameters = args;
 
-    } else if (changed !== null && !graph.changed && !utils.changedParameters(parameters, args)) {
-        changed = false;
-        
     } else {
         utils.freeCache(cache.raw);
-        var g = graph.fetchGraph();
-        cache.raw = scran.clusterSNNGraph(g, { resolution: args.resolution });
-
+        var pcs = pca.fetchPCs();
+        cache.raw = scran.clusterKmeans(pcs.pcs, args.k, { numberOfDims: pcs.num_pcs, numberOfCells: pcs.num_obs });
         parameters = args;
         changed = true;
         utils.freeReloaded(cache);
@@ -64,7 +70,7 @@ export function unserialize(saved) {
     parameters = saved.parameters;
 
     if (saved.contents !== null) {
-        utils.freeReloaded(cache);
+        utils.freeReloaded(cache); // free anything that might have been there previously.
         cache.reloaded = saved.contents;
 
         var out = new scran.Int32WasmArray(cache.reloaded.clusters.length);

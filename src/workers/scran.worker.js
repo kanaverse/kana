@@ -8,6 +8,7 @@ import * as variance from "./_model_gene_var.js";
 import * as pca from "./_pca.js";
 import * as index from "./_neighbor_index.js";
 import * as cluster_choice from "./_choose_clustering.js";
+import * as kmeans_cluster from "./_kmeans_cluster.js";
 import * as snn_cluster from "./_snn_cluster.js";
 import * as snn_graph from "./_snn_graph.js";
 import * as snn_neighbors from "./_snn_neighbors.js";
@@ -40,6 +41,7 @@ function runAllSteps(mode = "run", state = null) {
             throw "'state' must be supplied if 'mode' is not 'serialize'";
         }
         if (mode === "unserialize") {
+            console.log(state);
             response = { "params": {} };
         }
     }
@@ -59,12 +61,22 @@ function runAllSteps(mode = "run", state = null) {
                 });
         }
     }
+    
+    var addSerialized = function(step, namespace) {
+        let value = namespace.serialize();
+        if (value !== null) {
+            response[step] = value;
+        }
+    };
   
-    var addToObject = function (object, property, value) {
-        if (property in object) {
-            object[property] = { ...object[property], ...value };
+    var addParameters = function(name, value, remapped) {
+        let object = response["params"];
+        if (name in object) {
+            for (const [k, v] of Object.entries(value)) {
+                object[name][k] = v;
+            }
         } else {
-            object[property] = value;
+            object[name] = value;
         }
     }
   
@@ -72,7 +84,7 @@ function runAllSteps(mode = "run", state = null) {
     {
         let step = "inputs";
         if (mode === "serialize") {
-            response[step] = inputs.serialize()
+            addSerialized(step, inputs);
         } else {
             if (mode == "run") {
                 inputs.compute({
@@ -93,7 +105,7 @@ function runAllSteps(mode = "run", state = null) {
     {
         let step = "quality_control_metrics";
         if (mode === "serialize") {
-            response[step] = metrics.serialize();
+            addSerialized(step, metrics);
         } else {
             if (mode == "run") {
                 metrics.compute({
@@ -102,7 +114,7 @@ function runAllSteps(mode = "run", state = null) {
                 });
             } else {
                 metrics.unserialize(state[step]);
-                addToObject(response["params"], "qc", {
+                addParameters("qc", {
                     "qc-usemitodefault": state[step].parameters.use_mito_default,
                     "qc-mito": state[step].parameters.mito_prefix
                 });
@@ -114,7 +126,7 @@ function runAllSteps(mode = "run", state = null) {
     {
         let step = "quality_control_thresholds";
         if (mode === "serialize") {
-            response[step] = thresholds.serialize();
+            addSerialized(step, thresholds);
         } else {
             if (mode == "run") {
                 thresholds.compute({
@@ -122,7 +134,7 @@ function runAllSteps(mode = "run", state = null) {
                 });
             } else {
                 thresholds.unserialize(state[step]);
-                addToObject(response["params"], "qc", {
+                addParameters("qc", {
                     "qc-nmads": state[step].parameters.nmads
                 });
             }
@@ -133,7 +145,7 @@ function runAllSteps(mode = "run", state = null) {
     {
         let step = "quality_control_filtered";
         if (mode == "serialize") {
-            response[step] = filter.serialize();
+            addSerialized(step, filter);
         } else {
             if (mode == "run") {
                 filter.compute({});
@@ -147,7 +159,7 @@ function runAllSteps(mode = "run", state = null) {
     {
         let step = "normalization";
         if (mode == "serialize") {
-            response[step] = normalization.serialize();
+            addSerialized(step, normalization);
         } else {
             if (mode == "run") {
                 normalization.compute({});
@@ -161,7 +173,7 @@ function runAllSteps(mode = "run", state = null) {
     {
         let step = "feature_selection";
         if (mode == "serialize") {
-            response[step] = variance.serialize();
+            addSerialized(step, variance);
         } else {
             if (mode == "run") {
                 variance.compute({
@@ -169,7 +181,7 @@ function runAllSteps(mode = "run", state = null) {
                 });
             } else {
                 variance.unserialize(state[step]);
-                addToObject(response["params"], "fSelection", {
+                addParameters("fSelection", {
                     "fsel-span": state[step].parameters.span
                 });
             }
@@ -180,7 +192,7 @@ function runAllSteps(mode = "run", state = null) {
     {
         let step = "pca";
         if (mode == "serialize") {
-            response[step] = pca.serialize();
+            addSerialized(step, pca);
         } else {
             if (mode == "run") {
                 pca.compute({
@@ -189,7 +201,7 @@ function runAllSteps(mode = "run", state = null) {
                 });
             } else {
                 pca.unserialize(state[step]);
-                addToObject(response["params"], "pca", {
+                addParameters("pca", {
                     "pca-hvg": state[step].parameters.num_hvgs,
                     "pca-npc": state[step].parameters.num_pcs
                 });
@@ -201,7 +213,7 @@ function runAllSteps(mode = "run", state = null) {
     {
         let step = "neighbor_index";
         if (mode == "serialize") {
-            response[step] = index.serialize();
+            addSerialized(step, index);
         } else {
             if (mode == "run") {
                 index.compute({
@@ -209,7 +221,7 @@ function runAllSteps(mode = "run", state = null) {
                 });
             } else {
                 index.unserialize(state[step]);
-                addToObject(response["params"], "cluster", {
+                addParameters("cluster", {
                     "clus-approx": state[step].parameters.approximate
                 });
             }
@@ -233,7 +245,7 @@ function runAllSteps(mode = "run", state = null) {
                 });
             } else {
                 tsne.unserialize(state[step]);
-                addToObject(response["params"], "tsne", {
+                addParameters("tsne", {
                   "tsne-perp": state[step].parameters.perplexity,
                   "tsne-iter": state[step].parameters.iterations,
                   "animate": state[step].parameters.animate
@@ -258,7 +270,7 @@ function runAllSteps(mode = "run", state = null) {
                 });
             } else {
                 umap.unserialize(state[step]);
-                addToObject(response["params"], "umap", {
+                addParameters("umap", {
                     "umap-epochs": state[step].parameters.num_epochs,
                     "umap-nn": state[step].parameters.num_neighbors,
                     "umap-min_dist": state[step].parameters.min_dist,
@@ -271,17 +283,46 @@ function runAllSteps(mode = "run", state = null) {
   
     // Back to normal programming.
     {
-        let step = "snn_find_neighbors";
+        let step = "kmeans_cluster";
         if (mode == "serialize") {
-            response[step] = snn_neighbors.serialize();
+            addSerialized(step, kmeans_cluster);
         } else {
             if (mode == "run") {
+                // Only reporting the method to decide whether to execute this
+                // step; this does not need to be unserialized, as it is 
+                // remembered by the choose_clustering step.
+                kmeans_cluster.compute({
+                    "k": state.params.cluster["kmeans-k"],
+                    "cluster_method": state.params.cluster["clus-method"] 
+                });
+            } else {
+                if (step in state) { // clause for back-compatibility with saved analyses.
+                    kmeans_cluster.unserialize(state[step]);
+                    addParameters("cluster", {
+                        "kmeans-k": state[step].parameters.k
+                    });
+                }
+            }
+            postSuccess(kmeans_cluster, step, "K-means clustering completed");
+        }
+    }
+
+    {
+        let step = "snn_find_neighbors";
+        if (mode == "serialize") {
+            addSerialized(step, snn_neighbors);
+        } else {
+            if (mode == "run") {
+                // Only reporting the method to decide whether to execute this
+                // step; this does not need to be unserialized, as it is 
+                // remembered by the choose_clustering step.
                 snn_neighbors.compute({
-                    "k": state.params.cluster["clus-k"]
+                    "k": state.params.cluster["clus-k"],
+                    "cluster_method": state.params.cluster["clus-method"]
                 });
             } else {
                 snn_neighbors.unserialize(state[step]);
-                addToObject(response["params"], "cluster", {
+                addParameters("cluster", {
                     "clus-k": state[step].parameters.k
                 });
             }
@@ -292,7 +333,7 @@ function runAllSteps(mode = "run", state = null) {
     {
         let step = "snn_build_graph";
         if (mode == "serialize") {
-            response[step] = snn_graph.serialize();
+            addSerialized(step, snn_graph);
         } else {
             if (mode == "run") {
                 snn_graph.compute({
@@ -300,7 +341,7 @@ function runAllSteps(mode = "run", state = null) {
                 });
             } else {
                 snn_graph.unserialize(state[step]);
-                addToObject(response["params"], "cluster", {
+                addParameters("cluster", {
                     "clus-scheme": state[step].parameters.scheme
                 });
             }
@@ -311,7 +352,7 @@ function runAllSteps(mode = "run", state = null) {
     {
         let step = "snn_cluster_graph";
         if (mode == "serialize") {
-            response[step] = snn_cluster.serialize();
+            addSerialized(step, snn_cluster);
         } else {
             if (mode == "run") {
                 snn_cluster.compute({
@@ -319,7 +360,7 @@ function runAllSteps(mode = "run", state = null) {
                 });
             } else {
                 snn_cluster.unserialize(state[step]);
-                addToObject(response["params"], "cluster", {
+                addParameters("cluster", {
                     "clus-res": state[step].parameters.resolution
                 });
             }
@@ -330,7 +371,7 @@ function runAllSteps(mode = "run", state = null) {
     {
         let step = "choose_clustering";
         if (mode == "serialize") {
-            response[step] = cluster_choice.serialize();
+            addSerialized(step, cluster_choice);
         } else {
             if (mode == "run") {
                 cluster_choice.compute({
@@ -338,7 +379,7 @@ function runAllSteps(mode = "run", state = null) {
                 });
             } else {
                 cluster_choice.unserialize(state[step]);
-                addToObject(response["params"], "cluster", {
+                addParameters("cluster", {
                     "clus-method": state[step].parameters.method
                 });
             }
@@ -349,7 +390,7 @@ function runAllSteps(mode = "run", state = null) {
     {
         let step = "marker_detection";
         if (mode == "serialize") {
-            response[step] = cluster_markers.serialize();
+            addSerialized(step, cluster_markers);
         } else {
             if (mode == "run") {
                 cluster_markers.compute({});
@@ -363,7 +404,7 @@ function runAllSteps(mode = "run", state = null) {
     {
         let step = "custom_marker_management";
         if (mode == "serialize") {
-            response[step] = custom_markers.serialize();
+            addSerialized(step, custom_markers);
         } else {
             if (mode == "run") {
                 custom_markers.compute({});
@@ -375,6 +416,7 @@ function runAllSteps(mode = "run", state = null) {
     }
   
     if (mode == "serialize") {
+        console.log(response);
         return Promise.all([tsne_res, umap_res])
             .then(done => {
                 response.tsne = done[0];

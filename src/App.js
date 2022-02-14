@@ -334,7 +334,7 @@ const App = () => {
     } else if (payload.type === "pca_DATA") {
       const { resp } = payload;
       setPcaVarExp(resp);
-    } else if (payload.type === "snn_cluster_graph_DATA") {
+    } else if (payload.type === "choose_clustering_DATA") {
       const { resp } = payload;
 
       let t_annots = [...annotationCols];
