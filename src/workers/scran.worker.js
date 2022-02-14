@@ -262,6 +262,7 @@ function runAllSteps(mode = "run", state = null) {
                     "umap-epochs": state[step].parameters.num_epochs,
                     "umap-nn": state[step].parameters.num_neighbors,
                     "umap-min_dist": state[step].parameters.min_dist,
+                    "animate": state[step].parameters.animate
                 });
             }
             postSuccessAsync(umap, step, "UMAP completed");
