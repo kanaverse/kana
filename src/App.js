@@ -589,7 +589,7 @@ const App = () => {
         </p>
         <Divider />
         <p>If the error is related to input data, we support <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/output/matrices">Matrix Market</a>,
-          <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices">10X V3 HDF5</a> or H5AD formats.</p>
+          <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices">10X v3 HDF5</a> or H5AD formats.</p>
         <p>
           If not, please report the issue on <a href='https://github.com/jkanche/kana/issues' target="_blank">GitHub</a>.
         </p>
