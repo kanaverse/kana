@@ -85,7 +85,7 @@ This is called during the loading of an existing analysis.
 The return value is ignored.
 
 Typical implementations will store the unserialized contents in `cache.reloaded`.
-Both `results()` and serialize()` should be capable of detecting that unserialized values are present and using them, 
+Both `results()` and `serialize()` should be capable of detecting that unserialized values are present and using them, 
 instead of searching for (and failing to find) the results from `compute()`.
 However, if `compute()` is ever run for this step, any values in `cache.reloaded` will be stale and should be removed.
 
