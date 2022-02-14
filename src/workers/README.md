@@ -17,7 +17,7 @@ This is occasionally relevant if there are multiple choices of steps for a parti
 the choice of one step allows us to skip the unnecessary execution of the other steps by setting `changed = null`.
 Note that skipped steps may still have `changed = false` in some cases (e.g., they were previously executed and the parameters/inputs have not changed).
 
-### `compute(args)`
+## `compute(args)`
 
 This function takes an object containing the analysis parameters and performs some compute.
 The return value is ignored.
@@ -63,7 +63,7 @@ This is necessary when dealing with compute in a separate worker (e.g., the t-SN
 
 Developers can assume that `results()` will only be called if the step was not skipped, i.e., some results are actually computed.
 
-### `serialize()`
+## `serialize()`
 
 This function returns an object containing the parameters and results of the `compute()`'d analysis for serialization.
 The results should be, at the very least, a superset of any information returned by `results()`,
