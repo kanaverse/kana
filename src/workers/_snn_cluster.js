@@ -63,7 +63,7 @@ export function serialize() {
 export function unserialize(saved) {
     parameters = saved.parameters;
 
-    if (saved !== undefined) {
+    if (saved.contents !== null) {
         utils.freeReloaded(cache);
         cache.reloaded = saved.contents;
 
