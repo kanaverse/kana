@@ -59,20 +59,9 @@ const AnalysisDialog = ({
         tmpInputParams["fSelection"]["fsel-span"] = Number(tmpInputParams["fSelection"]["fsel-span"]);
         tmpInputParams["umap"]["umap-min_dist"] = Number(tmpInputParams["umap"]["umap-min_dist"]);
 
-        if (tmpInputParams["cluster"]["clus-method"] === "kmeans") {
-            tmpInputParams["cluster"] = {
-                "clus-method": "kmeans",
-                "kmeans-k": tmpInputParams["cluster"]["kmeans-k"]
-            };
-        } else if (tmpInputParams["cluster"]["clus-method"] === "snn_graph") {
-            tmpInputParams["cluster"] = {
-                "clus-k": tmpInputParams["cluster"]["clus-k"],
-                "clus-scheme": tmpInputParams["cluster"]["clus-scheme"],
-                "clus-approx": tmpInputParams["cluster"]["clus-approx"],
-                "clus-res": Number(tmpInputParams["cluster"]["clus-res"]),
-                "clus-method": "snn_graph",
-            };
-        }
+        tmpInputParams["cluster"]["kmeans-k"] = Number(tmpInputParams["cluster"]["kmeans-k"]);
+        tmpInputParams["cluster"]["clus-k"] = Number(tmpInputParams["cluster"]["clus-k"]);
+        tmpInputParams["cluster"]["clus-res"] = Number(tmpInputParams["cluster"]["clus-res"]);
 
         setParams(tmpInputParams);
 
