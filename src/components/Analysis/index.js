@@ -16,15 +16,6 @@ const AnalysisDialog = ({
     includeFooter,
     ...props
 }) => {
-    
-    const [isOpen, setIsOpen] = useState(false);
-    const [showStepHelper, setShowStepHelper] = useState(1);
-    const handleButtonClick = useCallback(() => {
-        setTmpInputParams(tabSelected === "new" ? params : loadParams);
-        setIsOpen(!isOpen);
-    }, [isOpen]);
-
-    const handleClose = useCallback(() => setIsOpen(false), []);
 
     const { inputFiles, setInputFiles,
         params, setParams,
@@ -52,6 +43,15 @@ const AnalysisDialog = ({
     // const [hdfFormat, sethdfFormat] = useState("tenx");
 
     let [tmpInputParams, setTmpInputParams] = useState(tabSelected === "new" ? params : loadParams);
+
+    const [isOpen, setIsOpen] = useState(false);
+    const [showStepHelper, setShowStepHelper] = useState(1);
+    const handleButtonClick = useCallback(() => {
+        // setTmpInputParams(tabSelected === "new" ? params : loadParams);
+        setIsOpen(!isOpen);
+    }, [isOpen]);
+
+    const handleClose = useCallback(() => setIsOpen(false), []);
 
     function handleImport() {
         // convert cluster res to number
@@ -89,70 +89,23 @@ const AnalysisDialog = ({
         if (currTab === "new") {
             handleNewImportTab(newImportFormat);
         } else if (currTab === "load") {
-
+            handleLoadImportTab(loadImportFormat);
         }
         setTabSelected(currTab);
         setShowStepHelper(0);
     }
 
     function handleNewImportTab(currTab, prevTab) {
-        if (currTab === "mtx") {
-            setTmpInputFiles({
-                gene: null,
-                mtx: null,
-                barcode: null,
-            });
-
-            setInputText({
-                mtx: "Choose Matrix Market file",
-                gene: "Choose gene annotation",
-                barcode: "Choose barcode annotation",
-            });
-        } else if (currTab === "tenx") {
-
-            setTmpInputFiles({
-                file: null,
-            });
-
-            setInputText({
-                file: "Choose 10x HDF5 matrix file",
-            });
-        } else if (currTab === "h5ad") {
-            setTmpInputFiles({
-                file: null,
-            });
-
-            setInputText({
-                file: "Choose H5AD file",
-            });
-        }
 
         setTmpInputParams(params);
         setNewImportFormat(currTab);
     }
 
     function handleLoadImportTab(currTab, prevTab) {
-        if (currTab === "kana") {
-            setTmpInputFiles({
-                file: null
-            });
-
-            setInputText({
-                file: "Choose kana analysis file"
-            });
-
-
-        } else if (currTab === "kanadb") {
-            setTmpInputFiles({
-                file: null
-            });
-
-            setTmpInputValid(true);
-        }
-
-        if (loadParams) {
+        if (loadParams && loadParamsFor === currTab) {
             setTmpInputParams(loadParams);
         }
+
         setLoadImportFormat(currTab);
     }
 

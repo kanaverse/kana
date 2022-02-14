@@ -259,10 +259,9 @@ function runAllSteps(mode = "run", state = null) {
             } else {
                 umap.unserialize(state[step]);
                 addToObject(response["params"], "umap", {
-                    "num_epochs": state[step].parameters.num_epochs,
-                    "num_neighbors": state[step].parameters.num_neighbors,
-                    "min_dist": state[step].parameters.min_dist,
-                    "animate": state[step].parameters.animate
+                    "umap-epochs": state[step].parameters.num_epochs,
+                    "umap-nn": state[step].parameters.num_neighbors,
+                    "umap-min_dist": state[step].parameters.min_dist,
                 });
             }
             postSuccessAsync(umap, step, "UMAP completed");
