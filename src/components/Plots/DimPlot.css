@@ -9,6 +9,10 @@
   background-color: #fff;
 }
 
+.dim-plot {
+  text-align:left;
+}
+
 .top-header {
   grid-column: 2 / -1;
   grid-row: 1;

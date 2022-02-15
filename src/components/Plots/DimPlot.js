@@ -1,4 +1,3 @@
-import { ScatterGL } from 'scatter-gl';
 import React, { useEffect, useRef, useContext, useState } from 'react';
 import {
     ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider,
@@ -15,6 +14,8 @@ import { palette } from './utils';
 
 import "./DimPlot.css";
 import { AppToaster } from "../Spinners/AppToaster";
+
+import WebGLVis from 'epiviz.gl';
 
 const DimPlot = (props) => {
     const container = useRef();
@@ -109,26 +110,14 @@ const DimPlot = (props) => {
                 containerEl.style.width = "95%";
                 containerEl.style.height = "95%";
 
-                tmp_scatterplot = new ScatterGL(containerEl, {
-                    onSelect: (points) => {
-                        if (points.length !== 0) {
-                            setSelectedPoints(points);
-                        }
-                    },
-                    orbitControls: {
-                        zoomSpeed: 1.25,
-                    },
-                    styles: {
-                        point: {
-                            scaleDefault: 1,
-                            scaleSelected: 1.25,
-                            scaleHover: 1.25,
-                        }
-                    }
-                });
-
-                tmp_scatterplot.setPanMode();
+                tmp_scatterplot = new WebGLVis(containerEl);
+                tmp_scatterplot.addToDom();
                 setScatterplot(tmp_scatterplot);
+                tmp_scatterplot.addEventListener("onSelectionEnd", (event) => {
+                    console.log("selection came back");
+                    console.log(event);
+                    // setSelectedPoints(event);
+                });
             }
 
             let data = null;
@@ -149,24 +138,7 @@ const DimPlot = (props) => {
                 const cluster_mappings = plotFactors;
                 const cluster_colors = plotColorMappings;
 
-                let points = []
-                data.x.forEach((x, i) => {
-                    points.push([x, data.y[i]]);
-                });
-
-                let metadata = {
-                    // clusters: cluster_mappings
-                };
-                const dataset = new ScatterGL.Dataset(points, metadata);
-
-                if (renderCount) {
-                    tmp_scatterplot.render(dataset);
-                    setRenderCount(false);
-                } else {
-                    tmp_scatterplot.updateDataset(dataset);
-                }
-
-                // callback for coloring cells on the plot
+                // coloring cells on the plot
                 // by default chooses the cluster assigned color for the plot
                 // if a gradient bar is available, sets gradient 
                 // if a cluster is highlighted, grays out all other cells except the cells
@@ -175,17 +147,24 @@ const DimPlot = (props) => {
                 // gradient selection > cluster selection > graying out
                 // an initial implementation also used a per cluster gradient to color cells
                 // by expression, commmented out
-                tmp_scatterplot.setPointColorer((i, selectedIndices, hoverIndex) => {
-
-                    if (selectedIndices.has(i)) {
-                        return "#30404D";
+                let plot_colors = [];
+                for (let i = 0; i < data.x.length; i++) {
+                    if (selectedPoints && selectedPoints.has(i)) {
+                        plot_colors[i] = "#30404D";
+                        continue;
                     }
 
                     if (clusHighlight != null) {
                         if (!String(clusHighlight).startsWith("cs")) {
-                            if (clusHighlight !== cluster_mappings[i]) return '#D3D3D3';
+                            if (clusHighlight !== cluster_mappings[i]) {
+                                plot_colors[i] = '#D3D3D3';
+                                continue;
+                            }
                         } else {
-                            if (!props?.customSelection[clusHighlight].includes(i)) return '#D3D3D3';
+                            if (!props?.customSelection[clusHighlight].includes(i)) {
+                                plot_colors[i] = '#D3D3D3';
+                                continue;
+                            }
                         }
                     }
 
@@ -194,7 +173,8 @@ const DimPlot = (props) => {
                         let expr = props?.selectedClusterSummary?.[index]?.expr;
 
                         if (Array.isArray(expr)) {
-                            return "#" + gradient.colorAt(expr?.[i]);
+                            plot_colors[i] = "#" + gradient.colorAt(expr?.[i]);
+                            continue;
                             // if we want per cell gradient 
                             // let colorGradients = cluster_colors.map(x => {
                             //     var gradient = new Rainbow();
@@ -210,11 +190,57 @@ const DimPlot = (props) => {
 
                     if (clusHighlight != null && String(clusHighlight).startsWith("cs")) {
                         let tmpclus = parseInt(clusHighlight.replace("cs", ""));
-                        return cluster_colors[max + tmpclus];
+                        plot_colors[i] = cluster_colors[max + tmpclus];
                     } else {
-                        return cluster_colors[cluster_mappings[i]];
+                        plot_colors[i] = cluster_colors[cluster_mappings[i]];
                     }
-                });
+                }
+
+                let spec = {
+                    defaultData: {
+                        x: Array.from(data.x),
+                        y: Array.from(data.y),
+                        color: plot_colors,
+                    },
+                    // margins: {
+                    //     left: '10px',
+                    //     right: '10px',
+                    //     bottom: '10px',
+                    //     top: '10px',
+                    // },
+                    // height: containerEl.clientHeight,
+                    // width: containerEl.clientWidth,
+                    xAxis: 'none',
+                    yAxis: 'none',
+                    tracks: [
+                        {
+                            mark: 'point',
+                            x: {
+                                attribute: 'x',
+                                type: 'quantitative',
+                                domain: getMinMax(data.x),
+                            },
+                            y: {
+                                attribute: 'y',
+                                type: 'quantitative',
+                                domain: getMinMax(data.y),
+                            },
+                            color: {
+                                attribute: 'color',
+                                type: 'inline',
+                            },
+                            size: { value: 3 },
+                            opacity: { value: 0.8 },
+                        },
+                    ],
+                }
+
+                if (renderCount) {
+                    tmp_scatterplot.setSpecification(spec);
+                    setRenderCount(false);
+                } else {
+                    tmp_scatterplot.setSpecification(spec);
+                }
             }
         }
     }, [props?.tsneData, props?.umapData, props?.animateData, props?.defaultRedDims,
@@ -247,15 +273,14 @@ const DimPlot = (props) => {
                 setPlotFactors(tmp.factor);
             }
         }
-
     }, [colorByAnotation, annotationObj, props?.clusterData,]);
 
     const setInteraction = (x) => {
         if (x === "SELECT") {
-            scatterplot.setSelectMode();
+            scatterplot.setViewOptions({ tool: "lasso" });
             setPlotMode("SELECT");
         } else {
-            scatterplot.setPanMode();
+            scatterplot.setViewOptions({ tool: "pan" });
             setPlotMode("PAN");
         }
     }
