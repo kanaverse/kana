@@ -113,10 +113,8 @@ const DimPlot = (props) => {
                 tmp_scatterplot = new WebGLVis(containerEl);
                 tmp_scatterplot.addToDom();
                 setScatterplot(tmp_scatterplot);
-                tmp_scatterplot.addEventListener("onSelectionEnd", (event) => {
-                    console.log("selection came back");
-                    console.log(event);
-                    // setSelectedPoints(event);
+                tmp_scatterplot.addEventListener("onSelectionEnd", (e) => {
+                    setSelectedPoints(e.detail.data?.selection?.indices);
                 });
             }
 
