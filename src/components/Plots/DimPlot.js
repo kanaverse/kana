@@ -282,7 +282,6 @@ const DimPlot = (props) => {
 
     const clearPoints = () => {
         setSelectedPoints(null);
-        scatterplot.select(null);
     }
 
     // save use selected selection of cells
@@ -292,6 +291,7 @@ const DimPlot = (props) => {
         let tmpcolor = [...props?.clusterColors];
         tmpcolor.push(color[0]);
         props?.setClusterColors(tmpcolor);
+        setPlotColorMappings(tmpcolor);
 
         let cid = Object.keys(props?.customSelection).length;
         let tmpSelection = { ...props?.customSelection };
@@ -299,15 +299,12 @@ const DimPlot = (props) => {
         props?.setCustomSelection(tmpSelection);
 
         setSelectedPoints(null);
-        scatterplot.select(null);
     }
 
     function handleSaveEmbedding() {
         const containerEl = container.current;
         if (containerEl) {
-            // preserve drawing buffers is false, so render and capture state right away
-            scatterplot.renderScatterPlot();
-            const iData = scatterplot.scatterPlot.renderer.domElement.toDataURL();
+            const iData = scatterplot.canvas.toDataURL();
 
             let tmp = [...props?.savedPlot];
 
