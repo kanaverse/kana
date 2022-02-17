@@ -196,20 +196,17 @@ const DimPlot = (props) => {
                     }
                 }
 
+                let xMinMax = getMinMax(data.x);
+                let yMinMax = getMinMax(data.y);
+                let xDomain = [(xMinMax[0] - (Math.abs(0.25 * xMinMax[0]))), (xMinMax[1] + (Math.abs(0.25 * xMinMax[1])))];
+                let yDomain = [(yMinMax[0] - (Math.abs(0.25 * yMinMax[0]))), (yMinMax[1] + (Math.abs(0.25 * yMinMax[1])))];
+
                 let spec = {
                     defaultData: {
-                        x: Array.from(data.x),
-                        y: Array.from(data.y),
+                        x: data.x,
+                        y: data.y,
                         color: plot_colors,
                     },
-                    // margins: {
-                    //     left: '10px',
-                    //     right: '10px',
-                    //     bottom: '10px',
-                    //     top: '10px',
-                    // },
-                    // height: containerEl.clientHeight,
-                    // width: containerEl.clientWidth,
                     xAxis: 'none',
                     yAxis: 'none',
                     tracks: [
@@ -218,12 +215,12 @@ const DimPlot = (props) => {
                             x: {
                                 attribute: 'x',
                                 type: 'quantitative',
-                                domain: getMinMax(data.x),
+                                domain: xDomain,
                             },
                             y: {
                                 attribute: 'y',
                                 type: 'quantitative',
-                                domain: getMinMax(data.y),
+                                domain: yDomain,
                             },
                             color: {
                                 attribute: 'color',
