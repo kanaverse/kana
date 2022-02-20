@@ -35,7 +35,7 @@ export function compute(args) {
     } else {
         utils.freeCache(cache.raw);
         var pcs = pca.fetchPCs();
-        cache.raw = scran.clusterKmeans(pcs.pcs, args.k, { numberOfDims: pcs.num_pcs, numberOfCells: pcs.num_obs });
+        cache.raw = scran.clusterKmeans(pcs.pcs, args.k, { numberOfDims: pcs.num_pcs, numberOfCells: pcs.num_obs, initMethod: "pca-part" });
         parameters = args;
         changed = true;
         utils.freeReloaded(cache);
