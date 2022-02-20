@@ -114,6 +114,10 @@ function loadMatrixMarketRaw(files) {
         cache.annotations = null;
     }
 
+    if ("reloaded" in cache) {
+        delete cache.reloaded;
+    }
+
     return;
 }
 
@@ -163,7 +167,6 @@ function loadMatrixMarket(args) {
         } else {
             parameters = formatted;
             loadMatrixMarketRaw(formatted.files);
-            delete cache.reloaded;
         }
     }
 
@@ -207,6 +210,11 @@ function load10XRaw(files) {
         cache.genes = dummyGenes(cache.matrix.numberOfRows());
     }
     scran.permuteFeatures(cache.matrix, cache.genes);
+
+    if ("reloaded" in cache) {
+        delete cache.reloaded;
+    }
+
     return;
 }
 
@@ -277,6 +285,11 @@ function loadH5ADRaw(files, name) {
         cache.genes = dummyGenes(cache.matrix.numberOfRows());
     }
     scran.permuteFeatures(cache.matrix, cache.genes);
+
+    if ("reloaded" in cache) {
+        delete cache.reloaded;
+    }
+
     return;
 }
 
@@ -314,7 +327,6 @@ function loadHDF5(args, format) {
             } else {
                 loadH5ADRaw(formatted.files);
             }
-            delete cache.reloaded;
         }
     }
 
