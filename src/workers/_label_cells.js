@@ -12,8 +12,34 @@ export var changed = false;
 
 var hs_references = {};
 var mm_references = {};
+
 const hs_base = "https://github.com/clusterfork/singlepp-references/releases/download/hs-latest";
 const mm_base = "https://github.com/clusterfork/singlepp-references/releases/download/mm-latest";
+
+// Try to figure out the best feature identifiers to use,
+// based on the highest confidence annotation.
+function chooseFeatures() {
+    let genes = inputs.fetchGenes();
+    let types = inputs.fetchGeneTypes();
+
+    let best_feature = null;
+    let best = null;
+    for (const [key, val] of Object.entries(types)) {
+        if (best === null) {
+            best_feature = key;
+            best = val;
+        } else if (val.confidence > best.confidence) {
+            best_feature = key;
+            best = val;
+        }
+    }
+
+    cached.feature_space = { 
+        "features": genes[best_feature], 
+        "details": best 
+    };
+    return;
+}
 
 // TODO: consolidate this with _inputs.readDSVFromBuffer to eliminate the D3 dependency.
 function quickLineReader(buffer, compression) {
@@ -33,116 +59,122 @@ function quickLineReader(buffer, compression) {
     return lines;    
 }
 
-function loadReference(name, species) {
+async function getBuiltReference(name, species, rebuild) {
     let base;
-    let ref;
+    let references;
     if (species == "human") {
         base = hs_base;
-        ref = hs_references;
+        references = hs_references;
     } else {
         base = mm_base;
-        ref = mm_references;
+        references = mm_references;
     }
 
-    if (name in ref) {
-        return new Promise(resolve => resolve(ref[name]));
+    if (!(name in references) || rebuild) {
+        let buffers = await Promise.all([
+            downloads.get(base + "/" + name + "_genes.csv.gz"),
+            downloads.get(base + "/" + name + "_labels_fine.csv.gz"),
+            downloads.get(base + "/" + name + "_labels_names_fine.csv.gz"),
+            downloads.get(base + "/" + name + "_markers_fine.gmt.gz"),
+            downloads.get(base + "/" + name + "_markers_matrix.csv.gz")
+        ]);
+
+        let loaded, built;
+        try {
+            // Technically, we could persist the loaded reference before it is
+            // built.  This would avoid the need for a reload if rebuild =
+            // true. However, it would be rare to see a rebuild = true, because
+            // that implies a completely new dataset; and I don't want to spend
+            // more memory holding the loaded dataset alongside the built one.
+            let loaded = scran.loadLabelledReferenceFromBuffers(
+                new Uint8Array(buffers[4]), // rank matrix
+                new Uint8Array(buffers[3]), // markers
+                new Uint8Array(buffers[1])) // label per sample
+
+            let gene_lines = quickLineReader(new Uint8Array(buffers[0])); // gene names
+            let ensembl = [];
+            let symbol = [];
+            gene_lines.forEach(x => {
+                let fields = x.split(",");
+                ensembl.push(fields[0]);
+                ensembl.push(fields[1]);
+            });
+
+            let labels = quickLineReader(new Uint8Array(buffers[2]); // full label names
+
+            let chosen_ids;
+            if (cached.feature_space.details.type === "ensembl") {
+                chosen_ids = ensembl;
+            } else {
+                chosen_ids = symbol;
+            }
+
+            let built = scran.buildLabelledReference(cached.feature_space.features, loaded, chosen_ids); 
+            references[name] = {
+                "labels": labels, 
+                "raw": built
+            };
+
+        } catch (e) {
+            if (built !== undefined) {
+                built.free();
+            }
+            throw e;
+
+        } finally {
+            if (loaded !== undefined) {
+                loaded.free();
+            }
+        }
     }
 
-    let collection = [
-        downloads.get(base + "/" + name + "_genes.csv.gz"),
-        downloads.get(base + "/" + name + "_labels_fine.csv.gz"),
-        downloads.get(base + "/" + name + "_labels_names_fine.csv.gz"),
-        downloads.get(base + "/" + name + "_markers_fine.gmt.gz"),
-        downloads.get(base + "/" + name + "_markers_matrix.csv.gz")
-    ];
-
-    return Promise.all(collection).then(buffers => {
-        let loaded = scran.loadLabelledReferenceFromBuffers(
-            new Uint8Array(buffers[4]), // rank matrix
-            new Uint8Array(buffers[3]), // markers
-            new Uint8Array(buffers[1])) // label per sample
-
-        let gene_lines = quickLineReader(new Uint8Array(buffers[0])); // gene names
-        let ensembl = [];
-        let symbol = [];
-        gene_lines.forEach(x => {
-            let fields = x.split(",");
-            ensembl.push(fields[0]);
-            ensembl.push(fields[1]);
-        });
-
-        let labels = quickLineReader(new Uint8Array(buffers[2]); // full label names
-        ref[name] = {
-            "genes": { "ensembl": ensembl, "symbol": symbol },
-            "labels": labels, 
-            "raw": loaded
-        };
-
-        return ref[name];
-    });
+    return references[name];
 }
 
 export function compute(args) {
-    if (!markers.changed && !utils.changedParameters(parameters, args)) {
+    if (!markers.changed && !inputs.changed && !utils.changedParameters(parameters, args)) {
         changed = false;
         return;
     } 
-    
-    // Try to figure out the species from the highest confidence annotation.
-    let genes = inputs.fetchGenes();
-    let types = inputs.fetchGeneTypes(); // TODO: add this function.
-    let best_feature = null;
-    let best = null;
-    for (const [key, val] of Object.entries(types)) {
-        if (best === null) {
-            best_feature = key;
-            best = val;
-        } else if (val.confidence > best.confidence) {
-            best_feature = key;
-            best = val;
-        }
+
+    let rebuild = false;
+    if (inputs.changed || !("feature_space" in cached)) {
+        rebuild = true;
+        chooseFeatures();
     }
 
     // Fetching all of the references.
     let init = downloads.initialize();
     let valid = {};
-
-    if (best.species == "human") {
+    if (fdetails.species == "human") {
         for (const ref of args.human_references) {
-            valid[ref] = loadReference(ref, "human");
+            valid[ref] = getBuiltReference(ref, "human", rebuild);
         }
-    } else if (best.species == "mouse") {
+    } else if (fdetails.species == "mouse") {
         for (const ref of args.mouse_references) {
-            valid[ref] = loadReference(ref, "mouse");
+            valid[ref] = getBuiltReference(ref, "mouse", rebuild);
         }
     }
 
     // Creating a column-major array of mean vectors.
-    let ngroups = markers.numberOfGroups(); // TODO: add this
-    let ngenes = markers.numberOfGenes(); // TODO: add this
+    let ngenes = cached.feature_space.features.length;
+    let ngroups = markers.numberOfGroups(); 
     let cluster_means = utils.allocateCachedArray(ngroups * ngenes, "Float64Array", cache);
-    let cluster_array = cluster_means.array();
     for (var g = 0; g < ngroups; g++) {
-        let means = markers.fetchMeansAsWasmArray(g);
+        let means = markers.fetchGroupMeans(g, false); // Warning: direct view in wasm space - be careful.
+        let cluster_array = cluster_means.array();
         cluster_array.set(means, g * ngenes);
     }
 
-    // Running classifications on the cluster means.
+    // Running classifications on the cluster means. Note that compute() itself
+    // cannot be async, as we need to make sure 'changed' is set and available for
+    // downstream steps; hence the explicit then().
     for (const [key, val] of Object.entries(valid)) {
-        valid[key] = val.then(refpack => {
-            let chosen_ids;
-            if (best.type == "ensembl") {
-                chosen_ids = refpack.genes.ensembl;
-            } else {
-                chosen_ids = refpack.genes.symbol;
-            }
-
-            // TODO: support dense array inputs into labelCells.
-            let output = scran.labelCells(cluster_means, refpack.raw, { geneNames: genes[best_feature], referenceGeneNames: chosen_ids });
-
+        valid[key] = val.then(builtref => {
+            let output = scran.labelCells(cluster_means, builtref, { numberOfGenes: ngenes, numberOfCells: ngroups });
             let labels = [];
             for (const o of output) {
-                labels.push(refpack.labels[o]);
+                labels.push(builtref.labels[o]);
             }
             return labels;
         });

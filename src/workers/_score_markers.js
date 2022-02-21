@@ -56,3 +56,11 @@ export function unserialize(saved) {
 export function fetchGroupResults(rank_type, group) {
     return markers.fetchGroupResults(cache.raw, cache.reloaded, rank_type, group); 
 }
+
+export function numberOfGroups() {
+    return markers.numberOfGroups(cache.raw, cache.reloaded);
+}
+
+export function fetchGroupMeans(group, copy = true) {
+    return markers.fetchGroupMeans(cache.raw, cache.reloaded, group, copy);
+}

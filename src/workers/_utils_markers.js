@@ -25,6 +25,10 @@ export function serializeGroupStats(obj, group) {
     };
 }
 
+function useReloaded(reloaded) {
+    return reloaded !== undefined;
+}
+
 /*
  * Helper function to retrieve marker statistics for plotting.
  * This is used both for cluster-specific markers as well as the
@@ -34,7 +38,7 @@ export function fetchGroupResults(results, reloaded, rank_type, group) {
     if (!rank_type || rank_type === undefined) {
         rank_type = "cohen-min-rank";
     }
-    var use_reloaded = (reloaded !== undefined);
+    var use_reloaded = useReloaded(reloaded):
 
     var ordering;
     {
@@ -130,4 +134,24 @@ export function fetchGroupResults(results, reloaded, rank_type, group) {
         "lfc": stat_lfc,
         "delta_detected": stat_delta_d
     };
+}
+
+/* The functions below are dunked here instead of in _score_markers.js, mostly
+ * to centralize the logic of how we distinguish between reloaded and computed
+ * results.
+ */
+export function numberOfGroups(results, reloaded) {
+    if (useReloaded(reloaded)) {
+        return reloaded.length;
+    } else {
+        return results.numberOfGroups();
+    }
+}
+
+export function fetchGroupMeans(results, reloaded, group, copy = true) {
+    if (useReloaded(reloaded)) {
+        return reloaded[group].means;
+    } else {
+        return results.means(group, { copy: copy })
+    }
 }
