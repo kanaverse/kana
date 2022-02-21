@@ -171,7 +171,7 @@ export function compute(args) {
     // downstream steps; hence the explicit then().
     for (const [key, val] of Object.entries(valid)) {
         valid[key] = val.then(builtref => {
-            let output = scran.labelCells(cluster_means, builtref, { numberOfGenes: ngenes, numberOfCells: ngroups });
+            let output = scran.labelCells(cluster_means, builtref, { numberOfFeatures: ngenes, numberOfCells: ngroups });
             let labels = [];
             for (const o of output) {
                 labels.push(builtref.labels[o]);

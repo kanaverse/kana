@@ -4,21 +4,21 @@
   "version": "0.1.0",
   "private": true,
   "author": {
-      "name": "Jayaram Kancherla",
-      "email": "jayaram.kancherla@gmail.com",
-      "url": "https://www.jkanche.com"
+    "name": "Jayaram Kancherla",
+    "email": "jayaram.kancherla@gmail.com",
+    "url": "https://www.jkanche.com"
   },
   "contributors": [
-      {
-          "name": "Aaron Lun",
-          "email": "infinite.monkeys.with.keyboards@gmail.com"
-      }
+    {
+      "name": "Aaron Lun",
+      "email": "infinite.monkeys.with.keyboards@gmail.com"
+    }
   ],
   "bugs": "https://github.com/jkanche/kana/issues",
   "keywords": [
-      "bioinformatics",
-      "scRNA-seq",
-      "webassembly"
+    "bioinformatics",
+    "scRNA-seq",
+    "webassembly"
   ],
   "repository": "github:jkanche/kana",
   "license": "MIT",
