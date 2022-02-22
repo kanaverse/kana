@@ -9,31 +9,22 @@ var abbreviated = {};
 
 export var changed = false;
 
-function permuteGenes(genes) {
-    var buf = new scran.Int32WasmArray(cache.matrix.numberOfRows());
-    try {
-        cache.matrix.permutation({ buffer: buf });
-
-        let perm = buf.array();
-        for (const [key, val] of Object.entries(genes)) {
-            let copy = val.slice();
-
-            for (var i = 0; i < perm.length; i++) {
-                copy[perm[i]] = val[i];
-            }
-            genes[key] = copy;
-        }
-    } finally {
-        buf.free();
-    }
-}
-
-function dummyGenes(numberOfRowss) {
+function dummyGenes(numberOfRows) {
     let genes = []
-    for (let i = 0; i < numberOfRowss; i++) {
+    for (let i = 0; i < numberOfRows; i++) {
         genes.push(`Gene ${i + 1}`);
     }
     return { "id": genes };
+}
+
+function guessFeatureType() {
+    var gene_info_type = {};
+    var gene_info = fetchGenes();
+    for (const [key, val] of Object.entries(gene_info)) {
+        gene_info_type[key] = scran.guessFeatures(val);
+    }
+    cache.gene_types = gene_info_type;
+    return;
 }
 
 function readDSVFromBuffer(content, fname, delim = "\t") {
@@ -85,7 +76,7 @@ function loadMatrixMarketRaw(files) {
         cache.genes = dummyGenes(cache.matrix.numberOfRows());
     }
 
-    permuteGenes(cache.genes);
+    scran.permuteFeatures(cache.matrix, cache.genes);
 
     var annotations_file = files.filter(x => x.type == "annotations");
     if (annotations_file.length == 1) {
@@ -121,6 +112,10 @@ function loadMatrixMarketRaw(files) {
 
     } else {
         cache.annotations = null;
+    }
+
+    if ("reloaded" in cache) {
+        delete cache.reloaded;
     }
 
     return;
@@ -172,7 +167,6 @@ function loadMatrixMarket(args) {
         } else {
             parameters = formatted;
             loadMatrixMarketRaw(formatted.files);
-            delete cache.reloaded;
         }
     }
 
@@ -215,7 +209,12 @@ function load10XRaw(files) {
     if (cache.genes === null) {
         cache.genes = dummyGenes(cache.matrix.numberOfRows());
     }
-    permuteGenes(cache.genes);
+    scran.permuteFeatures(cache.matrix, cache.genes);
+
+    if ("reloaded" in cache) {
+        delete cache.reloaded;
+    }
+
     return;
 }
 
@@ -285,7 +284,12 @@ function loadH5ADRaw(files, name) {
     if (cache.genes === null) {
         cache.genes = dummyGenes(cache.matrix.numberOfRows());
     }
-    permuteGenes(cache.genes);
+    scran.permuteFeatures(cache.matrix, cache.genes);
+
+    if ("reloaded" in cache) {
+        delete cache.reloaded;
+    }
+
     return;
 }
 
@@ -323,7 +327,6 @@ function loadHDF5(args, format) {
             } else {
                 loadH5ADRaw(formatted.files);
             }
-            delete cache.reloaded;
         }
     }
 
@@ -349,6 +352,7 @@ export function compute(args) {
         default:
             throw "unknown matrix file extension: '" + args.format + "'";
     }
+    guessFeatureType();
     return;
 }
 
@@ -399,6 +403,7 @@ export function serialize() {
 export function unserialize(saved) {
     parameters = saved.parameters;
     cache.reloaded = saved.contents;
+    guessFeatureType();
     return;
 }
 

@@ -50,7 +50,7 @@ const DimPlot = (props) => {
     const [plotGroups, setPlotGroups] = useState(null);
     const [plotFactors, setPlotFactors] = useState(null);
 
-    const max = getMinMax(props?.clusterData.clusters)[1];
+    const max = getMinMax(props?.clusterData.clusters)[1] + 1;
 
     // if either gene or expression changes, compute gradients and min/max
     useEffect(() => {
