@@ -38,7 +38,7 @@ export function fetchGroupResults(results, reloaded, rank_type, group) {
     if (!rank_type || rank_type === undefined) {
         rank_type = "cohen-min-rank";
     }
-    var use_reloaded = useReloaded(reloaded):
+    var use_reloaded = useReloaded(reloaded);
 
     var ordering;
     {
@@ -152,6 +152,6 @@ export function fetchGroupMeans(results, reloaded, group, copy = true) {
     if (useReloaded(reloaded)) {
         return reloaded[group].means;
     } else {
-        return results.means(group, { copy: copy })
+        return results.means(group, { copy: copy });
     }
 }

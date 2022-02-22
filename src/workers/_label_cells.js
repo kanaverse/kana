@@ -13,8 +13,11 @@ export var changed = false;
 var hs_references = {};
 var mm_references = {};
 
-const hs_base = "https://github.com/clusterfork/singlepp-references/releases/download/hs-latest";
-const mm_base = "https://github.com/clusterfork/singlepp-references/releases/download/mm-latest";
+// TODO: figure out a better CORS-friendly location
+//const hs_base = "https://github.com/clusterfork/singlepp-references/releases/download/hs-latest";
+//const mm_base = "https://github.com/clusterfork/singlepp-references/releases/download/mm-latest";
+const hs_base = "https://clusterfork.github.io/singlepp-references/testing/human";
+const mm_base = "https://clusterfork.github.io/singlepp-references/testing/mouse";
 
 // Try to figure out the best feature identifiers to use,
 // based on the highest confidence annotation.
@@ -34,18 +37,16 @@ function chooseFeatures() {
         }
     }
 
-    cached.feature_space = { 
-        "features": genes[best_feature], 
-        "details": best 
-    };
+    cache.features = genes[best_feature];
+    cache.feature_details = best;
     return;
 }
 
 // TODO: consolidate this with _inputs.readDSVFromBuffer to eliminate the D3 dependency.
-function quickLineReader(buffer, compression) {
+function quickLineReader(buffer, compression = "gz") {
     let txt = buffer;
     if (compression == "gz") {
-        let txt = pako.ungzip(buffer);
+        txt = pako.ungzip(buffer);
     }
 
     const dec = new TextDecoder();
@@ -70,13 +71,15 @@ async function getBuiltReference(name, species, rebuild) {
         references = mm_references;
     }
 
+    downloads.initialize();
+
     if (!(name in references) || rebuild) {
         let buffers = await Promise.all([
             downloads.get(base + "/" + name + "_genes.csv.gz"),
             downloads.get(base + "/" + name + "_labels_fine.csv.gz"),
-            downloads.get(base + "/" + name + "_labels_names_fine.csv.gz"),
+            downloads.get(base + "/" + name + "_label_names_fine.csv.gz"),
             downloads.get(base + "/" + name + "_markers_fine.gmt.gz"),
-            downloads.get(base + "/" + name + "_markers_matrix.csv.gz")
+            downloads.get(base + "/" + name + "_matrix.csv.gz")
         ]);
 
         let loaded, built;
@@ -97,19 +100,19 @@ async function getBuiltReference(name, species, rebuild) {
             gene_lines.forEach(x => {
                 let fields = x.split(",");
                 ensembl.push(fields[0]);
-                ensembl.push(fields[1]);
+                symbol.push(fields[1]);
             });
 
-            let labels = quickLineReader(new Uint8Array(buffers[2]); // full label names
+            let labels = quickLineReader(new Uint8Array(buffers[2])); // full label names
 
             let chosen_ids;
-            if (cached.feature_space.details.type === "ensembl") {
+            if (cache.feature_details.type === "ensembl") {
                 chosen_ids = ensembl;
             } else {
                 chosen_ids = symbol;
             }
 
-            let built = scran.buildLabelledReference(cached.feature_space.features, loaded, chosen_ids); 
+            let built = scran.buildLabelledReference(cache.features, loaded, chosen_ids); 
             references[name] = {
                 "labels": labels, 
                 "raw": built
@@ -142,22 +145,23 @@ export function compute(args) {
         rebuild = true;
         chooseFeatures();
     }
+    let species = cache.feature_details.species;
 
     // Fetching all of the references.
     let init = downloads.initialize();
     let valid = {};
-    if (fdetails.species == "human") {
+    if (species == "human") {
         for (const ref of args.human_references) {
             valid[ref] = getBuiltReference(ref, "human", rebuild);
         }
-    } else if (fdetails.species == "mouse") {
+    } else if (species == "mouse") {
         for (const ref of args.mouse_references) {
             valid[ref] = getBuiltReference(ref, "mouse", rebuild);
         }
     }
 
     // Creating a column-major array of mean vectors.
-    let ngenes = cached.feature_space.features.length;
+    let ngenes = cache.features.length;
     let ngroups = markers.numberOfGroups(); 
     let cluster_means = utils.allocateCachedArray(ngroups * ngenes, "Float64Array", cache);
     for (var g = 0; g < ngroups; g++) {
@@ -171,7 +175,7 @@ export function compute(args) {
     // downstream steps; hence the explicit then().
     for (const [key, val] of Object.entries(valid)) {
         valid[key] = val.then(builtref => {
-            let output = scran.labelCells(cluster_means, builtref, { numberOfFeatures: ngenes, numberOfCells: ngroups });
+            let output = scran.labelCells(cluster_means, builtref.raw, { numberOfFeatures: ngenes, numberOfCells: ngroups });
             let labels = [];
             for (const o of output) {
                 labels.push(builtref.labels[o]);
@@ -195,6 +199,7 @@ export async function results() {
             output[key] = await val;
         }
     }
+    console.log(output);
     return output;
 }
 

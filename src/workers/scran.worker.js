@@ -15,6 +15,7 @@ import * as snn_neighbors from "./_snn_neighbors.js";
 import * as tsne from "./_tsne_monitor.js";
 import * as umap from "./_umap_monitor.js";
 import * as cluster_markers from "./_score_markers.js";
+import * as label_cells from "./_label_cells.js";
 import * as custom_markers from "./_custom_markers.js";
 import * as kana_db from "./KanaDBHandler.js";
 import * as utils from "./_utils.js";
@@ -79,6 +80,8 @@ function runAllSteps(mode = "run", state = null) {
             object[name] = value;
         }
     }
+
+    let serialization_promises = {};
   
     // Running through all steps.
     {
@@ -231,11 +234,10 @@ function runAllSteps(mode = "run", state = null) {
 
     // Need to handle promises in serialize(), results() output,
     // as these are coming from other workers and are inherently async.
-    var tsne_res;
     {
         let step = "tsne";
         if (mode == "serialize") {
-            tsne_res = tsne.serialize();
+            serialization_promises[step] = tsne.serialize();
         } else {
             if (mode == "run") {
                 tsne.compute({
@@ -255,11 +257,10 @@ function runAllSteps(mode = "run", state = null) {
         }
     }
 
-    var umap_res;
     {
         let step = "umap";
         if (mode == "serialize") {
-            umap_res = umap.serialize();
+            serialization_promises[step] = umap.serialize();
         } else {
             if (mode == "run") {
                 umap.compute({
@@ -402,6 +403,23 @@ function runAllSteps(mode = "run", state = null) {
     }
 
     {
+        let step = "cell_labelling";
+        if (mode == "serialize") {
+            serialization_promises[step] = label_cells.serialize();
+        } else {
+            if (mode == "run") {
+                label_cells.compute({
+                    "human_references": [ "BlueprintEncode" ],
+                    "mouse_references": [ "ImmGen" ]
+                });
+            } else {
+                label_cells.unserialize(state[step]);
+            }
+            postSuccessAsync(label_cells, step, "Cell type labelling complete");
+        }
+    }
+
+    {
         let step = "custom_marker_management";
         if (mode == "serialize") {
             addSerialized(step, custom_markers);
@@ -416,11 +434,13 @@ function runAllSteps(mode = "run", state = null) {
     }
   
     if (mode == "serialize") {
-        console.log(response);
-        return Promise.all([tsne_res, umap_res])
+        let keys = Object.keys(serialization_promises);
+        let vals = Object.values(serialization_promises);
+        return Promise.all(vals)
             .then(done => {
-                response.tsne = done[0];
-                response.umap = done[1];
+                done.forEach((x, i) => {
+                    response[keys[i]] = x;
+                });
                 return response;
             });
     } else {
