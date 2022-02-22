@@ -282,6 +282,7 @@ const DimPlot = (props) => {
 
     const clearPoints = () => {
         setSelectedPoints(null);
+        // TODO: clear polygon on UI
     }
 
     // save use selected selection of cells
@@ -299,6 +300,7 @@ const DimPlot = (props) => {
         props?.setCustomSelection(tmpSelection);
 
         setSelectedPoints(null);
+        // TODO: clear polygon on UI
     }
 
     function handleSaveEmbedding() {
