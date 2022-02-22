@@ -188,7 +188,7 @@ const DimPlot = (props) => {
 
                     if (clusHighlight != null && String(clusHighlight).startsWith("cs")) {
                         let tmpclus = parseInt(clusHighlight.replace("cs", ""));
-                        plot_colors[i] = cluster_colors[max + tmpclus];
+                        plot_colors[i] = cluster_colors[max + tmpclus - 1];
                     } else {
                         plot_colors[i] = cluster_colors[cluster_mappings[i]];
                     }
@@ -282,7 +282,7 @@ const DimPlot = (props) => {
 
     const clearPoints = () => {
         setSelectedPoints(null);
-        // TODO: clear polygon on UI
+        scatterplot.clearSelection();
     }
 
     // save use selected selection of cells
@@ -300,7 +300,7 @@ const DimPlot = (props) => {
         props?.setCustomSelection(tmpSelection);
 
         setSelectedPoints(null);
-        // TODO: clear polygon on UI
+        scatterplot.clearSelection();
     }
 
     function handleSaveEmbedding() {
