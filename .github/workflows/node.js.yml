@@ -25,7 +25,8 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm i
+          cache: "npm"
+      - run: yarn install
       - run: CI='' && npm run build-ghpages --if-present
       - run: touch ./build/.nojekyll
       - name: GH Pages Deployment
