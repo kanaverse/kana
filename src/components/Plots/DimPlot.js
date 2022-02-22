@@ -24,6 +24,8 @@ const DimPlot = (props) => {
     const [scatterplot, setScatterplot] = useState(null);
     // set which cluster to highlight, also for custom selections
     const [clusHighlight, setClusHighlight] = useState(null);
+    // get closestpoint on viz, to highlight the cluster
+    const [clusHover, setClusHover] = useState(null);
     // show a gradient on the plot ?
     const [showGradient, setShowGradient] = useState(false);
     // expression min & max
@@ -135,6 +137,16 @@ const DimPlot = (props) => {
 
                 const cluster_mappings = plotFactors;
                 const cluster_colors = plotColorMappings;
+
+                tmp_scatterplot.addEventListener("pointHovered", (e) => {
+                    let hdata = e.detail.data;
+
+                    if (hdata?.distance <= 1.5) {
+                        setClusHover(cluster_mappings[hdata?.indices?.[0]]);
+                    } else {
+                        setClusHover(null);
+                    }
+                });
 
                 // coloring cells on the plot
                 // by default chooses the cluster assigned color for the plot
@@ -414,7 +426,7 @@ const DimPlot = (props) => {
                                     plotGroups && plotGroups.map((x, i) => {
                                         return (
                                             <li key={i}
-                                                className={clusHighlight === i ? 'legend-highlight' : ''}
+                                                className={clusHover === i || clusHighlight === i ? 'legend-highlight' : ""}
                                                 style={{ color: plotColorMappings[i] }}
                                                 onClick={() => {
                                                     if (i === clusHighlight) {
