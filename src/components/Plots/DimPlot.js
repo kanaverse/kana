@@ -109,12 +109,10 @@ const DimPlot = (props) => {
             if (!tmp_scatterplot) {
                 const containerEl = container.current;
 
-                containerEl.style.width = "95%";
-                containerEl.style.height = "95%";
-
                 tmp_scatterplot = new WebGLVis(containerEl);
                 tmp_scatterplot.addToDom();
                 setScatterplot(tmp_scatterplot);
+
                 tmp_scatterplot.addEventListener("onSelectionEnd", (e) => {
                     setSelectedPoints(e.detail.data?.selection?.indices);
                 });
@@ -140,6 +138,7 @@ const DimPlot = (props) => {
 
                 tmp_scatterplot.addEventListener("pointHovered", (e) => {
                     let hdata = e.detail.data;
+                    e.preventDefault();
 
                     if (hdata?.distance <= 1.5) {
                         setClusHover(cluster_mappings[hdata?.indices?.[0]]);
@@ -263,7 +262,7 @@ const DimPlot = (props) => {
                             opacity: { value: 0.8 },
                         },
                     ],
-                }
+                };
 
                 if (renderCount) {
                     tmp_scatterplot.setSpecification(spec);
@@ -461,7 +460,10 @@ const DimPlot = (props) => {
             <div className='dim-plot'>
                 {
                     props?.defaultRedDims ?
-                        <div ref={container} ></div> :
+                        <div ref={container} style={{
+                            width: "95%",
+                            height: "95%"
+                        }}></div> :
                         "Choose an Embedding... or Embeddings are being computed..."
                 }
             </div>

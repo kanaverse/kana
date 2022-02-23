@@ -76,7 +76,7 @@
 .dim-plot, .iter {
   grid-row: 2;
   grid-column: 2;
-  vertical-align: center;
+  vertical-align: middle;
 }
 
 .dim-button {
