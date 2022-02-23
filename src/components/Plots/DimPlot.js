@@ -222,6 +222,18 @@ const DimPlot = (props) => {
                 let xDomain = [(xMinMax[0] - (Math.abs(0.25 * xMinMax[0]))), (xMinMax[1] + (Math.abs(0.25 * xMinMax[1])))];
                 let yDomain = [(yMinMax[0] - (Math.abs(0.25 * yMinMax[0]))), (yMinMax[1] + (Math.abs(0.25 * yMinMax[1])))];
 
+                let aspRatio = containerEl.clientWidth/containerEl.clientHeight;
+
+                let xBound = Math.max(...xDomain.map(a => Math.abs(a)));
+                let yBound = Math.max(...yDomain.map(a => Math.abs(a)));
+
+                if (aspRatio > 1) {
+                    xBound = xBound * aspRatio;
+                } else {
+                    yBound = yBound / aspRatio;
+                }
+
+
                 let spec = {
                     defaultData: {
                         x: data.x,
@@ -236,12 +248,12 @@ const DimPlot = (props) => {
                             x: {
                                 attribute: 'x',
                                 type: 'quantitative',
-                                domain: xDomain,
+                                domain: [-xBound, xBound],
                             },
                             y: {
                                 attribute: 'y',
                                 type: 'quantitative',
-                                domain: yDomain,
+                                domain: [-yBound, yBound],
                             },
                             color: {
                                 attribute: 'color',
@@ -256,6 +268,40 @@ const DimPlot = (props) => {
                 if (renderCount) {
                     tmp_scatterplot.setSpecification(spec);
                     setRenderCount(false);
+
+                    let resizeTimeout;
+                    window.addEventListener("resize", () => {
+    
+                        // similar to what we do in epiviz
+                        if (resizeTimeout) {
+                            clearTimeout(resizeTimeout);
+                        }
+                        
+                        resizeTimeout = setTimeout(() => {
+
+                            tmp_scatterplot.setCanvasSize(
+                                containerEl.parentNode.clientWidth,
+                                containerEl.parentNode.clientHeight
+                            );
+
+                            aspRatio = containerEl.clientWidth/containerEl.clientHeight;
+
+                            xBound = Math.max(...xDomain.map(a => Math.abs(a)));
+                            yBound = Math.max(...yDomain.map(a => Math.abs(a)));
+            
+                            if (aspRatio > 1) {
+                                xBound = xBound * aspRatio;
+                            } else {
+                                yBound = yBound / aspRatio;
+                            }
+
+                            spec["tracks"][0].x.domain = [-xBound, xBound];
+                            spec["tracks"][0].y.domain = [-yBound, yBound];
+
+
+                            tmp_scatterplot.setSpecification(spec);
+                        }, 500);
+                    });
                 } else {
                     tmp_scatterplot.setSpecification(spec);
                 }
