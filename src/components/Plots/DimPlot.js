@@ -148,6 +148,17 @@ const DimPlot = (props) => {
                     }
                 });
 
+                tmp_scatterplot.addEventListener("pointClicked", (e) => {
+                    e.preventDefault();
+
+                    let hdata = e.detail.data;
+                    if (hdata?.distance <= 1.5) {
+                        setClusHighlight(cluster_mappings[hdata?.indices?.[0]]);
+                    } else {
+                        setClusHighlight(null);
+                    }
+                });
+
                 // coloring cells on the plot
                 // by default chooses the cluster assigned color for the plot
                 // if a gradient bar is available, sets gradient 
