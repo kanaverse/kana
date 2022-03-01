@@ -302,7 +302,7 @@ const DimPlot = (props) => {
                         }, 500);
                     });
                 } else {
-                    tmp_scatterplot.setSpecification(spec);
+                    tmp_scatterplot.updateSpecification(spec);
                 }
             }
         }
