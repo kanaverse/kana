@@ -9,6 +9,10 @@
   background-color: #fff;
 }
 
+.dim-plot {
+  text-align:left;
+}
+
 .top-header {
   grid-column: 2 / -1;
   grid-row: 1;
@@ -72,7 +76,7 @@
 .dim-plot, .iter {
   grid-row: 2;
   grid-column: 2;
-  vertical-align: center;
+  vertical-align: middle;
 }
 
 .dim-button {
