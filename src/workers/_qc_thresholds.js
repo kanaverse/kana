@@ -1,6 +1,7 @@
 import * as scran from "scran.js"; 
 import * as utils from "./_utils.js";
 import * as metrics from "./_qc_metrics.js";
+import * as wa from "wasmarrays.js";
 
 var cache = {};
 var parameters = {};
@@ -57,7 +58,7 @@ export function unserialize(saved) {
     utils.freeReloaded(cache);
     cache.reloaded = saved.contents;
 
-    var tmp = new scran.Uint8WasmArray(cache.reloaded.discards.length);
+    var tmp = scran.createUint8WasmArray(cache.reloaded.discards.length);
     tmp.set(cache.reloaded.discards);
     cache.reloaded.discards = tmp;
     
@@ -69,7 +70,7 @@ export function fetchDiscardsAsWasmArray() {
         return cache.reloaded.discards;        
     } else {
         var tmp = cache.raw.discardOverall({ copy: false });
-        return new scran.Uint8WasmArray(tmp.length, tmp.byteOffset);
+        return new wa.Uint8WasmArray(scran.wasmArraySpace(), null, tmp.length, tmp.byteOffset);
     }
 }
 

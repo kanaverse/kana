@@ -21,11 +21,11 @@ export function recreateNeighbors(neighbors) {
         var num_obs = neighbors.num_obs;
         var size = neighbors.size;
 
-        rbuf = new scran.Int32WasmArray(num_obs);
+        rbuf = scran.createInt32WasmArray(num_obs);
         rbuf.set(neighbors.runs);
-        ibuf = new scran.Int32WasmArray(size);
+        ibuf = scran.createInt32WasmArray(size);
         ibuf.set(neighbors.indices);
-        dbuf = new scran.Float64WasmArray(size);
+        dbuf = scran.createFloat64WasmArray(size);
         dbuf.set(neighbors.distances);
 
         output = scran.NeighborSearchResults.unserialize(rbuf, ibuf, dbuf);
