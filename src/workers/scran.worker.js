@@ -408,10 +408,12 @@ function runAllSteps(mode = "run", state = null) {
             serialization_promises[step] = label_cells.serialize();
         } else {
             if (mode == "run") {
-                label_cells.compute({
-                    "human_references": [ "BlueprintEncode" ],
-                    "mouse_references": [ "ImmGen" ]
-                });
+                let anno_species = state.params.annotateCells["annotateCells-species"];
+                let stateObj = {
+                    "species": anno_species,
+                };
+                stateObj[`${anno_species}_references`] = state.params.annotateCells["annotateCells-references"];
+                label_cells.compute(stateObj);
             } else {
                 label_cells.unserialize(state[step]);
             }

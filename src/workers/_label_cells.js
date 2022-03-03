@@ -145,7 +145,9 @@ export function compute(args) {
         rebuild = true;
         chooseFeatures();
     }
-    let species = cache.feature_details.species;
+
+    // TODO: either automatically choose or let the user decide
+    let species = args.species;
 
     // Fetching all of the references.
     let init = downloads.initialize();
