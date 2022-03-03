@@ -13,8 +13,7 @@ function fetchPCsAsWasmArray() {
     if ("reloaded" in cache) {
         return cache.reloaded.pcs;
     } else {
-        let tmp = cache.raw.principalComponents({ copy: false });
-        return new wa.Float64WasmArray(scran.wasmArraySpace(), null, tmp.length, tmp.byteOffset);
+        return cache.raw.principalComponents({ copy: "view" });
     }
 }
 

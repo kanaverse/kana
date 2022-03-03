@@ -69,8 +69,7 @@ export function fetchDiscardsAsWasmArray() {
     if ("reloaded" in cache) {
         return cache.reloaded.discards;        
     } else {
-        var tmp = cache.raw.discardOverall({ copy: false });
-        return new wa.Uint8WasmArray(scran.wasmArraySpace(), null, tmp.length, tmp.byteOffset);
+        return cache.raw.discardOverall({ copy: "view" });
     }
 }
 
