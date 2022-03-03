@@ -1,4 +1,5 @@
 import * as scran from "scran.js";
+import * as wa from "wasmarrays.js";
 
 export function freeCache(object) {
     if (object !== undefined && object !== null) {
@@ -13,7 +14,7 @@ export function freeCache(object) {
 export function freeReloaded(cache) {
     if ("reloaded" in cache) {
         for (const [k, v] of Object.entries(cache.reloaded)) {
-            if (v instanceof scran.WasmArray) {
+            if (v instanceof wa.WasmArray) {
                 v.free();
             }
         }
@@ -52,13 +53,13 @@ export function allocateCachedArray(size, type, cache, name = "buffer") {
     if (reallocate) {
         switch (type) {
             case "Uint8Array":
-                cache[name] = new scran.Uint8WasmArray(size);
+                cache[name] = scran.createUint8WasmArray(size);
                 break;
             case "Int32Array":
-                cache[name] = new scran.Int32WasmArray(size);
+                cache[name] = scran.createInt32WasmArray(size);
                 break;
             case "Float64Array":
-                cache[name] = new scran.Float64WasmArray(size);
+                cache[name] = scran.createFloat64WasmArray(size);
                 break;
             default:
                 // We only ever use one of the three above types in our 

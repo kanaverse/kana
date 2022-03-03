@@ -2,6 +2,7 @@ import * as scran from "scran.js";
 import * as utils from "./_utils.js";
 import * as normalization from "./_normalization.js";
 import * as variance from "./_model_gene_var.js";
+import * as wa from "wasmarrays.js";
 
 var cache = {};
 var parameters = {};
@@ -12,8 +13,7 @@ function fetchPCsAsWasmArray() {
     if ("reloaded" in cache) {
         return cache.reloaded.pcs;
     } else {
-        let tmp = cache.raw.principalComponents({ copy: false });
-        return new scran.Float64WasmArray(tmp.length, tmp.byteOffset);
+        return cache.raw.principalComponents({ copy: "view" });
     }
 }
 
@@ -75,7 +75,7 @@ export function unserialize(saved) {
     utils.freeReloaded(cache);
     cache.reloaded = saved.contents;
 
-    var tmp = new scran.Float64WasmArray(cache.reloaded.pcs.length);
+    var tmp = scran.createFloat64WasmArray(cache.reloaded.pcs.length);
     tmp.set(cache.reloaded.pcs);
     cache.reloaded.pcs = tmp;
     return;

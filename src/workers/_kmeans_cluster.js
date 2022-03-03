@@ -73,7 +73,7 @@ export function unserialize(saved) {
         utils.freeReloaded(cache); // free anything that might have been there previously.
         cache.reloaded = saved.contents;
 
-        var out = new scran.Int32WasmArray(cache.reloaded.clusters.length);
+        var out = scran.createInt32WasmArray(cache.reloaded.clusters.length);
         out.set(cache.reloaded.clusters);
         cache.reloaded.clusters = out;
     } else {

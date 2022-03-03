@@ -10,9 +10,9 @@ export function computeNeighbors(k) {
     try {
         results = scran.findNearestNeighbors(nn_index, k);
 
-        rbuf = new scran.Int32WasmArray(results.numberOfCells());
-        ibuf = new scran.Int32WasmArray(results.size());
-        dbuf = new scran.Float64WasmArray(results.size());
+        rbuf = scran.createInt32WasmArray(results.numberOfCells());
+        ibuf = scran.createInt32WasmArray(results.size());
+        dbuf = scran.createFloat64WasmArray(results.size());
 
         results.serialize({ runs: rbuf, indices: ibuf, distances: dbuf });
         output["size"] = results.size();
