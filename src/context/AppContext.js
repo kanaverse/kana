@@ -42,7 +42,12 @@ const AppContextProvider = ({ children }) => {
       "umap-min_dist": 0.01,
       "animate": false,
     },
-    markerGene: {}
+    markerGene: {},
+    annotateCells: {
+      "annotateCells": false,
+      "annotateCells-species": "human",
+      "annotateCells-references": null,
+    }
   });
 
   // which tab is selected ? defaults to new
