@@ -45,8 +45,9 @@ const AppContextProvider = ({ children }) => {
     markerGene: {},
     annotateCells: {
       "annotateCells": false,
-      "annotateCells-species": "human",
-      "annotateCells-references": null,
+      // "annotateCells-species": "human",
+      "annotateCells-human_references": null,
+      "annotateCells-mouse_references": null,
     }
   });
 

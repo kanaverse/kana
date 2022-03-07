@@ -694,7 +694,7 @@ const AnalysisDialog = ({
                                 innerLabelChecked="yes" innerLabel="no"
                                 onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "annotateCells": { ...tmpInputParams["annotateCells"], "annotateCells": e.target.checked } }) }} />
                         </Label>
-                        {tmpInputParams["annotateCells"]["annotateCells"] && <Label className="row-input">
+                        {/* {tmpInputParams["annotateCells"]["annotateCells"] && <Label className="row-input">
                             <Text className="text-100">
                                 <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(8)}>
@@ -709,9 +709,40 @@ const AnalysisDialog = ({
                                 <option value="mouse">Mouse</option>
                             </HTMLSelect>
                         </Label>
-                        }
+                        } */}
 
-                        {tmpInputParams["annotateCells"]["annotateCells"] && tmpInputParams["annotateCells"]["annotateCells-species"] == "human" && <Label className="row-input">
+                        {tmpInputParams["annotateCells"]["annotateCells"] && <Label className="row-input">
+                            <Text className="text-100">
+                                <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                    onMouseEnter={() => setShowStepHelper(8)}>
+                                    Choose reference datasets
+                                </span>
+                            </Text>
+                            <select
+                                multiple={true}
+                                onChange={(e) => { 
+                                    setTmpInputParams({ 
+                                        ...tmpInputParams, 
+                                        "annotateCells": { 
+                                            ...tmpInputParams["annotateCells"], 
+                                            "annotateCells-human_references": [...e.target.options].filter(option => option.selected && option.value.startsWith("human_")).map(option => option.value.replace("human_", "")),
+                                            "annotateCells-mouse_references": [...e.target.options].filter(option => option.selected && option.value.startsWith("mouse_")).map(option => option.value.replace("mouse_", "")) 
+                                        } 
+                                    }) 
+                                }}
+                            // defaultValue={tmpInputParams["annotateCells"]["annotateCells-reference"]}
+                            >
+                                <option value="human_BlueprintEncode">Blueprint Encode (human)</option>
+                                <option value="human_DatabaseImmuneCellExpression">Database Immune Cell Expression (human)</option>
+                                <option value="human_HumanPrimaryCellAtlas">Human Primary Cell Atlas (human)</option>
+                                <option value="human_MonacoImmune">Monaco Immune (human)</option>
+                                <option value="human_NovershternHematopoietic">Novershtern Hematopoietic (human)</option>
+                                <option value="mouse_ImmGen">Imm Gen (mouse)</option>
+                                <option value="mouse_MouseRNAseq">Mouse RNA-seq (mouse)</option>
+                            </select>
+                        </Label>}
+
+                        {/* {tmpInputParams["annotateCells"]["annotateCells"] && tmpInputParams["annotateCells"]["annotateCells-species"] == "human" && <Label className="row-input">
                             <Text className="text-100">
                                 <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(8)}>
@@ -748,7 +779,7 @@ const AnalysisDialog = ({
                                     <option value="MouseRNAseq">Mouse RNA-seq</option>
                                 </select>
                             </Label>
-                        }
+                        } */}
                     </div>
                 </div>
             </div>
