@@ -91,6 +91,9 @@ const App = () => {
   // remove custom Selection
   const [delCustomSelection, setDelCustomSelection] = useState(null);
 
+  // Cell Labels
+  const [cellLabelData, setCellLabelData] = useState(null);
+
   // geneExpression
   // what gene is selected for scatterplot
   const [gene, setGene] = useState(null);
@@ -449,6 +452,9 @@ const App = () => {
       setAnnotationObj(tmp);
 
       setReqAnnotation(null);
+    } else if (payload.type === "cell_labelling_DATA") {
+      const { resp } = payload;
+      setCellLabelData(resp);
     }
   }
 
@@ -559,6 +565,7 @@ const App = () => {
             setSavedPlot={setSavedPlot}
             clusterData={clusterData}
             clusterColors={clusterColors}
+            cellLabelData={cellLabelData}
             gene={gene}
           />
         </div>

@@ -1,6 +1,8 @@
 import React from "react";
 import PCABarPlot from "../Plots/PCABarPlot";
 import ClusterBarPlot from "../Plots/ClusterBarPlot";
+import CellLabelTable from "../Plots/CellLabelTable";
+
 import { useContext } from 'react';
 import { AppContext } from './../../context/AppContext';
 import { Card, Elevation } from "@blueprintjs/core";
@@ -36,6 +38,14 @@ const Gallery = (props) => {
             <Card className="gallery-elem" elevation={Elevation.ONE}>
               <h5># of cells per cluster</h5>
               <ClusterBarPlot data={props?.clusterData} clusterColors={props?.clusterColors} />
+            </Card>
+            : ""
+        }
+        {
+          props?.cellLabelData ?
+            <Card className="gallery-elem" elevation={Elevation.ONE}>
+              <h5>Cell Labels</h5>
+              <CellLabelTable data={props?.cellLabelData} />
             </Card>
             : ""
         }
