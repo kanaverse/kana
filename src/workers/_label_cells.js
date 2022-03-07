@@ -146,8 +146,8 @@ export function compute(args) {
         chooseFeatures();
     }
 
-    // TODO: either automatically choose or let the user decide
-    let species = args.species;
+    // automatically choose from the data
+    let species = cache.feature_details.species;
 
     // Fetching all of the references.
     let init = downloads.initialize();

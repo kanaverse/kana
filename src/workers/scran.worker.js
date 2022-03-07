@@ -411,8 +411,9 @@ function runAllSteps(mode = "run", state = null) {
                 let anno_species = state.params.annotateCells["annotateCells-species"];
                 let stateObj = {
                     "species": anno_species,
+                    "human_references": state.params.annotateCells["annotateCells-human_references"],
+                    "mouse_references": state.params.annotateCells["annotateCells-mouse_references"]
                 };
-                stateObj[`${anno_species}_references`] = state.params.annotateCells["annotateCells-references"];
                 label_cells.compute(stateObj);
             } else {
                 label_cells.unserialize(state[step]);
