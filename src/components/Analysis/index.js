@@ -343,15 +343,17 @@ const AnalysisDialog = ({
                 {showStepHelper === 8 &&
                     <Callout intent="primary">
                         <p>
-                            Kana also supports automatic cell type annotation for human and mouse datasets.
-                            It is primarily based on the datasets available in the
-                            <a target="_blank" href="https://bioconductor.org/packages/release/data/experiment/html/celldex.html"> celldex</a> package,
-                            themselves derived from the original <a target="_blank" href="https://bioconductor.org/packages/release/bioc/html/SingleR.html">SingleR</a> publication.
+                            Perform cell type annotation for human and mouse datasets.
+                            This uses the <a target="_blank" href="https://bioconductor.org/packages/release/bioc/html/SingleR.html">SingleR</a> algorithm
+                            to label clusters based on their similarity to reference expression profiles of curated cell types.
+                            Similarity is quantified using Spearman correlations on the top marker genes for each reference type,
+                            with additional fine-tuning iterations to improve resolution between closely related labels.
                         </p>
                         <p>
                             <strong>Reference Datasets</strong>:
-                            We preprocess reference datasets for easy of use in the browser. These artifacts are available at
-                            <a target="_blank" href="https://github.com/clusterfork/singlepp-references/releases"> cell annotator reference datasets</a>
+                            A selection of references are available from the <a target="_blank" href="https://bioconductor.org/packages/release/data/experiment/html/celldex.html">celldex</a> package.
+                            Classification of the clusters is performed separately for each reference.
+                            If multiple references are selected, an additional round of scoring is performed to determine which reference has the best label for each cluster.
                         </p>
                     </Callout>
                 }
