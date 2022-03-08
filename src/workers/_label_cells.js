@@ -16,8 +16,8 @@ var hs_references = {};
 var mm_references = {};
 
 const proxy = "https://cors-proxy.aaron-lun.workers.dev";
-const hs_base = "https://clusterfork.github.io/singlepp-references/testing/human";
-const mm_base = "https://clusterfork.github.io/singlepp-references/testing/mouse";
+const hs_base = "https://github.com/clusterfork/singlepp-references/releases/download/hs-latest";
+const mm_base = "https://github.com/clusterfork/singlepp-references/releases/download/mm-latest";
 
 // Try to figure out the best feature identifiers to use,
 // based on the highest confidence annotation.
@@ -139,7 +139,7 @@ async function getBuiltReference(name, species, rebuild) {
 
             let built = scran.buildLabelledReference(cache.features, loaded, chosen_ids); 
             references[name] = {
-                "labels": current.labels, 
+                "features": chosen_ids,
                 "raw": built
             };
 
@@ -149,7 +149,10 @@ async function getBuiltReference(name, species, rebuild) {
         }
     }
 
-    return references[name];
+    return {
+        "loaded": preloaded[name],
+        "built": references[name]
+    };
 }
 
 export function compute(args) {
@@ -193,34 +196,77 @@ export function compute(args) {
     // Running classifications on the cluster means. Note that compute() itself
     // cannot be async, as we need to make sure 'changed' is set and available for
     // downstream steps; hence the explicit then().
+    cache.results = {};
     for (const [key, val] of Object.entries(valid)) {
-        valid[key] = val.then(builtref => {
-            let output = scran.labelCells(cluster_means, builtref.raw, { numberOfFeatures: ngenes, numberOfCells: ngroups });
+        cache.results[key] = val.then(ref => {
+            let output = scran.labelCells(cluster_means, ref.built.raw, { numberOfFeatures: ngenes, numberOfCells: ngroups });
             let labels = [];
             for (const o of output) {
-                labels.push(builtref.labels[o]);
+                labels.push(ref.loaded.labels[o]);
             }
             return labels;
         });
     }
 
-    cache.results = valid;
+    // Performing additional integration, if necessary. We don't really 
+    // need this if there's only one reference.
+    let used_refs = Object.keys(valid);
+    if (used_refs.length > 1) {
+        if (rebuild || utils.changedParameters(used_refs, cache.used)) {
+            let used_vals = Object.values(valid);
+
+            cache.integrated = Promise.all(used_vals)
+                .then(arr => {
+                    let loaded = arr.map(x => x.loaded.raw);
+                    let feats = arr.map(x => x.built.features);
+                    let built = arr.map(x => x.built.raw);
+                    return scran.integrateLabelledReferences(cache.features, loaded, feats, built);
+                }
+            );
+        }
+
+        cache.integrated_results = cache.integrated
+            .then(async (integrated) => {
+                let results = [];
+                for (const key of used_refs) {
+                    results.push(await cache.results[key]);
+                }
+
+                let out = scran.integrateCellLabels(cluster_means, results, integrated, { numberOfFeatures: ngenes, numberOfCells: ngroups });
+                let as_names = [];
+                out.forEach(i => {
+                    as_names.push(used_refs[i]);
+                });
+                return as_names;
+            }
+        );
+    } else {
+        utils.freeCache(cache.integrated);
+        delete cache.integrated_results;
+    }
+    cache.used = used_refs;
+
     changed = true;
     delete cache.reloaded;
     return;
 }
 
 export async function results() {
-    let output = {};
     if ("reloaded" in cache) {
         return cache.reloaded;
     } else {
+        let perref = {};
         for (const [key, val] of Object.entries(cache.results)) {
-            output[key] = await val;
+            perref[key] = await val;
         }
+
+        let output = { "per_reference": perref };
+        if ("integrated_results" in cache) {
+            output.integrated = await cache.integrated_results;
+        }
+        console.log(output);
+        return output;
     }
-    console.log(output);
-    return output;
 }
 
 export async function serialize() {
