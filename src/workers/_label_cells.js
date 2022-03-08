@@ -10,12 +10,12 @@ var parameters = {};
 
 export var changed = false;
 
+var hs_loaded = {};
+var mm_loaded = {};
 var hs_references = {};
 var mm_references = {};
 
-// TODO: figure out a better CORS-friendly location
-//const hs_base = "https://github.com/clusterfork/singlepp-references/releases/download/hs-latest";
-//const mm_base = "https://github.com/clusterfork/singlepp-references/releases/download/mm-latest";
+const proxy = "https://cors-proxy.aaron-lun.workers.dev";
 const hs_base = "https://clusterfork.github.io/singlepp-references/testing/human";
 const mm_base = "https://clusterfork.github.io/singlepp-references/testing/mouse";
 
@@ -63,33 +63,33 @@ function quickLineReader(buffer, compression = "gz") {
 async function getBuiltReference(name, species, rebuild) {
     let base;
     let references;
+    let preloaded;
     if (species == "human") {
         base = hs_base;
+        preloaded = hs_loaded;
         references = hs_references;
     } else {
         base = mm_base;
+        preloaded = mm_loaded;
         references = mm_references;
     }
 
     downloads.initialize();
 
-    if (!(name in references) || rebuild) {
+    if (!(name in preloaded)) {
         let buffers = await Promise.all([
-            downloads.get(base + "/" + name + "_genes.csv.gz"),
-            downloads.get(base + "/" + name + "_labels_fine.csv.gz"),
-            downloads.get(base + "/" + name + "_label_names_fine.csv.gz"),
-            downloads.get(base + "/" + name + "_markers_fine.gmt.gz"),
-            downloads.get(base + "/" + name + "_matrix.csv.gz")
+            downloads.get(proxy + "/" + encodeURIComponent(base + "/" + name + "_genes.csv.gz")),
+            downloads.get(proxy + "/" + encodeURIComponent(base + "/" + name + "_labels_fine.csv.gz")),
+            downloads.get(proxy + "/" + encodeURIComponent(base + "/" + name + "_label_names_fine.csv.gz")),
+            downloads.get(proxy + "/" + encodeURIComponent(base + "/" + name + "_markers_fine.gmt.gz")),
+            downloads.get(proxy + "/" + encodeURIComponent(base + "/" + name + "_matrix.csv.gz"))
         ]);
 
-        let loaded, built;
+        console.log(buffers);
+
+        let loaded;
         try {
-            // Technically, we could persist the loaded reference before it is
-            // built.  This would avoid the need for a reload if rebuild =
-            // true. However, it would be rare to see a rebuild = true, because
-            // that implies a completely new dataset; and I don't want to spend
-            // more memory holding the loaded dataset alongside the built one.
-            let loaded = scran.loadLabelledReferenceFromBuffers(
+            loaded = scran.loadLabelledReferenceFromBuffers(
                 new Uint8Array(buffers[4]), // rank matrix
                 new Uint8Array(buffers[3]), // markers
                 new Uint8Array(buffers[1])) // label per sample
@@ -104,30 +104,48 @@ async function getBuiltReference(name, species, rebuild) {
             });
 
             let labels = quickLineReader(new Uint8Array(buffers[2])); // full label names
+            preloaded[name] = { 
+                "raw": loaded, 
+                "genes": {
+                    "ensembl": ensembl,
+                    "symbol": symbol
+                },
+                "labels": labels
+            };
+
+        } catch (e) {
+            utils.freeCache(loaded);
+            throw e;
+        }
+    }
+
+
+    if (!(name in references) || rebuild) {
+        let built;
+        try {
+            if (name in references) {
+                utils.freeCache(references[name].raw);
+            }
+
+            let current = preloaded[name];
+            let loaded = current.raw;
 
             let chosen_ids;
             if (cache.feature_details.type === "ensembl") {
-                chosen_ids = ensembl;
+                chosen_ids = current.genes.ensembl;
             } else {
-                chosen_ids = symbol;
+                chosen_ids = current.genes.symbol;
             }
 
             let built = scran.buildLabelledReference(cache.features, loaded, chosen_ids); 
             references[name] = {
-                "labels": labels, 
+                "labels": current.labels, 
                 "raw": built
             };
 
         } catch (e) {
-            if (built !== undefined) {
-                built.free();
-            }
+            utils.freeCache(built);
             throw e;
-
-        } finally {
-            if (loaded !== undefined) {
-                loaded.free();
-            }
         }
     }
 
@@ -141,7 +159,7 @@ export function compute(args) {
     } 
 
     let rebuild = false;
-    if (inputs.changed || !("feature_space" in cached)) {
+    if (inputs.changed || !("feature_space" in cache)) {
         rebuild = true;
         chooseFeatures();
     }
