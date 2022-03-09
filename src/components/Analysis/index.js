@@ -776,9 +776,9 @@ const AnalysisDialog = ({
                                     textTransform: "capitalize",
                                     fontWeight: "bold"
                                 }}>Mouse: </span>
-                                <Checkbox defaultChecked={isCheckIncluded("human", "ImmGen")} inline={true} label="ImmGen"
+                                <Checkbox defaultChecked={isCheckIncluded("mouse", "ImmGen")} inline={true} label="ImmGen"
                                     onChange={(e) => { handleCheckbox(e, "mouse", "ImmGen") }} />
-                                <Checkbox defaultChecked={isCheckIncluded("human", "MouseRNAseq")} inline={true} label="Mouse RNA-seq"
+                                <Checkbox defaultChecked={isCheckIncluded("mouse", "MouseRNAseq")} inline={true} label="Mouse RNA-seq"
                                     onChange={(e) => { handleCheckbox(e, "mouse", "MouseRNAseq") }} />
                             </div>
                             {/* <select
