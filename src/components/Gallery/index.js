@@ -42,7 +42,7 @@ const Gallery = (props) => {
             : ""
         }
         {
-          props?.cellLabelData && Object.keys(props?.cellLabelData?.per_reference) > 0 ?
+          props?.cellLabelData && Object.keys(props?.cellLabelData?.per_reference).length > 0 ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
               <h5>Cell Labels (<span style={{
                 fontStyle: "italic",
