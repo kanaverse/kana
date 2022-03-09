@@ -459,6 +459,10 @@ export function fetchGenes() {
     }
 }
 
+export function fetchGeneTypes() {
+    return cache.gene_types;
+}
+
 export function fetchAnnotations(col) {
     let annots, asize;
     if ("reloaded" in cache) {

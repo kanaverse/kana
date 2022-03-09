@@ -1,8 +1,8 @@
 import {
-    Button, Classes, Dialog, Text, FileInput, NumericInput,
+    Button, Classes, Text, FileInput, NumericInput,
     Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
     RadioGroup, Radio, Icon, Position,
-    InputGroup,
+    InputGroup, FormGroup, Checkbox,
     Drawer
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
@@ -180,6 +180,37 @@ const AnalysisDialog = ({
         return d.toDateString() + ", " + d.toLocaleTimeString();
     }
 
+    function handleCheckbox(e, species, key) {
+        console.log(e);
+        let tkey = `annotateCells-${species}_references`;
+        let tmpAnnoCells = [...tmpInputParams["annotateCells"][tkey]];
+        if (e.target.checked) {
+            if (!tmpAnnoCells.includes(key)) {
+                tmpAnnoCells.push(key);
+            }
+        } else {
+            tmpAnnoCells = tmpAnnoCells.filter((y) => {
+                return y !== key;
+            });
+        }
+
+        let tmpAnno = {
+            ...tmpInputParams["annotateCells"]
+        }
+
+        tmpAnno[tkey] = tmpAnnoCells;
+
+        setTmpInputParams({
+            ...tmpInputParams,
+            "annotateCells": tmpAnno
+        })
+    }
+
+    function isCheckIncluded(species, key) {
+        let tkey = `annotateCells-${species}_references`;
+        return tmpInputParams["annotateCells"][tkey].includes(key);
+    }
+
     const get_common_tooltips = () => {
         return (
             <>
@@ -337,6 +368,23 @@ const AnalysisDialog = ({
                             <strong>Epochs</strong>:
                             Number of epochs to use for convergence.
                             This doesn't really change all too much in the results.
+                        </p>
+                    </Callout>
+                }
+                {showStepHelper === 8 &&
+                    <Callout intent="primary">
+                        <p>
+                            Perform cell type annotation for human and mouse datasets.
+                            This uses the <a target="_blank" href="https://bioconductor.org/packages/release/bioc/html/SingleR.html">SingleR</a> algorithm
+                            to label clusters based on their similarity to reference expression profiles of curated cell types.
+                            Similarity is quantified using Spearman correlations on the top marker genes for each reference type,
+                            with additional fine-tuning iterations to improve resolution between closely related labels.
+                        </p>
+                        <p>
+                            <strong>Reference Datasets</strong>:
+                            A selection of references are available from the <a target="_blank" href="https://bioconductor.org/packages/release/data/experiment/html/celldex.html">celldex</a> package.
+                            Classification of the clusters is performed separately for each reference.
+                            If multiple references are selected, an additional round of scoring is performed to determine which reference has the best label for each cluster.
                         </p>
                     </Callout>
                 }
@@ -657,6 +705,150 @@ const AnalysisDialog = ({
         )
     }
 
+    const get_input_label_cells = () => {
+        return (
+            <div className="col">
+                <div>
+                    <H5><Tag round={true}>8</Tag>
+                        <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                            onMouseEnter={() => setShowStepHelper(8)}>
+                            Annotate cells
+                        </span>
+                    </H5>
+                    <div className="row">
+                        {/* <Label className="row-input">
+                            <Text className="text-100">
+                                <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                    onMouseEnter={() => setShowStepHelper(8)}>
+                                    Annotate cell types ?
+                                </span>
+                            </Text>
+                            <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["annotateCells"]["annotateCells"]}
+                                innerLabelChecked="yes" innerLabel="no"
+                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "annotateCells": { ...tmpInputParams["annotateCells"], "annotateCells": e.target.checked } }) }} />
+                        </Label> */}
+                        {/* {tmpInputParams["annotateCells"]["annotateCells"] && <Label className="row-input">
+                            <Text className="text-100">
+                                <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                    onMouseEnter={() => setShowStepHelper(8)}>
+                                    Species
+                                </span>
+                            </Text>
+                            <HTMLSelect
+                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "annotateCells": { ...tmpInputParams["annotateCells"], "annotateCells-species": e.target.value } }) }}
+                                defaultValue={tmpInputParams["annotateCells"]["annotateCells-species"]}
+                            >
+                                <option value="human">Human</option>
+                                <option value="mouse">Mouse</option>
+                            </HTMLSelect>
+                        </Label>
+                        } */}
+
+                        <Label className="row-input">
+                            <Text className="text-100">
+                                <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                    onMouseEnter={() => setShowStepHelper(8)}>
+                                    Choose reference datasets
+                                </span>
+                            </Text>
+                            <div style={{
+                                marginTop: "10px"
+                            }}>
+                                <span style={{
+                                    marginRight: "10px",
+                                    textTransform: "capitalize",
+                                    fontWeight: "bold"
+                                }}>Human: </span>
+                                <Checkbox defaultChecked={isCheckIncluded("human", "BlueprintEncode")} inline={true} label="Blueprint Encode"
+                                    onChange={(e) => { handleCheckbox(e, "human", "BlueprintEncode") }} />
+                                <Checkbox defaultChecked={isCheckIncluded("human", "DatabaseImmuneCellExpression")} inline={true} label="Database ImmuneCell Expression"
+                                    onChange={(e) => { handleCheckbox(e, "human", "DatabaseImmuneCellExpression") }} />
+                                <Checkbox defaultChecked={isCheckIncluded("human", "HumanPrimaryCellAtlas")} inline={true} label="Human Primary Cell Atlas"
+                                    onChange={(e) => { handleCheckbox(e, "human", "HumanPrimaryCellAtlas") }} />
+                                <Checkbox defaultChecked={isCheckIncluded("human", "MonacoImmune")} inline={true} label="Monaco Immune"
+                                    onChange={(e) => { handleCheckbox(e, "human", "MonacoImmune") }} />
+                                <Checkbox defaultChecked={isCheckIncluded("human", "NovershternHematopoietic")} inline={true} label="Novershtern Hematopoietic"
+                                    onChange={(e) => { handleCheckbox(e, "human", "NovershternHematopoietic") }} />
+                            </div>
+                            <div>
+                                <span style={{
+                                    marginRight: "10px",
+                                    textTransform: "capitalize",
+                                    fontWeight: "bold"
+                                }}>Mouse: </span>
+                                <Checkbox defaultChecked={isCheckIncluded("mouse", "ImmGen")} inline={true} label="ImmGen"
+                                    onChange={(e) => { handleCheckbox(e, "mouse", "ImmGen") }} />
+                                <Checkbox defaultChecked={isCheckIncluded("mouse", "MouseRNAseq")} inline={true} label="Mouse RNA-seq"
+                                    onChange={(e) => { handleCheckbox(e, "mouse", "MouseRNAseq") }} />
+                            </div>
+                            {/* <select
+                                multiple={true}
+                                onChange={(e) => {
+                                    setTmpInputParams({
+                                        ...tmpInputParams,
+                                        "annotateCells": {
+                                            ...tmpInputParams["annotateCells"],
+                                            "annotateCells-human_references": [...e.target.options].filter(option => option.selected && option.value.startsWith("human_")).map(option => option.value.replace("human_", "")),
+                                            "annotateCells-mouse_references": [...e.target.options].filter(option => option.selected && option.value.startsWith("mouse_")).map(option => option.value.replace("mouse_", ""))
+                                        }
+                                    })
+                                }}
+                            // defaultValue={tmpInputParams["annotateCells"]["annotateCells-reference"]}
+                            >
+                                <option value="human_BlueprintEncode">Blueprint Encode (human)</option>
+                                <option value="human_DatabaseImmuneCellExpression">Database Immune Cell Expression (human)</option>
+                                <option value="human_HumanPrimaryCellAtlas">Human Primary Cell Atlas (human)</option>
+                                <option value="human_MonacoImmune">Monaco Immune (human)</option>
+                                <option value="human_NovershternHematopoietic">Novershtern Hematopoietic (human)</option>
+                                <option value="mouse_ImmGen">Imm Gen (mouse)</option>
+                                <option value="mouse_MouseRNAseq">Mouse RNA-seq (mouse)</option>
+                            </select> */}
+                        </Label>
+
+                        {/* {tmpInputParams["annotateCells"]["annotateCells"] && tmpInputParams["annotateCells"]["annotateCells-species"] == "human" && <Label className="row-input">
+                            <Text className="text-100">
+                                <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                    onMouseEnter={() => setShowStepHelper(8)}>
+                                    Reference Dataset
+                                </span>
+                            </Text>
+                            <select
+                                multiple={true}
+                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "annotateCells": { ...tmpInputParams["annotateCells"], "annotateCells-references": [...e.target.options].filter(option => option.selected).map(option => option.value) } }) }}
+                                // defaultValue={tmpInputParams["annotateCells"]["annotateCells-reference"]}
+                            >
+                                <option value="BlueprintEncode">Blueprint Encode</option>
+                                <option value="DatabaseImmuneCellExpression">Database Immune Cell Expression</option>
+                                <option value="HumanPrimaryCellAtlas">Human Primary Cell Atlas</option>
+                                <option value="MonacoImmune">Monaco Immune</option>
+                                <option value="NovershternHematopoietic">Novershtern Hematopoietic</option>
+                            </select>
+                        </Label>
+                        }
+                        {tmpInputParams["annotateCells"]["annotateCells"] && tmpInputParams["annotateCells"]["annotateCells-species"] == "mouse" &&
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(8)}>
+                                        Reference Dataset
+                                    </span>
+                                </Text>
+                                <select
+                                    multiple={true}
+                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "annotateCells": { ...tmpInputParams["annotateCells"], "annotateCells-references": [...e.target.options].filter(option => option.selected).map(option => option.value) } }) }}
+                                    // defaultValue={tmpInputParams["annotateCells"]["annotateCells-reference"]}
+                                >
+                                    <option value="ImmGen">Imm Gen</option>
+                                    <option value="MouseRNAseq">Mouse RNA-seq</option>
+                                </select>
+                            </Label>
+                        } */}
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <>
             <Tooltip2 content="Start new analysis or modify parameters" position={Position.BOTTOM}>
@@ -761,6 +953,7 @@ const AnalysisDialog = ({
                                     {get_input_clus()}
                                     {get_input_tsne()}
                                     {get_input_umap()}
+                                    {get_input_label_cells()}
                                 </div>
 
                                 <div className="row-input-tooltips">
@@ -922,6 +1115,12 @@ const AnalysisDialog = ({
                                             && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             get_input_umap()
                                             : ""
+                                    }
+
+                                    {loadParams && loadParamsFor === loadImportFormat
+                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                        get_input_label_cells()
+                                        : ""
                                     }
                                 </div>
                                 <div className='row-input-tooltips'>
