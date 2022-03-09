@@ -7,18 +7,17 @@ const CellLabelTable = (props) => {
             <table>
                 <tr>
                     <td></td>
-                    {/* <th scope="col">CLUSTERS</th> */}
                     {
-                        Object.keys(props?.data).map(x => <th scope="col">{x}</th>)
+                        Object.keys(props?.data?.per_reference).map(x => <th key={x} scope="col">{x}</th>)
                     }
                 </tr>
                 {
-                    props?.data[Object.keys(props?.data)].map((x, i) => {
+                    props?.data?.per_reference[Object.keys(props?.data?.per_reference)[0]].map((x, i) => {
                         return (
-                            <tr>
+                            <tr key={i} >
                                 <th scope="row">Cluster {i + 1}</th>
                                 {
-                                    Object.keys(props?.data).map(y => <td style={{ fontStyle: 'italic' }}>{props?.data[y][i]}</td>)
+                                    Object.keys(props?.data?.per_reference).map((y, j) => <td key={j} className={Array.isArray(props?.data?.integrated) && props?.data?.integrated[i] === y ? "td-highlight" : ""}>{props?.data?.per_reference[y][i]}</td>)
                                 }
                             </tr>
                         )

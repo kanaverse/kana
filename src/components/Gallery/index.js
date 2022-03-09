@@ -42,9 +42,13 @@ const Gallery = (props) => {
             : ""
         }
         {
-          props?.cellLabelData ?
+          props?.cellLabelData && Object.keys(props?.cellLabelData?.per_reference) > 0 ?
             <Card className="gallery-elem" elevation={Elevation.ONE}>
-              <h5>Cell Labels</h5>
+              <h5>Cell Labels (<span style={{
+                fontStyle: "italic",
+                color: "#2B95D6",
+                fontWeight: "bold"
+              }}>best match</span>)</h5>
               <CellLabelTable data={props?.cellLabelData} />
             </Card>
             : ""

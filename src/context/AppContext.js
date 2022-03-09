@@ -46,8 +46,8 @@ const AppContextProvider = ({ children }) => {
     annotateCells: {
       "annotateCells": false,
       // "annotateCells-species": "human",
-      "annotateCells-human_references": null,
-      "annotateCells-mouse_references": null,
+      "annotateCells-human_references": [],
+      "annotateCells-mouse_references": [],
     }
   });
 
