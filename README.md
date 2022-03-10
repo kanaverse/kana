@@ -14,7 +14,7 @@ Our client-side approach has a number of advantages:
   There's no need to maintain a server or cloud compute instance - let the user's machine take care of it.
   It also naturally scales to any number of users as they're automatically providing the compute.
 - By removing network latency, we can achieve a smooth interactive experience.
-  This ranges from steps such as animated dimensionality reductions to user-driven marker detection.
+  This ranges from steps such as animated dimensionality reductions to user-driven marker detection and celltype annotation.
 
 ![Overview and Analysis pbmc 68k dataset](assets/pbmc_68k.gif)
 
@@ -38,6 +38,7 @@ Briefly, this involves:
 - The usual dimensionality reductions (t-SNE/UMAP)
 - Marker detection for each cluster
 - Make custom cell selections and detect markers for this selection
+- Cell type annotation for each cluster across user selected reference datasets
 
 The interface provides a depiction of the dimensionality reduction of choice,
 a ranking of marker genes for the cluster of interest,
