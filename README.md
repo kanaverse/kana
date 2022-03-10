@@ -38,7 +38,7 @@ Briefly, this involves:
 - The usual dimensionality reductions (t-SNE/UMAP)
 - Marker detection for each cluster
 - Make custom cell selections and detect markers for this selection
-- cell type annotation for each cluster across user selected reference datasets
+- Cell type annotation for each cluster across user selected reference datasets
 
 The interface provides a depiction of the dimensionality reduction of choice,
 a ranking of marker genes for the cluster of interest,
