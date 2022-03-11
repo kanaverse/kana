@@ -383,40 +383,55 @@ export function serialize(path) {
     return;
 }
 
+export function unserializeFiles(path, loader, embedded) {
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.createGroup("inputs");
+    let phandle = ghandle.openGroup("parameters"); 
+
+    let fihandle = phandle.openGroup("files");
+    let kids = fihandle.children;
+    let files = new Array(kids.length);
+    
+    for (const x of Object.keys(kids)) {
+        let current = fihandle.openGroup(x);
+
+        let curfile = {};
+        for (const field of ["type", "name"]) {
+            let dhandle = current.openDataSet(field, { load: true });
+            curfile[field] = dhandle.values[0];
+        }
+
+        if (embedded) {
+            let dhandle = current.openDataSet("id", { load: true });
+            curfile.buffer = loader(dhandle.values[0]);
+        } else {
+            let buffer_deets = {};
+            for (const field of ["offset", "size"]) {
+                let dhandle = current.openDataSet(field, { load: true });
+                buffer_deets[field] = dhandle.values[0];
+            }
+            curfile.buffer = loader(buffer_deets.offset, buffer_deets.size);
+        }
+
+        let idx = Number(x);
+        files[idx] = curfile;
+    }
+
+    return files;
+}
+
 export function unserialize(path, env) {
     let fhandle = new scran.H5File(path);
     let ghandle = fhandle.createGroup("inputs");
 
-    parameters = {};
-    {
-        let phandle = ghandle.openGroup("parameters"); 
-        let fohandle = phandle.openDataSet("format");
-        parameters["files"] = fohandle.load()[0];
+    let phandle = ghandle.openGroup("parameters"); 
+    let fohandle = phandle.openDataSet("format");
+    let format = fohandle.load()[0];
 
-        let fihandle = phandle.openGroup("files");
-        let kids = fihandle.children;
-        parameters["files"] = new Array(kids.length);
-        
-        for (const x of Object.keys(kids)) {
-            let current = fihandle.openGroup(x);
-
-            let curfile = {};
-            for (const field of ["type", "name"]) {
-                let dhandle = current.openDataSet(field, { load: true });
-                curfile[field] = dhandle.values;
-            }
-
-            let buffer_deets = {};
-            for (const field of ["offset", "size"]) {
-                let dhandle = current.openDataSet(field, { load: true });
-                buffer_deets[field] = dhandle.values;
-            }
-            curfile.buffer = env.embedded.slice(buffer_deets.offset, buffer_deets.offset + buffer_deets.size);
-
-            let idx = Number(x);
-            parameters.files[idx] = curfile;
-        }
-    }
+    parameters = { 
+        format: format, 
+        files: files 
+    };
 
     // Run the reloaders now.
     if (parameters.type == "MatrixMarket") {
@@ -441,41 +456,51 @@ export function unserialize(path, env) {
     }
 
     // We need to do something if the permutation is not the same.
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.createGroup("inputs");
     let rhandle = ghandle.openGroup("results"); 
-    let dhandle = rhandle.openDataSet("permutation", { load: true });
-    let old_perm = dhandle.values;
 
-    let same = true;
-    {
-        let perm = cache.matrix.permutation({ copy: false });
-        for (const [index, val] of perm.array().entries()) {
-            if (old_perm[index] != val) {
-                same = false;
-                break;
+    if ("permutation" in rhandle.children) {
+        let dhandle = rhandle.openDataSet("permutation", { load: true });
+        let old_perm = dhandle.values;
+
+        let same = true;
+        {
+            let perm = cache.matrix.permutation({ copy: false });
+            for (const [index, val] of perm.array().entries()) {
+                if (old_perm[index] != val) {
+                    same = false;
+                    break;
+                }
             }
         }
-    }
 
-    if (same) {
-        env.permuter = (x) => {}; // no-op.
-    } else {
-        // Get the identities of the permuted rows in the current permutation.
-        let perm = cache.matrix.permutation({ restore: false });
+        if (same) {
+            env.permuter = (x) => {}; // no-op.
+        } else {
+            // Get the identities of the permuted rows in the current permutation.
+            let perm = cache.matrix.permutation({ restore: false });
 
-        // Figure out which row in the old permutation gets the desired identity.
-        perm.forEach((x, i) => {
-            perm[i] = old_perm[x];
-        });
-
-        // Adding a permuter function for all per-gene vectors.
-        env.permuter = (x) => {
-            let temp = x.slice();
-            x.forEach((y, i) => {
-                temp[i] = x[perm[i]];
+            // Figure out which row in the old permutation gets the desired identity.
+            perm.forEach((x, i) => {
+                perm[i] = old_perm[x];
             });
-            x.set(temp);
-            return;
-        });
+
+            // Adding a permuter function for all per-gene vectors.
+            env.permuter = (x) => {
+                let temp = x.slice();
+                x.forEach((y, i) => {
+                    temp[i] = x[perm[i]];
+                });
+                x.set(temp);
+                return;
+            });
+        }
+    } else {
+        // If this is the case, we're dealing with v0 states. We'll just
+        // assume it was the same, I guess. Should be fine as we didn't change
+        // the permutation code in v0.
+        env.permuter = (x) => {}; 
     }
 
     return;

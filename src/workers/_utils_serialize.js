@@ -1,87 +1,13 @@
 import * as pako from "pako";
 import * as hashwasm from "hash-wasm";
 import * as kana_db from "./KanaDBHandler.js";
+import * as convert_v0 from "./converter/from_v0.js";
+import * as inputs from "./_inputs.js";
 
 // Must be integers!
 const FORMAT_EMBEDDED_FILES = 0;
 const FORMAT_EXTERNAL_KANADB = 1;
-const FORMAT_VERSION = 0;
-
-function normalizeTypedArrays(object) {
-    if (Array.isArray(object)) {
-        for (var i = 0; i < object.length; i++) {
-            object[i] = normalizeTypedArrays(object[i]);
-        }
-    } else if (ArrayBuffer.isView(object)) {
-        object = { 
-            "_TypedArray_class": object.constructor.name, 
-            "_TypedArray_values": Array.from(object) 
-        };
-    } else if (object instanceof Object) {
-        // This MUST be after the previous clause, as otherwise
-        // a TypedArray is an object and is incorrectly handled. 
-        for (const [key, element] of Object.entries(object)) {
-            object[key] = normalizeTypedArrays(element);
-        }
-    }
-    return object;
-}
-
-function recoverTypedArrays(object) {
-    if (Array.isArray(object)) {
-        for (var i = 0; i < object.length; i++) {
-            object[i] = recoverTypedArrays(object[i]);
-        }
-    } else if (object instanceof Object) {
-        if ("_TypedArray_class" in object) {
-            var cls = object[["_TypedArray_class"]];
-            var vals = object[["_TypedArray_values"]];
-            switch (cls) {
-                case "Uint8Array":
-                    object = new Uint8Array(vals.length);
-                    break;
-                case "Int8Array":
-                    object = new Int8Array(vals.length);
-                    break;
-                case "Uint8Array":
-                    object = new Uint8Array(vals.length);
-                    break;
-                case "Uint16Array":
-                    object = new Uint16Array(vals.length);
-                    break;
-                case "Int16Array":
-                    object = new Int16Array(vals.length);
-                    break;
-                case "Uint32Array":
-                    object = new Uint32Array(vals.length);
-                    break;
-                case "Int32Array":
-                    object = new Int32Array(vals.length);
-                    break;
-                case "Uint64Array":
-                    object = new Uint64Array(vals.length);
-                    break;
-                case "Int64Array":
-                    object = new Int64Array(vals.length);
-                    break;
-                case "Float32Array":
-                    object = new Float32Array(vals.length);
-                    break;
-                case "Float64Array":
-                    object = new Float64Array(vals.length);
-                    break;
-                default:
-                    throw "unrecognized TypedArray class '" + cls;
-            }
-            object.set(vals);
-        } else {
-            for (const [key, element] of Object.entries(object)) {
-                object[key] = recoverTypedArrays(element);
-            }
-        }
-    } 
-    return object;
-}
+const FORMAT_VERSION = 1000000;
 
 function numberToBuffer(number) {
     // Store as little-endian. Probably safer
@@ -191,7 +117,9 @@ export async function save(contents, mode = "full") {
     }
 }
 
-export async function load(buffer) {
+export async function load(buffer, path) {
+    let env = {};
+
     var offset = 0;
     var format = bufferToNumber(new Uint8Array(buffer, offset, 8));
     offset += 8;
@@ -199,33 +127,27 @@ export async function load(buffer) {
     var version = bufferToNumber(new Uint8Array(buffer, offset, 8));
     offset += 8;
 
-    var json_len = bufferToNumber(new Uint8Array(buffer, offset, 8));
+    var state_len = bufferToNumber(new Uint8Array(buffer, offset, 8));
     offset += 8;
 
-    var contents = pako.ungzip(new Uint8Array(buffer, offset, json_len), { "to": "string" });
-    contents = JSON.parse(contents);
-    contents = recoverTypedArrays(contents);
-    offset += json_len;
+    let state = new Uint8Array(buffer, offset, state_len);
+    offset += state_len;
+    if (version < 1000000) {
+        from_v0.convertFromVersion0(state, path);
+    } else {
+        scran.writeFile(path, state);
+    }
+    env.path = path;
 
-    var buffered = contents.inputs.parameters.files;
     if (format == FORMAT_EMBEDDED_FILES) {
-        buffered.forEach((x, i) => {
-            var details = x.buffer;
-            var target = new Uint8Array(buffer, offset + details.offset, details.size);
-            var tmp = new ArrayBuffer(details.size);
-            (new Uint8Array(tmp)).set(target);
-            buffered[i].buffer = tmp;
-        });
+        let embedded = new Uint8Array(buffer, offset, buffer.byteLength - offset);
+        env.files = inputs.unserializeFiles(path, (start, size) => embedded.slice(start, start + size), true);
 
     } else if (format == FORMAT_EXTERNAL_KANADB) {
-        var collected = [];
-        buffered.forEach((x, i) => {
-            var id = x.buffer;
-            collected.push(kana_db.loadFile(id));
-        });
-  
+        env.files = inputs.unserializeFiles(path, kana_db.loadFile, false);
+        let collected = env.files.map(x => x.buffer);
         var resolved = await Promise.all(collected);
-        buffered.forEach((x, i) => {
+        env.files.forEach((x, i) => {
             if (resolved[i] === null) {
                 throw "KanaDB loading failed for file ID '" + x.buffer + "'";
             }
@@ -235,6 +157,6 @@ export async function load(buffer) {
     } else {
         throw "unsupported format type";
     }
- 
-    return contents;
+
+    return env;
 }

@@ -510,17 +510,20 @@ onmessage = function (msg) {
 
     /**************** LOADING EXISTING ANALYSES *******************/
     } else if (payload.type == "LOAD") {
+        const path = "temp.h5";
+
         if (payload.payload.files.format == "kana") {
             const reader = new FileReaderSync();
             var f = payload.payload.files.files.file[0];
             loaded
                 .then(async (x) => {
-                    var contents = await serialize_utils.load(reader.readAsArrayBuffer(f));
+                    var contents = await serialize_utils.load(reader.readAsArrayBuffer(f), path);
                     var response = runAllSteps("unserialize", contents);
                     postMessage({
                         type: "loadedParameters",
                         resp: response
                     });
+                    scran.removeFile(path);
                 })
                 .catch(error => {
                     console.error(error);
@@ -540,12 +543,13 @@ onmessage = function (msg) {
                             msg: `Fail: cannot load analysis ID '${id}'`
                         });
                     } else {
-                        var contents = await serialize_utils.load(res);
+                        var contents = await serialize_utils.load(res, path);
                         var response = await runAllSteps("unserialize", contents);
                         postMessage({
                             type: "loadedParameters",
                             resp: response
                         });
+                        scran.removeFile(path);
                     }
                 })
                 .catch(error => {
