@@ -59,3 +59,14 @@
     font-size: 12px;
     font-style: italic;
 }
+
+.stepper-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+}
+
+.stepper-container > button {
+    margin: 5px;
+}

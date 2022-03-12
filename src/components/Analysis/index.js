@@ -849,6 +849,8 @@ const AnalysisDialog = ({
         )
     }
 
+    const [showSection, setShowSection] = useState("input");
+
     return (
         <>
             <Tooltip2 content="Start new analysis or modify parameters" position={Position.BOTTOM}>
@@ -865,56 +867,67 @@ const AnalysisDialog = ({
                         defaultSelectedTabId={tabSelected}
                     >
                         <Tab id="new" title="Import new dataset" panel={
-                            <div className="inputs-container">
-                                <div className='row-input'>
-                                    <div className="col"
-                                        style={{
-                                            // paddingTop: '10px',
-                                            paddingBottom: '15px'
-                                        }}>
-                                        <div>
-                                            <H5><Tag round={true}>1</Tag>
-                                                <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                                    onMouseEnter={() => setShowStepHelper(1)}>
-                                                    Load input files
-                                                </span>
-                                            </H5>
-                                            <Tabs
-                                                animate={true}
-                                                renderActiveTabPanelOnly={true}
-                                                vertical={true}
-                                                onChange={handleNewImportTab}
-                                                defaultSelectedTabId={newImportFormat}
-                                            >
-                                                <Tab id="mtx" title="Matrix Market file" panel={
-                                                    <div className="row"
+                            <>
+                                <div className="stepper-container">
+                                    <Button intent="warning"
+                                        onClick={(() => setShowSection("input"))}
+                                        disabled={showSection === "input"}>Show Input</Button>
+                                    <Button intent="warning"
+                                        onClick={(() => setShowSection("params"))}
+                                        disabled={showSection === "params"}>Show Parameters</Button>
+                                </div>
+                                <div className="inputs-container">
+                                    <div className='row-input'>
+                                        {
+                                            showSection == "input" &&
+                                            <div className="col"
+                                                style={{
+                                                    // paddingTop: '10px',
+                                                    paddingBottom: '15px'
+                                                }}>
+                                                <div>
+                                                    <H5><Tag round={true}>1</Tag>
+                                                        <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                                            onMouseEnter={() => setShowStepHelper(1)}>
+                                                            Load input files
+                                                        </span>
+                                                    </H5>
+                                                    <Tabs
+                                                        animate={true}
+                                                        renderActiveTabPanelOnly={true}
+                                                        vertical={true}
+                                                        onChange={handleNewImportTab}
+                                                        defaultSelectedTabId={newImportFormat}
                                                     >
-                                                        <Label className="row-input">
-                                                            <FileInput text={inputText.mtx} onInputChange={(msg) => { setInputText({ ...inputText, "mtx": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "mtx": msg.target.files }) }} />
-                                                        </Label>
-                                                        <Label className="row-input">
-                                                            <FileInput text={inputText.gene} onInputChange={(msg) => { setInputText({ ...inputText, "gene": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "gene": msg.target.files }) }} />
-                                                        </Label>
-                                                        <Label className="row-input">
-                                                            <FileInput text={inputText.barcode} onInputChange={(msg) => { setInputText({ ...inputText, "barcode": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "barcode": msg.target.files }) }} />
-                                                        </Label>
-                                                    </div>
-                                                } />
-                                                <Tab id="tenx" title="10x HDF5 matrix" panel={
-                                                    <div className="row"
-                                                    >
-                                                        <Label className="row-input">
-                                                            <FileInput style={{
-                                                                marginTop: '5px'
-                                                            }}
-                                                                text={inputText.file}
-                                                                onInputChange={(msg) => {
-                                                                    setInputText({ ...inputText, "file": msg.target.files[0].name });
-                                                                    setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files })
-                                                                }} />
-                                                        </Label>
+                                                        <Tab id="mtx" title="Matrix Market file" panel={
+                                                            <div className="row"
+                                                            >
+                                                                <Label className="row-input">
+                                                                    <FileInput text={inputText.mtx} onInputChange={(msg) => { setInputText({ ...inputText, "mtx": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "mtx": msg.target.files }) }} />
+                                                                </Label>
+                                                                <Label className="row-input">
+                                                                    <FileInput text={inputText.gene} onInputChange={(msg) => { setInputText({ ...inputText, "gene": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "gene": msg.target.files }) }} />
+                                                                </Label>
+                                                                <Label className="row-input">
+                                                                    <FileInput text={inputText.barcode} onInputChange={(msg) => { setInputText({ ...inputText, "barcode": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "barcode": msg.target.files }) }} />
+                                                                </Label>
+                                                            </div>
+                                                        } />
+                                                        <Tab id="tenx" title="10x HDF5 matrix" panel={
+                                                            <div className="row"
+                                                            >
+                                                                <Label className="row-input">
+                                                                    <FileInput style={{
+                                                                        marginTop: '5px'
+                                                                    }}
+                                                                        text={inputText.file}
+                                                                        onInputChange={(msg) => {
+                                                                            setInputText({ ...inputText, "file": msg.target.files[0].name });
+                                                                            setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files })
+                                                                        }} />
+                                                                </Label>
 
-                                                        {/* <Label className="row-input">
+                                                                {/* <Label className="row-input">
                                                             <Text className="text-100">
                                                                 <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}>
                                                                     HDF5 format
@@ -925,232 +938,249 @@ const AnalysisDialog = ({
                                                                 <option key="h5ad">H5ad</option>
                                                             </HTMLSelect>
                                                         </Label> */}
-                                                    </div>
-                                                } />
-                                                <Tab id="h5ad" title="H5AD" panel={
-                                                    <div className="row"
-                                                    >
-                                                        <Label className="row-input">
-                                                            <FileInput style={{
-                                                                marginTop: '5px'
-                                                            }}
-                                                                text={inputText.file}
-                                                                onInputChange={(msg) => {
-                                                                    setInputText({ ...inputText, "file": msg.target.files[0].name });
-                                                                    setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files })
-                                                                }} />
-                                                        </Label>
-                                                    </div>
-                                                } />
-                                            </Tabs>
+                                                            </div>
+                                                        } />
+                                                        <Tab id="h5ad" title="H5AD" panel={
+                                                            <div className="row"
+                                                            >
+                                                                <Label className="row-input">
+                                                                    <FileInput style={{
+                                                                        marginTop: '5px'
+                                                                    }}
+                                                                        text={inputText.file}
+                                                                        onInputChange={(msg) => {
+                                                                            setInputText({ ...inputText, "file": msg.target.files[0].name });
+                                                                            setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files })
+                                                                        }} />
+                                                                </Label>
+                                                            </div>
+                                                        } />
+                                                    </Tabs>
 
-                                        </div>
+                                                </div>
+                                            </div>
+                                        }
+
+                                        {showSection == "params" && get_input_qc()}
+                                        {showSection == "params" && get_input_fsel()}
+                                        {showSection == "params" && get_input_pca()}
+                                        {showSection == "params" && get_input_clus()}
+                                        {showSection == "params" && get_input_tsne()}
+                                        {showSection == "params" && get_input_umap()}
+                                        {showSection == "params" && get_input_label_cells()}
                                     </div>
 
-                                    {get_input_qc()}
-                                    {get_input_fsel()}
-                                    {get_input_pca()}
-                                    {get_input_clus()}
-                                    {get_input_tsne()}
-                                    {get_input_umap()}
-                                    {get_input_label_cells()}
+                                    <div className="row-input-tooltips">
+                                        {
+                                            !tmpInputValid &&
+                                            <Callout intent="danger"
+                                                title="Incorrect file format"
+                                                style={{
+                                                    marginBottom: '10px'
+                                                }}>
+                                                <p>Upload files that in one of these formats;</p>
+                                                <ul>
+                                                    <li>Matrix Market - <code>*.mtx</code> or <code>*.mtx.gz</code></li>
+                                                    <li>features or genes, <code>*.tsv</code> or <code>*.tsv.gz</code></li>
+                                                    <li>HDF5 (10x or h5ad) - <code>*.h5</code> or <code>*.hdf5</code> or <code>*.h5ad</code></li>
+                                                </ul>
+                                            </Callout>
+                                        }
+                                        {showStepHelper === 1 &&
+                                            <Callout intent="primary">
+                                                <p>We currently support several common file formats for single-cell RNA-seq count data.</p>
+                                                <p>
+                                                    <strong>A count matrix in the Matrix Market (<code>*.mtx</code>) format. </strong>
+                                                    This file may be Gzip-compressed, in which case we expect it to have a <code>*.mtx.gz</code> extension.
+                                                    We assume that the matrix has already been filtered to remove empty droplets.
+                                                    We also recommend supplying the feature annotation as an additional TSV file with gene identifiers and symbols -
+                                                    this is usually called <code>features.tsv.gz</code> or <code>genes.tsv</code> in the output of processing pipelines like Cellranger.
+                                                </p>
+                                                <p>
+                                                    <strong>A count matrix in the 10X HDF5 feature-barcode matrix format. </strong>
+                                                    We assume that the matrix has already been filtered to remove empty droplets.
+                                                    This is usually called something like <code>filtered_feature_bc_matrix.h5</code> in the output of processing pipelines like Cellranger.
+                                                    (See <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices">here</a> for details.
+                                                    Do not confuse this with the molecule information file, which is something different altogether.)
+                                                </p>
+                                                <p>
+                                                    <strong>A count matrix in the H5AD (<code>*.h5ad</code>) format. </strong>
+                                                    We assume that the count matrix is stored in the <code>X</code> group.
+                                                    We will also try to guess which field in the <code>obs</code> annotation contains gene symbols.
+                                                </p>
+                                            </Callout>
+                                        }
+                                        {get_common_tooltips()}
+                                    </div>
                                 </div>
-
-                                <div className="row-input-tooltips">
-                                    {
-                                        !tmpInputValid &&
-                                        <Callout intent="danger"
-                                            title="Incorrect file format"
-                                            style={{
-                                                marginBottom: '10px'
-                                            }}>
-                                            <p>Upload files that in one of these formats;</p>
-                                            <ul>
-                                                <li>Matrix Market - <code>*.mtx</code> or <code>*.mtx.gz</code></li>
-                                                <li>features or genes, <code>*.tsv</code> or <code>*.tsv.gz</code></li>
-                                                <li>HDF5 (10x or h5ad) - <code>*.h5</code> or <code>*.hdf5</code> or <code>*.h5ad</code></li>
-                                            </ul>
-                                        </Callout>
-                                    }
-                                    {showStepHelper === 1 &&
-                                        <Callout intent="primary">
-                                            <p>We currently support several common file formats for single-cell RNA-seq count data.</p>
-                                            <p>
-                                                <strong>A count matrix in the Matrix Market (<code>*.mtx</code>) format. </strong>
-                                                This file may be Gzip-compressed, in which case we expect it to have a <code>*.mtx.gz</code> extension.
-                                                We assume that the matrix has already been filtered to remove empty droplets.
-                                                We also recommend supplying the feature annotation as an additional TSV file with gene identifiers and symbols -
-                                                this is usually called <code>features.tsv.gz</code> or <code>genes.tsv</code> in the output of processing pipelines like Cellranger.
-                                            </p>
-                                            <p>
-                                                <strong>A count matrix in the 10X HDF5 feature-barcode matrix format. </strong>
-                                                We assume that the matrix has already been filtered to remove empty droplets.
-                                                This is usually called something like <code>filtered_feature_bc_matrix.h5</code> in the output of processing pipelines like Cellranger.
-                                                (See <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices">here</a> for details.
-                                                Do not confuse this with the molecule information file, which is something different altogether.)
-                                            </p>
-                                            <p>
-                                                <strong>A count matrix in the H5AD (<code>*.h5ad</code>) format. </strong>
-                                                We assume that the count matrix is stored in the <code>X</code> group.
-                                                We will also try to guess which field in the <code>obs</code> annotation contains gene symbols.
-                                            </p>
-                                        </Callout>
-                                    }
-                                    {get_common_tooltips()}
-                                </div>
-                            </div>
+                            </>
                         } />
                         <Tab id="load" title="Load saved analysis" panel={
-                            <div className="inputs-container">
-                                <div className='row-input'>
-                                    <div className="col">
-                                        <Tabs
-                                            animate={true}
-                                            renderActiveTabPanelOnly={true}
-                                            vertical={true}
-                                            onChange={handleLoadImportTab}
-                                            defaultSelectedTabId={loadImportFormat}
-                                        >
-                                            <Tab id="kana" title="Load from file" panel={
-                                                <div>
-                                                    <H5><Tag round={true}>1</Tag>
-                                                        <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}>
-                                                            Load analysis from file
-                                                        </span>
-                                                    </H5>
-                                                    <div className="row">
-                                                        <Label className="row-input">
-                                                            <FileInput text={inputText.file} onInputChange={(msg) => { setInputText({ ...inputText, "file": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files }) }} />
-                                                        </Label>
-                                                    </div>
-                                                </div>
-                                            } />
-                                            {<Tab id="kanadb" title="Load from browser" panel={
-                                                <div>
-                                                    <H5><Tag round={true}>1</Tag>
-                                                        <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}>
-                                                            Load analysis from browser cache
-                                                        </span>
-                                                    </H5>
-                                                    {
-                                                        props?.kanaIDBRecs.length > 0 ?
+                            <>
+                                <div className="stepper-container">
+                                    <Button intent="warning"
+                                        onClick={(() => setShowSection("input"))}
+                                        disabled={showSection === "input"}>Show Input</Button>
+                                        {console.log(loadParams && loadParamsFor === loadImportFormat && showSection === "params")}
+                                    <Button intent="warning"
+                                        onClick={(() => setShowSection("params"))}
+                                        disabled={loadParams && loadParamsFor === loadImportFormat ? showSection === "params" ? false: true : true}>Show Parameters</Button>
+                                </div>
+                                <div className="inputs-container">
+                                    <div className='row-input'>
+                                        {
+                                            showSection === "input" &&
+                                            <div className="col">
+                                                <Tabs
+                                                    animate={true}
+                                                    renderActiveTabPanelOnly={true}
+                                                    vertical={true}
+                                                    onChange={handleLoadImportTab}
+                                                    defaultSelectedTabId={loadImportFormat}
+                                                >
+                                                    <Tab id="kana" title="Load from file" panel={
+                                                        <div>
+                                                            <H5><Tag round={true}>1</Tag>
+                                                                <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}>
+                                                                    Load analysis from file
+                                                                </span>
+                                                            </H5>
                                                             <div className="row">
-                                                                <RadioGroup
-                                                                    onChange={(x) => {
-                                                                        setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value });
-                                                                        setTmpInputValid(true);
-                                                                    }}
-                                                                    selectedValue={tmpInputFiles?.file}
-                                                                >
-                                                                    {
-                                                                        props?.kanaIDBRecs.map((x, i) => {
-                                                                            return (
-                                                                                <Radio key={i} style={{
-                                                                                    display: "flex",
-                                                                                    flexDirection: "row",
-                                                                                    alignItems: "center"
-                                                                                }}
-                                                                                    label={x.title} value={x.id} > &nbsp;
-                                                                                    <span className="kana-date">{parseKanaDate(x.time)}</span>  &nbsp;
-                                                                                    <Icon icon="trash" size="10"
-                                                                                        style={{
-                                                                                            alignSelf: 'baseline',
-                                                                                            paddingTop: '4px',
-                                                                                            paddingLeft: '5px',
-                                                                                        }}
-                                                                                        onClick={() => {
-                                                                                            props?.setDeletekdb(x.id);
-                                                                                        }}></Icon>
-                                                                                </Radio>
-                                                                            )
-                                                                        })
-                                                                    }
-                                                                </RadioGroup>
-                                                            </div> :
-                                                            <div className="row">
-                                                                <Label>No saved analysis found in the browser!!</Label>
+                                                                <Label className="row-input">
+                                                                    <FileInput text={inputText.file} onInputChange={(msg) => { setInputText({ ...inputText, "file": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files }) }} />
+                                                                </Label>
                                                             </div>
+                                                        </div>
+                                                    } />
+                                                    {<Tab id="kanadb" title="Load from browser" panel={
+                                                        <div>
+                                                            <H5><Tag round={true}>1</Tag>
+                                                                <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}>
+                                                                    Load analysis from browser cache
+                                                                </span>
+                                                            </H5>
+                                                            {
+                                                                props?.kanaIDBRecs.length > 0 ?
+                                                                    <div className="row">
+                                                                        <RadioGroup
+                                                                            onChange={(x) => {
+                                                                                setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value });
+                                                                                setTmpInputValid(true);
+                                                                            }}
+                                                                            selectedValue={tmpInputFiles?.file}
+                                                                        >
+                                                                            {
+                                                                                props?.kanaIDBRecs.map((x, i) => {
+                                                                                    return (
+                                                                                        <Radio key={i} style={{
+                                                                                            display: "flex",
+                                                                                            flexDirection: "row",
+                                                                                            alignItems: "center"
+                                                                                        }}
+                                                                                            label={x.title} value={x.id} > &nbsp;
+                                                                                            <span className="kana-date">{parseKanaDate(x.time)}</span>  &nbsp;
+                                                                                            <Icon icon="trash" size="10"
+                                                                                                style={{
+                                                                                                    alignSelf: 'baseline',
+                                                                                                    paddingTop: '4px',
+                                                                                                    paddingLeft: '5px',
+                                                                                                }}
+                                                                                                onClick={() => {
+                                                                                                    props?.setDeletekdb(x.id);
+                                                                                                }}></Icon>
+                                                                                        </Radio>
+                                                                                    )
+                                                                                })
+                                                                            }
+                                                                        </RadioGroup>
+                                                                    </div> :
+                                                                    <div className="row">
+                                                                        <Label>No saved analysis found in the browser!!</Label>
+                                                                    </div>
+                                                            }
+                                                        </div>} />
                                                     }
-                                                </div>} />
-                                            }
-                                        </Tabs>
+                                                </Tabs>
+                                            </div>
+                                        }
+
+                                        {
+                                            showSection === "params" && loadParams && loadParamsFor === loadImportFormat
+                                                && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                                get_input_qc()
+                                                : ""
+                                        }
+
+                                        {
+                                            showSection === "params" && loadParams && loadParamsFor === loadImportFormat
+                                                && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                                get_input_fsel()
+                                                : ""
+                                        }
+
+                                        {
+                                            showSection === "params" && loadParams && loadParamsFor === loadImportFormat
+                                                && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                                get_input_pca()
+                                                : ""
+                                        }
+
+                                        {
+                                            showSection === "params" && loadParams && loadParamsFor === loadImportFormat
+                                                && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                                get_input_clus()
+                                                : ""
+                                        }
+
+                                        {
+                                            showSection === "params" && loadParams && loadParamsFor === loadImportFormat
+                                                && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                                get_input_tsne()
+                                                : ""
+                                        }
+
+                                        {
+                                            showSection === "params" && loadParams && loadParamsFor === loadImportFormat
+                                                && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                                get_input_umap()
+                                                : ""
+                                        }
+
+                                        {showSection === "params" && loadParams && loadParamsFor === loadImportFormat
+                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                            get_input_label_cells()
+                                            : ""
+                                        }
                                     </div>
-                                    {
-                                        loadParams && loadParamsFor === loadImportFormat
-                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
-                                            get_input_qc()
-                                            : ""
-                                    }
-
-                                    {
-                                        loadParams && loadParamsFor === loadImportFormat
-                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
-                                            get_input_fsel()
-                                            : ""
-                                    }
-
-                                    {
-                                        loadParams && loadParamsFor === loadImportFormat
-                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
-                                            get_input_pca()
-                                            : ""
-                                    }
-
-                                    {
-                                        loadParams && loadParamsFor === loadImportFormat
-                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
-                                            get_input_clus()
-                                            : ""
-                                    }
-
-                                    {
-                                        loadParams && loadParamsFor === loadImportFormat
-                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
-                                            get_input_tsne()
-                                            : ""
-                                    }
-
-                                    {
-                                        loadParams && loadParamsFor === loadImportFormat
-                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
-                                            get_input_umap()
-                                            : ""
-                                    }
-
-                                    {loadParams && loadParamsFor === loadImportFormat
-                                        && tmpInputFiles?.file === inputFiles?.files?.file ?
-                                        get_input_label_cells()
-                                        : ""
-                                    }
-                                </div>
-                                <div className='row-input-tooltips'>
-                                    {
-                                        !tmpInputValid &&
-                                        <Callout intent="danger"
-                                            title="Incorrect file format"
-                                            style={{
-                                                marginBottom: '10px'
-                                            }}>
-                                        </Callout>
-                                    }
-                                    <Callout intent="primary">
-                                        Import a saved analysis from <strong>kana</strong>. These files
-                                        are stored as <strong><code>*.kana</code></strong>.
-                                    </Callout>
-
-                                    {showStepHelper === 1 &&
+                                    <div className='row-input-tooltips'>
+                                        {
+                                            !tmpInputValid &&
+                                            <Callout intent="danger"
+                                                title="Incorrect file format"
+                                                style={{
+                                                    marginBottom: '10px'
+                                                }}>
+                                            </Callout>
+                                        }
                                         <Callout intent="primary">
-                                            <p>We currently support files in the Cellranger format -
-                                                namely, a Matrix Market file containing the count matrix.
-                                                We also recommend supplying the feature annotation
-                                                (<code>features.tsv.gz</code> or <code>genes.tsv.gz</code>).
-                                                Users may also provide a TSV file containing the barcode annotations, if any.
-                                            </p>
+                                            Import a saved analysis from <strong>kana</strong>. These files
+                                            are stored as <strong><code>*.kana</code></strong>.
                                         </Callout>
-                                    }
-                                    {get_common_tooltips()}
+
+                                        {showStepHelper === 1 &&
+                                            <Callout intent="primary">
+                                                <p>We currently support files in the Cellranger format -
+                                                    namely, a Matrix Market file containing the count matrix.
+                                                    We also recommend supplying the feature annotation
+                                                    (<code>features.tsv.gz</code> or <code>genes.tsv.gz</code>).
+                                                    Users may also provide a TSV file containing the barcode annotations, if any.
+                                                </p>
+                                            </Callout>
+                                        }
+                                        {get_common_tooltips()}
+                                    </div>
                                 </div>
-                            </div>
+                            </>
                         } />
                     </Tabs >
                 </div >
