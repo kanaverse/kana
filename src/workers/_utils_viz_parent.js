@@ -90,16 +90,3 @@ export function runWithNeighbors(worker, args, nn_out, cache) {
 
     return sendTask(worker, run_msg, cache, transferrable);
 }
-
-export function retrieveCoordinates(worker, cache) {
-    if ("reloaded" in cache) {
-        // Buffers are transferred to the main thread, so we need to make sure we
-        // clone it so that we don't lose our master copy.
-        var copy = { ...cache.reloaded };
-        copy.x = copy.x.slice();
-        copy.y = copy.y.slice();
-        return new Promise(resolve => resolve(copy));
-    } else {
-        return cache.run.then(x => sendTask(worker, { "cmd": "FETCH" }, cache));
-    }
-}
