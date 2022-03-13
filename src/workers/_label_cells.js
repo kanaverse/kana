@@ -155,11 +155,20 @@ async function getBuiltReference(name, species, rebuild) {
     };
 }
 
-export function compute(args) {
-    if (!markers.changed && !inputs.changed && !utils.changedParameters(parameters, args)) {
-        changed = false;
-        return;
-    } 
+function compareArrays(x, y) {
+    if (x.length != y.length) {
+        return false;
+    }
+    for (var i = 0; i < x.length; i++) {
+        if (x[i] != y[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+export function compute(human_reference, mouse_references) {
+    changed = false;
 
     let rebuild = false;
     if (inputs.changed || !("feature_space" in cache)) {
@@ -167,93 +176,110 @@ export function compute(args) {
         chooseFeatures();
     }
 
-    // automatically choose from the data
-    let species = cache.feature_details.species;
+    if (rebuild || !compareArrays(human_references, parameters.human_references)) || !compareArrays(mouse_reference, parameters.mouse_references)) {
+        let species = cache.feature_details.species;
 
-    // Fetching all of the references.
-    let init = downloads.initialize();
-    let valid = {};
-    if (species == "human") {
-        for (const ref of args.human_references) {
-            valid[ref] = getBuiltReference(ref, "human", rebuild);
-        }
-    } else if (species == "mouse") {
-        for (const ref of args.mouse_references) {
-            valid[ref] = getBuiltReference(ref, "mouse", rebuild);
-        }
-    }
-
-    // Creating a column-major array of mean vectors.
-    let ngenes = cache.features.length;
-    let ngroups = markers.numberOfGroups(); 
-    let cluster_means = utils.allocateCachedArray(ngroups * ngenes, "Float64Array", cache);
-    for (var g = 0; g < ngroups; g++) {
-        let means = markers.fetchGroupMeans(g, false); // Warning: direct view in wasm space - be careful.
-        let cluster_array = cluster_means.array();
-        cluster_array.set(means, g * ngenes);
-    }
-
-    // Running classifications on the cluster means. Note that compute() itself
-    // cannot be async, as we need to make sure 'changed' is set and available for
-    // downstream steps; hence the explicit then().
-    cache.results = {};
-    for (const [key, val] of Object.entries(valid)) {
-        cache.results[key] = val.then(ref => {
-            let output = scran.labelCells(cluster_means, ref.built.raw, { numberOfFeatures: ngenes, numberOfCells: ngroups });
-            let labels = [];
-            for (const o of output) {
-                labels.push(ref.loaded.labels[o]);
+        // Fetching all of the references.
+        let init = downloads.initialize();
+        let valid = {};
+        if (species == "human") {
+            for (const ref of args.human_references) {
+                valid[ref] = getBuiltReference(ref, "human", rebuild);
             }
-            return labels;
-        });
+        } else if (species == "mouse") {
+            for (const ref of args.mouse_references) {
+                valid[ref] = getBuiltReference(ref, "mouse", rebuild);
+            }
+        }
+
+        // Updating both of them, just in case the user modified something for the other species;
+        // we want that choice to be preserved, as silly as it might be.
+        parameters.human_references = human_references;
+        parameters.mouse_references = mouse_references;
+
+        changed = true;
     }
 
-    // Performing additional integration, if necessary. We don't really 
-    // need this if there's only one reference.
-    let used_refs = Object.keys(valid);
-    if (used_refs.length > 1) {
-        if (rebuild || utils.changedParameters(used_refs, cache.used)) {
-            let used_vals = Object.values(valid);
+    if (changed) {
+        // Creating a column-major array of mean vectors.
+        let ngenes = cache.features.length;
+        let ngroups = markers.numberOfGroups(); 
+        let cluster_means = utils.allocateCachedArray(ngroups * ngenes, "Float64Array", cache);
+        for (var g = 0; g < ngroups; g++) {
+            let means = markers.fetchGroupMeans(g, false); // Warning: direct view in wasm space - be careful.
+            let cluster_array = cluster_means.array();
+            cluster_array.set(means, g * ngenes);
+        }
 
-            cache.integrated = Promise.all(used_vals)
-                .then(arr => {
-                    let loaded = arr.map(x => x.loaded.raw);
-                    let feats = arr.map(x => x.built.features);
-                    let built = arr.map(x => x.built.raw);
-                    return scran.integrateLabelledReferences(cache.features, loaded, feats, built);
+        // Running classifications on the cluster means. Note that compute() itself
+        // cannot be async, as we need to make sure 'changed' is set and available for
+        // downstream steps; hence the explicit then().
+        cache.results = {};
+        for (const [key, val] of Object.entries(valid)) {
+            cache.results[key] = val.then(ref => {
+                let output = scran.labelCells(cluster_means, ref.built.raw, { numberOfFeatures: ngenes, numberOfCells: ngroups });
+                let labels = [];
+                for (const o of output) {
+                    labels.push(ref.loaded.labels[o]);
+                }
+                return labels;
+            });
+        }
+
+        // Performing additional integration, if necessary. We don't really 
+        // need this if there's only one reference.
+        let used_refs = Object.keys(valid);
+        if (used_refs.length > 1) {
+            if (rebuild || !compareArrays(used_refs, cache.used)) {
+                let used_vals = Object.values(valid);
+
+                cache.integrated = Promise.all(used_vals)
+                    .then(arr => {
+                        let loaded = arr.map(x => x.loaded.raw);
+                        let feats = arr.map(x => x.built.features);
+                        let built = arr.map(x => x.built.raw);
+                        return scran.integrateLabelledReferences(cache.features, loaded, feats, built);
+                    }
+                );
+            }
+
+            cache.integrated_results = cache.integrated
+                .then(async (integrated) => {
+                    let results = [];
+                    for (const key of used_refs) {
+                        results.push(await cache.results[key]);
+                    }
+
+                    let out = scran.integrateCellLabels(cluster_means, results, integrated, { numberOfFeatures: ngenes, numberOfCells: ngroups });
+                    let as_names = [];
+                    out.forEach(i => {
+                        as_names.push(used_refs[i]);
+                    });
+                    return as_names;
                 }
             );
+        } else {
+            utils.freeCache(cache.integrated);
+            delete cache.integrated_results;
         }
 
-        cache.integrated_results = cache.integrated
-            .then(async (integrated) => {
-                let results = [];
-                for (const key of used_refs) {
-                    results.push(await cache.results[key]);
-                }
-
-                let out = scran.integrateCellLabels(cluster_means, results, integrated, { numberOfFeatures: ngenes, numberOfCells: ngroups });
-                let as_names = [];
-                out.forEach(i => {
-                    as_names.push(used_refs[i]);
-                });
-                return as_names;
-            }
-        );
-    } else {
-        utils.freeCache(cache.integrated);
-        delete cache.integrated_results;
+        cache.used = used_refs;
+        changed = true;
     }
-    cache.used = used_refs;
 
-    changed = true;
-    delete cache.reloaded;
+    if (changed) {
+        // Free some memory.
+        reloaded = null;
+    }
+
     return;
 }
 
 export async function results() {
-    if ("reloaded" in cache) {
-        return cache.reloaded;
+    // No real need to clone these, they're string arrays
+    // so they can't be transferred anyway.
+    if (!("results" in cache)) {
+        return reloaded;
     } else {
         let perref = {};
         for (const [key, val] of Object.entries(cache.results)) {
@@ -264,20 +290,63 @@ export async function results() {
         if ("integrated_results" in cache) {
             output.integrated = await cache.integrated_results;
         }
-        console.log(output);
+
         return output;
     }
 }
 
-export async function serialize() {
-    return {
-        "parameters": parameters,
-        "contents": await results()
-    };
+export async function serialize(path) {
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.createGroup("cell_labelling");
+    
+    {
+        let phandle = ghandle.createGroup("parameters");
+        phandle.writeDataSet("mouse_references", "String", [parameters.mouse_references.length], parameters.mouse_references);
+        phandle.writeDataSet("human_references", "String", [parameters.human_references.length], parameters.human_references);
+    }
+
+    {
+        let rhandle = ghandle.createGroup("results");
+        let res = await results();
+
+        let perhandle = rhandle.createGroup("per_reference");
+        for (const [key, val] of Object.entries(res.per_reference)) {
+            perhandle.writeDataSet(key, "String", [val.length], val);
+        }
+
+        if ("integrated" in res) {
+            rhandle.writeDataSet("integrated", "String", [res.integrated.length], res.integrated);
+        }
+    }
+
+    return;
 }
 
-export function unserialize(state) {
-    parameters = state.parameters;
-    cache.reloaded = state.contents;
+export function unserialize(path) {
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.openGroup("cell_labelling");
+    
+    {
+        let phandle = ghandle.openGroup("parameters");
+        parameters =  {
+            mouse_references: phandle.openDataSet("mouse_references", { load: true }).values,
+            human_references: phandle.openDataSet("human_references", { load: true }).values
+        };
+    }
+
+    {
+        let rhandle = ghandle.openGroup("results");
+
+        let perhandle = rhandle.openGroup("per_reference");
+        reloaded = { per_reference: {} };
+        for (const [key, val] of Object.entries(res.per_reference)) {
+            reloaded.per_reference[key] = perhandle.openDataSet(key, { load: true }).values;
+        }
+
+        if ("integrated" in res) {
+            reloaded.integrated = rhandle.openDataSet("integrated", { load: true }).values;
+        }
+    }
+
     return;
 }
