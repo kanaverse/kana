@@ -434,25 +434,25 @@ export function unserialize(path, env) {
     };
 
     // Run the reloaders now.
-    if (parameters.type == "MatrixMarket") {
-        loadMatrixMarketRaw(parameters.files);
+    if (format == "MatrixMarket") {
+        loadMatrixMarketRaw(files);
 
-    } else if (parameters.type == "H5AD") {
-        loadH5ADRaw(parameters.files);
+    } else if (format == "H5AD") {
+        loadH5ADRaw(files);
 
-    } else if (parameters.type == "10X") {
-        load10XRaw(parameters.files);
+    } else if (format == "10X") {
+        load10XRaw(files);
 
-    } else if (parameters.type == "HDF5") {
+    } else if (format == "HDF5") {
         // legacy support: trying to guess what it is based on its extension.
-        if (parameters.files[0].name.match(/h5ad$/i)) {
-            loadH5ADRaw(parameters.files);
+        if (files[0].name.match(/h5ad$/i)) {
+            loadH5ADRaw(files);
         } else {
-            load10XRaw(parameters.files);
+            load10XRaw(files);
         }
 
     } else {
-        throw `unrecognized count matrix format, ${parameters.type}`;
+        throw `unrecognized count matrix format "${format}"`;
     }
 
     // We need to do something if the permutation is not the same.
@@ -460,50 +460,31 @@ export function unserialize(path, env) {
     let ghandle = fhandle.createGroup("inputs");
     let rhandle = ghandle.openGroup("results"); 
 
+    let perm = null;
     if ("permutation" in rhandle.children) {
         let dhandle = rhandle.openDataSet("permutation", { load: true });
-        let old_perm = dhandle.values;
-
-        let same = true;
-        {
-            let perm = cache.matrix.permutation({ copy: false });
-            for (const [index, val] of perm.array().entries()) {
-                if (old_perm[index] != val) {
-                    same = false;
-                    break;
-                }
-            }
-        }
-
-        if (same) {
-            env.permuter = (x) => {}; // no-op.
-        } else {
-            // Get the identities of the permuted rows in the current permutation.
-            let perm = cache.matrix.permutation({ restore: false });
-
-            // Figure out which row in the old permutation gets the desired identity.
-            perm.forEach((x, i) => {
-                perm[i] = old_perm[x];
-            });
-
-            // Adding a permuter function for all per-gene vectors.
-            env.permuter = (x) => {
-                let temp = x.slice();
-                x.forEach((y, i) => {
-                    temp[i] = x[perm[i]];
-                });
-                x.set(temp);
-                return;
-            });
-        }
+        perm = scran.updatePermutation(cache.matrix, dhandle.values);
     } else {
         // If this is the case, we're dealing with v0 states. We'll just
         // assume it was the same, I guess. Should be fine as we didn't change
         // the permutation code in v0.
-        env.permuter = (x) => {}; 
+    }
+    let permuter;
+    if (perm !== null) {
+        // Adding a permuter function for all per-gene vectors.
+        permuter = (x) => {
+            let temp = x.slice();
+            x.forEach((y, i) => {
+                temp[i] = x[perm[i]];
+            });
+            x.set(temp);
+            return;
+        });
+    } else {
+        permuter = (x) => {}; 
     }
 
-    return;
+    return permuter;
 }
 
 /** Public functions (custom) **/
