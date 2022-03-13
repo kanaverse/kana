@@ -9,6 +9,10 @@ var reloaded = null;
 
 export var changed = false;
 
+/***************************
+ ******** Compute **********
+ ***************************/
+
 function computeMetrics() {
     utils.freeCache(cache.metrics);
     var mat = inputs.fetchCountMatrix();
@@ -44,7 +48,7 @@ function computeMetrics() {
     return;
 }
 
-function computeThresholds() {
+function computeFilters() {
     // Need to check this in case we're operating from a reloaded analysis,
     // where there is no guarantee that we reran the computeMetrics() step in compue().
     if (!("metrics" in cache)) { 
@@ -54,9 +58,12 @@ function computeThresholds() {
     var stats = cache.metrics;
     utils.freeCache(cache.filters);
     cache.filters = scran.computePerCellQCFilters(stats, { numberOfMADs: parameters.nmads });
+    return;
+}
 
+function applyFilters() {
     var mat = inputs.fetchCountMatrix();
-    var disc = cache.filters.discardOverall({ copy: "view" });
+    var disc = fetchDiscards();
     utils.freeCache(cache.matrix);
     cache.matrix = scran.filterCells(mat, disc);
     return;
@@ -77,7 +84,12 @@ export function compute(use_mito_default, mito_prefix, nmads) {
 
     if (changed || nmads !== parameters.nmads) {
         parameters.nmads = nmads;
-        computeThresholds();
+        computeFilters();
+        changed = true;
+    }
+
+    if (changed) {
+        applyFilters();
         changed = true;
     }
 
@@ -89,6 +101,10 @@ export function compute(use_mito_default, mito_prefix, nmads) {
     }
     return;
 }
+
+/***************************
+ ******** Results **********
+ ***************************/
 
 function getData(copy = true) {
     var data = {};
@@ -148,6 +164,10 @@ export function results() {
         "thresholds": thresholds
     };
 }
+
+/**********************************
+ ******** Saving/loading **********
+ **********************************/
 
 export function serialize(path) {
     let fhandle = new scran.H5File(path);
@@ -222,20 +242,31 @@ export function unserialize(path) {
     return;
 }
 
+/***************************
+ ******** Getters **********
+ ***************************/
+
 export function fetchSums({ unsafe = false } = {}) {
-    if ("reloaded" in cache) {
+    if (reloaded !== null) {
         return reloaded.sums;
     } else {
         // Unsafe, because we're returning a raw view into the Wasm heap,
         // which might be invalidated upon further allocations.
-        return cache.raw.sums({ copy: !unsafe });
+        return cache.metrics.sums({ copy: !unsafe });
     }
 }
 
 export function fetchDiscards() {
-    if ("reloaded" in cache) {
+    if (reloaded !== null) {
         return reloaded.discards;
     } else {
-        return cache.raw.discardOverall({ copy: "view" });
+        return cache.filters.discardOverall({ copy: "view" });
     }
+}
+
+export function fetchFilteredMatrix() {
+    if (!("matrix" in cache)) {
+        applyFilters();
+    }
+    return cache.matrix;
 }
