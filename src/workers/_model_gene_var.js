@@ -4,60 +4,99 @@ import * as normalization from "./_normalization.js";
   
 var cache = {};
 var parameters = {};
+var reloaded = null;
 
 export var changed = false;
 
-function spawnStats() {
-    var model_output = cache.raw;
-    return {
-        "means": model_output.means(),
-        "vars": model_output.variances(),
-        "fitted": model_output.fitted(),
-        "resids": model_output.residuals()
-    };
-}
+export function compute(span) {
+    changed = false;
+    if (normalization.changed) {
+        changed = true;
+    } 
+    
+    if (changed || span != parameters.span) {
+        cache.results = scran.modelGeneVar(mat, { span: args.span });
 
-export function compute(args) {
-    if (!normalization.changed && !utils.changedParameters(parameters, args)) {
-        changed = false;
-    } else {
-        var mat = normalization.fetchNormalizedMatrix();
-        cache.raw = scran.modelGeneVar(mat, { span: args.span });
-
-        cache.sorted_residuals = cache.raw.residuals().slice(); // a separate copy.
+        cache.sorted_residuals = cache.results.residuals().slice(); // a separate copy.
         cache.sorted_residuals.sort();
 
-        parameters = args;
-        delete cache.reloaded;
+        parameters.span = span;
         changed = true;
     }
+
+    if (changed) {
+        // Freeing some memory.
+        reloaded = null;
+    }
+
     return;
 }
 
-export function results() {
-    if ("reloaded" in cache) {
-        return {
-            "means": cache.reloaded.means.slice(),
-            "vars": cache.reloaded.vars.slice(),
-            "fitted": cache.reloaded.fitted.slice(),
-            "resids": cache.reloaded.resids.slice()
+function chooseResults(copy = true) {
+    if (!("results" in cache)) {
+        var output = {
+            means: reloaded.means,
+            vars: reloaded.vars,
+            fitted: reloaded.fitted,
+            resids: reloaded.resids
         };
+        return utils.copyVectors(output, copy);
     } else {
-        return spawnStats();
+        copy = utils.copyOrView(copy);
+        return {
+            "means": cache.results.means({ copy: copy }),
+            "vars": cache.results.variances({ copy: copy }),
+            "fitted": cache.results.fitted({ copy: copy }),
+            "resids": cache.results.residuals({copy: copy })
+        };
     }
 }
 
+export function results() {
+    return chooseResults();
+}
+
 export function serialize() {
-    return { 
-        "parameters": parameters,
-        "contents": results()
-    };
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.createGroup("feature_selection");
+
+    {
+        let phandle = ghandle.createGroup("parameters"); 
+        phandle.writeDataSet("span", "Float64", [], parameters.span);
+    }
+
+    {
+        let res = chooseResults(false);
+        let rhandle = ghandle.createGroup("results"); 
+        for (const x of [ "means", "vars", "fitted", "resids" ]) {
+            let y = res[x];
+            rhandle.writeDataSet(x, "Float64", [y.length], y);
+        }
+    }
 }
 
 export function unserialize(saved) {
-    parameters = saved.parameters;
-    cache.reloaded = saved.contents;
-    cache.sorted_residuals = cache.reloaded.resids.slice();
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.openGroup("feature_selection");
+
+    {
+        let phandle = ghandle.openGroup("parameters");
+        parameters = {
+            span: phandle.openDataSet("span", { load: true }).values[0]
+        };
+    }
+
+    {
+        let rhandle = ghandle.openGroup("results");
+        reloaded = {
+            means: rhandle.openDataSet("means", { load: true }).values,
+            vars: rhandle.openDataSet("vars", { load: true }).values,
+            fitted: rhandle.openDataSet("fitted", { load: true }).values,
+            resids: rhandle.openDataSet("resids", { load: true }).values
+        };
+    }
+
+    cache.sorted_residuals = reloaded.resids.slice();
     cache.sorted_residuals.sort();
     return;
 }
@@ -67,9 +106,9 @@ export function fetchSortedResiduals() {
 }
 
 export function fetchResiduals({ unsafe = false } = {}) {
-    if ("reloaded" in cache) {
-        return cache.reloaded.resids;
+    if (!("results" in cache)) {
+        return reloaded.resids;
     } else {
-        return cache.raw.residuals({ copy: !unsafe });
+        return cache.results.residuals({ copy: !unsafe });
     }
 }
