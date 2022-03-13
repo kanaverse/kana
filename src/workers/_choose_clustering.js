@@ -8,28 +8,22 @@ var parameters = {};
 
 export var changed = false;
 
-/** Standard functions **/
-export function compute(args) {
+export function compute(method) {
     changed = true;
     
-    if (!utils.changedParameters(parameters, args)) {
-        if (args.method == "snn_graph") {
+    if (method == parameters.method) {
+        if (method == "snn_graph") {
             if (!snn_cluster.changed) {
                 changed = false;
             }
-        } else if (args.method == "kmeans") {
+        } else if (method == "kmeans") {
             if (!kmeans_cluster.changed) {
                 changed = false;
             }
         }
     }
 
-    if (changed) {
-        delete cache.reloaded;
-        parameters = args;
-        changed = true;
-    }
-    
+    parameters.method = method;
     return;
 }
 
@@ -38,22 +32,34 @@ export function results() {
     return { "clusters": clusters.slice() };
 }
 
-export function serialize() {
-    // No need to serialize the cluster IDs,
-    // as this is done for each step.
-    return {
-        "parameters": parameters,
-        "contents": {}
-    };
-}
+export function serialize(path) {
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.createGroup("choose_clustering");
 
-export function unserialize(saved) {
-    parameters = saved.parameters;
-    cache.reloaded = saved.contents;
+    {
+        let phandle = ghandle.createGroup("parameters");
+        phandle.writeDataSet("method", "String", [], parameters.method);
+    }
+
+    // No need to serialize the cluster IDs as this is done for each step.
+    ghandle.createGroup("results");
     return;
 }
 
-/** Non-standard functions **/
+export function unserialize(path) {
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.openGroup("choose_clustering");
+
+    {
+        let phandle = ghandle.openGroup("parameters");
+        parameters = {
+            method: phandle.openDataSet("method", { load: true }).values[0]
+        };
+    }
+
+    return;
+}
+
 export function fetchClustersAsWasmArray() {
     if (parameters.method == "snn_graph") {
         return snn_cluster.fetchClustersAsWasmArray();

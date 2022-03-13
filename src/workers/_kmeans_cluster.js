@@ -6,10 +6,13 @@ var cache = {};
 var parameters = {};
 
 export var changed = false;
-export var skipped = false;
+export var invalid = false;
 
 export function fetchClustersAsWasmArray() {
     if (!("raw" in cache)) {
+        if (invalid) {
+            throw "cannot fetch k-means clusters from an invalid state";
+        }
         return cache.reloaded.clusters;
     } else {
         return cache.raw.clusters({ copy: "view" });
@@ -18,7 +21,7 @@ export function fetchClustersAsWasmArray() {
 
 export function compute(run_me, k) {
     changed = false;
-    skipped = !run_me;
+    invalid = false;
 
     if (pca.changed || k != parameters.k) {
         if (run_me) {
@@ -35,6 +38,9 @@ export function compute(run_me, k) {
         if (reloaded !== null) {
             utils.free(reloaded.clusters);
             reloaded = null;
+        }
+        if (!run_me) {
+            invalid = true;
         }
     }
 
@@ -58,9 +64,13 @@ export function serialize(path) {
 
     {
         let rhandle = ghandle.createGroup("results");
-        let clusters = fetchClustersAsWasmArray();
-        phandle.writeDataSet("clusters", "Int32", [clusters.length], clusters);
+        if (!invalid) {
+            let clusters = fetchClustersAsWasmArray();
+            phandle.writeDataSet("clusters", "Int32", [clusters.length], clusters);
+         }
     }
+
+    return;
 }
 
 export function unserialize(path) {
@@ -76,10 +86,17 @@ export function unserialize(path) {
 
     {
         let rhandle = ghandle.createGroup("results");
-        let clusters = rhandle.openDataSet("clusters", { load: true }).values;
-        
-        reloaded = {};
-        let buf = utils.allocateCachedArray(clusters.length, "Int32Array", reloaded, "clusters");
-        buf.set(clusters);
+
+        if ("clusters" in rhandle.children) {
+            let clusters = rhandle.openDataSet("clusters", { load: true }).values;
+            reloaded = {};
+            let buf = utils.allocateCachedArray(clusters.length, "Int32Array", reloaded, "clusters");
+            buf.set(clusters);
+            invalid = false;
+        } else {
+            invalid = true;
+        }
     }
+
+    return;
 }
