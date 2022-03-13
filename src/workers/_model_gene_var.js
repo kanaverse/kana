@@ -10,11 +10,9 @@ export var changed = false;
 
 export function compute(span) {
     changed = false;
-    if (normalization.changed) {
-        changed = true;
-    } 
     
-    if (changed || span != parameters.span) {
+    if (normalization.changed || span != parameters.span) {
+        let mat = normalization.fetchNormalizedMatrix();
         cache.results = scran.modelGeneVar(mat, { span: args.span });
 
         cache.sorted_residuals = cache.results.residuals().slice(); // a separate copy.
@@ -56,7 +54,7 @@ export function results() {
     return chooseResults();
 }
 
-export function serialize() {
+export function serialize(path) {
     let fhandle = new scran.H5File(path);
     let ghandle = fhandle.createGroup("feature_selection");
 
@@ -75,7 +73,7 @@ export function serialize() {
     }
 }
 
-export function unserialize(saved) {
+export function unserialize(path, permutator) {
     let fhandle = new scran.H5File(path);
     let ghandle = fhandle.openGroup("feature_selection");
 
@@ -94,6 +92,12 @@ export function unserialize(saved) {
             fitted: rhandle.openDataSet("fitted", { load: true }).values,
             resids: rhandle.openDataSet("resids", { load: true }).values
         };
+
+        // Possibly permuting it to match the new permutation order;
+        // see 'unserialize' in './_inputs.js'.
+        for (const [key, value] of Object.entries(reloaded)) {
+            permuter(value);
+        }
     }
 
     cache.sorted_residuals = reloaded.resids.slice();
