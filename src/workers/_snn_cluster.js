@@ -1,38 +1,84 @@
 import * as scran from "scran.js"; 
 import * as utils from "./_utils.js";
-import * as graph from "./_snn_graph.js";
+import * as index from "./_neighbor_index.js";
 
 var cache = {};
 var parameters = {};
 
 export var changed = false;
+export var invalid = true;
 
 export function fetchClustersAsWasmArray() {
-    if ("reloaded" in cache) {
-        return cache.reloaded.clusters;
+    if (!("clusters" in cache)) {
+        if (invalid) {
+            throw "cannot fetch SNN clusters from an invalid state";
+        }
+        return reloaded.clusters;
     } else {
-        return cache.raw.membership({ copy: "view" });
+        return cache.clusters.membership({ copy: "view" });
     }
 }
 
-export function compute(args) {
-    if (graph.changed === null) { // If my upstream was skipped, then I am also skipped.
-        changed = null;
-        utils.freeCache(cache.raw); // Also freeing some memory as a courtesy.
-        utils.freeReloaded(cache);
-        parameters = args;
+function computeNeighbors(k) {
+    utils.freeCache(cache.neighbors);
+    cache.neighbors = scran.findNearestNeighbors(index.fetchIndex(), k);
+    return;
+}
 
-    } else if (changed !== null && !graph.changed && !utils.changedParameters(parameters, args)) {
-        changed = false;
-        
-    } else {
-        utils.freeCache(cache.raw);
-        var g = graph.fetchGraph();
-        cache.raw = scran.clusterSNNGraph(g, { resolution: args.resolution });
+function computeGraph(scheme) {
+    if (!("neighbors" in cache)) {
+        computeNeighbors(parameters.k);
+    }
+    utils.freeCache(cache.graph);
+    cache.graph = scran.buildSNNGraph(cache.neighbors, { scheme: scheme });
+    return;
+}
 
-        parameters = args;
+function computeClusters(resolution) {
+    if (!("graph" in cache)) {
+        computeGraph(parameters.scheme);
+    }
+    utils.freeCache(cache.clusters);
+    cache.clusters = scran.clusterSNNGraph(cache.graph, { resolution: args.resolution });
+    return;
+}
+
+export function compute(run_me, k, scheme, resolution) {
+    changed = false;
+    invalid = false;
+
+    if (index.changed || k !== parameters.k) {
+        if (run_me) {
+            computeNeighbors(k);
+        }
+        parameters.k = k;
         changed = true;
-        utils.freeReloaded(cache);
+    }
+
+    if (changed || scheme !== parameters.scheme) { 
+        if (run_me) {
+            computeGraph(scheme);
+        }
+        parameters.scheme = scheme;
+        changed = true;
+    }
+
+    if (changed || resolution !== parameters.resolution) {
+        if (run_me) {
+            computeClusters(resolution);
+        }
+        parameters.resolution = resolution;
+        changed = true;
+    }
+
+    if (changed) {
+        if (reloaded !== null) {
+            utils.free(reloaded.clusters);
+            reloaded = null;
+        }
+        if (!run_me) {
+            invalid = true;
+        }
     }
 
     return;
@@ -44,34 +90,52 @@ export function results() {
     return {};
 }
 
-export function serialize() {
-    let output = { 
-        "parameters": parameters
-    };
+export function serialize(path) {
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.createGroup("snn_graph_cluster");
 
-    if (changed === null) {
-        output.contents = null;
-    } else {
-        output.contents = {
-            "clusters": fetchClustersAsWasmArray().slice()
-        };
+    {
+        let phandle = ghandle.createGroup("parameters");
+        phandle.writeDataSet("k", "Int32", [], parameters.k);
+        phandle.writeDataSet("scheme", "Scheme", [], ["rank", "number", "jaccard"][parameters.scheme]); // TODO: scheme should just directly be the string.
+        phandle.writeDataSet("resolution", "Float64", [], parameters.resolution);
     }
 
-    return output;
+    {
+        let rhandle = ghandle.createGroup("results");
+        let clusters = fetchClustersAsWasmArray();
+        phandle.writeDataSet("clusters", "Int32", [clusters.length], clusters);
+    }
+
+    return;
 }
 
 export function unserialize(saved) {
-    parameters = saved.parameters;
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.openGroup("snn_graph_cluster");
 
-    if (saved.contents !== null) {
-        utils.freeReloaded(cache);
-        cache.reloaded = saved.contents;
+    {
+        let phandle = ghandle.openGroup("parameters");
+        parameters = {
+            k: phandle.openDataSet("k", { load: true }).values[0],
+            scheme: phandle.openDataSet("scheme", { load: true }).values[0],
+            resolution: phandle.openDataSet("resolution", { load: true }).values[0]
+        };
+        parameters.scheme = { "rank": 0, "number": 1, "jaccard": 2 }[parameters.scheme];
+    }
 
-        var out = scran.createInt32WasmArray(cache.reloaded.clusters.length);
-        out.set(cache.reloaded.clusters);
-        cache.reloaded.clusters = out;
-    } else {
-        changed = null;
+    {
+        let rhandle = ghandle.createGroup("results");
+
+        if ("clusters" in rhandle.children) {
+            let clusters = rhandle.openDataSet("clusters", { load: true }).values;
+            reloaded = {};
+            let buf = utils.allocateCachedArray(clusters.length, "Int32Array", reloaded, "clusters");
+            buf.set(clusters);
+            invalid = false;
+        } else {
+            invalid = true;
+        }
     }
 
     return;
