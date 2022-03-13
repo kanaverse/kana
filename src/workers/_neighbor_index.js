@@ -7,22 +7,21 @@ var parameters = {};
 
 export var changed = false;
 
-export function rawCompute(args) {
-    utils.freeCache(cache.raw);
+export function rawCompute(approximate) {
     var pcs = pca.fetchPCs();
-    cache.raw = scran.buildNeighborSearchIndex(pcs.pcs, { numberOfDims: pcs.num_pcs, numberOfCells: pcs.num_obs });
-    delete cache.reloaded;
+    cache.raw = scran.buildNeighborSearchIndex(pcs.pcs, { approximate: approximate, numberOfDims: pcs.num_pcs, numberOfCells: pcs.num_obs });
     return;
 }
 
-export function compute(args) {
-    if (!pca.changed && !utils.changedParameters(parameters, args)) {
-        changed = false;
-    } else {
-        rawCompute(args);
-        parameters = args;
+export function compute(approximate) {
+    changed = false;
+
+    if (pca.changed || approximate != parameters.approximate) {
+        rawCompute(approximate);
+        parameters.approximate = approximate;
         changed = true;
     }
+
     return;
 }
 
@@ -30,22 +29,36 @@ export function results() {
     return {};
 }
 
-export function serialize() {
-    return {
-      "parameters": parameters,
-      "contents": results()
-    };
+export function serialize(path) {
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.createGroup("neighbor_index");
+
+    {
+        let phandle = ghandle.createGroup("parameters");
+        phandle.writeDataSet("approximate", "Uint8", [], Number(parameters.approximate));
+    }
+
+    ghandle.createGroup("results");
+    return;
 }
 
 export function unserialize(saved) {
-    parameters = saved.parameters;
-    cache.reloaded = saved.contents;
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.openGroup("neighbor_index");
+
+    {
+        let phandle = ghandle.openGroup("parameters");
+        parameters = {
+            approximate: phandle.openDataSet("approximate", { load: true }).value > 0;
+        };
+    }
+
     return;
 }
 
 export function fetchIndex() {
-    if ("reloaded" in cache) {
-        rawCompute(parameters);
+    if (!("raw" in cache)) {
+        rawCompute(parameters.approximate);
     }
     return cache.raw;
 }
