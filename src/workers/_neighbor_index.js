@@ -49,7 +49,7 @@ export function unserialize(saved) {
     {
         let phandle = ghandle.openGroup("parameters");
         parameters = {
-            approximate: phandle.openDataSet("approximate", { load: true }).value > 0;
+            approximate: phandle.openDataSet("approximate", { load: true }).value > 0
         };
     }
 

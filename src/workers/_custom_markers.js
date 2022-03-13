@@ -1,6 +1,6 @@
 import * as scran from "scran.js";
 import * as utils from "./_utils.js";
-import * as filter from "./_qc_filter.js";
+import * as qc from "./_quality_control.js";
 import * as normalization from "./_normalization.js";
 import * as markers from "./_utils_markers.js";
 
@@ -13,7 +13,7 @@ export function compute(args) {
     /* If the QC filter was re-run, all of the selections are invalidated as
      * the identity of the indices may have changed.
      */
-    if (filter.changed) {
+    if (qc.changed) {
         parameters.selections = {};
         for (const [key, val] of Object.entries(cache.results)) {
             utils.freeCache(val.raw);                    

@@ -456,8 +456,6 @@ export function unserialize(path, env) {
     }
 
     // We need to do something if the permutation is not the same.
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("inputs");
     let rhandle = ghandle.openGroup("results"); 
 
     let perm = null;
@@ -465,7 +463,7 @@ export function unserialize(path, env) {
         let dhandle = rhandle.openDataSet("permutation", { load: true });
         perm = scran.updatePermutation(cache.matrix, dhandle.values);
     } else {
-        // If this is the case, we're dealing with v0 states. We'll just
+        // Otherwise, we're dealing with v0 states. We'll just
         // assume it was the same, I guess. Should be fine as we didn't change
         // the permutation code in v0.
     }
@@ -479,7 +477,7 @@ export function unserialize(path, env) {
             });
             x.set(temp);
             return;
-        });
+        };
     } else {
         permuter = (x) => {}; 
     }

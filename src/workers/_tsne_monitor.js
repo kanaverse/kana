@@ -63,8 +63,8 @@ export function compute(perplexity, iterations, animate) {
 async function getResults(copy)  {
     if (!("run" in cache)) {
         let output = {
-            x: reloaded.x;
-            y: reloaded.y;
+            x: reloaded.x,
+            y: reloaded.y
         };
         utils.copyVectors(output, copy);
         output.iterations = parameters.iterations;
