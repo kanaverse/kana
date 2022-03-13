@@ -13,7 +13,7 @@ export var changed = false;
  ******** Compute **********
  ***************************/
 
-function computeMetrics() {
+function computeMetrics(use_mito_default, mito_prefix) {
     utils.freeCache(cache.metrics);
     var mat = inputs.fetchCountMatrix();
 
@@ -27,14 +27,14 @@ function computeMetrics() {
     var gene_info = inputs.fetchGenes();
     var sub_arr = subsets.array();
     for (const [key, val] of Object.entries(gene_info)) {
-        if (parameters.use_mito_default) {
+        if (use_mito_default) {
             val.forEach((x, i) => {
                 if (mito.symbol.has(x) || mito.ensembl.has(x)) {
                     sub_arr[i] = 1;
                 }
             });
         } else {
-            var lower_mito = parameters.mito_prefix.toLowerCase();
+            var lower_mito = mito_prefix.toLowerCase();
             val.forEach((x, i) => {
                 if(x.toLowerCase().startsWith(lower_mito)) {
                     sub_arr[i] = 1;
@@ -48,19 +48,6 @@ function computeMetrics() {
     return;
 }
 
-function computeFilters() {
-    // Need to check this in case we're operating from a reloaded analysis,
-    // where there is no guarantee that we reran the computeMetrics() step in compue().
-    if (!("metrics" in cache)) { 
-        computeMetrics();
-    }
-
-    var stats = cache.metrics;
-    utils.freeCache(cache.filters);
-    cache.filters = scran.computePerCellQCFilters(stats, { numberOfMADs: parameters.nmads });
-    return;
-}
-
 function applyFilters() {
     var mat = inputs.fetchCountMatrix();
     var disc = fetchDiscards();
@@ -71,20 +58,26 @@ function applyFilters() {
 
 export function compute(use_mito_default, mito_prefix, nmads) {
     changed = false;
-    if (!inputs.changed) {
-        changed = true;
-    }
 
-    if (changed || use_mito_default !== parameters.use_mito_default || mito_prefix !== parameters.mito_prefix) {
+    if (inputs.changed || use_mito_default !== parameters.use_mito_default || mito_prefix !== parameters.mito_prefix) {
+        computeMetrics(use_mito_default, mito_prefix);
         parameters.use_mito_default = use_mito_default;
         parameters.mito_prefix = mito_prefix;
-        computeMetrics();
         changed = true;
     }
 
     if (changed || nmads !== parameters.nmads) {
+        // Need to check this in case we're operating from a reloaded analysis,
+        // where there is no guarantee that we reran the computeMetrics() step in compue().
+        if (!("metrics" in cache)) { 
+            computeMetrics(parameters.use_mito_default, parameters.mito_prefix);
+        }
+
+        var stats = cache.metrics;
+        utils.freeCache(cache.filters);
+        cache.filters = scran.computePerCellQCFilters(stats, { numberOfMADs: nmads });
+
         parameters.nmads = nmads;
-        computeFilters();
         changed = true;
     }
 
@@ -94,6 +87,7 @@ export function compute(use_mito_default, mito_prefix, nmads) {
     }
 
     if (changed) {
+        // Freeing some memory.
         if (reloaded !== null) {
             utils.free(reloaded.discards_buffer);
             reloaded = null;
@@ -108,7 +102,7 @@ export function compute(use_mito_default, mito_prefix, nmads) {
 
 function getData(copy = true) {
     var data = {};
-    if (reloaded !== null) {
+    if (!("metrics" in cache)) {
         data.sums = reloaded.metrics.sums;
         data.detected = reloaded.metrics.detected;
         data.proportion = reloaded.metrics.proportion;
@@ -125,7 +119,7 @@ function getData(copy = true) {
 
 function getThresholds(copy = true) {
     var thresholds = {};
-    if (reloaded !== null) {
+    if (!("filters" in cache)) {
         thresholds.sums = reloaded.thresholds.sums.slice();
         thresholds.detected = reloaded.thresholds.detected.slice();
         thresholds.proportion = reloaded.thresholds.proportion.slice();
@@ -236,7 +230,7 @@ export function unserialize(path) {
         reloaded.thresholds = thresholds;
 
         let discards = rhandle.openDataSet("discards", { load: true }).values; 
-        reloaded.discards = utils.allocateCachedArray(discards.length, "Uint8Array", cache, "discards_buffer");
+        utils.allocateCachedArray(discards.length, "Uint8Array", reloaded, "discards");
         reloaded.discards.set(discards);
     }
     return;
@@ -247,7 +241,7 @@ export function unserialize(path) {
  ***************************/
 
 export function fetchSums({ unsafe = false } = {}) {
-    if (reloaded !== null) {
+    if (!("metrics" in cache)) {
         return reloaded.sums;
     } else {
         // Unsafe, because we're returning a raw view into the Wasm heap,
@@ -257,7 +251,7 @@ export function fetchSums({ unsafe = false } = {}) {
 }
 
 export function fetchDiscards() {
-    if (reloaded !== null) {
+    if (!("filters" in cache)) {
         return reloaded.discards;
     } else {
         return cache.filters.discardOverall({ copy: "view" });
