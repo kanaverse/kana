@@ -66,7 +66,7 @@ export function unserialize(path, permuter) {
         let rhandle = chandle.openGroup("clusters");
         reloaded = { clusters: {} };
         for (const cl of Object.keys(rhandle.children)) {
-            clusters[Number(cl)] = markers.unserializeGroupStats(rhandle.openGroup(cl));
+            clusters[Number(cl)] = markers.unserializeGroupStats(rhandle.openGroup(cl), permuter);
         }
     }
 

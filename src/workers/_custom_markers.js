@@ -35,7 +35,7 @@ export function results() {
     return {};
 }
 
-export function serialize() {
+export function serialize(path) {
     let fhandle = new scran.H5File(path);
     let ghandle = fhandle.createGroup("custom_selection_markers");
 
@@ -74,7 +74,7 @@ export function unserialize(path, permuter) {
         let rhandle = chandle.openGroup("selections");
         reloaded = { clusters: {} };
         for (const sel of Object.keys(rhandle.children)) {
-            clusters[sel] = markers.unserializeGroupStats(rhandle.openGroup(sel));
+            clusters[sel] = markers.unserializeGroupStats(rhandle.openGroup(sel), permuter);
         }
     }
 

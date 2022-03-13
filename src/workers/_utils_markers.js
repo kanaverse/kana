@@ -37,10 +37,11 @@ export function serializeGroupStats(handle, obj, group) {
     }
 }
 
-export function unserializeGroupStats(handle) {
+export function unserializeGroupStats(handle, permuter) {
     let output = {};
     for (const x of [ "means", "detected" ]) {
         output[x] = handle.openDataset(x, { load: true }).values;
+        permuter(output[x]);
     }
 
     for (const i of [ "lfc", "delta-detected", "auc", "cohen" ]) {
@@ -48,6 +49,7 @@ export function unserializeGroupStats(handle) {
         let current = {};
         for (const j of Object.keys(summaries)) {
             current[j] = rhandle.openDataSet(j, { load: true }).values;
+            permuter(current[j]);
         }
         output[i] = current;
     }
