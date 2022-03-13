@@ -350,6 +350,7 @@ export function convertFromVersion0(state, newfile) {
     // Marker detection.
     {
         let ghandle = fhandle.createGroup("marker_detection");
+        ghandle.createGroup("parameters");
 
         let chandle = ghandle.createGroup("results");
         let rhandle = chandle.createGroup("clusters");
@@ -364,7 +365,7 @@ export function convertFromVersion0(state, newfile) {
                 dhandle.write(y);
             }
 
-            for (const i of [ "lfc", "delta_detected", "auc", "cohen" ]) {
+            for (const i of [ "lfc", "delta-detected", "auc", "cohen" ]) {
                 let rankings = current[i];
                 let rhandle = ihandle.createGroup(i);
 
@@ -379,7 +380,7 @@ export function convertFromVersion0(state, newfile) {
 
     // Custom markers.
     {
-        let ghandle = fhandle.createGroup("custom_marker_management");
+        let ghandle = fhandle.createGroup("custom_selections");
 
         let phandle = ghandle.createGroup("parameters");
         let shandle = phandle.createGroup("selections");
@@ -390,7 +391,7 @@ export function convertFromVersion0(state, newfile) {
         }
 
         let chandle = ghandle.createGroup("results");
-        let rhandle = chandle.createGroup("selections");
+        let rhandle = chandle.createGroup("markers");
         for (const [key, val] of Object.entries(state.custom_marker_management.contents.results)) {
             let ihandle = rhandle.createGroup(String(key));
             let current = recoverTypedArrays(val);
@@ -408,4 +409,5 @@ export function convertFromVersion0(state, newfile) {
             }
         }
     }
+
 }
