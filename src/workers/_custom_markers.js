@@ -36,29 +36,51 @@ export function results() {
 }
 
 export function serialize() {
-    var results = {};
-    
-    for (const [key, val] of Object.entries(cache.results)) {
-        if ("reloaded" in val) {
-            results[key] = val.reloaded;
-        } else {
-            results[key] = markers.serializeGroupStats(val.raw, 1);
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.createGroup("custom_selection_markers");
+
+    {
+        let phandle = ghandle.createGroup("parameters");
+        let rhandle = chandle.createGroup("selections");
+        for (const [key, val] of Object.entries(parameters.selections)) {
+            rhandle.writeDataSet(String(key), "Uint8", [val.length], val);
         }
     }
-    
-    return {
-        "parameters": parameters,
-        "contents": { "results": results }
-    };
+
+    {
+        let chandle = ghandle.createGroup("results");
+        let rhandle = chandle.createGroup("selections");
+        for (const [key, val] of Object.entries(cache.results)) {
+            markers.serializeGroupStats(rhandle, val, 1);
+        }
+    }
 }
 
-export function unserialize(saved) {
-    parameters = saved.parameters;
-    for (const [key, val] of Object.entries(saved.contents)) {
-        cache.results[key] = { "reloaded": val };
+export function unserialize(path, permuter) {
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.createGroup("custom_selection_markers");
+
+    {
+        let phandle = ghandle.createGroup("parameters");
+        let rhandle = chandle.createGroup("selections");
+        parameters = { selections: {} };
+        for (const key of Object.keys(rhandle.children)) {
+            parameters.selections[key] = rhandle.openDataSet(key, { load: true }).values;
+        }
     }
+
+    {
+        let chandle = ghandle.openGroup("results");
+        let rhandle = chandle.openGroup("selections");
+        reloaded = { clusters: {} };
+        for (const sel of Object.keys(rhandle.children)) {
+            clusters[sel] = markers.unserializeGroupStats(rhandle.openGroup(sel));
+        }
+    }
+
     return;
 }
+
 
 export function addSelection(id, selection) {
     var mat = normalization.fetchNormalizedMatrix();
@@ -85,9 +107,10 @@ export function removeSelection(id) {
     utils.freeCache(cache.results[id].raw);
     delete cache.results[id];
     delete parameters.selections[id];
+    return;
 }
 
 export function fetchResults(id, rank_type) {
     var current = cache.results[id];
-    return markers.fetchGroupResults(current.raw, current.reloaded, rank_type, 1); 
-};
+    return markers.fetchGroupResults(current, rank_type, 1); 
+}

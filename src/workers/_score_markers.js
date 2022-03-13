@@ -6,22 +6,26 @@ import * as markers from "./_utils_markers.js";
 
 var cache = {};
 var parameters = {};
+var reloaded = null;
 
 export var changed = false;
 
-export function compute(args) {
-    if (!normalization.changed && !choice.changed && !utils.changedParameters(parameters, args)) {
-        changed = false;
-    } else {
-        utils.freeCache(cache.raw);
+export function compute() {
+    changed = false;
+
+    if (normalization.changed || choice.changed) {
         var mat = normalization.fetchNormalizedMatrix();
         var clusters = choice.fetchClustersAsWasmArray();
-
+        
+        utils.freeCache(cache.raw);
         cache.raw = scran.scoreMarkers(mat, clusters);
 
-        parameters = args;
-        delete cache.reloaded;
+        // No parameters to set.
         changed = true;
+    }
+
+    if (changed) {
+        reloaded = null;
     }
     return;
 }
@@ -30,37 +34,71 @@ export function results() {
     return {};
 }
 
-export function serialize() {
-    var contents;
-    if ("reloaded" in cache) {
-        contents = cache.reloaded;
-    } else {
-        var contents = [];
-        var num = cache.raw.numberOfGroups();
-        for (var i = 0; i < num; i++) {
-            contents.push(markers.serializeGroupStats(cache.raw, i));
+export function serialize(path) {
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.createGroup("marker_detection");
+    ghandle.createGroup("parameters");
+
+    {
+        let chandle = ghandle.createGroup("results");
+        let rhandle = chandle.createGroup("clusters");
+
+        if ("raw" in cache) {
+            var num = cache.raw.numberOfGroups();
+            for (var i = 0; i < num; i++) {
+                markers.serializeGroupStats(rhandle, cache.raw, i);
+            }
+        } else {
+            for (const i of Object.keys(reloaded)) {
+                markers.serializeGroupState(rhandle, reloaded, i);
+            }
         }
     }
-    return {
-        "parameters": parameters,
-        "contents": contents
-    };
 }
 
-export function unserialize(saved) {
-    parameters = saved.parameters;
-    cache.reloaded = saved.contents;
+export function unserialize(path, permuter) {
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.createGroup("marker_detection");
+    ghandle.createGroup("parameters");
+
+    {
+        let chandle = ghandle.openGroup("results");
+        let rhandle = chandle.openGroup("clusters");
+        reloaded = { clusters: {} };
+        for (const cl of Object.keys(rhandle.children)) {
+            clusters[Number(cl)] = markers.unserializeGroupStats(rhandle.openGroup(cl));
+        }
+    }
+
     return;
 }
 
 export function fetchGroupResults(rank_type, group) {
-    return markers.fetchGroupResults(cache.raw, cache.reloaded, rank_type, group); 
+    let results = null;
+    if ("raw" in cache) {
+        return markers.fetchGroupResults(cache.raw, rank_type, group); 
+    } else {
+        return markers.fetchGroupResults(reloaded, rank_type, group); 
+    }
 }
 
-export function numberOfGroups() {
-    return markers.numberOfGroups(cache.raw, cache.reloaded);
+export function numberOfGroups(results, reloaded) {
+    if (!("raw" in cache)) {
+        return Object.keys(reloaded.clusters).length;
+    } else {
+        return cache.raw.numberOfGroups();
+    }
 }
 
-export function fetchGroupMeans(group, copy = true) {
-    return markers.fetchGroupMeans(cache.raw, cache.reloaded, group, copy);
+export function fetchGroupMeans(copy = true) {
+    if (!("raw" in cache)) {
+        let out = reloaded.clusters[group].means;
+        if (copy) {
+            return out.slice();
+        } else {
+            return out;
+        }
+    } else {
+        return cache.raw.means(group, { copy: copy });
+    }
 }

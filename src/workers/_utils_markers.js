@@ -1,32 +1,58 @@
-export function serializeGroupStats(obj, group) {
-    return {
-        "means": obj.means(group),
-        "detected": obj.detected(group),
-        "lfc": {
-            "min": obj.lfc(group, { summary: 0 }),
-            "mean": obj.lfc(group, { summary: 1 }),
-            "min-rank": obj.lfc(group, { summary: 4 })
-        },
-        "delta_detected": {
-            "min": obj.deltaDetected(group, { summary: 0 }),
-            "mean": obj.deltaDetected(group, { summary: 1 }),
-            "min-rank": obj.deltaDetected(group, { summary: 4 })
-        },
-        "cohen": {
-            "min": obj.cohen(group, { summary: 0 }),
-            "mean": obj.cohen(group, { summary: 1 }),
-            "min-rank": obj.cohen(group, { summary: 4 })
-        },
-        "auc": {
-            "min": obj.auc(group, { summary: 0 }),
-            "mean": obj.auc(group, { summary: 1 }),
-            "min-rank": obj.auc(group, { summary: 4 })
+import * as scran from "scran.js";
+
+const summaries = { "min": 0, "mean": 1, "min-rank": 4 };
+
+export function serializeGroupStats(handle, obj, group) {
+    let ihandle = rhandle.createGroup(String(group));
+    let not_reloaded = (obj instanceof scran.ScoreMarkersResults);
+
+    for (const x of [ "means", "detected" ]) {
+        let y;
+        if (not_reloaded) {
+            y = obj[x](group, { copy: "view" });
+        } else {
+            y = obj[group][x];
         }
-    };
+        let dhandle = ihandle.createDataSet(x, "Float64", [y.length]);
+        dhandle.write(y);
+    }
+
+    for (const i of [ "lfc", "delta-detected", "auc", "cohen" ]) {
+        let rhandle = ihandle.createGroup(i);
+        let i0 = i;
+        if (i == "delta_detected") {
+            i0 = "deltaDetected";
+        }
+
+        for (const [j, k] of Object.entries(summaries)) {
+            let y;
+            if (not_reloaded) {
+                y = obj[i0](group, { summary: k });
+            } else {
+                y = obj[group][i][j];
+            }
+            let dhandle = rhandle.createDataSet(j, "Float64", [y.length]);
+            dhandle.write(y);
+        }
+    }
 }
 
-function useReloaded(reloaded) {
-    return reloaded !== undefined;
+export function unserializeGroupStats(handle) {
+    let output = {};
+    for (const x of [ "means", "detected" ]) {
+        output[x] = handle.openDataset(x, { load: true }).values;
+    }
+
+    for (const i of [ "lfc", "delta-detected", "auc", "cohen" ]) {
+        let rhandle = ihandle.openGroup(i);
+        let current = {};
+        for (const j of Object.keys(summaries)) {
+            current[j] = rhandle.openDataSet(j, { load: true }).values;
+        }
+        output[i] = current;
+    }
+
+    return output;
 }
 
 /*
@@ -34,11 +60,11 @@ function useReloaded(reloaded) {
  * This is used both for cluster-specific markers as well as the
  * DE genes that are computed for a custom selection vs the rest.
  */
-export function fetchGroupResults(results, reloaded, rank_type, group) {
+export function fetchGroupResults(results, rank_type, group) {
     if (!rank_type || rank_type === undefined) {
         rank_type = "cohen-min-rank";
     }
-    var use_reloaded = useReloaded(reloaded);
+    var use_reloaded = (results instanceof scran.ScoreMarkersResults);
 
     var ordering;
     {
@@ -64,12 +90,12 @@ export function fetchGroupResults(results, reloaded, rank_type, group) {
             } else if (rank_type.match(/^lfc-/)) {
                 effect = "lfc";
             } else if (rank_type.match(/^delta-d-/)) {
-                effect = "delta_detected";
+                effect = "delta-detected";
             } else {
                 throw "unknown rank type '" + rank_type + "'";
             }
       
-            ranking = reloaded[group][effect][summary];
+            ranking = results[group][effect][summary];
         } else {
             let index = 1;
             if (rank_type.match(/-min$/)) {
@@ -115,7 +141,7 @@ export function fetchGroupResults(results, reloaded, rank_type, group) {
   
     var stat_detected, stat_mean, stat_lfc, stat_delta_d;
     if (use_reloaded) {
-        var current = reloaded[group];
+        var current = results[group];
         stat_mean = reorder(current.means);
         stat_detected = reorder(current.detected);
         stat_lfc = reorder(current.lfc["mean"]);
@@ -136,22 +162,3 @@ export function fetchGroupResults(results, reloaded, rank_type, group) {
     };
 }
 
-/* The functions below are dunked here instead of in _score_markers.js, mostly
- * to centralize the logic of how we distinguish between reloaded and computed
- * results.
- */
-export function numberOfGroups(results, reloaded) {
-    if (useReloaded(reloaded)) {
-        return reloaded.length;
-    } else {
-        return results.numberOfGroups();
-    }
-}
-
-export function fetchGroupMeans(results, reloaded, group, copy = true) {
-    if (useReloaded(reloaded)) {
-        return reloaded[group].means;
-    } else {
-        return results.means(group, { copy: copy });
-    }
-}
