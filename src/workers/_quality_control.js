@@ -120,9 +120,9 @@ function getData(copy = true) {
 function getThresholds(copy = true) {
     var thresholds = {};
     if (!("filters" in cache)) {
-        thresholds.sums = reloaded.thresholds.sums.slice();
-        thresholds.detected = reloaded.thresholds.detected.slice();
-        thresholds.proportion = reloaded.thresholds.proportion.slice();
+        thresholds.sums = reloaded.thresholds.sums;
+        thresholds.detected = reloaded.thresholds.detected;
+        thresholds.proportion = reloaded.thresholds.proportion;
         utils.copyVectors(thresholds, copy);
     } else {
         copy = utils.copyOrView(copy);

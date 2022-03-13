@@ -30,7 +30,7 @@ export function compute(span) {
     return;
 }
 
-function chooseResults(copy = true) {
+function getResults(copy = true) {
     if (!("results" in cache)) {
         var output = {
             means: reloaded.means,
@@ -38,7 +38,8 @@ function chooseResults(copy = true) {
             fitted: reloaded.fitted,
             resids: reloaded.resids
         };
-        return utils.copyVectors(output, copy);
+        utils.copyVectors(output, copy);
+        return output;
     } else {
         copy = utils.copyOrView(copy);
         return {
@@ -51,7 +52,7 @@ function chooseResults(copy = true) {
 }
 
 export function results() {
-    return chooseResults();
+    return getResults();
 }
 
 export function serialize(path) {
@@ -64,7 +65,7 @@ export function serialize(path) {
     }
 
     {
-        let res = chooseResults(false);
+        let res = getResults(false);
         let rhandle = ghandle.createGroup("results"); 
         for (const x of [ "means", "vars", "fitted", "resids" ]) {
             let y = res[x];

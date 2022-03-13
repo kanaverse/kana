@@ -66,7 +66,7 @@ async function getResults(copy)  {
             x: reloaded.x;
             y: reloaded.y;
         };
-        utils.copyVectors(output);
+        utils.copyVectors(output, copy);
         output.iterations = parameters.iterations;
         return output;
     } else {

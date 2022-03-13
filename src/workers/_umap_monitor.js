@@ -63,7 +63,7 @@ async function getResults(copy)  {
             x: reloaded.x;
             y: reloaded.y;
         };
-        utils.copyVectors(output);
+        utils.copyVectors(output, copy);
         output.iterations = parameters.num_epochs;
         return output;
     } else {
