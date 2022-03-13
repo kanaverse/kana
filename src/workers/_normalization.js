@@ -1,8 +1,6 @@
 import * as scran from "scran.js"; 
 import * as utils from "./_utils.js";
-import * as thresholds from "./_qc_thresholds.js";
-import * as filter from "./_qc_filter.js";
-import * as metrics from "./_qc_metrics.js";
+import * as qc from "./_quality_control.js";
 
 var cache = {};
 var parameters = {};
@@ -15,7 +13,7 @@ function rawCompute() {
 
     // Better not have any more allocations in between now and filling of size_factors!
     var sums = metrics.fetchSums({ unsafe: true });
-    var discards = thresholds.fetchDiscards({ unsafe: true });
+    var discards = thresholds.fetchDiscards().array();
 
     // Reusing the totals computed earlier.
     var size_factors = buffer.array();
@@ -33,18 +31,17 @@ function rawCompute() {
 
     utils.freeCache(cache.matrix);
     cache.matrix = scran.logNormCounts(mat, { sizeFactors: buffer });
-
-    delete cache.reloaded;
     return;
 }
 
-export function compute(args) {
-    if (!metrics.changed && !filter.changed && !utils.changedParameters(parameters, args)) {
-        changed = false;
-    } else {
-        rawCompute();
-        parameters = args;
+export function compute() {
+    changed = false;
+    if (quality_control.changed) {
         changed = true;
+    } 
+
+    if (changed) {
+        rawCompute();
     }
     return;
 }
@@ -53,21 +50,21 @@ export function results() {
     return {};
 }
 
-export function serialize() {
-    return {
-        "parameters": parameters,
-        "contents": results()
-    };
+export function serialize(path) {
+    // Token effort.
+    let fhandle = new scran.H5File(path);
+    let ghandle = fhandle.createGroup("normalization");
+    ghandle.openGroup("parameters"); 
+    ghandle.openGroup("results"); 
 }
 
-export function unserialize(saved) {
-    parameters = saved.parameters;
-    cache.reloaded = saved.contents;
+export function unserialize(path) {
+    // Nothing to do here.
     return;
 }
 
 export function fetchNormalizedMatrix() {
-    if ("reloaded" in cache) {
+    if (!("matrix" in cache)) {
         rawCompute();
     }
     return cache.matrix;
