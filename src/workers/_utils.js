@@ -1,12 +1,25 @@
 import * as scran from "scran.js";
 import * as wa from "wasmarrays.js";
 
+export function copyVectors(data, copy) {
+    if (copy) {
+        for (const k of Object.keys(data)) {
+            data[k] = data[k].slice();
+        }
+    }
+}
+
+export function copyOrView(copy) {
+    if (!copy) {
+        return "view";
+    } else {
+        return copy;
+    }
+}
+
 export function freeCache(object) {
     if (object !== undefined && object !== null) {
-        try { // placeholder try() for now, because older scran.js don't work with double-free.
-            object.free();
-        } catch (e) {
-        }
+        object.free();
     }
     return;
 }
@@ -22,21 +35,8 @@ export function freeReloaded(cache) {
     }
 }
 
-export function changedParameters(x, y) {
+export function changedParameters(x, y, subset) {
     return JSON.stringify(x) != JSON.stringify(y);
-}
-
-export function computeRange(arr) {
-    var max = -Infinity, min = Infinity;
-    arr.forEach(function (x) {
-        if (max < x) {
-            max = x;
-        }
-        if (min > x) {
-            min = x;
-        }
-    });
-    return [min, max];
 }
 
 export function allocateCachedArray(size, type, cache, name = "buffer") {
