@@ -57,7 +57,7 @@ export function unserialize(path) {
         };
     }
 
-    return;
+    return { ...parameters };
 }
 
 export function fetchClustersAsWasmArray() {

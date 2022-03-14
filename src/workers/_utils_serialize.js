@@ -1,8 +1,6 @@
-import * as pako from "pako";
 import * as hashwasm from "hash-wasm";
 import * as kana_db from "./KanaDBHandler.js";
 import * as convert_v0 from "./converter/from_v0.js";
-import * as inputs from "./_inputs.js";
 
 // Must be integers!
 const FORMAT_EMBEDDED_FILES = 0;
@@ -35,50 +33,41 @@ function bufferToNumber(buffer) {
     return output;
 }
 
-export async function save(contents, mode = "full") {
-    // Extract out the file buffers.
-    var buffered = contents.inputs.parameters.files;
-    var all_buffers = [];
-    var total_len = 0;
-    var format_type;
+export function createSaver(embedded) {
+    let output = {
+        collected: []
+    };
 
-    if (mode == "full") {
-        format_type = FORMAT_EMBEDDED_FILES;
-        buffered.forEach((x, i) => {
-            var val = x.buffer;
-            all_buffers.push(val);
-            buffered[i].buffer = { "offset": total_len, "size": val.byteLength };
-            total_len += val.byteLength;
-        });
-
-    } else if (mode == "KanaDB") {
-        // Saving the files to IndexedDB instead. 'all_buffers' now holds a promise
-        // indicating whether all of these things were saved properly.
-        format_type = FORMAT_EXTERNAL_KANADB;
-        for (const x of buffered) {
+    if (embedded) {
+        output.sofar = 0;
+        output.saver = async (obj) => {  // just async for consistency.
+            output.collected.push(obj.buffer);
+            let current = output.sofar;
+            let size = obj.buffer.byteLength;
+            output.sofar += size;
+            return {
+                "offset": current,
+                "size": size
+            };
+        };
+    } else {
+        output.saver = async (obj) => {
             var md5 = await hashwasm.md5(new Uint8Array(x.buffer));
             var id = x.type + "_" + x.name + "_" + x.buffer.byteLength + "_" + md5;
             var ok = await kana_db.saveFile(id, x.buffer);
             if (!ok) {
                 throw "failed to save file '" + id + "' to KanaDB";
             }
-            x.buffer = id;
-            all_buffers.push(id);
-        }
-
-    } else {
-        throw "unsupported mode " + mode;
+            output.collected.push(id);
+            return id;
+        };
     }
 
-    // Converting all other TypedArrays to normal arrays.
-    contents = normalizeTypedArrays(contents);
+    return output;
+}
 
-    // Converting the JSON to a string and gzipping it into a Uint8Array.
-    var json_str = JSON.stringify(contents);
-    const json_view = pako.gzip(json_str);
-
-    // Allocating a huge arrayBuffer.
-    var combined = new ArrayBuffer(24 + json_view.length + total_len);
+function save_internal(format_type, state, extras) {
+    var combined = new ArrayBuffer(24 + state.length + extras);
     var combined_arr = new Uint8Array(combined);
     var offset = 0;
 
@@ -90,36 +79,47 @@ export async function save(contents, mode = "full") {
     combined_arr.set(version, offset); 
     offset += version.length;
 
-    let json_len = numberToBuffer(json_view.length);
-    combined_arr.set(json_len, offset); 
-    offset += json_len.length;
+    let state_len = numberToBuffer(state.length);
+    combined_arr.set(state_len, offset); 
+    offset += state_len.length;
 
     if (offset != 24) {
         throw "oops - accounting error in the serialization code!";
     }
 
-    combined_arr.set(json_view, offset);
-    offset += json_view.length;
-
-    if (mode == "full") {
-        for (const buf of all_buffers) {
-            const tmp = new Uint8Array(buf);
-            combined_arr.set(tmp, offset);
-            offset += tmp.length;
-        }
-        return combined;
-
-    } else if (mode == "KanaDB") {
-        return { "file_ids": all_buffers, "state": combined };
-
-    } else {
-        throw "unsupported mode " + mode;
+    combined_arr.set(state, offset);
+    return {
+        "offset": offset,
+        "combined": combined                
     }
 }
 
-export async function load(buffer, path) {
-    let env = {};
+export function saveEmbedded(state, collected) {
+    let total_len = 0;
+    for (const buf of collected) {
+        total_len += buf.byteLength;
+    }
 
+    let saved = save_internal(FORMAT_EMBEDDED_FILES, state, total_len);
+    let offset = saved.offset;
+    let combined_arr = new Uint8Array(saved.combined);
+
+    for (const buf of collected) {
+        const tmp = new Uint8Array(buf);
+        combined_arr.set(tmp, offset);
+        offset += tmp.length;
+    }
+
+    return saved.combined;
+}
+
+export function saveLinked(state, collected, title) {
+    let saved = save_internal(FORMAT_EXTERNAL_KANADB, state, 0);
+    let id = await kana_db.saveAnalysis(null, saved.combined, collected, title);
+    return id;
+}
+
+export async function load(buffer, state_path) {
     var offset = 0;
     var format = bufferToNumber(new Uint8Array(buffer, offset, 8));
     offset += 8;
@@ -133,30 +133,22 @@ export async function load(buffer, path) {
     let state = new Uint8Array(buffer, offset, state_len);
     offset += state_len;
     if (version < 1000000) {
-        from_v0.convertFromVersion0(state, path);
+        from_v0.convertFromVersion0(state, state_path);
     } else {
-        scran.writeFile(path, state);
+        scran.writeFile(state_path, state);
     }
-    env.path = path;
 
+    let bundle = {};
     if (format == FORMAT_EMBEDDED_FILES) {
-        let embedded = new Uint8Array(buffer, offset, buffer.byteLength - offset);
-        env.files = inputs.unserializeFiles(path, (start, size) => embedded.slice(start, start + size), true);
-
+        bundle.remaining = new Uint8Array(buffer, offset, buffer.byteLength - offset);
+        bundle.loader = (start, size) => bundle.remaining.slice(start, start + size);
+        bundle.embedded = true;
     } else if (format == FORMAT_EXTERNAL_KANADB) {
-        env.files = inputs.unserializeFiles(path, kana_db.loadFile, false);
-        let collected = env.files.map(x => x.buffer);
-        var resolved = await Promise.all(collected);
-        env.files.forEach((x, i) => {
-            if (resolved[i] === null) {
-                throw "KanaDB loading failed for file ID '" + x.buffer + "'";
-            }
-            x.buffer = resolved[i];
-        });
-
+        bundle.loader = kana_db.loadFile;
+        bundle.embedded: false;
     } else {
         throw "unsupported format type";
     }
 
-    return env;
+    return bundle;
 }

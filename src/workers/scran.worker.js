@@ -33,422 +33,251 @@ function postSuccess_(info, step, message) {
     }, transferable);
 }
 
-function runAllSteps(mode = "run", state = null) {
-    var response;
-    if (mode === "serialize") {
-        response = {};
-    } else {
-        if (state == null) {
-            throw "'state' must be supplied if 'mode' is not 'serialize'";
-        }
-        if (mode === "unserialize") {
-            console.log(state);
-            response = { "params": {} };
-        }
+var postSuccess = function (namespace, step, message) {
+    if (namespace.changed || mode == "unserialize") {
+        postSuccess_(namespace.results(), step, message);
     }
-  
-    // Creating helper functions.
-    var postSuccess = function (namespace, step, message) {
-        if (namespace.changed || mode == "unserialize") {
-            postSuccess_(namespace.results(), step, message);
-        }
-    }
-  
-    var postSuccessAsync = function (namespace, step, message) {
-        if (namespace.changed || mode == "unserialize") {
-            namespace.results()
-                .then(res => {
-                    postSuccess_(res, step, message);
-                });
-        }
-    }
-    
-    var addSerialized = function(step, namespace) {
-        let value = namespace.serialize();
-        if (value !== null) {
-            response[step] = value;
-        }
-    };
-  
-    var addParameters = function(name, value, remapped) {
-        let object = response["params"];
-        if (name in object) {
-            for (const [k, v] of Object.entries(value)) {
-                object[name][k] = v;
-            }
-        } else {
-            object[name] = value;
-        }
-    }
+}
 
-    let serialization_promises = {};
-  
-    // Running through all steps.
-    {
-        let step = "inputs";
-        if (mode === "serialize") {
-            addSerialized(step, inputs);
-        } else {
-            if (mode == "run") {
-                inputs.compute({
-                    "format": state.files.format,
-                    "files": state.files.files
-                });
-            } else {
-                inputs.unserialize(state[step]);
-                response["files"] = {
-                    "format": "kana",
-                    "files": []
-                };
-            }
-            postSuccess(inputs, step, "Count matrix loaded");
-        }
-    }
-  
-    {
-        let step = "quality_control_metrics";
-        if (mode === "serialize") {
-            addSerialized(step, metrics);
-        } else {
-            if (mode == "run") {
-                metrics.compute({
-                    "use_mito_default": state.params.qc["qc-usemitodefault"],
-                    "mito_prefix": state.params.qc["qc-mito"]
-                });
-            } else {
-                metrics.unserialize(state[step]);
-                addParameters("qc", {
-                    "qc-usemitodefault": state[step].parameters.use_mito_default,
-                    "qc-mito": state[step].parameters.mito_prefix
-                });
-            }
-            postSuccess(metrics, step, "QC metrics computed");
-        }
-    }
-  
-    {
-        let step = "quality_control_thresholds";
-        if (mode === "serialize") {
-            addSerialized(step, thresholds);
-        } else {
-            if (mode == "run") {
-                thresholds.compute({
-                    "nmads": state.params.qc["qc-nmads"]
-                });
-            } else {
-                thresholds.unserialize(state[step]);
-                addParameters("qc", {
-                    "qc-nmads": state[step].parameters.nmads
-                });
-            }
-            postSuccess(thresholds, step, "QC thresholds computed");
-        }
-    }
-  
-    {
-        let step = "quality_control_filtered";
-        if (mode == "serialize") {
-            addSerialized(step, filter);
-        } else {
-            if (mode == "run") {
-                filter.compute({});
-            } else {
-                filter.unserialize(state[step]);
-            }
-            postSuccess(filter, step, "QC filtering completed");
-        }
-    }
-  
-    {
-        let step = "normalization";
-        if (mode == "serialize") {
-            addSerialized(step, normalization);
-        } else {
-            if (mode == "run") {
-                normalization.compute({});
-            } else {
-                normalization.unserialize(state[step]);
-            }
-            postSuccess(normalization, step, "Log-normalization completed");
-        }
-    }
-  
-    {
-        let step = "feature_selection";
-        if (mode == "serialize") {
-            addSerialized(step, variance);
-        } else {
-            if (mode == "run") {
-                variance.compute({
-                    "span": state.params.fSelection["fsel-span"]
-                });
-            } else {
-                variance.unserialize(state[step]);
-                addParameters("fSelection", {
-                    "fsel-span": state[step].parameters.span
-                });
-            }
-            postSuccess(variance, step, "Variance modelling completed");
-        }
-    }
-  
-    {
-        let step = "pca";
-        if (mode == "serialize") {
-            addSerialized(step, pca);
-        } else {
-            if (mode == "run") {
-                pca.compute({
-                    "num_hvgs": state.params.pca["pca-hvg"],
-                    "num_pcs": state.params.pca["pca-npc"]
-                });
-            } else {
-                pca.unserialize(state[step]);
-                addParameters("pca", {
-                    "pca-hvg": state[step].parameters.num_hvgs,
-                    "pca-npc": state[step].parameters.num_pcs
-                });
-            }
-            postSuccess(pca, step, "Principal components analysis completed");
-        }
-    }
-  
-    {
-        let step = "neighbor_index";
-        if (mode == "serialize") {
-            addSerialized(step, index);
-        } else {
-            if (mode == "run") {
-                index.compute({
-                    "approximate": state.params.cluster["clus-approx"]
-                });
-            } else {
-                index.unserialize(state[step]);
-                addParameters("cluster", {
-                    "clus-approx": state[step].parameters.approximate
-                });
-            }
-            postSuccess(index, step, "Neighbor search index constructed");
-        }
-    }
-
-    // Need to handle promises in serialize(), results() output,
-    // as these are coming from other workers and are inherently async.
-    {
-        let step = "tsne";
-        if (mode == "serialize") {
-            serialization_promises[step] = tsne.serialize();
-        } else {
-            if (mode == "run") {
-                tsne.compute({
-                    "perplexity": state.params.tsne["tsne-perp"],
-                    "iterations": state.params.tsne["tsne-iter"],
-                    "animate": state.params.tsne["animate"]
-                });
-            } else {
-                tsne.unserialize(state[step]);
-                addParameters("tsne", {
-                  "tsne-perp": state[step].parameters.perplexity,
-                  "tsne-iter": state[step].parameters.iterations,
-                  "animate": state[step].parameters.animate
-                });
-            }
-            postSuccessAsync(tsne, step, "t-SNE completed");
-        }
-    }
-
-    {
-        let step = "umap";
-        if (mode == "serialize") {
-            serialization_promises[step] = umap.serialize();
-        } else {
-            if (mode == "run") {
-                umap.compute({
-                    "num_epochs": state.params.umap["umap-epochs"],
-                    "num_neighbors": state.params.umap["umap-nn"],
-                    "min_dist": state.params.umap["umap-min_dist"],
-                    "animate": state.params.umap["animate"]
-                });
-            } else {
-                umap.unserialize(state[step]);
-                addParameters("umap", {
-                    "umap-epochs": state[step].parameters.num_epochs,
-                    "umap-nn": state[step].parameters.num_neighbors,
-                    "umap-min_dist": state[step].parameters.min_dist,
-                    "animate": state[step].parameters.animate
-                });
-            }
-            postSuccessAsync(umap, step, "UMAP completed");
-        }
-    }
-  
-    // Back to normal programming.
-    {
-        let step = "kmeans_cluster";
-        if (mode == "serialize") {
-            addSerialized(step, kmeans_cluster);
-        } else {
-            if (mode == "run") {
-                // Only reporting the method to decide whether to execute this
-                // step; this does not need to be unserialized, as it is 
-                // remembered by the choose_clustering step.
-                kmeans_cluster.compute({
-                    "k": state.params.cluster["kmeans-k"],
-                    "cluster_method": state.params.cluster["clus-method"] 
-                });
-            } else {
-                if (step in state) { // clause for back-compatibility with saved analyses.
-                    kmeans_cluster.unserialize(state[step]);
-                    addParameters("cluster", {
-                        "kmeans-k": state[step].parameters.k
-                    });
-                }
-            }
-            postSuccess(kmeans_cluster, step, "K-means clustering completed");
-        }
-    }
-
-    {
-        let step = "snn_find_neighbors";
-        if (mode == "serialize") {
-            addSerialized(step, snn_neighbors);
-        } else {
-            if (mode == "run") {
-                // Only reporting the method to decide whether to execute this
-                // step; this does not need to be unserialized, as it is 
-                // remembered by the choose_clustering step.
-                snn_neighbors.compute({
-                    "k": state.params.cluster["clus-k"],
-                    "cluster_method": state.params.cluster["clus-method"]
-                });
-            } else {
-                snn_neighbors.unserialize(state[step]);
-                addParameters("cluster", {
-                    "clus-k": state[step].parameters.k
-                });
-            }
-            postSuccess(snn_neighbors, step, "Shared nearest neighbor search completed");
-        }
-    }
-  
-    {
-        let step = "snn_build_graph";
-        if (mode == "serialize") {
-            addSerialized(step, snn_graph);
-        } else {
-            if (mode == "run") {
-                snn_graph.compute({
-                    "scheme": state.params.cluster["clus-scheme"]
-                });
-            } else {
-                snn_graph.unserialize(state[step]);
-                addParameters("cluster", {
-                    "clus-scheme": state[step].parameters.scheme
-                });
-            }
-            postSuccess(snn_graph, step, "Shared nearest neighbor graph constructed");
-        }
-    }
-  
-    {
-        let step = "snn_cluster_graph";
-        if (mode == "serialize") {
-            addSerialized(step, snn_cluster);
-        } else {
-            if (mode == "run") {
-                snn_cluster.compute({
-                    "resolution": state.params.cluster["clus-res"]
-                });
-            } else {
-                snn_cluster.unserialize(state[step]);
-                addParameters("cluster", {
-                    "clus-res": state[step].parameters.resolution
-                });
-            }
-            postSuccess(snn_cluster, step, "Community detection from SNN graph complete");
-        }
-    }
-
-    {
-        let step = "choose_clustering";
-        if (mode == "serialize") {
-            addSerialized(step, cluster_choice);
-        } else {
-            if (mode == "run") {
-                cluster_choice.compute({
-                    "method": state.params.cluster["clus-method"]
-                });
-            } else {
-                cluster_choice.unserialize(state[step]);
-                addParameters("cluster", {
-                    "clus-method": state[step].parameters.method
-                });
-            }
-            postSuccess(cluster_choice, step, "Clustering of interest chosen");
-        }
-    }
-
-    {
-        let step = "marker_detection";
-        if (mode == "serialize") {
-            addSerialized(step, cluster_markers);
-        } else {
-            if (mode == "run") {
-                cluster_markers.compute({});
-            } else {
-                cluster_markers.unserialize(state[step]);
-            }
-            postSuccess(cluster_markers, step, "Marker detection complete");
-        }
-    }
-
-    {
-        let step = "cell_labelling";
-        if (mode == "serialize") {
-            serialization_promises[step] = label_cells.serialize();
-        } else {
-            if (mode == "run") {
-                let anno_species = state.params.annotateCells["annotateCells-species"];
-                let stateObj = {
-                    "species": anno_species,
-                    "human_references": state.params.annotateCells["annotateCells-human_references"],
-                    "mouse_references": state.params.annotateCells["annotateCells-mouse_references"]
-                };
-                label_cells.compute(stateObj);
-            } else {
-                label_cells.unserialize(state[step]);
-            }
-            postSuccessAsync(label_cells, step, "Cell type labelling complete");
-        }
-    }
-
-    {
-        let step = "custom_marker_management";
-        if (mode == "serialize") {
-            addSerialized(step, custom_markers);
-        } else {
-            if (mode == "run") {
-                custom_markers.compute({});
-            } else {
-                custom_markers.unserialize(state[step]);
-            }
-            postSuccess(custom_markers, step, "Pruning of custom markers finished");
-        }
-    }
-  
-    if (mode == "serialize") {
-        let keys = Object.keys(serialization_promises);
-        let vals = Object.values(serialization_promises);
-        return Promise.all(vals)
-            .then(done => {
-                done.forEach((x, i) => {
-                    response[keys[i]] = x;
-                });
-                return response;
+var postSuccessAsync = function (namespace, step, message) {
+    if (namespace.changed || mode == "unserialize") {
+        namespace.results()
+            .then(res => {
+                postSuccess_(res, step, message);
             });
-    } else {
-        return response;
     }
+}
+
+/***************************************/
+
+const step_inputs = "inputs";
+const step_qc = "quality_control";
+const step_norm = "normalizaton";
+const step_feat = "feature_selecton";
+const step_pca = "pca";
+const step_neighbors = "neighbor_index";
+const step_tsne = "tsne";
+const step_umap = "umap";
+const step_kmeans = "kmeans_cluster";
+const step_snn = "snn_cluster_graph";
+const step_choice = "choose_clustering";
+const step_markers = "marker_detection";
+const step_labels = "cell_labelling";
+const step_custom = "custom_marker_management";
+
+function runAllSteps(state) {
+    inputs.compute(state.files.format, state.files.files);
+    postSuccess(inputs, step_inputs, "Count matrix loaded");
+
+    qc.compute(
+        state.params.qc["qc-usemitodefault"], 
+        state.params.qc["qc-mito"], 
+        state.params.qc["qc-nmads"]
+    );
+    postSuccess(qc, step_qc, Applying quality control filters");
+ 
+    normalization.compute();
+    postSuccess(normalization, step_norm, Log-normalization completed");
+
+    variance.compute(state.params.fSelection["fsel-span"]);
+    postSuccess(variance, step_feat, "Variance modelling completed");
+
+    pca.compute(
+        state.params.pca["pca-hvg"], 
+        state.params.pca["pca-npc"]
+    );
+    postSuccess(pca, step_pca, "Principal components analysis completed");
+
+    index.compute(state.params.cluster["clus-approx"]);
+    postSuccess(index, step_neighbors, "Neighbor search index constructed");
+
+    tsne.compute(
+        state.params.tsne["tsne-perp"], 
+        state.params.tsne["tsne-iter"], 
+        state.params.tsne["animate"]
+    );
+    postSuccessAsync(tsne, step_tsne, "t-SNE completed");
+
+    umap.compute(
+        state.params.umap["umap-nn"], 
+        state.params.umap["umap-epochs"], 
+        state.params.umap["umap-min_dist"], 
+        state.params.umap["animate"]
+    );
+    postSuccessAsync(umap, step_umap, "UMAP completed");
+
+    let method = state.params.cluster["clus-method"];
+    kmeans_cluster.compute(
+        method == "kmeans", 
+        state.params.cluster["kmeans-k"]
+    );
+    postSuccess(kmeans_cluster, step_kmeans, "K-means clustering completed");
+
+    snn_cluster.compute(
+        method == "snn_graph", 
+        state.params.cluster["clus-k"], 
+        state.params.cluster["clus-scheme"], 
+        state.params.cluster["clus-method"]
+    );
+    postSuccess(kmeans_cluster, step_snn, "SNN graph clustering completed");
+  
+    cluster_choice.compute(state.params.cluster["clus-method"]);
+    postSuccess(cluster_choice, step_choice, "Clustering of interest chosen");
+
+    cluster_markers.compute();
+    postSuccess(cluster_markers, step_markers, "Marker detection complete");
+
+    label_cells.compute(
+        state.params.annotateCells["annotateCells-human_references"],
+        state.params.annotateCells["annotateCells-mouse_references"]
+    );
+    postSuccessAsync(label_cells, step_labels, "Cell type labelling complete");
+
+    custom_markers.compute();
+    postSuccess(custom_markers, step_custom, "Pruning of custom markers finished");
+
+    return;
+}
+ 
+/***************************************/
+ 
+async function serializeAllSteps(saver, embedded) {
+    const path = "temp.h5";
+    scran.createNewHDF5File(path);
+    let output;
+
+    try {
+        await inputs.serialize(path, saver, embedded);
+        qc.serialize(path);
+        normalization.serialize(path);
+        variance.serialize(path);
+        pca.serialize(path);
+        index.serialize(path);
+        await tsne.serialize(path);
+        await umap.serialize(path);
+        kmeans_cluster.serialize(path);
+        snn_cluster.serialize(path);
+        cluster_choice.serialize(path);
+        cluster_markers.serialize(path);
+        label_cells.serialize(path);
+        custom_markers.serialize(path);
+
+        output = scran.readFile(path);
+    } finally {
+        scran.removeFile(path);
+    }
+
+    return output;
+}
+
+function unserializeAllSteps(path, loader, embedded) {
+    let response = { "params": {} };
+
+    let permuter = inputs.unserialize(path, loader, embedded);
+    response["files"] = {
+        "format": "kana",
+        "files": []
+    };
+    postSuccess(inputs, step_inputs, "Reloaded count matrix");
+
+    {
+        let params = qc.unserialize(path);
+        postSuccess(qc, step_qc, "Reloaded QC metrics");
+        response["qc"] = {
+            "qc-usemitodefault": params.use_mito_default,
+            "qc-mito": params.mito_prefix,
+            "qc-nmads": params.nmads
+        };
+    }
+
+    normalization.unserialize(path);
+    postSuccess(normalization, step_norm, "Reloaded log-normalization");
+
+    {
+        let params = variance.unserialize(path, permuter);
+        postSuccess(variance, step_feat, "Reloaded variance modelling statistics");
+        response["fSelection"] = {
+            "fsel-span": params.span
+        };
+    }
+
+    {
+        let params = pca.unserialize(path);
+        postSuccess(pca, step_pca, "Reloaded principal components");
+        response["pca"] = {
+            "pca-hvg": params.num_hvgs,
+            "pca-npc": params.num_pcs
+        };
+    }
+
+    {
+        let params = index.unserialize(path);
+        postSuccess(index, step_index, "Reloaded neighbor search index");
+        response["cluster"] = {
+            "clus-approx": params.approximate
+        };
+    }
+
+    {
+        let params = tsne.unserialize(path);
+        postSuccessAsync(tsne, step_tsne, "t-SNE reloaded");
+        response["tsne"] = {
+            "tsne-perp": params.perplexity,
+            "tsne-iter": params.iterations,
+            "animate": params.animate
+        };
+    }
+
+    {
+        let umap.unserialize(path);
+        postSuccessAsync(umap, step_umap, "UMAP reloaded");
+        response["umap"] = {
+            "umap-epochs": params.num_epochs,
+            "umap-nn": params.num_neighbors,
+            "umap-min_dist": params.min_dist,
+            "animate": params.animate
+        };
+    }
+
+    {
+        let params = kmeans.unserialize(path);
+        postSuccess(kmeans_cluster, step_kmeans, "K-means clustering reloaded");
+        response["cluster"]["kmeans-k"] = params.k; // 'cluster' already added above.
+    }
+
+    {
+        let params = snn_cluster.unserialize(path);
+        postSuccess(snn_cluster, step_snn, "SNN graph clustering reloaded");
+        response["cluster"]["clus-k"] = params.k;
+        response["cluster"]["clus-scheme"] = params.scheme;
+        response["cluster"]["clus-res"] = params.resolution;
+    }
+
+    {
+        let params = choice.unserialize(path);
+        postSuccess(cluster_choice, step, "Clustering of interest chosen");
+        response["cluster"]["clus-method"] = params.method;
+    }
+
+    cluster_markers.unserialize(path, permuter);
+    postSuccess(cluster_markers, step_markers, "Reloaded per-cluster markers");
+
+    {
+        let params = label_cells.unserialize(path);    
+        postSuccessAsync(label_cells, step_labels, "Reloaded cell type labels");
+        response["annotateCells"] = {
+            "annotateCells-human_references": params.human_references,
+            "annotateCells-mouse_references": params.mouse_references
+        };
+    }
+
+    {
+        let params = custom_markers.unserialize(path, permuter);
+        postSuccess(custom_markers, step_custom, "Pruning of custom markers finished");
+        response["custom-selections"] = params;
+    }
+
+    return;
 }
 
 /***************************************/
@@ -498,7 +327,7 @@ onmessage = function (msg) {
     } else if (payload.type == "RUN") {
         loaded
             .then(x => {
-                runAllSteps("run", payload.payload)
+                runAllSteps(payload.payload)
             })
             .catch(error => {
                 console.error(error);
@@ -513,17 +342,23 @@ onmessage = function (msg) {
         const path = "temp.h5";
 
         if (payload.payload.files.format == "kana") {
-            const reader = new FileReaderSync();
-            var f = payload.payload.files.files.file[0];
+            let f = payload.payload.files.files.file[0];
             loaded
                 .then(async (x) => {
-                    var contents = await serialize_utils.load(reader.readAsArrayBuffer(f), path);
-                    var response = runAllSteps("unserialize", contents);
-                    postMessage({
-                        type: "loadedParameters",
-                        resp: response
-                    });
-                    scran.removeFile(path);
+                    const reader = new FileReaderSync();
+                    let res = reader.readAsArrayBuffer(f);
+                    try {
+                        let loaders = await serialize_utils.load(res, path);
+                        let response = unserializeAllSteps(path, loaders.loader, loaders.embedded);
+                        postMessage({
+                            type: "loadedParameters",
+                            resp: response
+                        });
+                    } finally {
+                        if (scran.fileExists(path)) {
+                            scran.removeFile(path);
+                        }
+                    }
                 })
                 .catch(error => {
                     console.error(error);
@@ -543,13 +378,18 @@ onmessage = function (msg) {
                             msg: `Fail: cannot load analysis ID '${id}'`
                         });
                     } else {
-                        var contents = await serialize_utils.load(res, path);
-                        var response = await runAllSteps("unserialize", contents);
-                        postMessage({
-                            type: "loadedParameters",
-                            resp: response
-                        });
-                        scran.removeFile(path);
+                        try {
+                            let loaders = await serialize_utils.load(res, path);
+                            let response = unserializeAllSteps(path, loaders.loader, loaders.embedded);
+                            postMessage({
+                                type: "loadedParameters",
+                                resp: response
+                            });
+                        } finally {
+                            if (scran.fileExists(path)) {
+                                scran.removeFile(path);
+                            }
+                        }
                     }
                 })
                 .catch(error => {
@@ -561,11 +401,13 @@ onmessage = function (msg) {
                 });
         }
   
-    } else if (payload.type == "EXPORT") { // exporting an analysis
+    /**************** SAVING EXISTING ANALYSES *******************/
+    } else if (payload.type == "EXPORT") { 
         loaded
             .then(async (x) => {
-                var state = await runAllSteps("serialize");
-                var output = await serialize_utils.save(state, "full");
+                var savers = await serialize_utils.createSaver(true);
+                var state = await serializeAllSteps(savers.saver, true);
+                var output = await serialize_utils.saveEmbedded(state, savers.collected, true);
                 postMessage({
                     type: "exportState",
                     resp: output,
@@ -579,14 +421,14 @@ onmessage = function (msg) {
                     msg: error.toString()
                 });
             });
-  
+ 
     } else if (payload.type == "SAVEKDB") { // save analysis to inbrowser indexedDB 
         var title = payload.payload.title;
         loaded
             .then(async (x) => {
-                var state = await runAllSteps("serialize");
-                var output = await serialize_utils.save(state, "KanaDB");
-                var id = await kana_db.saveAnalysis(null, output.state, output.file_ids, title);
+                var savers = await serialize_utils.createSaver(false);
+                var state = await runAllSteps(savers.saver, false);
+                var output = await serialize_utils.saveLinked(state, savers.collected, title);
                 if (id !== null) {
                     let recs = await kana_db.getRecords();
                     postMessage({

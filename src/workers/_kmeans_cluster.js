@@ -98,5 +98,5 @@ export function unserialize(path) {
         }
     }
 
-    return;
+    return { ...parameters };
 }

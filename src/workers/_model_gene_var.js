@@ -103,7 +103,8 @@ export function unserialize(path, permutator) {
 
     cache.sorted_residuals = reloaded.resids.slice();
     cache.sorted_residuals.sort();
-    return;
+
+    return { ...parameters };
 }
 
 export function fetchSortedResiduals() {

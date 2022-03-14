@@ -78,9 +78,13 @@ export function unserialize(path, permuter) {
         }
     }
 
-    return;
+    // Need to make a copy to avoid moving the buffers.
+    let output = { selections: {} };
+    for (const [k, v] of Object.entries(parameters.selections)) {
+        output.selections[k] = v.slice();        
+    }
+    return output;
 }
-
 
 export function addSelection(id, selection) {
     var mat = normalization.fetchNormalizedMatrix();

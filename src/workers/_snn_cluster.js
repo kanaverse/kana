@@ -138,5 +138,5 @@ export function unserialize(saved) {
         }
     }
 
-    return;
+    return { ...parameters };
 }

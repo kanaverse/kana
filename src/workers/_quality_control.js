@@ -233,7 +233,8 @@ export function unserialize(path) {
         utils.allocateCachedArray(discards.length, "Uint8Array", reloaded, "discards");
         reloaded.discards.set(discards);
     }
-    return;
+
+    return { ...parameters };
 }
 
 /***************************

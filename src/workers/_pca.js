@@ -124,7 +124,7 @@ export function unserialize(path) {
         reloaded.pcs.set(pcs);        
     }
 
-    return;
+    return { ...parameters };
 }
 
 export function fetchPCs() {

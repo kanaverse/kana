@@ -53,7 +53,7 @@ export function unserialize(saved) {
         };
     }
 
-    return;
+    return { ...parameters };
 }
 
 export function fetchIndex() {

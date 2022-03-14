@@ -13,7 +13,7 @@ export function initialize() {
 
 export var changed = false;
 
-function core(num_neighbors, num_epochs, min_dist, reneighbor) {
+function core(num_neighbors, num_epochs, min_dist, animate, reneighbor) {
     var nn_out = null;
     if (reneighbor) {
         nn_out = vizutils.computeNeighbors(args.num_neighbors);
@@ -35,7 +35,7 @@ function core(num_neighbors, num_epochs, min_dist, reneighbor) {
     return;
 }
 
-export function compute(num_neighbors, num_epochs, min_dist) {
+export function compute(num_neighbors, num_epochs, min_dist, animate) {
     changed = false;
 
     let reneighbor = false;
@@ -44,10 +44,11 @@ export function compute(num_neighbors, num_epochs, min_dist) {
     }
 
     if (reneighbor || num_epochs != parameters.num_epochs || min_dist != parameters.min_dist) {
-        core(num_neighbors, num_epochs, min_dist, reneighbor);
+        core(num_neighbors, num_epochs, min_dist, animate, reneighbor);
+        parameters.num_neighbors = num_neighbors;
         parameters.num_epochs = num_epochs;
         parameters.min_dist = min_dist;
-        parameters.num_neighbors = num_neighbors;
+        parameters.animate = animate;
     }
 
     if (changed) {
@@ -121,7 +122,7 @@ export function unserialize(path) {
         };
     }
 
-    return;
+    return { ...parameters };
 }
 
 export function animate() {

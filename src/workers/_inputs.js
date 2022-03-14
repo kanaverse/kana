@@ -318,19 +318,21 @@ function loadHDF5(args, format) {
     return;
 }
 
-/** Public functions (standard) **/
+/******************************
+ ****** Standard exports ******
+ ******************************/
 
-export function compute(args) {
-    switch (args.format) {
+export function compute(format, files) {
+    switch (format) {
         case "mtx":
-            loadMatrixMarket(args.files);
+            loadMatrixMarket(files);
             break;
         case "hdf5":
         case "tenx":
-            loadHDF5(args.files, "10X");
+            loadHDF5(files, "10X");
             break;
         case "h5ad":
-            loadHDF5(args.files, "H5AD");
+            loadHDF5(files, "H5AD");
             break;
         case "kana":
             // do nothing, this is handled by unserialize.
@@ -342,15 +344,20 @@ export function compute(args) {
 }
 
 export function results() {
-    var output = { "dimensions": fetchDimensions() }
-    output.genes = { ...cache.genes };
+    var output = { 
+        "dimensions": {
+            "num_genes": cache.matrix.numberOfRows(),
+            "num_cells": cache.matrix.numberOfColumns()
+        },
+        "genes": { ...cache.genes }
+    };
     if (cache.annotations) {
         output.annotations = Object.keys(cache.annotations);
     }
     return output;
 }
 
-export function serialize(path) {
+export async function serialize(path, saver, embedded) {
     let fhandle = new scran.H5File(path);
     let ghandle = fhandle.createGroup("inputs");
 
@@ -359,12 +366,19 @@ export function serialize(path) {
         phandle.writeDataSet("format", "String", [], parameters.format);
         let fihandle = phandle.createGroup("files");
 
+        let sofar = 0;
         for (const [index, obj] of parameters.files.entries()) {
             let curhandle = fihandle.createGroup(String(index));
             curhandle.writeDataSet("type", "String", [], obj.type);
             curhandle.writeDataSet("name", "String", [], obj.name);
-            curhandle.writeDataSet("offset", "Uint32", [], obj.buffer.offset);
-            curhandle.writeDataSet("size", "Uint32", [], obj.buffer.size);
+
+            let res = await saver(obj);
+            if (embedded) {
+                curhandle.writeDataSet("offset", "Uint32", [], res.offset);
+                curhandle.writeDataSet("size", "Uint32", [], res.size);
+            } else {
+                curhandle.writeDataSet("id", "String", [], res);
+            }
         }
     }
 
@@ -383,57 +397,47 @@ export function serialize(path) {
     return;
 }
 
-export function unserializeFiles(path, loader, embedded) {
+export function unserialize(path, loader, embedded) {
     let fhandle = new scran.H5File(path);
     let ghandle = fhandle.createGroup("inputs");
     let phandle = ghandle.openGroup("parameters"); 
 
-    let fihandle = phandle.openGroup("files");
-    let kids = fihandle.children;
-    let files = new Array(kids.length);
-    
-    for (const x of Object.keys(kids)) {
-        let current = fihandle.openGroup(x);
+    // Extracting the files.
+    {
+        let fihandle = phandle.openGroup("files");
+        let kids = fihandle.children;
+        let files = new Array(kids.length);
+        
+        for (const x of Object.keys(kids)) {
+            let current = fihandle.openGroup(x);
 
-        let curfile = {};
-        for (const field of ["type", "name"]) {
-            let dhandle = current.openDataSet(field, { load: true });
-            curfile[field] = dhandle.values[0];
-        }
-
-        if (embedded) {
-            let dhandle = current.openDataSet("id", { load: true });
-            curfile.buffer = loader(dhandle.values[0]);
-        } else {
-            let buffer_deets = {};
-            for (const field of ["offset", "size"]) {
+            let curfile = {};
+            for (const field of ["type", "name"]) {
                 let dhandle = current.openDataSet(field, { load: true });
-                buffer_deets[field] = dhandle.values[0];
+                curfile[field] = dhandle.values[0];
             }
-            curfile.buffer = loader(buffer_deets.offset, buffer_deets.size);
-        }
 
-        let idx = Number(x);
-        files[idx] = curfile;
+            // Note that 'buffer' may possibly contain promises, depending on
+            // 'loader'; this should be resolved by the caller.
+            if (embedded) {
+                let dhandle = current.openDataSet("id", { load: true });
+                curfile.buffer = loader(dhandle.values[0]);
+            } else {
+                let buffer_deets = {};
+                for (const field of ["offset", "size"]) {
+                    let dhandle = current.openDataSet(field, { load: true });
+                    buffer_deets[field] = dhandle.values[0];
+                }
+                curfile.buffer = loader(buffer_deets.offset, buffer_deets.size);
+            }
+
+            let idx = Number(x);
+            files[idx] = curfile;
+        }
     }
 
-    return files;
-}
-
-export function unserialize(path, env) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("inputs");
-
-    let phandle = ghandle.openGroup("parameters"); 
-    let fohandle = phandle.openDataSet("format");
-    let format = fohandle.load()[0];
-
-    parameters = { 
-        format: format, 
-        files: files 
-    };
-
     // Run the reloaders now.
+    let format = phandle.openDataSet("format", { load: true }).values[0];
     if (format == "MatrixMarket") {
         loadMatrixMarketRaw(files);
 
@@ -454,6 +458,11 @@ export function unserialize(path, env) {
     } else {
         throw `unrecognized count matrix format "${format}"`;
     }
+
+    parameters = { 
+        format: format, 
+        files: files 
+    };
 
     // We need to do something if the permutation is not the same.
     let rhandle = ghandle.openGroup("results"); 
@@ -485,17 +494,12 @@ export function unserialize(path, env) {
     return permuter;
 }
 
-/** Public functions (custom) **/
+/****************************
+ ****** Custom exports ******
+ ****************************/
 
 export function fetchCountMatrix() {
     return cache.matrix;
-}
-
-export function fetchDimensions() {
-    return {
-        "num_genes": cache.matrix.numberOfRows(),
-        "num_cells": cache.matrix.numberOfColumns()
-    };
 }
 
 export function fetchGenes() {
