@@ -397,7 +397,7 @@ export async function serialize(path, saver, embedded) {
     return;
 }
 
-export function unserialize(path, loader, embedded) {
+export async function unserialize(path, loader, embedded) {
     let fhandle = new scran.H5File(path);
     let ghandle = fhandle.createGroup("inputs");
     let phandle = ghandle.openGroup("parameters"); 
@@ -417,18 +417,16 @@ export function unserialize(path, loader, embedded) {
                 curfile[field] = dhandle.values[0];
             }
 
-            // Note that 'buffer' may possibly contain promises, depending on
-            // 'loader'; this should be resolved by the caller.
             if (embedded) {
                 let dhandle = current.openDataSet("id", { load: true });
-                curfile.buffer = loader(dhandle.values[0]);
+                curfile.buffer = await loader(dhandle.values[0]);
             } else {
                 let buffer_deets = {};
                 for (const field of ["offset", "size"]) {
                     let dhandle = current.openDataSet(field, { load: true });
                     buffer_deets[field] = dhandle.values[0];
                 }
-                curfile.buffer = loader(buffer_deets.offset, buffer_deets.size);
+                curfile.buffer = await loader(buffer_deets.offset, buffer_deets.size);
             }
 
             let idx = Number(x);

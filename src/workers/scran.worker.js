@@ -159,7 +159,7 @@ async function serializeAllSteps(saver, embedded) {
         snn_cluster.serialize(path);
         cluster_choice.serialize(path);
         cluster_markers.serialize(path);
-        label_cells.serialize(path);
+        await label_cells.serialize(path);
         custom_markers.serialize(path);
 
         output = scran.readFile(path);
@@ -170,10 +170,10 @@ async function serializeAllSteps(saver, embedded) {
     return output;
 }
 
-function unserializeAllSteps(path, loader, embedded) {
+async function unserializeAllSteps(path, loader, embedded) {
     let response = { "params": {} };
 
-    let permuter = inputs.unserialize(path, loader, embedded);
+    let permuter = await inputs.unserialize(path, loader, embedded);
     response["files"] = {
         "format": "kana",
         "files": []
