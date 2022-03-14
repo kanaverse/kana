@@ -29,7 +29,6 @@ export function compute(method) {
 
 export function results() {
     var clusters = fetchClustersAsWasmArray();
-    console.log(clusters);
     return { "clusters": clusters.slice() };
 }
 

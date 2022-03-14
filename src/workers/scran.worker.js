@@ -113,7 +113,7 @@ function runAllSteps(state) {
         method == "snn_graph", 
         state.params.cluster["clus-k"], 
         state.params.cluster["clus-scheme"], 
-        state.params.cluster["clus-method"]
+        state.params.cluster["clus-res"]
     );
     postSuccess(kmeans_cluster, step_snn, "SNN graph clustering completed");
   

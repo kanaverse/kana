@@ -90,7 +90,7 @@ export function numberOfGroups(results, reloaded) {
     }
 }
 
-export function fetchGroupMeans(copy = true) {
+export function fetchGroupMeans(group, { copy = true }) {
     if (!("raw" in cache)) {
         let out = reloaded.clusters[group].means;
         if (copy) {

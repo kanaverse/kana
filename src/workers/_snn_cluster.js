@@ -41,8 +41,6 @@ function computeClusters(resolution) {
     }
     utils.freeCache(cache.clusters);
     cache.clusters = scran.clusterSNNGraph(cache.graph, { resolution: resolution });
-    console.log(cache.clusters.best());
-    console.log(cache.clusters.membership());
     return;
 }
 

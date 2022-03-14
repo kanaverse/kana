@@ -7,6 +7,7 @@ import * as pako from "pako";
 
 var cache = {};
 var parameters = {};
+var reloaded = null;
 
 export var changed = false;
 
@@ -85,8 +86,6 @@ async function getBuiltReference(name, species, rebuild) {
             downloads.get(proxy + "/" + encodeURIComponent(base + "/" + name + "_matrix.csv.gz"))
         ]);
 
-        console.log(buffers);
-
         let loaded;
         try {
             loaded = scran.loadLabelledReferenceFromBuffers(
@@ -156,6 +155,9 @@ async function getBuiltReference(name, species, rebuild) {
 }
 
 function compareArrays(x, y) {
+    if (typeof x === "undefined" || typeof y === "undefined") {
+        return false;
+    }
     if (x.length != y.length) {
         return false;
     }
@@ -167,36 +169,34 @@ function compareArrays(x, y) {
     return true;
 }
 
-export function compute(human_reference, mouse_references) {
+export function compute(human_references, mouse_references) {
     changed = false;
 
     let rebuild = false;
     if (inputs.changed || !("feature_space" in cache)) {
         rebuild = true;
+        changed = true;
         chooseFeatures();
     }
-
-    if (rebuild || !compareArrays(human_references, parameters.human_references) || !compareArrays(mouse_reference, parameters.mouse_references)) {
-        let species = cache.feature_details.species;
-
-        // Fetching all of the references.
-        let init = downloads.initialize();
-        let valid = {};
-        if (species == "human") {
-            for (const ref of human_references) {
-                valid[ref] = getBuiltReference(ref, "human", rebuild);
-            }
-        } else if (species == "mouse") {
-            for (const ref of mouse_references) {
-                valid[ref] = getBuiltReference(ref, "mouse", rebuild);
-            }
+    let species = cache.feature_details.species;
+        
+    // Fetching all of the references. This is effectively a no-op
+    // if rebuild = false, so we do it to fill up 'valid'.
+    let init = downloads.initialize();
+    let valid = {};
+    if (species == "human") {
+        for (const ref of human_references) {
+            valid[ref] = getBuiltReference(ref, "human", rebuild);
         }
+    } else if (species == "mouse") {
+        for (const ref of mouse_references) {
+            valid[ref] = getBuiltReference(ref, "mouse", rebuild);
+        }
+    }
 
-        // Updating both of them, just in case the user modified something for the other species;
-        // we want that choice to be preserved, as silly as it might be.
+    if (!compareArrays(human_references, parameters.human_references) || !compareArrays(mouse_reference, parameters.mouse_references)) {
         parameters.human_references = human_references;
         parameters.mouse_references = mouse_references;
-
         changed = true;
     }
 
@@ -206,7 +206,7 @@ export function compute(human_reference, mouse_references) {
         let ngroups = markers.numberOfGroups(); 
         let cluster_means = utils.allocateCachedArray(ngroups * ngenes, "Float64Array", cache);
         for (var g = 0; g < ngroups; g++) {
-            let means = markers.fetchGroupMeans(g, false); // Warning: direct view in wasm space - be careful.
+            let means = markers.fetchGroupMeans(g, { copy: false }); // Warning: direct view in wasm space - be careful.
             let cluster_array = cluster_means.array();
             cluster_array.set(means, g * ngenes);
         }
@@ -291,6 +291,7 @@ export async function results() {
             output.integrated = await cache.integrated_results;
         }
 
+        console.log(output);
         return output;
     }
 }

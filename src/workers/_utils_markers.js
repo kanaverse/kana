@@ -66,7 +66,7 @@ export function fetchGroupResults(results, rank_type, group) {
     if (!rank_type || rank_type === undefined) {
         rank_type = "cohen-min-rank";
     }
-    var use_reloaded = (results instanceof scran.ScoreMarkersResults);
+    var use_reloaded = !(results instanceof scran.ScoreMarkersResults);
 
     var ordering;
     {
