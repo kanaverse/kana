@@ -13,7 +13,7 @@ export function compute(span) {
     
     if (normalization.changed || span != parameters.span) {
         let mat = normalization.fetchNormalizedMatrix();
-        cache.results = scran.modelGeneVar(mat, { span: args.span });
+        cache.results = scran.modelGeneVar(mat, { span: span });
 
         cache.sorted_residuals = cache.results.residuals().slice(); // a separate copy.
         cache.sorted_residuals.sort();

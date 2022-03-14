@@ -24,18 +24,7 @@ export function freeCache(object) {
     return;
 }
 
-export function freeReloaded(cache) {
-    if ("reloaded" in cache) {
-        for (const [k, v] of Object.entries(cache.reloaded)) {
-            if (v instanceof wa.WasmArray) {
-                v.free();
-            }
-        }
-        delete cache.reloaded;
-    }
-}
-
-export function changedParameters(x, y, subset) {
+export function changedParameters(x, y) {
     return JSON.stringify(x) != JSON.stringify(y);
 }
 

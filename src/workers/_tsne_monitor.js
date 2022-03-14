@@ -73,7 +73,7 @@ async function getResults(copy)  {
         // Vectors that we get from the worker are inherently
         // copied, so no need to do anything extra here.
         await cache.run;
-        return sendTask(worker, { "cmd": "FETCH" }, cache);
+        return vizutils.sendTask(worker, { "cmd": "FETCH" }, cache);
     }
 }
 

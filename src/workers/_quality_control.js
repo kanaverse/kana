@@ -44,7 +44,18 @@ function computeMetrics(use_mito_default, mito_prefix) {
     }
 
     var mat = inputs.fetchCountMatrix();
-    cache.raw = scran.computePerCellQCMetrics(mat, subsets);
+    cache.metrics = scran.computePerCellQCMetrics(mat, subsets);
+    return;
+}
+
+function computeFilters(nmads) {
+    // Need to check this in case we're operating from a reloaded analysis,
+    // where there is no guarantee that we reran the computeMetrics() step in compue().
+    if (!("metrics" in cache)) { 
+        computeMetrics(parameters.use_mito_default, parameters.mito_prefix);
+    }
+    utils.freeCache(cache.filters);
+    cache.filters = scran.computePerCellQCFilters(cache.metrics, { numberOfMADs: nmads });
     return;
 }
 
@@ -67,16 +78,7 @@ export function compute(use_mito_default, mito_prefix, nmads) {
     }
 
     if (changed || nmads !== parameters.nmads) {
-        // Need to check this in case we're operating from a reloaded analysis,
-        // where there is no guarantee that we reran the computeMetrics() step in compue().
-        if (!("metrics" in cache)) { 
-            computeMetrics(parameters.use_mito_default, parameters.mito_prefix);
-        }
-
-        var stats = cache.metrics;
-        utils.freeCache(cache.filters);
-        cache.filters = scran.computePerCellQCFilters(stats, { numberOfMADs: nmads });
-
+        computeFilters(nmads);
         parameters.nmads = nmads;
         changed = true;
     }
@@ -89,7 +91,7 @@ export function compute(use_mito_default, mito_prefix, nmads) {
     if (changed) {
         // Freeing some memory.
         if (reloaded !== null) {
-            utils.free(reloaded.discards_buffer);
+            utils.freeCache(reloaded.discards_buffer);
             reloaded = null;
         }
     }
@@ -109,10 +111,9 @@ function getData(copy = true) {
         utils.copyVectors(data, copy);
     } else {
         copy = utils.copyOrView(copy);
-        var qc_output = cache.metrics;
-        data.sums = qc_output.sums({ copy: copy });
-        data.detected = qc_output.detected({ copy: copy });
-        data.proportion = qc_output.subsetProportions(0, { copy: copy });
+        data.sums = cache.metrics.sums({ copy: copy });
+        data.detected = cache.metrics.detected({ copy: copy });
+        data.proportion = cache.metrics.subsetProportions(0, { copy: copy });
     }
     return data;
 }
@@ -126,10 +127,9 @@ function getThresholds(copy = true) {
         utils.copyVectors(thresholds, copy);
     } else {
         copy = utils.copyOrView(copy);
-        var qc_thresholds = cache.filters;
-        thresholds.sums = obj.thresholdsSums({ copy: copy });
-        thresholds.detected = obj.thresholdsDetected({ copy: copy });
-        thresholds.proportion = obj.thresholdsSubsetProportions(0, { copy: copy });
+        thresholds.sums = cache.filters.thresholdsSums({ copy: copy });
+        thresholds.detected = cache.filters.thresholdsDetected({ copy: copy });
+        thresholds.proportion = cache.filters.thresholdsSubsetProportions(0, { copy: copy });
     }
     return thresholds;
 }

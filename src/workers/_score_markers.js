@@ -50,7 +50,7 @@ export function serialize(path) {
             }
         } else {
             for (const i of Object.keys(reloaded)) {
-                markers.serializeGroupState(rhandle, reloaded, i);
+                markers.serializeGroupStats(rhandle, reloaded, i);
             }
         }
     }

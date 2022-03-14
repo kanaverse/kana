@@ -176,18 +176,18 @@ export function compute(human_reference, mouse_references) {
         chooseFeatures();
     }
 
-    if (rebuild || !compareArrays(human_references, parameters.human_references)) || !compareArrays(mouse_reference, parameters.mouse_references)) {
+    if (rebuild || !compareArrays(human_references, parameters.human_references) || !compareArrays(mouse_reference, parameters.mouse_references)) {
         let species = cache.feature_details.species;
 
         // Fetching all of the references.
         let init = downloads.initialize();
         let valid = {};
         if (species == "human") {
-            for (const ref of args.human_references) {
+            for (const ref of human_references) {
                 valid[ref] = getBuiltReference(ref, "human", rebuild);
             }
         } else if (species == "mouse") {
-            for (const ref of args.mouse_references) {
+            for (const ref of mouse_references) {
                 valid[ref] = getBuiltReference(ref, "mouse", rebuild);
             }
         }

@@ -1,6 +1,6 @@
 import * as hashwasm from "hash-wasm";
 import * as kana_db from "./KanaDBHandler.js";
-import * as convert_v0 from "./converter/from_v0.js";
+import * as convert_v0 from "./legacy/from_v0.js";
 
 // Must be integers!
 const FORMAT_EMBEDDED_FILES = 0;
@@ -40,7 +40,7 @@ export function createSaver(embedded) {
 
     if (embedded) {
         output.sofar = 0;
-        output.saver = async (obj) => {  // just async for consistency.
+        output.saver = (obj) => {
             output.collected.push(obj.buffer);
             let current = output.sofar;
             let size = obj.buffer.byteLength;
@@ -113,7 +113,7 @@ export function saveEmbedded(state, collected) {
     return saved.combined;
 }
 
-export function saveLinked(state, collected, title) {
+export async function saveLinked(state, collected, title) {
     let saved = save_internal(FORMAT_EXTERNAL_KANADB, state, 0);
     let id = await kana_db.saveAnalysis(null, saved.combined, collected, title);
     return id;
@@ -145,7 +145,7 @@ export async function load(buffer, state_path) {
         bundle.embedded = true;
     } else if (format == FORMAT_EXTERNAL_KANADB) {
         bundle.loader = kana_db.loadFile;
-        bundle.embedded: false;
+        bundle.embedded = false;
     } else {
         throw "unsupported format type";
     }

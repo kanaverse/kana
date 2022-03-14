@@ -156,8 +156,6 @@ function loadMatrixMarket(args) {
         } else {
             parameters = formatted;
             loadMatrixMarketRaw(formatted.files);
-            loadMatrixMarketGenes(formatted.files);
-            loadMatrixMarketAnnotations(formatted.files);
         }
     }
 
@@ -338,7 +336,7 @@ export function compute(format, files) {
             // do nothing, this is handled by unserialize.
             break;
         default:
-            throw "unknown matrix file extension: '" + args.format + "'";
+            throw "unknown matrix file extension: '" + format + "'";
     }
     return;
 }
@@ -403,35 +401,33 @@ export async function unserialize(path, loader, embedded) {
     let phandle = ghandle.openGroup("parameters"); 
 
     // Extracting the files.
-    {
-        let fihandle = phandle.openGroup("files");
-        let kids = fihandle.children;
-        let files = new Array(kids.length);
-        
-        for (const x of Object.keys(kids)) {
-            let current = fihandle.openGroup(x);
+    let fihandle = phandle.openGroup("files");
+    let kids = fihandle.children;
+    let files = new Array(kids.length);
+    
+    for (const x of Object.keys(kids)) {
+        let current = fihandle.openGroup(x);
 
-            let curfile = {};
-            for (const field of ["type", "name"]) {
-                let dhandle = current.openDataSet(field, { load: true });
-                curfile[field] = dhandle.values[0];
-            }
-
-            if (embedded) {
-                let dhandle = current.openDataSet("id", { load: true });
-                curfile.buffer = await loader(dhandle.values[0]);
-            } else {
-                let buffer_deets = {};
-                for (const field of ["offset", "size"]) {
-                    let dhandle = current.openDataSet(field, { load: true });
-                    buffer_deets[field] = dhandle.values[0];
-                }
-                curfile.buffer = await loader(buffer_deets.offset, buffer_deets.size);
-            }
-
-            let idx = Number(x);
-            files[idx] = curfile;
+        let curfile = {};
+        for (const field of ["type", "name"]) {
+            let dhandle = current.openDataSet(field, { load: true });
+            curfile[field] = dhandle.values[0];
         }
+
+        if (embedded) {
+            let dhandle = current.openDataSet("id", { load: true });
+            curfile.buffer = await loader(dhandle.values[0]);
+        } else {
+            let buffer_deets = {};
+            for (const field of ["offset", "size"]) {
+                let dhandle = current.openDataSet(field, { load: true });
+                buffer_deets[field] = dhandle.values[0];
+            }
+            curfile.buffer = await loader(buffer_deets.offset, buffer_deets.size);
+        }
+
+        let idx = Number(x);
+        files[idx] = curfile;
     }
 
     // Run the reloaders now.

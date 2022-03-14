@@ -1,8 +1,6 @@
 import * as scran from "scran.js";
 import * as inputs from "./_inputs.js";
-import * as metrics from "./_qc_metrics.js";
-import * as thresholds from "./_qc_thresholds.js";
-import * as filter from "./_qc_filter.js";
+import * as qc from "./_quality_control.js";
 import * as normalization from "./_normalization.js";
 import * as variance from "./_model_gene_var.js";
 import * as pca from "./_pca.js";
@@ -10,8 +8,6 @@ import * as index from "./_neighbor_index.js";
 import * as cluster_choice from "./_choose_clustering.js";
 import * as kmeans_cluster from "./_kmeans_cluster.js";
 import * as snn_cluster from "./_snn_cluster.js";
-import * as snn_graph from "./_snn_graph.js";
-import * as snn_neighbors from "./_snn_neighbors.js";
 import * as tsne from "./_tsne_monitor.js";
 import * as umap from "./_umap_monitor.js";
 import * as cluster_markers from "./_score_markers.js";
@@ -33,21 +29,6 @@ function postSuccess_(info, step, message) {
     }, transferable);
 }
 
-var postSuccess = function (namespace, step, message) {
-    if (namespace.changed || mode == "unserialize") {
-        postSuccess_(namespace.results(), step, message);
-    }
-}
-
-var postSuccessAsync = function (namespace, step, message) {
-    if (namespace.changed || mode == "unserialize") {
-        namespace.results()
-            .then(res => {
-                postSuccess_(res, step, message);
-            });
-    }
-}
-
 /***************************************/
 
 const step_inputs = "inputs";
@@ -66,6 +47,21 @@ const step_labels = "cell_labelling";
 const step_custom = "custom_marker_management";
 
 function runAllSteps(state) {
+    var postSuccess = function (namespace, step, message) {
+        if (namespace.changed) {
+            postSuccess_(namespace.results(), step, message);
+        }
+    }
+
+    var postSuccessAsync = function (namespace, step, message) {
+        if (namespace.changed) {
+            namespace.results()
+                .then(res => {
+                    postSuccess_(res, step, message);
+                });
+        }
+    }
+
     inputs.compute(state.files.format, state.files.files);
     postSuccess(inputs, step_inputs, "Count matrix loaded");
 
@@ -74,10 +70,10 @@ function runAllSteps(state) {
         state.params.qc["qc-mito"], 
         state.params.qc["qc-nmads"]
     );
-    postSuccess(qc, step_qc, Applying quality control filters");
+    postSuccess(qc, step_qc, "Applying quality control filters");
  
     normalization.compute();
-    postSuccess(normalization, step_norm, Log-normalization completed");
+    postSuccess(normalization, step_norm, "Log-normalization completed");
 
     variance.compute(state.params.fSelection["fsel-span"]);
     postSuccess(variance, step_feat, "Variance modelling completed");
@@ -171,6 +167,17 @@ async function serializeAllSteps(saver, embedded) {
 }
 
 async function unserializeAllSteps(path, loader, embedded) {
+    var postSuccess = function (namespace, step, message) {
+        postSuccess_(namespace.results(), step, message);
+    }
+
+    var postSuccessAsync = function (namespace, step, message) {
+        namespace.results()
+            .then(res => {
+                postSuccess_(res, step, message);
+            });
+    }
+
     let response = { "params": {} };
 
     let permuter = await inputs.unserialize(path, loader, embedded);
@@ -229,7 +236,7 @@ async function unserializeAllSteps(path, loader, embedded) {
     }
 
     {
-        let umap.unserialize(path);
+        let params = umap.unserialize(path);
         postSuccessAsync(umap, step_umap, "UMAP reloaded");
         response["umap"] = {
             "umap-epochs": params.num_epochs,

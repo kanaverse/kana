@@ -6,12 +6,13 @@ import * as wa from "wasmarrays.js";
 
 var cache = {};
 var parameters = {};
+var reloaded = null;
 
 export var changed = false;
 
 function fetchPCsAsWasmArray() {
     if (!("pcs" in cache)) {
-        return cache.reloaded.pcs;
+        return reloaded.pcs;
     } else {
         return cache.pcs.principalComponents({ copy: "view" });
     }
@@ -47,7 +48,7 @@ export function compute(num_hvgs, num_pcs) {
 
         var mat = normalization.fetchNormalizedMatrix();
         utils.freeCache(cache.pcs);
-        cache.pcs = scran.runPCA(mat, { features: sub, numberOfPCs: args.num_pcs });
+        cache.pcs = scran.runPCA(mat, { features: sub, numberOfPCs: num_pcs });
 
         parameters.num_pcs = num_pcs;
         changed = true;
@@ -56,7 +57,7 @@ export function compute(num_hvgs, num_pcs) {
     if (changed) {
         // Free some memory.
         if (reloaded !== null) {
-            utils.free(reloaded.pcs);
+            utils.freeCache(reloaded.pcs);
             reloaded = null;
         }
     }

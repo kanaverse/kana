@@ -4,6 +4,7 @@ import * as index from "./_neighbor_index.js";
 
 var cache = {};
 var parameters = {};
+var reloaded = null;
 
 export var changed = false;
 export var invalid = true;
@@ -39,7 +40,9 @@ function computeClusters(resolution) {
         computeGraph(parameters.scheme);
     }
     utils.freeCache(cache.clusters);
-    cache.clusters = scran.clusterSNNGraph(cache.graph, { resolution: args.resolution });
+    cache.clusters = scran.clusterSNNGraph(cache.graph, { resolution: resolution });
+    console.log(cache.clusters.best());
+    console.log(cache.clusters.membership());
     return;
 }
 
@@ -73,7 +76,7 @@ export function compute(run_me, k, scheme, resolution) {
 
     if (changed) {
         if (reloaded !== null) {
-            utils.free(reloaded.clusters);
+            utils.freeCache(reloaded.clusters);
             reloaded = null;
         }
         if (!run_me) {

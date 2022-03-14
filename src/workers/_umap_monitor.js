@@ -16,7 +16,7 @@ export var changed = false;
 function core(num_neighbors, num_epochs, min_dist, animate, reneighbor) {
     var nn_out = null;
     if (reneighbor) {
-        nn_out = vizutils.computeNeighbors(args.num_neighbors);
+        nn_out = vizutils.computeNeighbors(num_neighbors);
     }
 
     let args = {
@@ -71,7 +71,7 @@ async function getResults(copy)  {
         // Vectors that we get from the worker are inherently
         // copied, so no need to do anything extra here.
         await cache.run;
-        return sendTask(worker, { "cmd": "FETCH" }, cache);
+        return vizutils.sendTask(worker, { "cmd": "FETCH" }, cache);
     }
 }
 

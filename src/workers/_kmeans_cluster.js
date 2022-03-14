@@ -4,6 +4,7 @@ import * as pca from "./_pca.js";
 
 var cache = {};
 var parameters = {};
+var reloaded = null;
 
 export var changed = false;
 export var invalid = false;
@@ -13,7 +14,7 @@ export function fetchClustersAsWasmArray() {
         if (invalid) {
             throw "cannot fetch k-means clusters from an invalid state";
         }
-        return cache.reloaded.clusters;
+        return reloaded.clusters;
     } else {
         return cache.raw.clusters({ copy: "view" });
     }
@@ -36,7 +37,7 @@ export function compute(run_me, k) {
 
     if (changed) {
         if (reloaded !== null) {
-            utils.free(reloaded.clusters);
+            utils.freeCache(reloaded.clusters);
             reloaded = null;
         }
         if (!run_me) {

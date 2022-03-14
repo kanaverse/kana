@@ -8,12 +8,12 @@ var parameters = {};
 export var changed = false;
 
 function rawCompute() {
-    var mat = filter.fetchFilteredMatrix();
+    var mat = qc.fetchFilteredMatrix();
     var buffer = utils.allocateCachedArray(mat.numberOfColumns(), "Float64Array", cache);
 
     // Better not have any more allocations in between now and filling of size_factors!
-    var sums = metrics.fetchSums({ unsafe: true });
-    var discards = thresholds.fetchDiscards().array();
+    var sums = qc.fetchSums({ unsafe: true });
+    var discards = qc.fetchDiscards().array();
 
     // Reusing the totals computed earlier.
     var size_factors = buffer.array();
@@ -36,7 +36,7 @@ function rawCompute() {
 
 export function compute() {
     changed = false;
-    if (quality_control.changed) {
+    if (qc.changed) {
         changed = true;
     } 
 
