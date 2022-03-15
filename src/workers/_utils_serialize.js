@@ -88,6 +88,8 @@ function save_internal(format_type, state, extras) {
     }
 
     combined_arr.set(state, offset);
+    offset += state.length;
+
     return {
         "offset": offset,
         "combined": combined                
