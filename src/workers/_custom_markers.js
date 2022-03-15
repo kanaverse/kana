@@ -41,7 +41,7 @@ export function serialize(path) {
 
     {
         let phandle = ghandle.createGroup("parameters");
-        let rhandle = chandle.createGroup("selections");
+        let rhandle = phandle.createGroup("selections");
         for (const [key, val] of Object.entries(parameters.selections)) {
             rhandle.writeDataSet(String(key), "Uint8", [val.length], val);
         }
@@ -62,7 +62,7 @@ export function unserialize(path, permuter) {
 
     {
         let phandle = ghandle.createGroup("parameters");
-        let rhandle = chandle.createGroup("selections");
+        let rhandle = phandle.createGroup("selections");
         parameters = { selections: {} };
         for (const key of Object.keys(rhandle.children)) {
             parameters.selections[key] = rhandle.openDataSet(key, { load: true }).values;

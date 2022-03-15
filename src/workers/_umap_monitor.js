@@ -1,3 +1,4 @@
+import * as scran from "scran.js";
 import * as vizutils from "./_utils_viz_parent.js";
 import * as index from "./_neighbor_index.js";
 import * as utils from "./_utils.js";

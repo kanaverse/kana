@@ -186,7 +186,7 @@ export function serialize(path) {
         }
 
         {
-            let thandle = chandle.createGroup("thresholds");
+            let thandle = rhandle.createGroup("thresholds");
             let thresholds = getThresholds(false);
             for (const x of [ "sums", "detected", "proportion" ]) {
                 let current = thresholds[x];

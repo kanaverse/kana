@@ -54,8 +54,8 @@ export function serialize(path) {
     // Token effort.
     let fhandle = new scran.H5File(path);
     let ghandle = fhandle.createGroup("normalization");
-    ghandle.openGroup("parameters"); 
-    ghandle.openGroup("results"); 
+    ghandle.createGroup("parameters"); 
+    ghandle.createGroup("results"); 
 }
 
 export function unserialize(path) {

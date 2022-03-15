@@ -3,7 +3,7 @@ import * as scran from "scran.js";
 const summaries = { "min": 0, "mean": 1, "min-rank": 4 };
 
 export function serializeGroupStats(handle, obj, group) {
-    let ihandle = rhandle.createGroup(String(group));
+    let ihandle = handle.createGroup(String(group));
     let not_reloaded = (obj instanceof scran.ScoreMarkersResults);
 
     for (const x of [ "means", "detected" ]) {
@@ -18,9 +18,9 @@ export function serializeGroupStats(handle, obj, group) {
     }
 
     for (const i of [ "lfc", "delta-detected", "auc", "cohen" ]) {
-        let rhandle = ihandle.createGroup(i);
+        let curhandle = ihandle.createGroup(i);
         let i0 = i;
-        if (i == "delta_detected") {
+        if (i == "delta-detected") {
             i0 = "deltaDetected";
         }
 
@@ -31,7 +31,7 @@ export function serializeGroupStats(handle, obj, group) {
             } else {
                 y = obj[group][i][j];
             }
-            let dhandle = rhandle.createDataSet(j, "Float64", [y.length]);
+            let dhandle = curhandle.createDataSet(j, "Float64", [y.length]);
             dhandle.write(y);
         }
     }

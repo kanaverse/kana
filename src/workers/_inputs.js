@@ -361,7 +361,7 @@ export async function serialize(path, saver, embedded) {
 
     {
         let phandle = ghandle.createGroup("parameters"); 
-        phandle.writeDataSet("format", "String", [], parameters.format);
+        phandle.writeDataSet("format", "String", [], parameters.type);
         let fihandle = phandle.createGroup("files");
 
         let sofar = 0;
@@ -389,7 +389,7 @@ export async function serialize(path, saver, embedded) {
 
         let rhandle = ghandle.createGroup("results"); 
         rhandle.writeDataSet("dimensions", "Int32", [2], dims);
-        rhandle.createDataSet("permutation", "Int32", [perm.length], perms);
+        rhandle.createDataSet("permutation", "Int32", [perm.length], perm);
     }
 
     return;
