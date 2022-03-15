@@ -152,10 +152,13 @@ export function results() {
         ranges[k] = [min, max];
     }
 
+    var mat = fetchFilteredMatrix();
+
     return { 
         "data": data, 
         "ranges": ranges,
-        "thresholds": thresholds
+        "thresholds": thresholds,
+        "dims": [mat.numberOfRows(), mat.numberOfColumns()]
     };
 }
 

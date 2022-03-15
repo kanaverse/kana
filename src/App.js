@@ -125,7 +125,7 @@ const App = () => {
     setGenesInfo, initLoadState, tabSelected,
     datasetName, params, loadParams,
     setGeneColSel, setLoadParams,
-    setInitLoadState, inputFiles, annotationCols, setAnnotationCols, 
+    setInitLoadState, inputFiles, annotationCols, setAnnotationCols,
     annotationObj, setAnnotationObj } = useContext(AppContext);
 
   // initializes various things on the worker side
@@ -240,16 +240,16 @@ const App = () => {
     }
   }, [indexedDBState]);
 
-    // get annotation for a column from worker
-    useEffect(() => {
+  // get annotation for a column from worker
+  useEffect(() => {
 
-      reqAnnotation !== null && scranWorker.postMessage({
-        "type": "getAnnotation",
-        "payload": {
-          "annotation": reqAnnotation
-        }
-      });
-    }, [reqAnnotation]);
+    reqAnnotation !== null && scranWorker.postMessage({
+      "type": "getAnnotation",
+      "payload": {
+        "annotation": reqAnnotation
+      }
+    });
+  }, [reqAnnotation]);
 
   useEffect(() => {
 
@@ -321,16 +321,10 @@ const App = () => {
       if (payload.resp?.annotations) {
         setAnnotationCols(Object.values(payload.resp.annotations));
       }
-    } else if (payload.type === "quality_control_metrics_DATA") {
+    } else if (payload.type === "quality_control_DATA") {
       const { resp } = payload;
       setQcData(resp);
-    } else if (payload.type === "quality_control_thresholds_DATA") {
-      const { resp } = payload;
-      let tmp = { ...qcData };
-      tmp["thresholds"] = resp;
-      setQcData(tmp);
-    } else if (payload.type === "quality_control_filtered_DATA") {
-      setQcDims(`${payload.resp.retained}`);
+      setQcDims(`${resp?.dims}`);
     } else if (payload.type === "feature_selection_DATA") {
       const { resp } = payload;
       setFSelectionData(resp);
@@ -447,7 +441,7 @@ const App = () => {
       }, 1000);
     } else if (payload.type === "setAnnotation") {
       const { resp } = payload;
-      let tmp = {...annotationObj};
+      let tmp = { ...annotationObj };
       tmp[resp.annotation] = resp.values;
       setAnnotationObj(tmp);
 
