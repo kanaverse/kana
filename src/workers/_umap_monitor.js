@@ -5,6 +5,7 @@ import * as utils from "./_utils.js";
 var cache = { "counter": 0, "promises": {} };
 var parameters = {};
 var worker = null;
+var reloaded = null;
 
 export function initialize() {
     worker = new Worker(new URL("./umap.worker.js", import.meta.url), { type: "module" });
@@ -49,6 +50,7 @@ export function compute(num_neighbors, num_epochs, min_dist, animate) {
         parameters.num_epochs = num_epochs;
         parameters.min_dist = min_dist;
         parameters.animate = animate;
+        changed = true;
     }
 
     if (changed) {
