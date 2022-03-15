@@ -1,4 +1,4 @@
-import * as scran from "scran.js"; 
+import * as scran from "scran.js";
 import * as utils from "./_utils.js";
 import * as inputs from "./_inputs.js";
 import { mito } from "./mito.js";
@@ -36,7 +36,7 @@ function computeMetrics(use_mito_default, mito_prefix) {
         } else {
             var lower_mito = mito_prefix.toLowerCase();
             val.forEach((x, i) => {
-                if(x.toLowerCase().startsWith(lower_mito)) {
+                if (x.toLowerCase().startsWith(lower_mito)) {
                     sub_arr[i] = 1;
                 }
             });
@@ -51,7 +51,7 @@ function computeMetrics(use_mito_default, mito_prefix) {
 function computeFilters(nmads) {
     // Need to check this in case we're operating from a reloaded analysis,
     // where there is no guarantee that we reran the computeMetrics() step in compue().
-    if (!("metrics" in cache)) { 
+    if (!("metrics" in cache)) {
         computeMetrics(parameters.use_mito_default, parameters.mito_prefix);
     }
     utils.freeCache(cache.filters);
@@ -152,13 +152,23 @@ export function results() {
         ranges[k] = [min, max];
     }
 
-    var mat = fetchFilteredMatrix();
+    let remaining;
+    if ("matrix" in cache) {
+        remaining = cache.matrix.numberOfColumns();
+    } else {
+        remaining = 0;
+        fetchDiscards().array().forEach(x => {
+            if (x == 0) {
+                remaining++;
+            }
+        });
+    }
 
-    return { 
-        "data": data, 
+    return {
+        "data": data,
         "ranges": ranges,
         "thresholds": thresholds,
-        "dims": [mat.numberOfRows(), mat.numberOfColumns()]
+        "dims": remaining
     };
 }
 
@@ -171,14 +181,14 @@ export function serialize(path) {
     let ghandle = fhandle.createGroup("quality_control");
 
     {
-        let phandle = ghandle.createGroup("parameters"); 
+        let phandle = ghandle.createGroup("parameters");
         phandle.writeDataSet("use_mito_default", "Uint8", [], Number(parameters.use_mito_default));
         phandle.writeDataSet("mito_prefix", "String", [], parameters.mito_prefix);
         phandle.writeDataSet("nmads", "Float64", [], parameters.nmads);
     }
 
     {
-        let rhandle = ghandle.createGroup("results"); 
+        let rhandle = ghandle.createGroup("results");
 
         {
             let mhandle = rhandle.createGroup("metrics");
@@ -191,7 +201,7 @@ export function serialize(path) {
         {
             let thandle = rhandle.createGroup("thresholds");
             let thresholds = getThresholds(false);
-            for (const x of [ "sums", "detected", "proportion" ]) {
+            for (const x of ["sums", "detected", "proportion"]) {
                 let current = thresholds[x];
                 thandle.writeDataSet(x, "Float64", [current.length], current);
             }
@@ -207,7 +217,7 @@ export function unserialize(path) {
     let ghandle = fhandle.createGroup("quality_control");
 
     {
-        let phandle = ghandle.openGroup("parameters"); 
+        let phandle = ghandle.openGroup("parameters");
         parameters = {
             use_mito_default: phandle.openDataSet("mito_prefix", { load: true }).values[0] > 0,
             mito_prefix: phandle.openDataSet("mito_prefix", { load: true }).values[0],
@@ -232,7 +242,7 @@ export function unserialize(path) {
         thresholds.proportion = thandle.openDataSet("proportion", { load: true }).values;
         reloaded.thresholds = thresholds;
 
-        let discards = rhandle.openDataSet("discards", { load: true }).values; 
+        let discards = rhandle.openDataSet("discards", { load: true }).values;
         utils.allocateCachedArray(discards.length, "Uint8Array", reloaded, "discards");
         reloaded.discards.set(discards);
     }
