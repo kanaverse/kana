@@ -24,11 +24,14 @@ export function compute(run_me, k) {
     changed = false;
     invalid = false;
 
-    if (pca.changed || k != parameters.k) {
+    if (pca.changed || k != parameters.k || !("raw" in cache)) {
+        utils.freeCache(cache.raw);
+
         if (run_me) {
             var pcs = pca.fetchPCs();
-            utils.freeCache(cache.raw);
             cache.raw = scran.clusterKmeans(pcs.pcs, k, { numberOfDims: pcs.num_pcs, numberOfCells: pcs.num_obs, initMethod: "pca-part" });
+        } else {
+            delete cache.raw; // ensure this step gets re-run later when run_me = true. 
         }
 
         parameters.k = k;

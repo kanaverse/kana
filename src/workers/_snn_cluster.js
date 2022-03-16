@@ -48,25 +48,31 @@ export function compute(run_me, k, scheme, resolution) {
     changed = false;
     invalid = false;
 
-    if (index.changed || k !== parameters.k) {
+    if (index.changed || k !== parameters.k || !("neighbors" in cache)) {
         if (run_me) {
             computeNeighbors(k);
+        } else {
+            delete cache.neighbors; // ensure this step gets re-run later when run_me = true. 
         }
         parameters.k = k;
         changed = true;
     }
 
-    if (changed || scheme !== parameters.scheme) { 
+    if (changed || scheme !== parameters.scheme || !("graph" in cache)) { 
         if (run_me) {
             computeGraph(scheme);
+        } else {
+            delete cache.graph;
         }
         parameters.scheme = scheme;
         changed = true;
     }
 
-    if (changed || resolution !== parameters.resolution) {
+    if (changed || resolution !== parameters.resolution || !("clusters" in cache)) {
         if (run_me) {
             computeClusters(resolution);
+        } else {
+            delete cache.clusters;
         }
         parameters.resolution = resolution;
         changed = true;

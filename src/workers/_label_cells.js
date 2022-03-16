@@ -194,7 +194,7 @@ export function compute(human_references, mouse_references) {
         }
     }
 
-    if (!compareArrays(human_references, parameters.human_references) || !compareArrays(mouse_reference, parameters.mouse_references)) {
+    if (!compareArrays(human_references, parameters.human_references) || !compareArrays(mouse_references, parameters.mouse_references)) {
         parameters.human_references = human_references;
         parameters.mouse_references = mouse_references;
         changed = true;
