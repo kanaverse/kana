@@ -324,7 +324,7 @@ const App = () => {
     } else if (payload.type === "quality_control_DATA") {
       const { resp } = payload;
       setQcData(resp);
-      setQcDims(`${resp?.dims}`);
+      setQcDims(`${resp.retained}`);
     } else if (payload.type === "feature_selection_DATA") {
       const { resp } = payload;
       setFSelectionData(resp);

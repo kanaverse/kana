@@ -152,13 +152,22 @@ export function results() {
         ranges[k] = [min, max];
     }
 
-    var mat = fetchFilteredMatrix();
+    let remaining = 0;
+    if ("matrix" in cache) {
+        remaining = cache.matrix.numberOfColumns();
+    } else {
+        fetchDiscards().array().forEach(x => {
+            if (x == 0) {
+                remaining++;
+            }
+        });
+    }
 
     return { 
         "data": data, 
         "ranges": ranges,
         "thresholds": thresholds,
-        "dims": [mat.numberOfRows(), mat.numberOfColumns()]
+        "retained": remaining
     };
 }
 
