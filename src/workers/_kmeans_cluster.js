@@ -70,7 +70,7 @@ export function serialize(path) {
         let rhandle = ghandle.createGroup("results");
         if (!invalid) {
             let clusters = fetchClustersAsWasmArray();
-            phandle.writeDataSet("clusters", "Int32", [clusters.length], clusters);
+            rhandle.writeDataSet("clusters", "Int32", [clusters.length], clusters);
          }
     }
 
