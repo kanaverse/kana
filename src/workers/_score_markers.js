@@ -58,15 +58,16 @@ export function serialize(path) {
 
 export function unserialize(path, permuter) {
     let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("marker_detection");
-    ghandle.createGroup("parameters");
+    let ghandle = fhandle.open("marker_detection");
+
+    // No parameters to unserialize.
 
     {
-        let chandle = ghandle.openGroup("results");
-        let rhandle = chandle.openGroup("clusters");
+        let chandle = ghandle.open("results");
+        let rhandle = chandle.open("clusters");
         reloaded = { clusters: {} };
         for (const cl of Object.keys(rhandle.children)) {
-            clusters[Number(cl)] = markers.unserializeGroupStats(rhandle.openGroup(cl), permuter);
+            reloaded.clusters[Number(cl)] = markers.unserializeGroupStats(rhandle.open(cl), permuter);
         }
     }
 
@@ -78,7 +79,7 @@ export function fetchGroupResults(rank_type, group) {
     if ("raw" in cache) {
         return markers.fetchGroupResults(cache.raw, rank_type, group); 
     } else {
-        return markers.fetchGroupResults(reloaded, rank_type, group); 
+        return markers.fetchGroupResults(reloaded.clusters, rank_type, group); 
     }
 }
 

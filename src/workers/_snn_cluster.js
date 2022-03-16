@@ -111,25 +111,25 @@ export function serialize(path) {
     return;
 }
 
-export function unserialize(saved) {
+export function unserialize(path) {
     let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.openGroup("snn_graph_cluster");
+    let ghandle = fhandle.open("snn_graph_cluster");
 
     {
-        let phandle = ghandle.openGroup("parameters");
+        let phandle = ghandle.open("parameters");
         parameters = {
-            k: phandle.openDataSet("k", { load: true }).values[0],
-            scheme: phandle.openDataSet("scheme", { load: true }).values[0],
-            resolution: phandle.openDataSet("resolution", { load: true }).values[0]
+            k: phandle.open("k", { load: true }).values[0],
+            scheme: phandle.open("scheme", { load: true }).values[0],
+            resolution: phandle.open("resolution", { load: true }).values[0]
         };
         parameters.scheme = { "rank": 0, "number": 1, "jaccard": 2 }[parameters.scheme];
     }
 
     {
-        let rhandle = ghandle.createGroup("results");
+        let rhandle = ghandle.open("results");
 
         if ("clusters" in rhandle.children) {
-            let clusters = rhandle.openDataSet("clusters", { load: true }).values;
+            let clusters = rhandle.open("clusters", { load: true }).values;
             reloaded = {};
             let buf = utils.allocateCachedArray(clusters.length, "Int32Array", reloaded, "clusters");
             buf.set(clusters);

@@ -48,12 +48,12 @@ export function serialize(path) {
 
 export function unserialize(path) {
     let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.openGroup("choose_clustering");
+    let ghandle = fhandle.open("choose_clustering");
 
     {
-        let phandle = ghandle.openGroup("parameters");
+        let phandle = ghandle.open("parameters");
         parameters = {
-            method: phandle.openDataSet("method", { load: true }).values[0]
+            method: phandle.open("method", { load: true }).values[0]
         };
     }
 

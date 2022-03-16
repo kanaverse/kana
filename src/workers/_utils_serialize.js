@@ -1,6 +1,7 @@
 import * as hashwasm from "hash-wasm";
 import * as kana_db from "./KanaDBHandler.js";
 import * as convert_v0 from "./legacy/from_v0.js";
+import * as scran from "scran.js";
 
 // Must be integers!
 const FORMAT_EMBEDDED_FILES = 0;

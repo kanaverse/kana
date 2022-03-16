@@ -115,7 +115,7 @@ function runAllSteps(state) {
         state.params.cluster["clus-scheme"], 
         state.params.cluster["clus-res"]
     );
-    postSuccess(kmeans_cluster, step_snn, "SNN graph clustering completed");
+    postSuccess(snn_cluster, step_snn, "SNN graph clustering completed");
   
     cluster_choice.compute(state.params.cluster["clus-method"]);
     postSuccess(cluster_choice, step_choice, "Clustering of interest chosen");
@@ -219,7 +219,7 @@ async function unserializeAllSteps(path, loader, embedded) {
 
     {
         let params = index.unserialize(path);
-        postSuccess(index, step_index, "Reloaded neighbor search index");
+        postSuccess(index, step_neighbors, "Reloaded neighbor search index");
         response["cluster"] = {
             "clus-approx": params.approximate
         };
@@ -247,7 +247,7 @@ async function unserializeAllSteps(path, loader, embedded) {
     }
 
     {
-        let params = kmeans.unserialize(path);
+        let params = kmeans_cluster.unserialize(path);
         postSuccess(kmeans_cluster, step_kmeans, "K-means clustering reloaded");
         response["cluster"]["kmeans-k"] = params.k; // 'cluster' already added above.
     }
@@ -261,8 +261,8 @@ async function unserializeAllSteps(path, loader, embedded) {
     }
 
     {
-        let params = choice.unserialize(path);
-        postSuccess(cluster_choice, step, "Clustering of interest chosen");
+        let params = cluster_choice.unserialize(path);
+        postSuccess(cluster_choice, step_choice, "Clustering of interest chosen");
         response["cluster"]["clus-method"] = params.method;
     }
 
@@ -356,7 +356,7 @@ onmessage = function (msg) {
                     let res = reader.readAsArrayBuffer(f);
                     try {
                         let loaders = await serialize_utils.load(res, path);
-                        let response = unserializeAllSteps(path, loaders.loader, loaders.embedded);
+                        let response = await unserializeAllSteps(path, loaders.loader, loaders.embedded);
                         postMessage({
                             type: "loadedParameters",
                             resp: response

@@ -106,22 +106,23 @@ export async function serialize(path) {
 
 export function unserialize(path) {
     let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.openGroup("umap");
+    let ghandle = fhandle.open("umap");
 
     {
-        let phandle = ghandle.openGroup("parameters");
+        let phandle = ghandle.open("parameters");
         parameters = {
-            perplexity: phandle.openDataSet("perplexity", { load: true }).values[0],
-            iterations: phandle.openDataSet("iterations", { load: true }).values[0],
-            animate: phandle.openDataSet("animate", { load: true }).values[0] > 0
+            num_neighbors: phandle.open("num_neighbors", { load: true }).values[0],
+            num_epochs: phandle.open("num_epochs", { load: true }).values[0],
+            min_dist: phandle.open("min_dist", { load: true }).values[0],
+            animate: phandle.open("animate", { load: true }).values[0] > 0
         };
     }
 
     {
-        let rhandle = ghandle.openGroup("results");
+        let rhandle = ghandle.open("results");
         reloaded = {
-            x: rhandle.openDataSet("x", { load: true }).values,
-            y: rhandle.openDataSet("y", { load: true }).values
+            x: rhandle.open("x", { load: true }).values,
+            y: rhandle.open("y", { load: true }).values
         };
     }
 

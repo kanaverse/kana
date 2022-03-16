@@ -389,7 +389,7 @@ export async function serialize(path, saver, embedded) {
 
         let rhandle = ghandle.createGroup("results"); 
         rhandle.writeDataSet("dimensions", "Int32", [2], dims);
-        rhandle.createDataSet("permutation", "Int32", [perm.length], perm);
+        rhandle.writeDataSet("permutation", "Int32", [perm.length], perm);
     }
 
     return;
@@ -397,30 +397,30 @@ export async function serialize(path, saver, embedded) {
 
 export async function unserialize(path, loader, embedded) {
     let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("inputs");
-    let phandle = ghandle.openGroup("parameters"); 
+    let ghandle = fhandle.open("inputs");
+    let phandle = ghandle.open("parameters"); 
 
     // Extracting the files.
-    let fihandle = phandle.openGroup("files");
+    let fihandle = phandle.open("files");
     let kids = fihandle.children;
     let files = new Array(kids.length);
     
     for (const x of Object.keys(kids)) {
-        let current = fihandle.openGroup(x);
+        let current = fihandle.open(x);
 
         let curfile = {};
         for (const field of ["type", "name"]) {
-            let dhandle = current.openDataSet(field, { load: true });
+            let dhandle = current.open(field, { load: true });
             curfile[field] = dhandle.values[0];
         }
 
-        if (embedded) {
-            let dhandle = current.openDataSet("id", { load: true });
+        if (!embedded) {
+            let dhandle = current.open("id", { load: true });
             curfile.buffer = await loader(dhandle.values[0]);
         } else {
             let buffer_deets = {};
             for (const field of ["offset", "size"]) {
-                let dhandle = current.openDataSet(field, { load: true });
+                let dhandle = current.open(field, { load: true });
                 buffer_deets[field] = dhandle.values[0];
             }
             curfile.buffer = await loader(buffer_deets.offset, buffer_deets.size);
@@ -431,7 +431,7 @@ export async function unserialize(path, loader, embedded) {
     }
 
     // Run the reloaders now.
-    let format = phandle.openDataSet("format", { load: true }).values[0];
+    let format = phandle.open("format", { load: true }).values[0];
     if (format == "MatrixMarket") {
         loadMatrixMarketRaw(files);
 
@@ -459,17 +459,18 @@ export async function unserialize(path, loader, embedded) {
     };
 
     // We need to do something if the permutation is not the same.
-    let rhandle = ghandle.openGroup("results"); 
+    let rhandle = ghandle.open("results"); 
 
     let perm = null;
     if ("permutation" in rhandle.children) {
-        let dhandle = rhandle.openDataSet("permutation", { load: true });
+        let dhandle = rhandle.open("permutation", { load: true });
         perm = scran.updatePermutation(cache.matrix, dhandle.values);
     } else {
         // Otherwise, we're dealing with v0 states. We'll just
         // assume it was the same, I guess. Should be fine as we didn't change
         // the permutation code in v0.
     }
+
     let permuter;
     if (perm !== null) {
         // Adding a permuter function for all per-gene vectors.

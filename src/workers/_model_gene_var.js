@@ -74,24 +74,24 @@ export function serialize(path) {
     }
 }
 
-export function unserialize(path, permutator) {
+export function unserialize(path, permuter) {
     let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.openGroup("feature_selection");
+    let ghandle = fhandle.open("feature_selection");
 
     {
-        let phandle = ghandle.openGroup("parameters");
+        let phandle = ghandle.open("parameters");
         parameters = {
-            span: phandle.openDataSet("span", { load: true }).values[0]
+            span: phandle.open("span", { load: true }).values[0]
         };
     }
 
     {
-        let rhandle = ghandle.openGroup("results");
+        let rhandle = ghandle.open("results");
         reloaded = {
-            means: rhandle.openDataSet("means", { load: true }).values,
-            vars: rhandle.openDataSet("vars", { load: true }).values,
-            fitted: rhandle.openDataSet("fitted", { load: true }).values,
-            resids: rhandle.openDataSet("resids", { load: true }).values
+            means: rhandle.open("means", { load: true }).values,
+            vars: rhandle.open("vars", { load: true }).values,
+            fitted: rhandle.open("fitted", { load: true }).values,
+            resids: rhandle.open("resids", { load: true }).values
         };
 
         // Possibly permuting it to match the new permutation order;

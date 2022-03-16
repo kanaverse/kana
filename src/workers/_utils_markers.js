@@ -40,15 +40,15 @@ export function serializeGroupStats(handle, obj, group) {
 export function unserializeGroupStats(handle, permuter) {
     let output = {};
     for (const x of [ "means", "detected" ]) {
-        output[x] = handle.openDataset(x, { load: true }).values;
+        output[x] = handle.open(x, { load: true }).values;
         permuter(output[x]);
     }
 
     for (const i of [ "lfc", "delta-detected", "auc", "cohen" ]) {
-        let rhandle = ihandle.openGroup(i);
+        let rhandle = handle.open(i);
         let current = {};
         for (const j of Object.keys(summaries)) {
-            current[j] = rhandle.openDataSet(j, { load: true }).values;
+            current[j] = rhandle.open(j, { load: true }).values;
             permuter(current[j]);
         }
         output[i] = current;
@@ -147,7 +147,7 @@ export function fetchGroupResults(results, rank_type, group) {
         stat_mean = reorder(current.means);
         stat_detected = reorder(current.detected);
         stat_lfc = reorder(current.lfc["mean"]);
-        stat_delta_d = reorder(current.delta_detected["mean"]);
+        stat_delta_d = reorder(current["delta-detected"]["mean"]);
     } else {
         stat_detected = reorder(results.detected(group, { copy: false }));
         stat_mean = reorder(results.means(group, { copy: false }));

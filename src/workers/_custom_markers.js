@@ -6,6 +6,7 @@ import * as markers from "./_utils_markers.js";
 
 var cache = { "results": {} };
 var parameters = { "selections": {} };
+var reloaded = null;
 
 export var changed = false;
 
@@ -58,23 +59,23 @@ export function serialize(path) {
 
 export function unserialize(path, permuter) {
     let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("custom_selections");
+    let ghandle = fhandle.open("custom_selections");
 
     {
-        let phandle = ghandle.createGroup("parameters");
-        let rhandle = phandle.createGroup("selections");
+        let phandle = ghandle.open("parameters");
+        let rhandle = phandle.open("selections");
         parameters = { selections: {} };
         for (const key of Object.keys(rhandle.children)) {
-            parameters.selections[key] = rhandle.openDataSet(key, { load: true }).values;
+            parameters.selections[key] = rhandle.open(key, { load: true }).values;
         }
     }
 
     {
-        let chandle = ghandle.openGroup("results");
-        let rhandle = chandle.openGroup("markers");
+        let chandle = ghandle.open("results");
+        let rhandle = chandle.open("markers");
         reloaded = { clusters: {} };
         for (const sel of Object.keys(rhandle.children)) {
-            clusters[sel] = markers.unserializeGroupStats(rhandle.openGroup(sel), permuter);
+            clusters[sel] = markers.unserializeGroupStats(rhandle.open(sel), permuter);
         }
     }
 

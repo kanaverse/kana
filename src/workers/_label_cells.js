@@ -325,27 +325,27 @@ export async function serialize(path) {
 
 export function unserialize(path) {
     let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.openGroup("cell_labelling");
+    let ghandle = fhandle.open("cell_labelling");
     
     {
-        let phandle = ghandle.openGroup("parameters");
+        let phandle = ghandle.open("parameters");
         parameters =  {
-            mouse_references: phandle.openDataSet("mouse_references", { load: true }).values,
-            human_references: phandle.openDataSet("human_references", { load: true }).values
+            mouse_references: phandle.open("mouse_references", { load: true }).values,
+            human_references: phandle.open("human_references", { load: true }).values
         };
     }
 
     {
-        let rhandle = ghandle.openGroup("results");
+        let rhandle = ghandle.open("results");
 
-        let perhandle = rhandle.openGroup("per_reference");
+        let perhandle = rhandle.open("per_reference");
         reloaded = { per_reference: {} };
-        for (const [key, val] of Object.entries(res.per_reference)) {
-            reloaded.per_reference[key] = perhandle.openDataSet(key, { load: true }).values;
+        for (const key of Object.keys(perhandle.children)) {
+            reloaded.per_reference[key] = perhandle.open(key, { load: true }).values;
         }
 
-        if ("integrated" in res) {
-            reloaded.integrated = rhandle.openDataSet("integrated", { load: true }).values;
+        if ("integrated" in perhandle.children) {
+            reloaded.integrated = rhandle.open("integrated", { load: true }).values;
         }
     }
 

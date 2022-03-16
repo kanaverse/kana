@@ -42,14 +42,14 @@ export function serialize(path) {
     return;
 }
 
-export function unserialize(saved) {
+export function unserialize(path) {
     let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.openGroup("neighbor_index");
+    let ghandle = fhandle.open("neighbor_index");
 
     {
-        let phandle = ghandle.openGroup("parameters");
+        let phandle = ghandle.open("parameters");
         parameters = {
-            approximate: phandle.openDataSet("approximate", { load: true }).value > 0
+            approximate: phandle.open("approximate", { load: true }).value > 0
         };
     }
 

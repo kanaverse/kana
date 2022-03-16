@@ -104,23 +104,23 @@ export function serialize(path) {
  
 export function unserialize(path) {
     let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.openGroup("pca");
+    let ghandle = fhandle.open("pca");
 
     {
-        let phandle = ghandle.openGroup("parameters"); 
+        let phandle = ghandle.open("parameters"); 
         parameters = { 
-            num_hvgs: phandle.openDataSet("num_hvgs", { load: true }).values[0],
-            num_pcs: phandle.openDataSet("num_pcs", { load: true }).values[0]
+            num_hvgs: phandle.open("num_hvgs", { load: true }).values[0],
+            num_pcs: phandle.open("num_pcs", { load: true }).values[0]
         };
     }
 
     {
-        let rhandle = ghandle.openGroup("results");
+        let rhandle = ghandle.open("results");
         reloaded = {
-            var_exp: rhandle.openDataSet("var_exp", { load: true }).values,
+            var_exp: rhandle.open("var_exp", { load: true }).values,
         };
 
-        let pcs = rhandle.openDataSet("pcs", { load: true }).values
+        let pcs = rhandle.open("pcs", { load: true }).values
         utils.allocateCachedArray(pcs.length, "Uint8Array", reloaded, "pcs");
         reloaded.pcs.set(pcs);        
     }
