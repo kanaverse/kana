@@ -256,7 +256,7 @@ export function unserialize(path) {
 
 export function fetchSums({ unsafe = false } = {}) {
     if (!("metrics" in cache)) {
-        return reloaded.sums;
+        return reloaded.metrics.sums;
     } else {
         // Unsafe, because we're returning a raw view into the Wasm heap,
         // which might be invalidated upon further allocations.

@@ -53,9 +53,9 @@ export function createSaver(embedded) {
         };
     } else {
         output.saver = async (obj) => {
-            var md5 = await hashwasm.md5(new Uint8Array(x.buffer));
-            var id = x.type + "_" + x.name + "_" + x.buffer.byteLength + "_" + md5;
-            var ok = await kana_db.saveFile(id, x.buffer);
+            var md5 = await hashwasm.md5(new Uint8Array(obj.buffer));
+            var id = obj.type + "_" + obj.name + "_" + obj.buffer.byteLength + "_" + md5;
+            var ok = await kana_db.saveFile(id, obj.buffer);
             if (!ok) {
                 throw "failed to save file '" + id + "' to KanaDB";
             }

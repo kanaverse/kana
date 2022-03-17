@@ -387,7 +387,7 @@ onmessage = function (msg) {
                     } else {
                         try {
                             let loaders = await serialize_utils.load(res, path);
-                            let response = unserializeAllSteps(path, loaders.loader, loaders.embedded);
+                            let response = await unserializeAllSteps(path, loaders.loader, loaders.embedded);
                             postMessage({
                                 type: "loadedParameters",
                                 resp: response
@@ -434,7 +434,7 @@ onmessage = function (msg) {
         loaded
             .then(async (x) => {
                 var savers = await serialize_utils.createSaver(false);
-                var state = await runAllSteps(savers.saver, false);
+                var state = await serializeAllSteps(savers.saver, false);
                 var output = await serialize_utils.saveLinked(state, savers.collected, title);
                 if (id !== null) {
                     let recs = await kana_db.getRecords();

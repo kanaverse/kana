@@ -11,19 +11,18 @@ function rawCompute() {
     var mat = qc.fetchFilteredMatrix();
     var buffer = utils.allocateCachedArray(mat.numberOfColumns(), "Float64Array", cache);
 
-    // Better not have any more allocations in between now and filling of size_factors!
-    var sums = qc.fetchSums({ unsafe: true });
-    var discards = qc.fetchDiscards().array();
+    var discards = qc.fetchDiscards();
+    var sums = qc.fetchSums({ unsafe: true }); // Better not have any more allocations in between now and filling of size_factors!
 
     // Reusing the totals computed earlier.
     var size_factors = buffer.array();
     var j = 0;
-    for (var i = 0; i < discards.length; ++i) {
-        if (!discards[i]) {
+    discards.array().forEach((x, i) => {
+        if (!x) {
             size_factors[j] = sums[i];
             j++;
         }
-    }
+    });
 
     if (j != mat.numberOfColumns()) {
         throw "normalization and filtering are not in sync";
