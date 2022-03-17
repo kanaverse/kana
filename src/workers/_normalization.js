@@ -49,10 +49,9 @@ export function results() {
     return {};
 }
 
-export function serialize(path) {
+export function serialize(handle) {
     // Token effort.
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("normalization");
+    let ghandle = handle.createGroup("normalization");
     ghandle.createGroup("parameters"); 
     ghandle.createGroup("results"); 
 }

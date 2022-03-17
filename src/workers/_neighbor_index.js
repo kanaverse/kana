@@ -29,9 +29,8 @@ export function results() {
     return {};
 }
 
-export function serialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("neighbor_index");
+export function serialize(handle) {
+    let ghandle = handle.createGroup("neighbor_index");
 
     {
         let phandle = ghandle.createGroup("parameters");
@@ -42,9 +41,8 @@ export function serialize(path) {
     return;
 }
 
-export function unserialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.open("neighbor_index");
+export function unserialize(handle) {
+    let ghandle = handle.open("neighbor_index");
 
     {
         let phandle = ghandle.open("parameters");

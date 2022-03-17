@@ -81,9 +81,8 @@ export function results() {
     return { "var_exp": var_exp };
 }
 
-export function serialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("pca");
+export function serialize(handle) {
+    let ghandle = handle.createGroup("pca");
 
     {
         let phandle = ghandle.createGroup("parameters"); 
@@ -102,9 +101,8 @@ export function serialize(path) {
     }
 }
  
-export function unserialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.open("pca");
+export function unserialize(handle) {
+    let ghandle = handle.open("pca");
 
     {
         let phandle = ghandle.open("parameters"); 

@@ -32,9 +32,8 @@ export function results() {
     return { "clusters": clusters.slice() };
 }
 
-export function serialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("choose_clustering");
+export function serialize(handle) {
+    let ghandle = handle.createGroup("choose_clustering");
 
     {
         let phandle = ghandle.createGroup("parameters");
@@ -46,9 +45,8 @@ export function serialize(path) {
     return;
 }
 
-export function unserialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.open("choose_clustering");
+export function unserialize(handle) {
+    let ghandle = handle.open("choose_clustering");
 
     {
         let phandle = ghandle.open("parameters");

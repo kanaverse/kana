@@ -139,28 +139,31 @@ function runAllSteps(state) {
  
 async function serializeAllSteps(saver, embedded) {
     const path = "temp.h5";
-    scran.createNewHDF5File(path);
-    let output;
 
+    let output;
     try {
-        await inputs.serialize(path, saver, embedded);
-        qc.serialize(path);
-        normalization.serialize(path);
-        variance.serialize(path);
-        pca.serialize(path);
-        index.serialize(path);
-        await tsne.serialize(path);
-        await umap.serialize(path);
-        kmeans_cluster.serialize(path);
-        snn_cluster.serialize(path);
-        cluster_choice.serialize(path);
-        cluster_markers.serialize(path);
-        await label_cells.serialize(path);
-        custom_markers.serialize(path);
+        let handle = scran.createNewHDF5File(path);
+
+        await inputs.serialize(handle, saver, embedded);
+        qc.serialize(handle);
+        normalization.serialize(handle);
+        variance.serialize(handle);
+        pca.serialize(handle);
+        index.serialize(handle);
+        await tsne.serialize(handle);
+        await umap.serialize(handle);
+        kmeans_cluster.serialize(handle);
+        snn_cluster.serialize(handle);
+        cluster_choice.serialize(handle);
+        cluster_markers.serialize(handle);
+        await label_cells.serialize(handle);
+        custom_markers.serialize(handle);
 
         output = scran.readFile(path);
     } finally {
-        scran.removeFile(path);
+        if (scran.fileExists(path)) {
+            scran.removeFile(path);
+        }
     }
 
     return output;
@@ -179,8 +182,9 @@ async function unserializeAllSteps(path, loader, embedded) {
     }
 
     let response = { "params": {} };
+    let handle = new scran.H5File(path);
 
-    let permuter = await inputs.unserialize(path, loader, embedded);
+    let permuter = await inputs.unserialize(handle, loader, embedded);
     response["files"] = {
         "format": "kana",
         "files": []
@@ -188,7 +192,7 @@ async function unserializeAllSteps(path, loader, embedded) {
     postSuccess(inputs, step_inputs, "Reloaded count matrix");
 
     {
-        let params = qc.unserialize(path);
+        let params = qc.unserialize(handle);
         postSuccess(qc, step_qc, "Reloaded QC metrics");
         response["qc"] = {
             "qc-usemitodefault": params.use_mito_default,
@@ -197,11 +201,11 @@ async function unserializeAllSteps(path, loader, embedded) {
         };
     }
 
-    normalization.unserialize(path);
+    normalization.unserialize(handle);
     postSuccess(normalization, step_norm, "Reloaded log-normalization");
 
     {
-        let params = variance.unserialize(path, permuter);
+        let params = variance.unserialize(handle, permuter);
         postSuccess(variance, step_feat, "Reloaded variance modelling statistics");
         response["fSelection"] = {
             "fsel-span": params.span
@@ -209,7 +213,7 @@ async function unserializeAllSteps(path, loader, embedded) {
     }
 
     {
-        let params = pca.unserialize(path);
+        let params = pca.unserialize(handle);
         postSuccess(pca, step_pca, "Reloaded principal components");
         response["pca"] = {
             "pca-hvg": params.num_hvgs,
@@ -218,7 +222,7 @@ async function unserializeAllSteps(path, loader, embedded) {
     }
 
     {
-        let params = index.unserialize(path);
+        let params = index.unserialize(handle);
         postSuccess(index, step_neighbors, "Reloaded neighbor search index");
         response["cluster"] = {
             "clus-approx": params.approximate
@@ -226,7 +230,7 @@ async function unserializeAllSteps(path, loader, embedded) {
     }
 
     {
-        let params = tsne.unserialize(path);
+        let params = tsne.unserialize(handle);
         postSuccessAsync(tsne, step_tsne, "t-SNE reloaded");
         response["tsne"] = {
             "tsne-perp": params.perplexity,
@@ -236,7 +240,7 @@ async function unserializeAllSteps(path, loader, embedded) {
     }
 
     {
-        let params = umap.unserialize(path);
+        let params = umap.unserialize(handle);
         postSuccessAsync(umap, step_umap, "UMAP reloaded");
         response["umap"] = {
             "umap-epochs": params.num_epochs,
@@ -247,13 +251,13 @@ async function unserializeAllSteps(path, loader, embedded) {
     }
 
     {
-        let params = kmeans_cluster.unserialize(path);
+        let params = kmeans_cluster.unserialize(handle);
         postSuccess(kmeans_cluster, step_kmeans, "K-means clustering reloaded");
         response["cluster"]["kmeans-k"] = params.k; // 'cluster' already added above.
     }
 
     {
-        let params = snn_cluster.unserialize(path);
+        let params = snn_cluster.unserialize(handle);
         postSuccess(snn_cluster, step_snn, "SNN graph clustering reloaded");
         response["cluster"]["clus-k"] = params.k;
         response["cluster"]["clus-scheme"] = params.scheme;
@@ -261,16 +265,16 @@ async function unserializeAllSteps(path, loader, embedded) {
     }
 
     {
-        let params = cluster_choice.unserialize(path);
+        let params = cluster_choice.unserialize(handle);
         postSuccess(cluster_choice, step_choice, "Clustering of interest chosen");
         response["cluster"]["clus-method"] = params.method;
     }
 
-    cluster_markers.unserialize(path, permuter);
+    cluster_markers.unserialize(handle, permuter);
     postSuccess(cluster_markers, step_markers, "Reloaded per-cluster markers");
 
     {
-        let params = label_cells.unserialize(path);    
+        let params = label_cells.unserialize(handle);    
         postSuccessAsync(label_cells, step_labels, "Reloaded cell type labels");
         response["annotateCells"] = {
             "annotateCells-human_references": params.human_references,
@@ -279,7 +283,7 @@ async function unserializeAllSteps(path, loader, embedded) {
     }
 
     {
-        let params = custom_markers.unserialize(path, permuter);
+        let params = custom_markers.unserialize(handle, permuter);
         postSuccess(custom_markers, step_custom, "Pruning of custom markers finished");
         response["custom-selections"] = params;
     }

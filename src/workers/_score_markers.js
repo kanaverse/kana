@@ -34,9 +34,8 @@ export function results() {
     return {};
 }
 
-export function serialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("marker_detection");
+export function serialize(handle) {
+    let ghandle = handle.createGroup("marker_detection");
     ghandle.createGroup("parameters");
 
     {
@@ -56,9 +55,8 @@ export function serialize(path) {
     }
 }
 
-export function unserialize(path, permuter) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.open("marker_detection");
+export function unserialize(handle, permuter) {
+    let ghandle = handle.open("marker_detection");
 
     // No parameters to unserialize.
 

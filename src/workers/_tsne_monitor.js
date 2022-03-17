@@ -81,9 +81,8 @@ export function results() {
     return getResults(true);
 }
 
-export async function serialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("tsne");
+export async function serialize(handle) {
+    let ghandle = handle.createGroup("tsne");
 
     {
         let phandle = ghandle.createGroup("parameters");
@@ -102,9 +101,8 @@ export async function serialize(path) {
     return;
 }
 
-export function unserialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.open("tsne");
+export function unserialize(handle) {
+    let ghandle = handle.open("tsne");
 
     {
         let phandle = ghandle.open("parameters");

@@ -82,9 +82,8 @@ export function results() {
     return getResults(true);
 }
 
-export async function serialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("umap");
+export async function serialize(handle) {
+    let ghandle = handle.createGroup("umap");
 
     {
         let phandle = ghandle.createGroup("parameters");
@@ -104,9 +103,8 @@ export async function serialize(path) {
     return;
 }
 
-export function unserialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.open("umap");
+export function unserialize(handle) {
+    let ghandle = handle.open("umap");
 
     {
         let phandle = ghandle.open("parameters");

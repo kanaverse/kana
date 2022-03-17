@@ -355,9 +355,8 @@ export function results() {
     return output;
 }
 
-export async function serialize(path, saver, embedded) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("inputs");
+export async function serialize(handle, saver, embedded) {
+    let ghandle = handle.createGroup("inputs");
 
     {
         let phandle = ghandle.createGroup("parameters"); 
@@ -395,9 +394,8 @@ export async function serialize(path, saver, embedded) {
     return;
 }
 
-export async function unserialize(path, loader, embedded) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.open("inputs");
+export async function unserialize(handle, loader, embedded) {
+    let ghandle = handle.open("inputs");
     let phandle = ghandle.open("parameters"); 
 
     // Extracting the files.

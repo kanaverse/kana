@@ -296,9 +296,8 @@ export async function results() {
     }
 }
 
-export async function serialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("cell_labelling");
+export async function serialize(handle) {
+    let ghandle = handle.createGroup("cell_labelling");
     
     {
         let phandle = ghandle.createGroup("parameters");
@@ -323,9 +322,8 @@ export async function serialize(path) {
     return;
 }
 
-export function unserialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.open("cell_labelling");
+export function unserialize(handle) {
+    let ghandle = handle.open("cell_labelling");
     
     {
         let phandle = ghandle.open("parameters");

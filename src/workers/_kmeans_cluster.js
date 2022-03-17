@@ -57,9 +57,8 @@ export function results() {
     return {};
 }
 
-export function serialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("kmeans_cluster");
+export function serialize(handle) {
+    let ghandle = handle.createGroup("kmeans_cluster");
 
     {
         let phandle = ghandle.createGroup("parameters");
@@ -77,9 +76,8 @@ export function serialize(path) {
     return;
 }
 
-export function unserialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.open("kmeans_cluster");
+export function unserialize(handle) {
+    let ghandle = handle.open("kmeans_cluster");
 
     {
         let phandle = ghandle.open("parameters");

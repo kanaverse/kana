@@ -175,9 +175,8 @@ export function results() {
  ******** Saving/loading **********
  **********************************/
 
-export function serialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("quality_control");
+export function serialize(handle) {
+    let ghandle = handle.createGroup("quality_control");
 
     {
         let phandle = ghandle.createGroup("parameters"); 
@@ -211,9 +210,8 @@ export function serialize(path) {
     }
 }
 
-export function unserialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.open("quality_control");
+export function unserialize(handle) {
+    let ghandle = handle.open("quality_control");
 
     {
         let phandle = ghandle.open("parameters"); 

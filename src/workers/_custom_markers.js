@@ -36,9 +36,8 @@ export function results() {
     return {};
 }
 
-export function serialize(path) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.createGroup("custom_selections");
+export function serialize(handle) {
+    let ghandle = handle.createGroup("custom_selections");
 
     {
         let phandle = ghandle.createGroup("parameters");
@@ -57,9 +56,8 @@ export function serialize(path) {
     }
 }
 
-export function unserialize(path, permuter) {
-    let fhandle = new scran.H5File(path);
-    let ghandle = fhandle.open("custom_selections");
+export function unserialize(handle, permuter) {
+    let ghandle = handle.open("custom_selections");
 
     {
         let phandle = ghandle.open("parameters");
