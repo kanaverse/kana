@@ -367,11 +367,12 @@ export function convertFromVersion0(state, newfile) {
 
             for (const i of [ "lfc", "delta_detected", "auc", "cohen" ]) {
                 let rankings = current[i];
-                let rhandle = ihandle.createGroup(i == "delta_detected" ? "delta-detected" : i);
+                let rhandle = ihandle.createGroup(i);
 
                 for (const j of [ "min", "mean", "min-rank" ]) {
                     let y = rankings[j];
-                    let dhandle = rhandle.createDataSet(j, "Float64", [y.length]);
+                    let name = (j == "min-rank" ? "min_rank" : j);
+                    let dhandle = rhandle.createDataSet(name, "Float64", [y.length]);
                     dhandle.write(y);
                 }
             }
@@ -404,8 +405,7 @@ export function convertFromVersion0(state, newfile) {
 
             for (const i of [ "lfc", "delta_detected", "auc", "cohen" ]) {
                 let y = current[i]["mean"];
-                let name = (i == "delta_detected" ? "delta-detected" : i);
-                let dhandle = ihandle.createDataSet(name, "Float64", [y.length]);
+                let dhandle = ihandle.createDataSet(i, "Float64", [y.length]);
                 dhandle.write(y);
             }
         }

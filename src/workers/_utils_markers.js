@@ -1,6 +1,6 @@
 import * as scran from "scran.js";
 
-const summaries = { "min": 0, "mean": 1, "min-rank": 4 };
+const summaries = { "min": 0, "mean": 1, "min_rank": 4 };
 
 export function serializeGroupStats(handle, obj, group, { no_summaries = false } = {}) {
     let ihandle = handle.createGroup(String(group));
@@ -17,9 +17,9 @@ export function serializeGroupStats(handle, obj, group, { no_summaries = false }
         dhandle.write(y);
     }
 
-    for (const i of [ "lfc", "delta-detected", "auc", "cohen" ]) {
+    for (const i of [ "lfc", "delta_detected", "auc", "cohen" ]) {
         let i0 = i;
-        if (i == "delta-detected") {
+        if (i == "delta_detected") {
             i0 = "deltaDetected";
         }
 
@@ -51,7 +51,7 @@ export function unserializeGroupStats(handle, permuter, { no_summaries = false }
         permuter(output[x]);
     }
 
-    for (const i of [ "lfc", "delta-detected", "auc", "cohen" ]) {
+    for (const i of [ "lfc", "delta_detected", "auc", "cohen" ]) {
         if (no_summaries) {
             output[i] = handle.open(i, { load: true }).values;
         } else {
@@ -92,7 +92,7 @@ export function fetchGroupResults(results, rank_type, group) {
                 summary = "min";
             } else if (rank_type.match(/-min-rank$/)) {
                 increasing = true;
-                summary = "min-rank";
+                summary = "min_rank";
             }
       
             let effect;
@@ -103,7 +103,7 @@ export function fetchGroupResults(results, rank_type, group) {
             } else if (rank_type.match(/^lfc-/)) {
                 effect = "lfc";
             } else if (rank_type.match(/^delta-d-/)) {
-                effect = "delta-detected";
+                effect = "delta_detected";
             } else {
                 throw "unknown rank type '" + rank_type + "'";
             }
@@ -158,7 +158,7 @@ export function fetchGroupResults(results, rank_type, group) {
         stat_mean = reorder(current.means);
         stat_detected = reorder(current.detected);
         stat_lfc = reorder(current.lfc["mean"]);
-        stat_delta_d = reorder(current["delta-detected"]["mean"]);
+        stat_delta_d = reorder(current.delta_detected["mean"]);
     } else {
         stat_detected = reorder(results.detected(group, { copy: false }));
         stat_mean = reorder(results.means(group, { copy: false }));
