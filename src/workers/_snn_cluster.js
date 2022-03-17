@@ -109,8 +109,10 @@ export function serialize(handle) {
 
     {
         let rhandle = ghandle.createGroup("results");
-        let clusters = fetchClustersAsWasmArray();
-        rhandle.writeDataSet("clusters", "Int32", [clusters.length], clusters);
+        if (!invalid) {
+            let clusters = fetchClustersAsWasmArray();
+            rhandle.writeDataSet("clusters", "Int32", [clusters.length], clusters);
+        }
     }
 
     return;

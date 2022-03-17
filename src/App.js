@@ -434,7 +434,7 @@ const App = () => {
       setIndexedDBState(false);
     } else if (payload.type === "loadedParameters") {
       const { resp } = payload;
-      setLoadParams(resp.params);
+      setLoadParams(resp);
 
       setTimeout(() => {
         setInitLoadState(false);

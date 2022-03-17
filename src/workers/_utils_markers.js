@@ -36,7 +36,7 @@ export function serializeGroupStats(handle, obj, group, { no_summaries = false }
             ihandle.writeDataSet(i, "Float64", [y.length], y);
         } else {
             let curhandle = ihandle.createGroup(i);
-            for (const [j, k] of Object.entries(cur_summaries)) {
+            for (const [j, k] of Object.entries(summaries)) {
                 let y = extractor(j, k);
                 curhandle.writeDataSet(j, "Float64", [y.length], y);
             }

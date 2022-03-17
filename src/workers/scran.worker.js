@@ -181,7 +181,7 @@ async function unserializeAllSteps(path, loader, embedded) {
             });
     }
 
-    let response = { "params": {} };
+    let response = {};
     let handle = new scran.H5File(path);
 
     let permuter = await inputs.unserialize(handle, loader, embedded);
@@ -288,7 +288,7 @@ async function unserializeAllSteps(path, loader, embedded) {
         response["custom-selections"] = params;
     }
 
-    return;
+    return response;
 }
 
 /***************************************/
