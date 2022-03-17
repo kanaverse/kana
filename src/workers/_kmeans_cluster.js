@@ -77,26 +77,30 @@ export function serialize(handle) {
 }
 
 export function unserialize(handle) {
-    let ghandle = handle.open("kmeans_cluster");
+    invalid = true;
+    parameters = {
+        k: 10
+    };
+    reloaded = {};
 
-    {
-        let phandle = ghandle.open("parameters");
-        parameters = {
-            k: phandle.open("k", { load: true }).values[0]
-        };
-    }
+    // Protect against old analysis states that don't have kmeans_cluster.
+    if ("kmeans_cluster" in handle.children) {
+        let ghandle = handle.open("kmeans_cluster");
 
-    {
-        let rhandle = ghandle.open("results");
+        {
+            let phandle = ghandle.open("parameters");
+            parameters.k = phandle.open("k", { load: true }).values[0];
+        }
 
-        if ("clusters" in rhandle.children) {
-            let clusters = rhandle.open("clusters", { load: true }).values;
-            reloaded = {};
-            let buf = utils.allocateCachedArray(clusters.length, "Int32Array", reloaded, "clusters");
-            buf.set(clusters);
-            invalid = false;
-        } else {
-            invalid = true;
+        {
+            let rhandle = ghandle.open("results");
+
+            if ("clusters" in rhandle.children) {
+                let clusters = rhandle.open("clusters", { load: true }).values;
+                let buf = utils.allocateCachedArray(clusters.length, "Int32Array", reloaded, "clusters");
+                buf.set(clusters);
+                invalid = false;
+            }
         }
     }
 

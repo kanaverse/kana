@@ -323,27 +323,34 @@ export async function serialize(handle) {
 }
 
 export function unserialize(handle) {
-    let ghandle = handle.open("cell_labelling");
-    
-    {
-        let phandle = ghandle.open("parameters");
-        parameters =  {
-            mouse_references: phandle.open("mouse_references", { load: true }).values,
-            human_references: phandle.open("human_references", { load: true }).values
-        };
-    }
+    parameters =  {
+        mouse_references: [],
+        human_references: []
+    };
 
-    {
-        let rhandle = ghandle.open("results");
+    reloaded = { per_reference: {} };
 
-        let perhandle = rhandle.open("per_reference");
-        reloaded = { per_reference: {} };
-        for (const key of Object.keys(perhandle.children)) {
-            reloaded.per_reference[key] = perhandle.open(key, { load: true }).values;
+    // Protect against old analysis states that don't have cell_labelling.
+    if ("cell_labelling" in handle.children) {
+        let ghandle = handle.open("cell_labelling");
+        
+        {
+            let phandle = ghandle.open("parameters");
+            parameters.mouse_references = phandle.open("mouse_references", { load: true }).values;
+            parameters.human_references = phandle.open("human_references", { load: true }).values;
         }
 
-        if ("integrated" in perhandle.children) {
-            reloaded.integrated = rhandle.open("integrated", { load: true }).values;
+        {
+            let rhandle = ghandle.open("results");
+
+            let perhandle = rhandle.open("per_reference");
+            for (const key of Object.keys(perhandle.children)) {
+                reloaded.per_reference[key] = perhandle.open(key, { load: true }).values;
+            }
+
+            if ("integrated" in perhandle.children) {
+                reloaded.integrated = rhandle.open("integrated", { load: true }).values;
+            }
         }
     }
 

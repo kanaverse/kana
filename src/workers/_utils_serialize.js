@@ -1,7 +1,8 @@
 import * as hashwasm from "hash-wasm";
 import * as kana_db from "./KanaDBHandler.js";
-import * as convert_v0 from "./legacy/from_v0.js";
+import * as from_v0 from "./legacy/from_v0.js";
 import * as scran from "scran.js";
+import * as pako from "pako";
 
 // Must be integers!
 const FORMAT_EMBEDDED_FILES = 0;
@@ -136,7 +137,9 @@ export async function load(buffer, state_path) {
     let state = new Uint8Array(buffer, offset, state_len);
     offset += state_len;
     if (version < 1000000) {
-        from_v0.convertFromVersion0(state, state_path);
+        let contents = pako.ungzip(state, { "to": "string" });
+        let values = JSON.parse(contents);
+        from_v0.convertFromVersion0(values, state_path);
     } else {
         scran.writeFile(state_path, state);
     }

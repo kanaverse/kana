@@ -198,13 +198,13 @@ export function convertFromVersion0(state, newfile) {
         let contents = recoverTypedArrays(state.pca.contents);
 
         let ve = contents.var_exp;
-        let vhandle = phandle.createDataSet("var_exp", "Float64", [ve.length]);
+        let vhandle = chandle.createDataSet("var_exp", "Float64", [ve.length]);
         vhandle.write(ve);
 
         // Save as a matrix.
         let npcs = ve.length;
         let ncells = contents.pcs.length / npcs;
-        let pchandle = phandle.createDataSet("pcs", "Float64", [ncells, npcs]); // transposed in HDF5.
+        let pchandle = chandle.createDataSet("pcs", "Float64", [ncells, npcs]); // transposed in HDF5.
         pchandle.write(contents.pcs);
     }
 
@@ -365,9 +365,9 @@ export function convertFromVersion0(state, newfile) {
                 dhandle.write(y);
             }
 
-            for (const i of [ "lfc", "delta-detected", "auc", "cohen" ]) {
+            for (const i of [ "lfc", "delta_detected", "auc", "cohen" ]) {
                 let rankings = current[i];
-                let rhandle = ihandle.createGroup(i);
+                let rhandle = ihandle.createGroup(i == "delta_detected" ? "delta-detected" : i);
 
                 for (const j of [ "min", "mean", "min-rank" ]) {
                     let y = rankings[j];
@@ -404,7 +404,8 @@ export function convertFromVersion0(state, newfile) {
 
             for (const i of [ "lfc", "delta_detected", "auc", "cohen" ]) {
                 let y = current[i]["mean"];
-                let dhandle = ihandle.createDataSet(i, "Float64", [y.length]);
+                let name = (i == "delta_detected" ? "delta-detected" : i);
+                let dhandle = ihandle.createDataSet(name, "Float64", [y.length]);
                 dhandle.write(y);
             }
         }

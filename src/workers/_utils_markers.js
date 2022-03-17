@@ -2,7 +2,7 @@ import * as scran from "scran.js";
 
 const summaries = { "min": 0, "mean": 1, "min-rank": 4 };
 
-export function serializeGroupStats(handle, obj, group) {
+export function serializeGroupStats(handle, obj, group, { no_summaries = false } = {}) {
     let ihandle = handle.createGroup(String(group));
     let not_reloaded = (obj instanceof scran.ScoreMarkersResults);
 
@@ -18,26 +18,33 @@ export function serializeGroupStats(handle, obj, group) {
     }
 
     for (const i of [ "lfc", "delta-detected", "auc", "cohen" ]) {
-        let curhandle = ihandle.createGroup(i);
         let i0 = i;
         if (i == "delta-detected") {
             i0 = "deltaDetected";
         }
 
-        for (const [j, k] of Object.entries(summaries)) {
-            let y;
+        let extractor = (summary, index) => {
             if (not_reloaded) {
-                y = obj[i0](group, { summary: k });
+                return obj[i0](group, { summary: index, copy: "view" });
             } else {
-                y = obj[group][i][j];
+                return obj[group][i][summary];
             }
-            let dhandle = curhandle.createDataSet(j, "Float64", [y.length]);
-            dhandle.write(y);
+        };
+
+        if (no_summaries) {
+            let y = extractor("mean", summaries["mean"]);
+            ihandle.writeDataSet(i, "Float64", [y.length], y);
+        } else {
+            let curhandle = ihandle.createGroup(i);
+            for (const [j, k] of Object.entries(cur_summaries)) {
+                let y = extractor(j, k);
+                curhandle.writeDataSet(j, "Float64", [y.length], y);
+            }
         }
     }
 }
 
-export function unserializeGroupStats(handle, permuter) {
+export function unserializeGroupStats(handle, permuter, { no_summaries = false } = {}) {
     let output = {};
     for (const x of [ "means", "detected" ]) {
         output[x] = handle.open(x, { load: true }).values;
@@ -45,13 +52,17 @@ export function unserializeGroupStats(handle, permuter) {
     }
 
     for (const i of [ "lfc", "delta-detected", "auc", "cohen" ]) {
-        let rhandle = handle.open(i);
-        let current = {};
-        for (const j of Object.keys(summaries)) {
-            current[j] = rhandle.open(j, { load: true }).values;
-            permuter(current[j]);
+        if (no_summaries) {
+            output[i] = handle.open(i, { load: true }).values;
+        } else {
+            let rhandle = handle.open(i);
+            let current = {};
+            for (const j of Object.keys(summaries)) {
+                current[j] = rhandle.open(j, { load: true }).values;
+                permuter(current[j]);
+            }
+            output[i] = current;
         }
-        output[i] = current;
     }
 
     return output;

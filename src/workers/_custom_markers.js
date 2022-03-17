@@ -51,7 +51,7 @@ export function serialize(handle) {
         let chandle = ghandle.createGroup("results");
         let rhandle = chandle.createGroup("markers");
         for (const [key, val] of Object.entries(cache.results)) {
-            markers.serializeGroupStats(rhandle, val, 1);
+            markers.serializeGroupStats(rhandle, val, 1, { no_summaries: true });
         }
     }
 }
@@ -73,7 +73,7 @@ export function unserialize(handle, permuter) {
         let rhandle = chandle.open("markers");
         reloaded = { clusters: {} };
         for (const sel of Object.keys(rhandle.children)) {
-            clusters[sel] = markers.unserializeGroupStats(rhandle.open(sel), permuter);
+            reloaded.clusters[sel] = markers.unserializeGroupStats(rhandle.open(sel), permuter, { no_summaries: true });
         }
     }
 
