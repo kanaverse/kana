@@ -116,7 +116,7 @@ function loadMatrixMarket(args) {
     // First pass computes an abbreviated version to quickly check for changes.
     // Second pass does the actual readArrayBuffer.
     for (var it = 0; it < 2; it++) {
-        var formatted = { "type": "MatrixMarket", "files": [] };
+        var formatted = { "format": "MatrixMarket", "files": [] };
 
         var bufferFun;
         if (it == 0) {
@@ -282,7 +282,7 @@ function loadHDF5(args, format) {
     // First pass computes an abbreviated version to quickly check for changes.
     // Second pass does the actual readArrayBuffer.
     for (var it = 0; it < 2; it++) {
-        var formatted = { "type": format, "files": [] };
+        var formatted = { "format": format, "files": [] };
 
         var bufferFun;
         if (it == 0) {
@@ -360,8 +360,7 @@ export async function serialize(handle, saver, embedded) {
 
     {
         let phandle = ghandle.createGroup("parameters"); 
-        console.log(parameters.type);
-        phandle.writeDataSet("format", "String", [], parameters.type);
+        phandle.writeDataSet("format", "String", [], parameters.format);
         let fihandle = phandle.createGroup("files");
 
         let sofar = 0;
