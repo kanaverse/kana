@@ -291,7 +291,6 @@ export async function results() {
             output.integrated = await cache.integrated_results;
         }
 
-        console.log(output);
         return output;
     }
 }
@@ -348,7 +347,7 @@ export function unserialize(handle) {
                 reloaded.per_reference[key] = perhandle.open(key, { load: true }).values;
             }
 
-            if ("integrated" in perhandle.children) {
+            if ("integrated" in rhandle.children) {
                 reloaded.integrated = rhandle.open("integrated", { load: true }).values;
             }
         }
