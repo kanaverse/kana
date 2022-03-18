@@ -87,17 +87,17 @@ export async function serialize(handle) {
 
     {
         let phandle = ghandle.createGroup("parameters");
-        phandle.createDataSet("num_neighbors", "Int32", [], parameters.num_neighbors);
+        phandle.writeDataSet("num_neighbors", "Int32", [], parameters.num_neighbors);
         phandle.writeDataSet("num_epochs", "Int32", [], parameters.num_epochs);
         phandle.writeDataSet("min_dist", "Float64", [], parameters.min_dist);
-        phandle.createDataSet("animate", "Uint8", [], Number(parameters.animate));
+        phandle.writeDataSet("animate", "Uint8", [], Number(parameters.animate));
     }
 
     {
         let res = await getResults(false);
         let rhandle = ghandle.createGroup("results");
-        rhandle.writeDataSet("x", "Float64", [res.x.length], res.x);
-        rhandle.writeDataSet("y", "Float64", [res.y.length], res.y);
+        rhandle.writeDataSet("x", "Float64", null, res.x);
+        rhandle.writeDataSet("y", "Float64", null, res.y);
     }
 
     return;

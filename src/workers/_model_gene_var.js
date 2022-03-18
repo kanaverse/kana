@@ -68,7 +68,7 @@ export function serialize(handle) {
         let rhandle = ghandle.createGroup("results"); 
         for (const x of [ "means", "vars", "fitted", "resids" ]) {
             let y = res[x];
-            rhandle.writeDataSet(x, "Float64", [y.length], y);
+            rhandle.writeDataSet(x, "Float64", null, y);
         }
     }
 }

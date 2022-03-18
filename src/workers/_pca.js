@@ -94,10 +94,10 @@ export function serialize(handle) {
         let rhandle = ghandle.createGroup("results");
 
         let ve = results().var_exp;
-        rhandle.writeDataSet("var_exp", "Float64", [ve.length], ve);
+        rhandle.writeDataSet("var_exp", "Float64", null, ve);
 
-        let pcs = fetchPCsAsWasmArray();
-        rhandle.writeDataSet("pcs", "Float64", [pcs.length], pcs);
+        let pcs = fetchPCs();
+        rhandle.writeDataSet("pcs", "Float64", [pcs.num_obs, pcs.num_pcs], pcs.pcs); // remember, it's transposed.
     }
 }
  

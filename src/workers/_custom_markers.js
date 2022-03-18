@@ -43,7 +43,7 @@ export function serialize(handle) {
         let phandle = ghandle.createGroup("parameters");
         let rhandle = phandle.createGroup("selections");
         for (const [key, val] of Object.entries(parameters.selections)) {
-            rhandle.writeDataSet(String(key), "Uint8", [val.length], val);
+            rhandle.writeDataSet(String(key), "Uint8", null, val);
         }
     }
 

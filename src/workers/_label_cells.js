@@ -301,8 +301,8 @@ export async function serialize(handle) {
     
     {
         let phandle = ghandle.createGroup("parameters");
-        phandle.writeDataSet("mouse_references", "String", [parameters.mouse_references.length], parameters.mouse_references);
-        phandle.writeDataSet("human_references", "String", [parameters.human_references.length], parameters.human_references);
+        phandle.writeDataSet("mouse_references", "String", null, parameters.mouse_references);
+        phandle.writeDataSet("human_references", "String", null, parameters.human_references);
     }
 
     {
@@ -311,11 +311,11 @@ export async function serialize(handle) {
 
         let perhandle = rhandle.createGroup("per_reference");
         for (const [key, val] of Object.entries(res.per_reference)) {
-            perhandle.writeDataSet(key, "String", [val.length], val);
+            perhandle.writeDataSet(key, "String", null, val);
         }
 
         if ("integrated" in res) {
-            rhandle.writeDataSet("integrated", "String", [res.integrated.length], res.integrated);
+            rhandle.writeDataSet("integrated", "String", null, res.integrated);
         }
     }
 

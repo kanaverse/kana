@@ -387,8 +387,8 @@ export async function serialize(handle, saver, embedded) {
         ];
 
         let rhandle = ghandle.createGroup("results"); 
-        rhandle.writeDataSet("dimensions", "Int32", [2], dims);
-        rhandle.writeDataSet("permutation", "Int32", [perm.length], perm);
+        rhandle.writeDataSet("dimensions", "Int32", null, dims);
+        rhandle.writeDataSet("permutation", "Int32", null, perm);
     }
 
     return;

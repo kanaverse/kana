@@ -191,9 +191,9 @@ export function serialize(handle) {
         {
             let mhandle = rhandle.createGroup("metrics");
             let data = getData(false);
-            mhandle.writeDataSet("sums", "Float64", [data.sums.length], data.sums)
-            mhandle.writeDataSet("detected", "Int32", [data.detected.length], data.detected);
-            mhandle.writeDataSet("proportion", "Float64", [data.proportion.length], data.proportion);
+            mhandle.writeDataSet("sums", "Float64", null, data.sums)
+            mhandle.writeDataSet("detected", "Int32", null, data.detected);
+            mhandle.writeDataSet("proportion", "Float64", null, data.proportion);
         }
 
         {
@@ -201,12 +201,12 @@ export function serialize(handle) {
             let thresholds = getThresholds(false);
             for (const x of [ "sums", "detected", "proportion" ]) {
                 let current = thresholds[x];
-                thandle.writeDataSet(x, "Float64", [current.length], current);
+                thandle.writeDataSet(x, "Float64", null, current);
             }
         }
 
         let disc = fetchDiscards();
-        rhandle.writeDataSet("discards", "Uint8", [disc.length], disc);
+        rhandle.writeDataSet("discards", "Uint8", null, disc);
     }
 }
 

@@ -13,8 +13,7 @@ export function serializeGroupStats(handle, obj, group, { no_summaries = false }
         } else {
             y = obj[group][x];
         }
-        let dhandle = ihandle.createDataSet(x, "Float64", [y.length]);
-        dhandle.write(y);
+        ihandle.writeDataSet(x, "Float64", null, y);
     }
 
     for (const i of [ "lfc", "delta_detected", "auc", "cohen" ]) {
@@ -33,12 +32,12 @@ export function serializeGroupStats(handle, obj, group, { no_summaries = false }
 
         if (no_summaries) {
             let y = extractor("mean", summaries["mean"]);
-            ihandle.writeDataSet(i, "Float64", [y.length], y);
+            ihandle.writeDataSet(i, "Float64", null, y);
         } else {
             let curhandle = ihandle.createGroup(i);
             for (const [j, k] of Object.entries(summaries)) {
                 let y = extractor(j, k);
-                curhandle.writeDataSet(j, "Float64", [y.length], y);
+                curhandle.writeDataSet(j, "Float64", null, y);
             }
         }
     }
