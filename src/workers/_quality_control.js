@@ -5,7 +5,6 @@ import { mito } from "./mito.js";
 
 var cache = {};
 var parameters = {};
-var reloaded = null;
 
 export var changed = false;
 
@@ -14,7 +13,6 @@ export var changed = false;
  ***************************/
 
 function computeMetrics(use_mito_default, mito_prefix) {
-    utils.freeCache(cache.metrics);
     var mat = inputs.fetchCountMatrix();
 
     // TODO: add more choices.
@@ -43,18 +41,26 @@ function computeMetrics(use_mito_default, mito_prefix) {
         }
     }
 
-    var mat = inputs.fetchCountMatrix();
+    utils.freeCache(cache.metrics);
     cache.metrics = scran.computePerCellQCMetrics(mat, subsets);
     return;
 }
 
+function computeFilters(nmads) {
+    utils.freeCache(cache.filters);
+    cache.filters = scran.computePerCellQCFilters(cache.metrics, { numberOfMADs: nmads });
+    return;
+}
+
 function applyFilters() {
+    var mat = inputs.fetchCountMatrix();
+    var disc = fetchDiscards();
+    utils.freeCache(cache.matrix);
+    cache.matrix = scran.filterCells(mat, disc);
     return;
 }
 
 export function compute(use_mito_default, mito_prefix, nmads) {
-    changed = false;
-
     let run_metrics = (inputs.changed || use_mito_default !== parameters.use_mito_default || mito_prefix !== parameters.mito_prefix);
     let run_filters = (run_metrics || nmads !== parameters.nmads);
     let run_apply = (run_filters);
@@ -81,26 +87,15 @@ export function compute(use_mito_default, mito_prefix, nmads) {
     }
 
     if (run_filters) {
-        utils.freeCache(cache.filters);
-        cache.filters = scran.computePerCellQCFilters(cache.metrics, { numberOfMADs: nmads });
+        computeFilters(nmads);
         parameters.nmads = nmads;
     }
 
     if (run_apply) {
-        var mat = inputs.fetchCountMatrix();
-        var disc = fetchDiscards();
-        utils.freeCache(cache.matrix);
-        cache.matrix = scran.filterCells(mat, disc);
+        applyFilters();
         changed = true;
     }
 
-    if (changed) {
-        // Freeing some memory.
-        if (reloaded !== null) {
-            utils.freeCache(reloaded.discards_buffer);
-            reloaded = null;
-        }
-    }
     return;
 }
 
@@ -109,35 +104,21 @@ export function compute(use_mito_default, mito_prefix, nmads) {
  ***************************/
 
 function getData(copy = true) {
-    var data = {};
-    if (!("metrics" in cache)) {
-        data.sums = reloaded.metrics.sums;
-        data.detected = reloaded.metrics.detected;
-        data.proportion = reloaded.metrics.proportion;
-        utils.copyVectors(data, copy);
-    } else {
-        copy = utils.copyOrView(copy);
-        data.sums = cache.metrics.sums({ copy: copy });
-        data.detected = cache.metrics.detected({ copy: copy });
-        data.proportion = cache.metrics.subsetProportions(0, { copy: copy });
-    }
-    return data;
+    copy = utils.copyOrView(copy);
+    return {
+        sums: cache.metrics.sums({ copy: copy }),
+        detected: cache.metrics.detected({ copy: copy }),
+        proportion: cache.metrics.subsetProportions(0, { copy: copy })
+    };
 }
 
 function getThresholds(copy = true) {
-    var thresholds = {};
-    if (!("filters" in cache)) {
-        thresholds.sums = reloaded.thresholds.sums;
-        thresholds.detected = reloaded.thresholds.detected;
-        thresholds.proportion = reloaded.thresholds.proportion;
-        utils.copyVectors(thresholds, copy);
-    } else {
-        copy = utils.copyOrView(copy);
-        thresholds.sums = cache.filters.thresholdsSums({ copy: copy });
-        thresholds.detected = cache.filters.thresholdsDetected({ copy: copy });
-        thresholds.proportion = cache.filters.thresholdsSubsetProportions(0, { copy: copy });
+    copy = utils.copyOrView(copy);
+    return {
+        sums: cache.filters.thresholdsSums({ copy: copy }),
+        detected: cache.filters.thresholdsDetected({ copy: copy }),
+        proportion: cache.filters.thresholdsSubsetProportions(0, { copy: copy })
     }
-    return thresholds;
 }
 
 export function results() {
@@ -216,6 +197,64 @@ export function serialize(handle) {
     }
 }
 
+class QCMetricsMimic {
+    constructor(sums, detected, proportion) {
+        this.sums_ = sums;
+        this.detected_ = detected;
+        this.proportion_ = proportion;
+    }
+
+    sums({ copy }) {
+        return utils.mimicGetter(this.sums_, copy);
+    }
+
+    detected({ copy }) {
+        return utils.mimicGetter(this.detected_, copy);
+    }
+
+    subsetProportions(index, { copy }) {
+        if (index != 0) {
+            throw "only 'index = 0' is supported for mimics";
+        }
+        return utils.mimicGetter(this.proportion_, copy);
+    }
+
+    free() {}
+}
+
+class QCFiltersMimic {
+    constructor(sums, detected, proportion, discards) {
+        this.sums_ = sums;
+        this.detected_ = detected;
+        this.proportion_ = proportion;
+        this.discards = scran.createUint8WasmArray(discards.length);
+        this.discards.set(discards);
+    }
+
+    thresholdsSums({ copy }) {
+        return utils.mimicGetter(this.sums_, copy);
+    }
+
+    thresholdsDetected({ copy }) {
+        return utils.mimicGetter(this.detected_, copy);
+    }
+
+    thresholdsSubsetProportions(index, { copy }) {
+        if (index != 0) {
+            throw "only 'index = 0' is supported for mimics";
+        }
+        return utils.mimicGetter(this.proportion_, copy);
+    }
+
+    discardOverall({ copy }) {
+        return utils.mimicGetter(this.discards, copy);
+    }
+
+    free() {
+        this.discards.free();
+    }
+}
+
 export function unserialize(handle) {
     let ghandle = handle.open("quality_control");
 
@@ -229,26 +268,27 @@ export function unserialize(handle) {
     }
 
     {
-        reloaded = {};
         let rhandle = ghandle.open("results");
 
-        let metrics = {};
         let mhandle = rhandle.open("metrics");
-        metrics.sums = mhandle.open("sums", { load: true }).values;
-        metrics.detected = mhandle.open("detected", { load: true }).values;
-        metrics.proportion = mhandle.open("proportion", { load: true }).values;
-        reloaded.metrics = metrics;
+        cache.metrics = new QCMetricsMimic(
+            mhandle.open("sums", { load: true }).values,
+            mhandle.open("detected", { load: true }).values,
+            mhandle.open("proportion", { load: true }).values
+        );
 
-        let thresholds = {};
         let thandle = rhandle.open("thresholds");
-        thresholds.sums = thandle.open("sums", { load: true }).values;
-        thresholds.detected = thandle.open("detected", { load: true }).values;
-        thresholds.proportion = thandle.open("proportion", { load: true }).values;
-        reloaded.thresholds = thresholds;
+        let thresholds_sums = thandle.open("sums", { load: true }).values;
+        let thresholds_detected = thandle.open("detected", { load: true }).values;
+        let thresholds_proportion = thandle.open("proportion", { load: true }).values;
 
         let discards = rhandle.open("discards", { load: true }).values; 
-        utils.allocateCachedArray(discards.length, "Uint8Array", reloaded, "discards");
-        reloaded.discards.set(discards);
+        cache.filters = new QCFiltersMimic(
+            thresholds_sums, 
+            thresholds_detected,
+            thresholds_proportion,
+            discards
+        );
     }
 
     return { ...parameters };
@@ -259,25 +299,23 @@ export function unserialize(handle) {
  ***************************/
 
 export function fetchSums({ unsafe = false } = {}) {
-    if (!("metrics" in cache)) {
-        return reloaded.metrics.sums;
-    } else {
-        // Unsafe, because we're returning a raw view into the Wasm heap,
-        // which might be invalidated upon further allocations.
-        return cache.metrics.sums({ copy: !unsafe });
-    }
+    // Unsafe, because we're returning a raw view into the Wasm heap,
+    // which might be invalidated upon further allocations.
+    return cache.metrics.sums({ copy: !unsafe });
 }
 
 export function fetchDiscards() {
-    if (!("filters" in cache)) {
-        return reloaded.discards;
-    } else {
-        return cache.filters.discardOverall({ copy: "view" });
-    }
+    return cache.filters.discardOverall({ copy: "view" });
 }
 
 export function fetchFilteredMatrix() {
     if (!("matrix" in cache)) {
+        if (!("filters" in cache)) {
+            if (!("metrics" in cache)) {
+                computeMetrics(parameters.use_mito_default, parameters.mito_prefix);
+            }
+            computeFilters(parameters.nmads);
+        }
         applyFilters();
     }
     return cache.matrix;

@@ -6,16 +6,11 @@ import * as wa from "wasmarrays.js";
 
 var cache = {};
 var parameters = {};
-var reloaded = null;
 
 export var changed = false;
 
 function fetchPCsAsWasmArray() {
-    if (!("pcs" in cache)) {
-        return reloaded.pcs;
-    } else {
-        return cache.pcs.principalComponents({ copy: "view" });
-    }
+    return cache.pcs.principalComponents({ copy: "view" });
 }
 
 function chooseFeatures(num_hvgs) {
@@ -54,30 +49,16 @@ export function compute(num_hvgs, num_pcs) {
         changed = true;
     }
 
-    if (changed) {
-        // Free some memory.
-        if (reloaded !== null) {
-            utils.freeCache(reloaded.pcs);
-            reloaded = null;
-        }
-    }
     return;
 }
 
 export function results() {
-    var var_exp;
-
-    if (!("pcs" in cache)) {
-        var_exp = reloaded.var_exp.slice();
-    } else {
-        var pca_output = cache.pcs;
-        var_exp = pca_output.varianceExplained();
-        var total_var = pca_output.totalVariance();
-        var_exp.forEach((x, i) => {
-            var_exp[i] = x/total_var;
-        });
-    }
-
+    var pca_output = cache.pcs;
+    var var_exp = pca_output.varianceExplained();
+    var total_var = pca_output.totalVariance();
+    var_exp.forEach((x, i) => {
+        var_exp[i] = x/total_var;
+    });
     return { "var_exp": var_exp };
 }
 
@@ -100,7 +81,31 @@ export function serialize(handle) {
         rhandle.writeDataSet("pcs", "Float64", [pcs.num_obs, pcs.num_pcs], pcs.pcs); // remember, it's transposed.
     }
 }
- 
+
+class PCAMimic { 
+    constructor(pcs, var_exp) {
+        this.var_exp = var_exp;
+        this.pcs = scran.createFloat64WasmArray(pcs.length);
+        this.pcs.set(pcs);
+    }
+
+    principalComponents({ copy }) {
+        return utils.mimicGetter(this.pcs, copy);
+    }
+
+    varianceExplained({ copy = true } = {}) {
+        return utils.mimicGetter(this.var_exp, copy);
+    }
+
+    totalVariance () {
+        return 1;
+    }
+
+    free() {
+        this.pcs.free();
+    }
+}
+
 export function unserialize(handle) {
     let ghandle = handle.open("pca");
 
@@ -114,13 +119,9 @@ export function unserialize(handle) {
 
     {
         let rhandle = ghandle.open("results");
-        reloaded = {
-            var_exp: rhandle.open("var_exp", { load: true }).values,
-        };
-
+        let var_exp = rhandle.open("var_exp", { load: true }).values;
         let pcs = rhandle.open("pcs", { load: true }).values
-        utils.allocateCachedArray(pcs.length, "Float64Array", reloaded, "pcs");
-        reloaded.pcs.set(pcs);        
+        cache.pcs = new PCAMimic(pcs, var_exp);
     }
 
     return { ...parameters };

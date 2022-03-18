@@ -7,7 +7,6 @@ import * as pako from "pako";
 
 var cache = {};
 var parameters = {};
-var reloaded = null;
 
 export var changed = false;
 
@@ -267,32 +266,23 @@ export function compute(human_references, mouse_references) {
         changed = true;
     }
 
-    if (changed) {
-        // Free some memory.
-        reloaded = null;
-    }
-
     return;
 }
 
 export async function results() {
     // No real need to clone these, they're string arrays
     // so they can't be transferred anyway.
-    if (!("results" in cache)) {
-        return reloaded;
-    } else {
-        let perref = {};
-        for (const [key, val] of Object.entries(cache.results)) {
-            perref[key] = await val;
-        }
-
-        let output = { "per_reference": perref };
-        if ("integrated_results" in cache) {
-            output.integrated = await cache.integrated_results;
-        }
-
-        return output;
+    let perref = {};
+    for (const [key, val] of Object.entries(cache.results)) {
+        perref[key] = await val;
     }
+
+    let output = { "per_reference": perref };
+    if ("integrated_results" in cache) {
+        output.integrated = await cache.integrated_results;
+    }
+
+    return output;
 }
 
 export async function serialize(handle) {
@@ -327,8 +317,6 @@ export function unserialize(handle) {
         human_references: []
     };
 
-    reloaded = { per_reference: {} };
-
     // Protect against old analysis states that don't have cell_labelling.
     if ("cell_labelling" in handle.children) {
         let ghandle = handle.open("cell_labelling");
@@ -343,12 +331,13 @@ export function unserialize(handle) {
             let rhandle = ghandle.open("results");
 
             let perhandle = rhandle.open("per_reference");
+            cache.results = {};
             for (const key of Object.keys(perhandle.children)) {
-                reloaded.per_reference[key] = perhandle.open(key, { load: true }).values;
+                cache.results[key] = perhandle.open(key, { load: true }).values;
             }
 
             if ("integrated" in rhandle.children) {
-                reloaded.integrated = rhandle.open("integrated", { load: true }).values;
+                cache.integrated_results = rhandle.open("integrated", { load: true }).values;
             }
         }
     }

@@ -6,7 +6,6 @@ import * as markers from "./_utils_markers.js";
 
 var cache = { "results": {} };
 var parameters = { "selections": {} };
-var reloaded = null;
 
 export var changed = false;
 
@@ -56,6 +55,54 @@ export function serialize(handle) {
     }
 }
 
+class CustomMarkersMimic {
+    constructor(results) {
+        this.results = results;
+    }
+
+    effect_grabber(key, group, summary, copy) {
+        if (group != 1) {
+            throw "only group 1 is supported for custom marker mimics";
+        }
+        if (summary != 1) {
+            throw "only the mean effect size is supported for custom marker mimics";
+        }
+        let chosen = this.results[group][key];
+        return utils.mimicGetter(chosen, copy);
+    }
+
+    lfc(group, { summary, copy }) {
+        return effect_grabber("lfc", group, summary, copy);
+    }
+
+    deltaDetected(group, { summary, copy }) {
+        return effect_grabber("delta_detected", group, summary, copy);
+    }
+
+    cohen(group, { summary, copy }) {
+        return effect_grabber("cohen", group, summary, copy);
+    }
+
+    auc(group, { summary, copy }) {
+        return effect_grabber("auc", group, summary, copy);
+    }
+
+    stat_grabber(key, group, copy) {
+        let chosen = this.results[group][key];
+        return utils.mimicGetter(chosen, copy);
+    }
+
+    means(group, { copy }) {
+        return stat_grabber("means", group, copy);
+    }
+
+    detected(group, { copy }) {
+        return stat_grabber("detected", group, copy);
+    }
+
+    free() {}
+}
+
 export function unserialize(handle, permuter) {
     let ghandle = handle.open("custom_selections");
 
@@ -71,9 +118,10 @@ export function unserialize(handle, permuter) {
     {
         let chandle = ghandle.open("results");
         let rhandle = chandle.open("markers");
-        reloaded = { clusters: {} };
+        cache.results = {};
         for (const sel of Object.keys(rhandle.children)) {
-            reloaded.clusters[sel] = markers.unserializeGroupStats(rhandle.open(sel), permuter, { no_summaries: true });
+            let current = markers.unserializeGroupStats(rhandle.open(sel), permuter, { no_summaries: true });
+            cache.results[sel] = new CustomMarkersMimic(current);
         }
     }
 

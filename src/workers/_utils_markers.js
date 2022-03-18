@@ -1,18 +1,13 @@
 import * as scran from "scran.js";
 
-const summaries = { "min": 0, "mean": 1, "min_rank": 4 };
+export const summaries2int = { "min": 0, "mean": 1, "min_rank": 4 };
+export const int2summaries = { 0: "min", 1: "mean", 4: "min_rank" };
 
 export function serializeGroupStats(handle, obj, group, { no_summaries = false } = {}) {
     let ihandle = handle.createGroup(String(group));
-    let not_reloaded = (obj instanceof scran.ScoreMarkersResults);
 
     for (const x of [ "means", "detected" ]) {
-        let y;
-        if (not_reloaded) {
-            y = obj[x](group, { copy: "view" });
-        } else {
-            y = obj[group][x];
-        }
+        let y= obj[x](group, { copy: "view" });
         ihandle.writeDataSet(x, "Float64", null, y);
     }
 
@@ -22,21 +17,14 @@ export function serializeGroupStats(handle, obj, group, { no_summaries = false }
             i0 = "deltaDetected";
         }
 
-        let extractor = (summary, index) => {
-            if (not_reloaded) {
-                return obj[i0](group, { summary: index, copy: "view" });
-            } else {
-                return obj[group][i][summary];
-            }
-        };
-
+        let extractor = (index) => obj[i0](group, { summary: index, copy: "view" });
         if (no_summaries) {
-            let y = extractor("mean", summaries["mean"]);
+            let y = extractor(summaries2int["mean"]);
             ihandle.writeDataSet(i, "Float64", null, y);
         } else {
             let curhandle = ihandle.createGroup(i);
-            for (const [j, k] of Object.entries(summaries)) {
-                let y = extractor(j, k);
+            for (const [j, k] of Object.entries(summaries2int)) {
+                let y = extractor(k);
                 curhandle.writeDataSet(j, "Float64", null, y);
             }
         }
@@ -56,7 +44,7 @@ export function unserializeGroupStats(handle, permuter, { no_summaries = false }
         } else {
             let rhandle = handle.open(i);
             let current = {};
-            for (const j of Object.keys(summaries)) {
+            for (const j of Object.keys(summaries2int)) {
                 current[j] = rhandle.open(j, { load: true }).values;
                 permuter(current[j]);
             }
@@ -76,7 +64,6 @@ export function fetchGroupResults(results, rank_type, group) {
     if (!rank_type || rank_type === undefined) {
         rank_type = "cohen-min-rank";
     }
-    var use_reloaded = !(results instanceof scran.ScoreMarkersResults);
 
     var ordering;
     {
@@ -85,51 +72,26 @@ export function fetchGroupResults(results, rank_type, group) {
         let ranking;
         let increasing = false;
       
-        if (use_reloaded) {
-            let summary = "mean";
-            if (rank_type.match(/-min$/)) {
-                summary = "min";
-            } else if (rank_type.match(/-min-rank$/)) {
-                increasing = true;
-                summary = "min_rank";
-            }
-      
-            let effect;
-            if (rank_type.match(/^cohen-/)) {
-                effect = "cohen";
-            } else if (rank_type.match(/^auc-/)) {
-                effect = "auc";
-            } else if (rank_type.match(/^lfc-/)) {
-                effect = "lfc";
-            } else if (rank_type.match(/^delta-d-/)) {
-                effect = "delta_detected";
-            } else {
-                throw "unknown rank type '" + rank_type + "'";
-            }
-      
-            ranking = results[group][effect][summary];
-        } else {
-            let index = 1;
-            if (rank_type.match(/-min$/)) {
-                index = 0;
-            } else if (rank_type.match(/-min-rank$/)) {
-                increasing = true;
-                index = 4;
-            }
-
-            if (rank_type.match(/^cohen-/)) {
-                ranking = results.cohen(group, { summary: index, copy: false });
-            } else if (rank_type.match(/^auc-/)) {
-                ranking = results.auc(group, { summary: index, copy: false });
-            } else if (rank_type.match(/^lfc-/)) {
-                ranking = results.lfc(group, { summary: index, copy: false });
-            } else if (rank_type.match(/^delta-d-/)) {
-                ranking = results.deltaDetected(group, { summary: index, copy: false });
-            } else {
-                throw "unknown rank type '" + rank_type + "'";
-            }
+        let index = 1;
+        if (rank_type.match(/-min$/)) {
+            index = 0;
+        } else if (rank_type.match(/-min-rank$/)) {
+            increasing = true;
+            index = 4;
         }
-      
+
+        if (rank_type.match(/^cohen-/)) {
+            ranking = results.cohen(group, { summary: index, copy: false });
+        } else if (rank_type.match(/^auc-/)) {
+            ranking = results.auc(group, { summary: index, copy: false });
+        } else if (rank_type.match(/^lfc-/)) {
+            ranking = results.lfc(group, { summary: index, copy: false });
+        } else if (rank_type.match(/^delta-d-/)) {
+            ranking = results.deltaDetected(group, { summary: index, copy: false });
+        } else {
+            throw "unknown rank type '" + rank_type + "'";
+        }
+  
         // Computing the ordering based on the ranking statistic.
         ordering = new Int32Array(ranking.length);
         for (var i = 0; i < ordering.length; i++) {
@@ -151,20 +113,11 @@ export function fetchGroupResults(results, rank_type, group) {
         return thing;
     };
   
-    var stat_detected, stat_mean, stat_lfc, stat_delta_d;
-    if (use_reloaded) {
-        var current = results[group];
-        stat_mean = reorder(current.means);
-        stat_detected = reorder(current.detected);
-        stat_lfc = reorder(current.lfc["mean"]);
-        stat_delta_d = reorder(current.delta_detected["mean"]);
-    } else {
-        stat_detected = reorder(results.detected(group, { copy: false }));
-        stat_mean = reorder(results.means(group, { copy: false }));
-        stat_lfc = reorder(results.lfc(group, { summary: 1, copy: false }));
-        stat_delta_d = reorder(results.deltaDetected(group, { summary: 1, copy: false }));
-    }
-  
+    var stat_detected = reorder(results.detected(group, { copy: false }));
+    var stat_mean = reorder(results.means(group, { copy: false }));
+    var stat_lfc = reorder(results.lfc(group, { summary: 1, copy: false }));
+    var stat_delta_d = reorder(results.deltaDetected(group, { summary: 1, copy: false }));
+
     return {
         "ordering": ordering,
         "means": stat_mean,

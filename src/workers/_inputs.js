@@ -360,6 +360,7 @@ export async function serialize(handle, saver, embedded) {
 
     {
         let phandle = ghandle.createGroup("parameters"); 
+        console.log(parameters.type);
         phandle.writeDataSet("format", "String", [], parameters.type);
         let fihandle = phandle.createGroup("files");
 

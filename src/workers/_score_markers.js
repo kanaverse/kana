@@ -6,7 +6,6 @@ import * as markers from "./_utils_markers.js";
 
 var cache = {};
 var parameters = {};
-var reloaded = null;
 
 export var changed = false;
 
@@ -24,9 +23,6 @@ export function compute() {
         changed = true;
     }
 
-    if (changed) {
-        reloaded = null;
-    }
     return;
 }
 
@@ -42,17 +38,58 @@ export function serialize(handle) {
         let chandle = ghandle.createGroup("results");
         let rhandle = chandle.createGroup("clusters");
 
-        if ("raw" in cache) {
-            var num = cache.raw.numberOfGroups();
-            for (var i = 0; i < num; i++) {
-                markers.serializeGroupStats(rhandle, cache.raw, i);
-            }
-        } else {
-            for (const i of Object.keys(reloaded)) {
-                markers.serializeGroupStats(rhandle, reloaded, i);
-            }
+        var num = cache.raw.numberOfGroups();
+        for (var i = 0; i < num; i++) {
+            markers.serializeGroupStats(rhandle, cache.raw, i);
         }
     }
+}
+
+class ScoreMarkersMimic {
+    constructor(clusters) {
+        this.clusters = clusters;
+    }
+
+    effect_grabber(key, group, summary, copy) {
+        let sidx = markers.int2summaries[summary];
+        let chosen = this.clusters[group][key][sidx];
+        return utils.mimicGetter(chosen, copy);
+    }
+
+    lfc(group, { summary, copy }) {
+        return this.effect_grabber("lfc", group, summary, copy);
+    }
+
+    deltaDetected(group, { summary, copy }) {
+        return this.effect_grabber("delta_detected", group, summary, copy);
+    }
+
+    cohen(group, { summary, copy }) {
+        return this.effect_grabber("cohen", group, summary, copy);
+    }
+
+    auc(group, { summary, copy }) {
+        return this.effect_grabber("auc", group, summary, copy);
+    }
+
+    stat_grabber(key, group, copy) {
+        let chosen = this.clusters[group][key];
+        return utils.mimicGetter(chosen, copy);
+    }
+
+    means(group, { copy }) {
+        return this.stat_grabber("means", group, copy);
+    }
+
+    detected(group, { copy }) {
+        return this.stat_grabber("detected", group, copy);
+    }
+
+    numberOfGroups() {
+        return Object.keys(this.clusters).length;
+    }
+
+    free() {}
 }
 
 export function unserialize(handle, permuter) {
@@ -63,41 +100,24 @@ export function unserialize(handle, permuter) {
     {
         let chandle = ghandle.open("results");
         let rhandle = chandle.open("clusters");
-        reloaded = { clusters: {} };
+        let clusters = {};
         for (const cl of Object.keys(rhandle.children)) {
-            reloaded.clusters[Number(cl)] = markers.unserializeGroupStats(rhandle.open(cl), permuter);
+            clusters[Number(cl)] = markers.unserializeGroupStats(rhandle.open(cl), permuter);
         }
+        cache.raw = new ScoreMarkersMimic(clusters);
     }
 
     return;
 }
 
 export function fetchGroupResults(rank_type, group) {
-    let results = null;
-    if ("raw" in cache) {
-        return markers.fetchGroupResults(cache.raw, rank_type, group); 
-    } else {
-        return markers.fetchGroupResults(reloaded.clusters, rank_type, group); 
-    }
+    return markers.fetchGroupResults(cache.raw, rank_type, group); 
 }
 
-export function numberOfGroups(results, reloaded) {
-    if (!("raw" in cache)) {
-        return Object.keys(reloaded.clusters).length;
-    } else {
-        return cache.raw.numberOfGroups();
-    }
+export function numberOfGroups() {
+    return cache.raw.numberOfGroups();
 }
 
 export function fetchGroupMeans(group, { copy = true }) {
-    if (!("raw" in cache)) {
-        let out = reloaded.clusters[group].means;
-        if (copy) {
-            return out.slice();
-        } else {
-            return out;
-        }
-    } else {
-        return cache.raw.means(group, { copy: copy });
-    }
+    return cache.raw.means(group, { copy: copy });
 }

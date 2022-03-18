@@ -4,17 +4,16 @@ import * as pca from "./_pca.js";
 
 var cache = {};
 var parameters = {};
-var reloaded = null;
 
 export var changed = false;
-export var invalid = false;
+
+export function valid() {
+    return ("raw" in cache);
+}
 
 export function fetchClustersAsWasmArray() {
-    if (!("raw" in cache)) {
-        if (invalid) {
-            throw "cannot fetch k-means clusters from an invalid state";
-        }
-        return reloaded.clusters;
+    if (!valid()) {
+        throw "cannot fetch k-means clusters from an invalid state";
     } else {
         return cache.raw.clusters({ copy: "view" });
     }
@@ -24,7 +23,7 @@ export function compute(run_me, k) {
     changed = false;
 
     let run_k = (pca.changed || k != parameters.k);
-    if (run_me && invalid) {
+    if (run_me && !valid()) {
         run_k = true;
     }
 
@@ -39,15 +38,6 @@ export function compute(run_me, k) {
         parameters.k = k;
         changed = true;
     }
-
-    if (changed) {
-        if (reloaded !== null) {
-            utils.freeCache(reloaded.clusters);
-            reloaded = null;
-        }
-    }
-
-    invalid = (changed && !run_me);
 
     return;
 }
@@ -68,7 +58,7 @@ export function serialize(handle) {
 
     {
         let rhandle = ghandle.createGroup("results");
-        if (!invalid) {
+        if (valid()) {
             let clusters = fetchClustersAsWasmArray();
             rhandle.writeDataSet("clusters", "Int32", null, clusters);
          }
@@ -77,12 +67,25 @@ export function serialize(handle) {
     return;
 }
 
+class KmeansMimic {
+    constructor(clusters) {
+        this.buffer = scran.createInt32WasmArray(clusters.length);
+        this.buffer.set(clusters);
+    }
+
+    clusters({ copy }) {
+        return utils.mimicGetter(this.buffer, copy);
+    }
+
+    free() {
+        this.buffer.free();
+    }
+}
+
 export function unserialize(handle) {
-    invalid = true;
     parameters = {
         k: 10
     };
-    reloaded = {};
 
     // Protect against old analysis states that don't have kmeans_cluster.
     if ("kmeans_cluster" in handle.children) {
@@ -95,12 +98,9 @@ export function unserialize(handle) {
 
         {
             let rhandle = ghandle.open("results");
-
             if ("clusters" in rhandle.children) {
                 let clusters = rhandle.open("clusters", { load: true }).values;
-                let buf = utils.allocateCachedArray(clusters.length, "Int32Array", reloaded, "clusters");
-                buf.set(clusters);
-                invalid = false;
+                cache.raw = new KmeansMimic(clusters);
             }
         }
     }

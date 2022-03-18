@@ -17,6 +17,27 @@ export function copyOrView(copy) {
     }
 }
 
+export function mimicGetter(value, copy) {
+    if (value instanceof wa.WasmArray) {
+        if (copy == "view") {
+            return value.view();
+        } else if (copy) {
+            return value.slice();
+        } else {
+            return value.array();
+        }
+    } else {
+        if (copy === true) {
+            return value.slice();
+        } else {
+            // Includes copy = "view"; we just provide a no-copy and assume
+            // that, if the caller actually wanted a WasmArray, they would
+            // have generated a WasmArray during the unserialization.
+            return value;
+        }
+    }
+}
+
 export function freeCache(object) {
     if (object !== undefined && object !== null) {
         object.free();

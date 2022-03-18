@@ -4,17 +4,16 @@ import * as index from "./_neighbor_index.js";
 
 var cache = {};
 var parameters = {};
-var reloaded = null;
 
 export var changed = false;
-export var invalid = true;
+
+export function valid() {
+    return ("clusters" in cache);
+}
 
 export function fetchClustersAsWasmArray() {
-    if (!("clusters" in cache)) {
-        if (invalid) {
-            throw "cannot fetch SNN clusters from an invalid state";
-        }
-        return reloaded.clusters;
+    if (!valid()) {
+        throw "cannot fetch SNN clusters from an invalid state";
     } else {
         return cache.clusters.membership({ copy: "view" });
     }
@@ -26,8 +25,7 @@ export function compute(run_me, k, scheme, resolution) {
     let rerun_neighbors = (index.changed || k !== parameters.k);
     let rerun_graph = (rerun_neighbors || scheme !== parameters.scheme);
     let rerun_clusters = (rerun_graph || resolution !== parameters.resolution);
-
-    if (run_me && invalid) {
+    if (run_me && !valid()) {
         rerun_clusters = true;
     }
 
@@ -76,15 +74,6 @@ export function compute(run_me, k, scheme, resolution) {
         changed = true;
     }
 
-    if (changed) {
-        if (reloaded !== null) {
-            utils.freeCache(reloaded.clusters);
-            reloaded = null;
-        }
-    }
-
-    invalid = (changed && !run_me);
-
     return;
 }
 
@@ -106,13 +95,28 @@ export function serialize(handle) {
 
     {
         let rhandle = ghandle.createGroup("results");
-        if (!invalid) {
+        if (valid()) {
             let clusters = fetchClustersAsWasmArray();
             rhandle.writeDataSet("clusters", "Int32", null, clusters);
         }
     }
 
     return;
+}
+
+class SNNClusterMimic {
+    constructor(clusters) {
+        this.buffer = scran.createInt32WasmArray(clusters.length);
+        this.buffer.set(clusters);
+    }
+
+    membership({ copy }) {
+        return utils.mimicGetter(this.buffer, copy);
+    }
+
+    free() {
+        this.buffer.free();
+    }
 }
 
 export function unserialize(handle) {
@@ -130,15 +134,9 @@ export function unserialize(handle) {
 
     {
         let rhandle = ghandle.open("results");
-
         if ("clusters" in rhandle.children) {
             let clusters = rhandle.open("clusters", { load: true }).values;
-            reloaded = {};
-            let buf = utils.allocateCachedArray(clusters.length, "Int32Array", reloaded, "clusters");
-            buf.set(clusters);
-            invalid = false;
-        } else {
-            invalid = true;
+            cache.clusters = new SNNClusterMimic(clusters);
         }
     }
 
