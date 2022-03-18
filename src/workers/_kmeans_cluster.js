@@ -22,18 +22,20 @@ export function fetchClustersAsWasmArray() {
 
 export function compute(run_me, k) {
     changed = false;
-    invalid = false;
 
-    if (pca.changed || k != parameters.k || !("raw" in cache)) {
+    let run_k = (pca.changed || k != parameters.k);
+    if (run_me && invalid) {
+        run_k = true;
+    }
+
+    if (run_k) {
         utils.freeCache(cache.raw);
-
         if (run_me) {
             var pcs = pca.fetchPCs();
             cache.raw = scran.clusterKmeans(pcs.pcs, k, { numberOfDims: pcs.num_pcs, numberOfCells: pcs.num_obs, initMethod: "pca-part" });
         } else {
             delete cache.raw; // ensure this step gets re-run later when run_me = true. 
         }
-
         parameters.k = k;
         changed = true;
     }
@@ -43,10 +45,9 @@ export function compute(run_me, k) {
             utils.freeCache(reloaded.clusters);
             reloaded = null;
         }
-        if (!run_me) {
-            invalid = true;
-        }
     }
+
+    invalid = (changed && !run_me);
 
     return;
 }

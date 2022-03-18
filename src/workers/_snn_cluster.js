@@ -20,57 +20,55 @@ export function fetchClustersAsWasmArray() {
     }
 }
 
-function computeNeighbors(k) {
-    utils.freeCache(cache.neighbors);
-    cache.neighbors = scran.findNearestNeighbors(index.fetchIndex(), k);
-    return;
-}
-
-function computeGraph(scheme) {
-    if (!("neighbors" in cache)) {
-        computeNeighbors(parameters.k);
-    }
-    utils.freeCache(cache.graph);
-    cache.graph = scran.buildSNNGraph(cache.neighbors, { scheme: scheme });
-    return;
-}
-
-function computeClusters(resolution) {
-    if (!("graph" in cache)) {
-        computeGraph(parameters.scheme);
-    }
-    utils.freeCache(cache.clusters);
-    cache.clusters = scran.clusterSNNGraph(cache.graph, { resolution: resolution });
-    return;
-}
-
 export function compute(run_me, k, scheme, resolution) {
     changed = false;
-    invalid = false;
 
-    if (index.changed || k !== parameters.k || !("neighbors" in cache)) {
-        if (run_me) {
-            computeNeighbors(k);
-        } else {
-            delete cache.neighbors; // ensure this step gets re-run later when run_me = true. 
-        }
-        parameters.k = k;
-        changed = true;
+    let rerun_neighbors = (index.changed || k !== parameters.k);
+    let rerun_graph = (rerun_neighbors || scheme !== parameters.scheme);
+    let rerun_clusters = (rerun_graph || resolution !== parameters.resolution);
+
+    if (run_me && invalid) {
+        rerun_clusters = true;
     }
 
-    if (changed || scheme !== parameters.scheme || !("graph" in cache)) { 
+    // Checking whether each step needs content from the preceding step(s).
+    // This is necessary when working with reloaded states and we want to rerun
+    // some later steps but still need to generate their prerequisites.
+    if (!("graph" in cache)) {
+        if (rerun_clusters) {
+            rerun_graph = true;
+        }
+    }
+    if (!("neighbors" in cache)) {
+        if (rerun_graph || rerun_clusters) {
+            rerun_neighbors = true;
+        }
+    }
+
+    if (rerun_neighbors) {
+        utils.freeCache(cache.neighbors);
         if (run_me) {
-            computeGraph(scheme);
+            cache.neighbors = scran.findNearestNeighbors(index.fetchIndex(), k);
+        } else {
+            delete cache.neighbors; // ensuring that this is re-run on future calls to compute() with run_me = true.
+        }
+        parameters.k = k;
+    }
+
+    if (rerun_graph) {
+        utils.freeCache(cache.graph);
+        if (run_me) {
+            cache.graph = scran.buildSNNGraph(cache.neighbors, { scheme: scheme });
         } else {
             delete cache.graph;
         }
         parameters.scheme = scheme;
-        changed = true;
     }
 
-    if (changed || resolution !== parameters.resolution || !("clusters" in cache)) {
+    if (rerun_clusters) {
+        utils.freeCache(cache.clusters);
         if (run_me) {
-            computeClusters(resolution);
+            cache.clusters = scran.clusterSNNGraph(cache.graph, { resolution: resolution });
         } else {
             delete cache.clusters;
         }
@@ -83,10 +81,9 @@ export function compute(run_me, k, scheme, resolution) {
             utils.freeCache(reloaded.clusters);
             reloaded = null;
         }
-        if (!run_me) {
-            invalid = true;
-        }
     }
+
+    invalid = (changed && !run_me);
 
     return;
 }

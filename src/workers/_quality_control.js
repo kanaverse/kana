@@ -48,43 +48,49 @@ function computeMetrics(use_mito_default, mito_prefix) {
     return;
 }
 
-function computeFilters(nmads) {
-    // Need to check this in case we're operating from a reloaded analysis,
-    // where there is no guarantee that we reran the computeMetrics() step in compue().
-    if (!("metrics" in cache)) { 
-        computeMetrics(parameters.use_mito_default, parameters.mito_prefix);
-    }
-    utils.freeCache(cache.filters);
-    cache.filters = scran.computePerCellQCFilters(cache.metrics, { numberOfMADs: nmads });
-    return;
-}
-
 function applyFilters() {
-    var mat = inputs.fetchCountMatrix();
-    var disc = fetchDiscards();
-    utils.freeCache(cache.matrix);
-    cache.matrix = scran.filterCells(mat, disc);
     return;
 }
 
 export function compute(use_mito_default, mito_prefix, nmads) {
     changed = false;
 
-    if (inputs.changed || use_mito_default !== parameters.use_mito_default || mito_prefix !== parameters.mito_prefix) {
+    let run_metrics = (inputs.changed || use_mito_default !== parameters.use_mito_default || mito_prefix !== parameters.mito_prefix);
+    let run_filters = (run_metrics || nmads !== parameters.nmads);
+    let run_apply = (run_filters);
+
+    // Checking whether each step needs content from the preceding steps.
+    // This is necessary when working with reloaded states and we want to rerun
+    // some later steps but still need to run their prerequisites.
+    if (!("filters" in cache)) {
+        if (run_apply) {
+            run_filters = true;
+        }
+    }
+    if (!("metrics" in cache)) {
+        if (run_apply || run_filters) {
+            run_metrics = true;
+        }
+    }
+
+    // Running the steps.
+    if (run_metrics) {
         computeMetrics(use_mito_default, mito_prefix);
         parameters.use_mito_default = use_mito_default;
         parameters.mito_prefix = mito_prefix;
-        changed = true;
     }
 
-    if (changed || nmads !== parameters.nmads) {
-        computeFilters(nmads);
+    if (run_filters) {
+        utils.freeCache(cache.filters);
+        cache.filters = scran.computePerCellQCFilters(cache.metrics, { numberOfMADs: nmads });
         parameters.nmads = nmads;
-        changed = true;
     }
 
-    if (changed) {
-        applyFilters();
+    if (run_apply) {
+        var mat = inputs.fetchCountMatrix();
+        var disc = fetchDiscards();
+        utils.freeCache(cache.matrix);
+        cache.matrix = scran.filterCells(mat, disc);
         changed = true;
     }
 
