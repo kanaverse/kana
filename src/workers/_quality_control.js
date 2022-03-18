@@ -216,7 +216,7 @@ export function unserialize(handle) {
     {
         let phandle = ghandle.open("parameters"); 
         parameters = {
-            use_mito_default: phandle.open("mito_prefix", { load: true }).values[0] > 0,
+            use_mito_default: phandle.open("use_mito_default", { load: true }).values[0] > 0,
             mito_prefix: phandle.open("mito_prefix", { load: true }).values[0],
             nmads: phandle.open("nmads", { load: true }).values[0]
         }

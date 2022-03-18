@@ -119,7 +119,7 @@ export function unserialize(handle) {
         };
 
         let pcs = rhandle.open("pcs", { load: true }).values
-        utils.allocateCachedArray(pcs.length, "Uint8Array", reloaded, "pcs");
+        utils.allocateCachedArray(pcs.length, "Float64Array", reloaded, "pcs");
         reloaded.pcs.set(pcs);        
     }
 
