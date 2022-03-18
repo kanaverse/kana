@@ -61,7 +61,7 @@ export function compute(use_mito_default, mito_prefix, nmads) {
 
     // Checking whether each step needs content from the preceding steps.
     // This is necessary when working with reloaded states and we want to rerun
-    // some later steps but still need to run their prerequisites.
+    // some later steps but still need to generate their prerequisites.
     if (!("filters" in cache)) {
         if (run_apply) {
             run_filters = true;
