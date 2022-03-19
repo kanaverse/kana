@@ -68,12 +68,12 @@ export function compute(use_mito_default, mito_prefix, nmads) {
     // Checking whether each step needs content from the preceding steps.
     // This is necessary when working with reloaded states and we want to rerun
     // some later steps but still need to generate their prerequisites.
-    if (!("filters" in cache)) {
+    if (cache.filters instanceof QCFiltersMimic) {
         if (run_apply) {
             run_filters = true;
         }
     }
-    if (!("metrics" in cache)) {
+    if (cache.metrics instanceof QCMetricsMimic) {
         if (run_apply || run_filters) {
             run_metrics = true;
         }
@@ -310,12 +310,6 @@ export function fetchDiscards() {
 
 export function fetchFilteredMatrix() {
     if (!("matrix" in cache)) {
-        if (!("filters" in cache)) {
-            if (!("metrics" in cache)) {
-                computeMetrics(parameters.use_mito_default, parameters.mito_prefix);
-            }
-            computeFilters(parameters.nmads);
-        }
         applyFilters();
     }
     return cache.matrix;
