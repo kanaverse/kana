@@ -6,7 +6,6 @@ import * as utils from "./_utils.js";
 var cache = { "counter": 0, "promises": {} };
 var parameters = {};
 var worker = null;
-var reloaded = null;
 
 export function initialize() {
     worker = new Worker(new URL("./tsne.worker.js", import.meta.url), { type: "module" });
@@ -38,33 +37,27 @@ function core(perplexity, iterations, animate, reneighbor) {
 }
 
 export function compute(perplexity, iterations, animate) {
-    changed = false;
+    let reneighbor = (index.changed || perplexity != parameters.perplexity || "reloaded" in cache);
+    changed = (reneighbor || iterations != parameters.iterations);
 
-    let reneighbor = false;
-    if (index.changed || perplexity != parameters.perplexity) {
-        reneighbor = true;
-    }
-
-    if (reneighbor || iterations != parameters.iterations) {
+    if (changed) {
         core(perplexity, iterations, animate, reneighbor);
+
         parameters.perplexity = perplexity;
         parameters.iterations = iterations;
         parameters.animate = animate;
-        changed = true;
-    }
 
-    if (changed) {
-        reloaded = null;
+        delete cache.reloaded;
     }
 
     return;
 }
 
 async function getResults(copy)  {
-    if (!("run" in cache)) {
+    if ("reloaded" in cache) {
         let output = {
-            x: reloaded.x,
-            y: reloaded.y
+            x: cache.reloaded.x,
+            y: cache.reloaded.y
         };
         utils.copyVectors(output, copy);
         output.iterations = parameters.iterations;
@@ -115,7 +108,7 @@ export function unserialize(handle) {
 
     {
         let rhandle = ghandle.open("results");
-        reloaded = {
+        cache.reloaded = {
             x: rhandle.open("x", { load: true }).values,
             y: rhandle.open("y", { load: true }).values
         };
@@ -125,7 +118,7 @@ export function unserialize(handle) {
 }
 
 export function animate() {
-    if (!("run" in cache)) {
+    if ("reloaded" in cache) {
         // We need to reneighbor because we haven't sent the neighbors across yet.
         core(parameters.perplexity, parameters.iterations, true, true);
 

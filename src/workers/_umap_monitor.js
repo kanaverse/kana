@@ -6,7 +6,6 @@ import * as utils from "./_utils.js";
 var cache = { "counter": 0, "promises": {} };
 var parameters = {};
 var worker = null;
-var reloaded = null;
 
 export function initialize() {
     worker = new Worker(new URL("./umap.worker.js", import.meta.url), { type: "module" });
@@ -38,34 +37,28 @@ function core(num_neighbors, num_epochs, min_dist, animate, reneighbor) {
 }
 
 export function compute(num_neighbors, num_epochs, min_dist, animate) {
-    changed = false;
+    let reneighbor = (index.changed || parameters.num_neighbors != num_neighbors || "reloaded" in cache);
+    changed = (reneighbor || num_epochs != parameters.num_epochs || min_dist != parameters.min_dist);
 
-    let reneighbor = false;
-    if (index.changed || parameters.num_neighbors != num_neighbors) {
-        reneighbor = true;
-    }
-
-    if (reneighbor || num_epochs != parameters.num_epochs || min_dist != parameters.min_dist) {
+    if (changed) {
         core(num_neighbors, num_epochs, min_dist, animate, reneighbor);
+
         parameters.num_neighbors = num_neighbors;
         parameters.num_epochs = num_epochs;
         parameters.min_dist = min_dist;
         parameters.animate = animate;
-        changed = true;
-    }
 
-    if (changed) {
-        reloaded = null;
+        delete cache.reloaded;
     }
 
     return;
 }
 
 async function getResults(copy)  {
-    if (!("run" in cache)) {
+    if ("reloaded" in cache) {
         let output = {
-            x: reloaded.x,
-            y: reloaded.y
+            x: cache.reloaded.x,
+            y: cache.reloaded.y
         };
         utils.copyVectors(output, copy);
         output.iterations = parameters.num_epochs;
@@ -118,7 +111,7 @@ export function unserialize(handle) {
 
     {
         let rhandle = ghandle.open("results");
-        reloaded = {
+        cache.reloaded = {
             x: rhandle.open("x", { load: true }).values,
             y: rhandle.open("y", { load: true }).values
         };

@@ -316,6 +316,7 @@ export function unserialize(handle) {
         mouse_references: [],
         human_references: []
     };
+    cache.results = {};
 
     // Protect against old analysis states that don't have cell_labelling.
     if ("cell_labelling" in handle.children) {
@@ -329,13 +330,10 @@ export function unserialize(handle) {
 
         {
             let rhandle = ghandle.open("results");
-
             let perhandle = rhandle.open("per_reference");
-            cache.results = {};
             for (const key of Object.keys(perhandle.children)) {
                 cache.results[key] = perhandle.open(key, { load: true }).values;
             }
-
             if ("integrated" in rhandle.children) {
                 cache.integrated_results = rhandle.open("integrated", { load: true }).values;
             }
