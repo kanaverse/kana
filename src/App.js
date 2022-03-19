@@ -272,6 +272,7 @@ const App = () => {
             },
             "msg": "not much to pass"
           });
+          setInitLoadState(true);
         } else {
           scranWorker.postMessage({
             "type": "RUN",
@@ -282,7 +283,6 @@ const App = () => {
             "msg": "not much to pass"
           });
         }
-        setInitLoadState(true);
       }
     }
   }, [inputFiles, params, wasmInitialized]);
