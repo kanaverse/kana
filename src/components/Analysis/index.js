@@ -181,7 +181,6 @@ const AnalysisDialog = ({
     }
 
     function handleCheckbox(e, species, key) {
-        console.log(e);
         let tkey = `annotateCells-${species}_references`;
         let tmpAnnoCells = [...tmpInputParams["annotateCells"][tkey]];
         if (e.target.checked) {
