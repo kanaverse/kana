@@ -258,7 +258,6 @@ export function compute(human_references, mouse_references) {
                 }
             );
         } else {
-            utils.freeCache(cache.integrated);
             delete cache.integrated_results;
         }
 
