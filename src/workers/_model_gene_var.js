@@ -7,59 +7,112 @@ var parameters = {};
 
 export var changed = false;
 
-function spawnStats() {
-    var model_output = cache.raw;
-    return {
-        "means": model_output.means(),
-        "vars": model_output.variances(),
-        "fitted": model_output.fitted(),
-        "resids": model_output.residuals()
-    };
-}
+export function compute(span) {
+    changed = false;
+    
+    if (normalization.changed || span != parameters.span) {
+        utils.freeCache(cache.results);
 
-export function compute(args) {
-    if (!normalization.changed && !utils.changedParameters(parameters, args)) {
-        changed = false;
-    } else {
-        var mat = normalization.fetchNormalizedMatrix();
-        cache.raw = scran.modelGeneVar(mat, { span: args.span });
+        let mat = normalization.fetchNormalizedMatrix();
+        cache.results = scran.modelGeneVar(mat, { span: span });
 
-        cache.sorted_residuals = cache.raw.residuals().slice(); // a separate copy.
+        cache.sorted_residuals = cache.results.residuals().slice(); // a separate copy.
         cache.sorted_residuals.sort();
 
-        parameters = args;
-        delete cache.reloaded;
+        parameters.span = span;
         changed = true;
     }
+
     return;
+}
+
+function getResults(copy = true) {
+    copy = utils.copyOrView(copy);
+    return {
+        "means": cache.results.means({ copy: copy }),
+        "vars": cache.results.variances({ copy: copy }),
+        "fitted": cache.results.fitted({ copy: copy }),
+        "resids": cache.results.residuals({copy: copy })
+    };
 }
 
 export function results() {
-    if ("reloaded" in cache) {
-        return {
-            "means": cache.reloaded.means.slice(),
-            "vars": cache.reloaded.vars.slice(),
-            "fitted": cache.reloaded.fitted.slice(),
-            "resids": cache.reloaded.resids.slice()
-        };
-    } else {
-        return spawnStats();
+    return getResults();
+}
+
+export function serialize(handle) {
+    let ghandle = handle.createGroup("feature_selection");
+
+    {
+        let phandle = ghandle.createGroup("parameters"); 
+        phandle.writeDataSet("span", "Float64", [], parameters.span);
+    }
+
+    {
+        let res = getResults(false);
+        let rhandle = ghandle.createGroup("results"); 
+        for (const x of [ "means", "vars", "fitted", "resids" ]) {
+            rhandle.writeDataSet(x, "Float64", null, res[x]);
+        }
     }
 }
 
-export function serialize() {
-    return { 
-        "parameters": parameters,
-        "contents": results()
-    };
+class ModelGeneVarMimic {
+    constructor(means, vars, fitted, resids) {
+        this.means_ = means;
+        this.vars_ = vars;
+        this.fitted_ = fitted;
+        this.resids_ = resids;
+    }
+
+    means({copy}) {
+        return utils.mimicGetter(this.means_, copy);
+    }
+
+    variances({copy}) {
+        return utils.mimicGetter(this.vars_, copy);
+    }
+
+    fitted({copy}) {
+        return utils.mimicGetter(this.fitted_, copy);
+    }
+
+    residuals({copy}) {
+        return utils.mimicGetter(this.resids_, copy);
+    }
+
+    free() {}
 }
 
-export function unserialize(saved) {
-    parameters = saved.parameters;
-    cache.reloaded = saved.contents;
-    cache.sorted_residuals = cache.reloaded.resids.slice();
+export function unserialize(handle, permuter) {
+    let ghandle = handle.open("feature_selection");
+
+    {
+        let phandle = ghandle.open("parameters");
+        parameters = {
+            span: phandle.open("span", { load: true }).values[0]
+        };
+    }
+
+    {
+        let rhandle = ghandle.open("results");
+        let reloaded = {};
+
+        // Possibly permuting it to match the new permutation order;
+        // see 'unserialize' in './_inputs.js'.
+        for (const key of [ "means", "vars", "fitted", "resids" ]) {
+            let value = rhandle.open(key, { load: true }).values;
+            permuter(value);
+            reloaded[key] = value;
+        }
+
+        cache.results = new ModelGeneVarMimic(reloaded.means, reloaded.vars, reloaded.fitted, reloaded.resids);
+    }
+
+    cache.sorted_residuals = cache.results.residuals({ copy: true });
     cache.sorted_residuals.sort();
-    return;
+
+    return { ...parameters };
 }
 
 export function fetchSortedResiduals() {
@@ -67,9 +120,5 @@ export function fetchSortedResiduals() {
 }
 
 export function fetchResiduals({ unsafe = false } = {}) {
-    if ("reloaded" in cache) {
-        return cache.reloaded.resids;
-    } else {
-        return cache.raw.residuals({ copy: !unsafe });
-    }
+    return cache.results.residuals({ copy: !unsafe });
 }

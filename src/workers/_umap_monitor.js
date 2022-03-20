@@ -1,3 +1,4 @@
+import * as scran from "scran.js";
 import * as vizutils from "./_utils_viz_parent.js";
 import * as index from "./_neighbor_index.js";
 import * as utils from "./_utils.js";
@@ -13,11 +14,18 @@ export function initialize() {
 
 export var changed = false;
 
-function core(args, reneighbor) {
+function core(num_neighbors, num_epochs, min_dist, animate, reneighbor) {
     var nn_out = null;
     if (reneighbor) {
-        nn_out = vizutils.computeNeighbors(args.num_neighbors);
+        nn_out = vizutils.computeNeighbors(num_neighbors);
     }
+
+    let args = {
+        "num_neighbors": num_neighbors,
+        "num_epochs": num_epochs,
+        "min_dist": min_dist,
+        "animate": animate
+    };
 
     // This returns a promise but the message itself is sent synchronously,
     // which is important to ensure that the UMAP runs in its worker in
@@ -28,44 +36,94 @@ function core(args, reneighbor) {
     return;
 }
 
-export function compute(args) {
-    if (!index.changed && !utils.changedParameters(parameters, args)) {
-        changed = false;
-        return;
+export function compute(num_neighbors, num_epochs, min_dist, animate) {
+    let reneighbor = (index.changed || parameters.num_neighbors != num_neighbors || "reloaded" in cache);
+    changed = (reneighbor || num_epochs != parameters.num_epochs || min_dist != parameters.min_dist);
+
+    if (changed) {
+        core(num_neighbors, num_epochs, min_dist, animate, reneighbor);
+
+        parameters.num_neighbors = num_neighbors;
+        parameters.num_epochs = num_epochs;
+        parameters.min_dist = min_dist;
+        parameters.animate = animate;
+
+        delete cache.reloaded;
     }
 
-    var reneighbor = index.changed || utils.changedParameters(parameters.num_neighbors, args.num_neighbors);
-    core(args, reneighbor);
+    return;
+}
 
-    parameters = args;
-    delete cache.reloaded;
-    changed = true;
+async function getResults(copy)  {
+    if ("reloaded" in cache) {
+        let output = {
+            x: cache.reloaded.x,
+            y: cache.reloaded.y
+        };
+        utils.copyVectors(output, copy);
+        output.iterations = parameters.num_epochs;
+        return output;
+    } else {
+        // Vectors that we get from the worker are inherently
+        // copied, so no need to do anything extra here.
+        await cache.run;
+        return vizutils.sendTask(worker, { "cmd": "FETCH" }, cache);
+    }
 }
 
 export function results() {
-    return vizutils.retrieveCoordinates(worker, cache);
+    return getResults(true);
 }
 
-export async function serialize() {
-    var contents = await vizutils.retrieveCoordinates(worker, cache);
-    return {
-        "parameters": parameters,
-        "contents": contents
-    };
-}
+export async function serialize(handle) {
+    let ghandle = handle.createGroup("umap");
 
-export function unserialize(saved) {
-    parameters = saved.parameters;
-    cache.reloaded = saved.contents;
+    {
+        let phandle = ghandle.createGroup("parameters");
+        phandle.writeDataSet("num_neighbors", "Int32", [], parameters.num_neighbors);
+        phandle.writeDataSet("num_epochs", "Int32", [], parameters.num_epochs);
+        phandle.writeDataSet("min_dist", "Float64", [], parameters.min_dist);
+        phandle.writeDataSet("animate", "Uint8", [], Number(parameters.animate));
+    }
+
+    {
+        let res = await getResults(false);
+        let rhandle = ghandle.createGroup("results");
+        rhandle.writeDataSet("x", "Float64", null, res.x);
+        rhandle.writeDataSet("y", "Float64", null, res.y);
+    }
+
     return;
+}
+
+export function unserialize(handle) {
+    let ghandle = handle.open("umap");
+
+    {
+        let phandle = ghandle.open("parameters");
+        parameters = {
+            num_neighbors: phandle.open("num_neighbors", { load: true }).values[0],
+            num_epochs: phandle.open("num_epochs", { load: true }).values[0],
+            min_dist: phandle.open("min_dist", { load: true }).values[0],
+            animate: phandle.open("animate", { load: true }).values[0] > 0
+        };
+    }
+
+    {
+        let rhandle = ghandle.open("results");
+        cache.reloaded = {
+            x: rhandle.open("x", { load: true }).values,
+            y: rhandle.open("y", { load: true }).values
+        };
+    }
+
+    return { ...parameters };
 }
 
 export function animate() {
     if ("reloaded" in cache) {
-        var param_copy = { ...parameters };
-        param_copy.animate = true;
-        core(param_copy, true);
-        delete cache.reloaded;
+        // We need to reneighbor because we haven't sent the neighbors across yet.
+        core(parameters.num_neighbors, parameters.num_epochs, parameters.min_dist, true, true);
   
         // Mimicking the response from the re-run.
         return cache.run

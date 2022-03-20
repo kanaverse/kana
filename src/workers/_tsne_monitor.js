@@ -14,12 +14,18 @@ export function initialize() {
 
 export var changed = false;
 
-function core(args, reneighbor) {
+function core(perplexity, iterations, animate, reneighbor) {
     var nn_out = null;
     if (reneighbor) {
-        var k = scran.perplexityToNeighbors(args.perplexity);
+        var k = scran.perplexityToNeighbors(perplexity);
         nn_out = vizutils.computeNeighbors(k);
     }
+
+    let args = {
+        "perplexity": perplexity,
+        "iterations": iterations,
+        "animate": animate
+    };
 
     // This returns a promise but the message itself is sent synchronously,
     // which is important to ensure that the t-SNE runs in its worker in
@@ -30,45 +36,91 @@ function core(args, reneighbor) {
     return;
 }
 
-export function compute(args) {
-    if (!index.changed && !utils.changedParameters(parameters, args)) {
-        changed = false;
-        return;
+export function compute(perplexity, iterations, animate) {
+    let reneighbor = (index.changed || perplexity != parameters.perplexity || "reloaded" in cache);
+    changed = (reneighbor || iterations != parameters.iterations);
+
+    if (changed) {
+        core(perplexity, iterations, animate, reneighbor);
+
+        parameters.perplexity = perplexity;
+        parameters.iterations = iterations;
+        parameters.animate = animate;
+
+        delete cache.reloaded;
     }
 
-    var reneighbor = index.changed || utils.changedParameters(parameters.perplexity, args.perplexity);
-    core(args, reneighbor);
-
-    parameters = args;
-    delete cache.reloaded;
-    changed = true;
+    return;
 }
 
+async function getResults(copy)  {
+    if ("reloaded" in cache) {
+        let output = {
+            x: cache.reloaded.x,
+            y: cache.reloaded.y
+        };
+        utils.copyVectors(output, copy);
+        output.iterations = parameters.iterations;
+        return output;
+    } else {
+        // Vectors that we get from the worker are inherently
+        // copied, so no need to do anything extra here.
+        await cache.run;
+        return vizutils.sendTask(worker, { "cmd": "FETCH" }, cache);
+    }
+}
 
 export function results() {
-    return vizutils.retrieveCoordinates(worker, cache);
+    return getResults(true);
 }
 
-export async function serialize() {
-    var contents = await vizutils.retrieveCoordinates(worker, cache);
-    return {
-        "parameters": parameters,
-        "contents": contents
-    };
-}
+export async function serialize(handle) {
+    let ghandle = handle.createGroup("tsne");
 
-export function unserialize(saved) {
-    parameters = saved.parameters;
-    cache.reloaded = saved.contents;
+    {
+        let phandle = ghandle.createGroup("parameters");
+        phandle.writeDataSet("perplexity", "Float64", [], parameters.perplexity);
+        phandle.writeDataSet("iterations", "Int32", [], parameters.iterations);
+        phandle.writeDataSet("animate", "Uint8", [], Number(parameters.animate));
+    }
+
+    {
+        let res = await getResults(false);
+        let rhandle = ghandle.createGroup("results");
+        rhandle.writeDataSet("x", "Float64", null, res.x);
+        rhandle.writeDataSet("y", "Float64", null, res.y);
+    }
+
     return;
+}
+
+export function unserialize(handle) {
+    let ghandle = handle.open("tsne");
+
+    {
+        let phandle = ghandle.open("parameters");
+        parameters = {
+            perplexity: phandle.open("perplexity", { load: true }).values[0],
+            iterations: phandle.open("iterations", { load: true }).values[0],
+            animate: phandle.open("animate", { load: true }).values[0] > 0
+        };
+    }
+
+    {
+        let rhandle = ghandle.open("results");
+        cache.reloaded = {
+            x: rhandle.open("x", { load: true }).values,
+            y: rhandle.open("y", { load: true }).values
+        };
+    }
+
+    return { ...parameters };
 }
 
 export function animate() {
     if ("reloaded" in cache) {
-        var param_copy = { ...parameters };
-        param_copy.animate = true;
-        core(param_copy, true);
-        delete cache.reloaded;
+        // We need to reneighbor because we haven't sent the neighbors across yet.
+        core(parameters.perplexity, parameters.iterations, true, true);
 
         // Mimicking the response from the re-run.
         return cache.run
