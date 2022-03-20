@@ -24,17 +24,13 @@ const AnalysisDialog = ({
         setLoadParamsFor, loadParamsFor, setDatasetName } = useContext(AppContext);
 
     // assuming new is the default tab
-    let [tmpInputFiles, setTmpInputFiles] = useState({
-        gene: null,
-        mtx: null,
-        barcode: null,
-    });
+    let [tmpInputFiles, setTmpInputFiles] = useState([{}]);
 
-    const [inputText, setInputText] = useState({
+    const [inputText, setInputText] = useState([{
         mtx: "Choose Matrix Market file",
         gene: "Choose feature/gene annotation",
         barcode: "Choose barcode annotation",
-    });
+    }]);
 
     let [tmpInputValid, setTmpInputValid] = useState(true);
 
@@ -132,39 +128,39 @@ const AnalysisDialog = ({
     useEffect(() => {
         if (tmpInputFiles) {
             if (tabSelected === "new") {
-                if (newImportFormat === "mtx") {
+                let all_valid = true;
+                // tmpInputFiles.forEach((x, ix) =>
+                for (let ix = 0; ix < tmpInputFiles.length; ix++) {
+                    let x = tmpInputFiles[ix];
                     if (
-                        (tmpInputFiles?.mtx && !(inputText?.mtx.toLowerCase().endsWith("mtx") ||
-                            inputText?.mtx.toLowerCase().endsWith("mtx.gz")
+                        (x?.mtx && !(inputText[ix]?.mtx.toLowerCase().endsWith("mtx") ||
+                            inputText[ix]?.mtx.toLowerCase().endsWith("mtx.gz")
                         )) ||
-                        (tmpInputFiles?.gene && !(inputText?.gene.toLowerCase().endsWith("tsv") ||
-                            inputText?.gene.toLowerCase().endsWith("tsv.gz")
+                        (x?.gene && !(inputText[ix]?.gene.toLowerCase().endsWith("tsv") ||
+                            inputText[ix]?.gene.toLowerCase().endsWith("tsv.gz")
                         )) ||
-                        (tmpInputFiles?.barcode && !(inputText?.barcode.toLowerCase().endsWith("tsv") ||
-                            inputText?.barcode.toLowerCase().endsWith("tsv.gz")
+                        (x?.barcode && !(inputText[ix]?.barcode.toLowerCase().endsWith("tsv") ||
+                            inputText[ix]?.barcode.toLowerCase().endsWith("tsv.gz")
                         ))
                     ) {
-                        setTmpInputValid(false);
-                    } else {
-                        setTmpInputValid(true);
+                        all_valid = false;
                     }
-                } else if (newImportFormat === "tenx" || newImportFormat === "h5ad") {
+
                     if (
-                        tmpInputFiles?.file && !(
-                            inputText?.file.toLowerCase().endsWith("hdf5") ||
-                            inputText?.file.toLowerCase().endsWith("h5") ||
-                            inputText?.file.toLowerCase().endsWith("h5ad")
+                        x?.file && !(
+                            inputText[ix]?.file.toLowerCase().endsWith("hdf5") ||
+                            inputText[ix]?.file.toLowerCase().endsWith("h5") ||
+                            inputText[ix]?.file.toLowerCase().endsWith("h5ad")
                         )
                     ) {
-                        setTmpInputValid(false);
-                    } else {
-                        setTmpInputValid(true);
+                        all_valid = false;
                     }
-                }
+                };
+                setTmpInputValid(all_valid);
 
             } else if (tabSelected === "load" && inputText?.file) {
                 if (loadImportFormat === "kana" &&
-                    tmpInputFiles?.file != null && !(inputText?.file.toLowerCase().endsWith("kana")
+                    tmpInputFiles?.file != null && !(tmpInputFiles[0]?.file.toLowerCase().endsWith("kana")
                     )
                 ) {
                     setTmpInputValid(false);
@@ -850,6 +846,124 @@ const AnalysisDialog = ({
 
     const [showSection, setShowSection] = useState("input");
 
+    const [fileCount, setFileCount] = useState([0]);
+
+    function get_new_input_files(idx, input) {
+        return (
+            <div className="col"
+                style={{
+                    // paddingTop: '10px',
+                    paddingBottom: '15px'
+                }}>
+                <div>
+                    <H5><Tag round={true}>1</Tag>
+                        <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                            onMouseEnter={() => setShowStepHelper(1)}>
+                            Load input files
+                        </span>
+                    </H5>
+                    <Tabs
+                        animate={true}
+                        renderActiveTabPanelOnly={true}
+                        vertical={true}
+                        onChange={handleNewImportTab}
+                        defaultSelectedTabId={newImportFormat}
+                    >
+                        <Tab id="mtx" title="Matrix Market file" panel={
+                            <div className="row"
+                            >
+                                <Label className="row-input">
+                                    <FileInput text={inputText[idx].mtx} onInputChange={(msg) => {
+                                        let tmp = [...tmpInputFiles];
+                                        tmp[idx]["mtx"] = msg.target.files;
+                                        setTmpInputFiles(tmp);
+
+                                        let tmpitext = [...inputText];
+                                        tmpitext[idx]["mtx"] = msg.target.files[0].name;
+                                        setInputText(tmpitext);
+                                        // setInputText({ ...inputText, "mtx": msg.target.files[0].name }); 
+                                        // setTmpInputFiles({ ...tmpInputFiles, "mtx": msg.target.files }) 
+                                    }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <FileInput text={inputText[idx].gene} onInputChange={(msg) => {
+                                        let tmp = [...tmpInputFiles];
+                                        tmp[idx]["gene"] = msg.target.files;
+                                        setTmpInputFiles(tmp);
+
+                                        let tmpitext = [...inputText];
+                                        tmpitext[idx]["gene"] = msg.target.files[0].name;
+                                        setInputText(tmpitext);
+                                        // setInputText({ ...inputText, "gene": msg.target.files[0].name }); 
+                                        // setTmpInputFiles({ ...tmpInputFiles, "gene": msg.target.files }) 
+                                    }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <FileInput text={inputText[idx].barcode} onInputChange={(msg) => {
+                                        let tmp = [...tmpInputFiles];
+                                        tmp[idx]["barcode"] = msg.target.files;
+                                        setTmpInputFiles(tmp);
+
+                                        let tmpitext = [...inputText];
+                                        tmpitext[idx]["barcode"] = msg.target.files[0].name;
+                                        setInputText(tmpitext);
+                                        // setInputText({ ...inputText, "barcode": msg.target.files[0].name }); 
+                                        // setTmpInputFiles({ ...tmpInputFiles, "barcode": msg.target.files }) 
+                                    }} />
+                                </Label>
+                            </div>
+                        } />
+                        <Tab id="tenx" title="10x HDF5 matrix" panel={
+                            <div className="row"
+                            >
+                                <Label className="row-input">
+                                    <FileInput style={{
+                                        marginTop: '5px'
+                                    }}
+                                        text={inputText[idx].file}
+                                        onInputChange={(msg) => {
+                                            let tmp = [...tmpInputFiles];
+                                            tmp[idx]["file"] = msg.target.files;
+                                            setTmpInputFiles(tmp);
+
+                                            let tmpitext = [...inputText];
+                                            tmpitext[idx]["file"] = msg.target.files[0].name;
+                                            setInputText(tmpitext);
+                                            // setInputText({ ...inputText, "file": msg.target.files[0].name });
+                                            // setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files })
+                                        }} />
+                                </Label>
+                            </div>
+                        } />
+                        <Tab id="h5ad" title="H5AD" panel={
+                            <div className="row"
+                            >
+                                <Label className="row-input">
+                                    <FileInput style={{
+                                        marginTop: '5px'
+                                    }}
+                                        text={inputText[idx].file}
+                                        onInputChange={(msg) => {
+                                            let tmp = [...tmpInputFiles];
+                                            tmp[idx]["file"] = msg.target.files;
+                                            setTmpInputFiles(tmp);
+
+                                            let tmpitext = [...inputText];
+                                            tmpitext[idx]["file"] = msg.target.files[0].name;
+                                            setInputText(tmpitext);
+                                            // setInputText({ ...inputText, "file": msg.target.files[0].name });
+                                            // setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files })
+                                        }} />
+                                </Label>
+                            </div>
+                        } />
+                    </Tabs>
+
+                </div>
+            </div>
+        )
+    }
+
     return (
         <>
             <Tooltip2 content="Start new analysis or modify parameters" position={Position.BOTTOM}>
@@ -869,96 +983,55 @@ const AnalysisDialog = ({
                             <>
                                 <div className="stepper-container">
                                     <Button intent="warning"
+                                        icon="bring-data"
                                         onClick={(() => setShowSection("input"))}
                                         disabled={showSection === "input"}>Show Input</Button>
+                                    <Icon icon="drag-handle-horizontal" />
                                     <Button intent="warning"
+                                        icon="merge-links"
                                         onClick={(() => setShowSection("params"))}
                                         disabled={showSection === "params"}>Show Parameters</Button>
                                 </div>
                                 <div className="inputs-container">
                                     <div className='row-input'>
+                                        {showSection == "input" ?
+                                            tmpInputFiles.map((x, ix) => get_new_input_files(ix, x))
+                                            : ""}
+
                                         {
                                             showSection == "input" &&
-                                            <div className="col"
-                                                style={{
-                                                    // paddingTop: '10px',
-                                                    paddingBottom: '15px'
-                                                }}>
-                                                <div>
-                                                    <H5><Tag round={true}>1</Tag>
-                                                        <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                                            onMouseEnter={() => setShowStepHelper(1)}>
-                                                            Load input files
-                                                        </span>
-                                                    </H5>
-                                                    <Tabs
-                                                        animate={true}
-                                                        renderActiveTabPanelOnly={true}
-                                                        vertical={true}
-                                                        onChange={handleNewImportTab}
-                                                        defaultSelectedTabId={newImportFormat}
-                                                    >
-                                                        <Tab id="mtx" title="Matrix Market file" panel={
-                                                            <div className="row"
-                                                            >
-                                                                <Label className="row-input">
-                                                                    <FileInput text={inputText.mtx} onInputChange={(msg) => { setInputText({ ...inputText, "mtx": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "mtx": msg.target.files }) }} />
-                                                                </Label>
-                                                                <Label className="row-input">
-                                                                    <FileInput text={inputText.gene} onInputChange={(msg) => { setInputText({ ...inputText, "gene": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "gene": msg.target.files }) }} />
-                                                                </Label>
-                                                                <Label className="row-input">
-                                                                    <FileInput text={inputText.barcode} onInputChange={(msg) => { setInputText({ ...inputText, "barcode": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "barcode": msg.target.files }) }} />
-                                                                </Label>
-                                                            </div>
-                                                        } />
-                                                        <Tab id="tenx" title="10x HDF5 matrix" panel={
-                                                            <div className="row"
-                                                            >
-                                                                <Label className="row-input">
-                                                                    <FileInput style={{
-                                                                        marginTop: '5px'
-                                                                    }}
-                                                                        text={inputText.file}
-                                                                        onInputChange={(msg) => {
-                                                                            setInputText({ ...inputText, "file": msg.target.files[0].name });
-                                                                            setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files })
-                                                                        }} />
-                                                                </Label>
-
-                                                                {/* <Label className="row-input">
-                                                            <Text className="text-100">
-                                                                <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}>
-                                                                    HDF5 format
-                                                                </span>
-                                                            </Text>
-                                                            <HTMLSelect onChange={(nval, val) => sethdfFormat(nval?.currentTarget.key)}>
-                                                                <option key="tenx">10x genomics</option>
-                                                                <option key="h5ad">H5ad</option>
-                                                            </HTMLSelect>
-                                                        </Label> */}
-                                                            </div>
-                                                        } />
-                                                        <Tab id="h5ad" title="H5AD" panel={
-                                                            <div className="row"
-                                                            >
-                                                                <Label className="row-input">
-                                                                    <FileInput style={{
-                                                                        marginTop: '5px'
-                                                                    }}
-                                                                        text={inputText.file}
-                                                                        onInputChange={(msg) => {
-                                                                            setInputText({ ...inputText, "file": msg.target.files[0].name });
-                                                                            setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files })
-                                                                        }} />
-                                                                </Label>
-                                                            </div>
-                                                        } />
-                                                    </Tabs>
-
-                                                </div>
+                                            <div style={{
+                                                display: "flex",
+                                                justifyContent: "center",
+                                                alignItems: "center"
+                                            }}>
+                                                <Button intent="warning"
+                                                    icon="add"
+                                                    style={{
+                                                        margin: "3px"
+                                                    }}
+                                                    onClick={((x) => {
+                                                        // setFileCount([...fileCount, fileCount.length])
+                                                        setTmpInputFiles([...tmpInputFiles, {}]);
+                                                        setInputText([...inputText, {
+                                                            mtx: "Choose Matrix Market file",
+                                                            gene: "Choose feature/gene annotation",
+                                                            barcode: "Choose barcode annotation",
+                                                        }])
+                                                    })}
+                                                >Import another file</Button>
+                                                <Button intent="warning"
+                                                    icon="delete"
+                                                    disabled={tmpInputFiles.length == 1}
+                                                    onClick={(() => {
+                                                        setTmpInputFiles([...tmpInputFiles].slice(-1));
+                                                        setInputText([...inputText].slice(-1));
+                                                        // setFileCount([...fileCount].slice(-1))
+                                                    })}
+                                                >Delete last import</Button>
                                             </div>
                                         }
+
 
                                         {showSection == "params" && get_input_qc()}
                                         {showSection == "params" && get_input_fsel()}
@@ -1018,12 +1091,14 @@ const AnalysisDialog = ({
                             <>
                                 <div className="stepper-container">
                                     <Button intent="warning"
+                                        icon="bring-data"
                                         onClick={(() => setShowSection("input"))}
                                         disabled={showSection === "input"}>Show Input</Button>
-                                        {console.log(loadParams && loadParamsFor === loadImportFormat && showSection === "params")}
+                                    <Icon icon="drag-handle-horizontal" />
                                     <Button intent="warning"
+                                        icon="merge-links"
                                         onClick={(() => setShowSection("params"))}
-                                        disabled={loadParams && loadParamsFor === loadImportFormat ? showSection === "params" ? false: true : true}>Show Parameters</Button>
+                                        disabled={loadParams && loadParamsFor === loadImportFormat ? showSection === "params" ? true : false : true}>Show Parameters</Button>
                                 </div>
                                 <div className="inputs-container">
                                     <div className='row-input'>
