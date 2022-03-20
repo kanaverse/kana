@@ -17,16 +17,6 @@ function dummyGenes(numberOfRows) {
     return { "id": genes };
 }
 
-function guessFeatureType() {
-    var gene_info_type = {};
-    var gene_info = fetchGenes();
-    for (const [key, val] of Object.entries(gene_info)) {
-        gene_info_type[key] = scran.guessFeatures(val);
-    }
-    cache.gene_types = gene_info_type;
-    return;
-}
-
 function readDSVFromBuffer(content, fname, delim = "\t") {
     var ext = fname.name.split('.').pop();
 
@@ -42,7 +32,10 @@ function readDSVFromBuffer(content, fname, delim = "\t") {
     return parsed;
 }
 
-/** Matrix Market **/
+/***********************************
+ ****** Matrix Market loaders ******
+ ***********************************/
+
 function loadMatrixMarketRaw(files) {
     utils.freeCache(cache.matrix);
 
@@ -114,10 +107,6 @@ function loadMatrixMarketRaw(files) {
         cache.annotations = null;
     }
 
-    if ("reloaded" in cache) {
-        delete cache.reloaded;
-    }
-
     return;
 }
 
@@ -127,7 +116,7 @@ function loadMatrixMarket(args) {
     // First pass computes an abbreviated version to quickly check for changes.
     // Second pass does the actual readArrayBuffer.
     for (var it = 0; it < 2; it++) {
-        var formatted = { "type": "MatrixMarket", "files": [] };
+        var formatted = { "format": "MatrixMarket", "files": [] };
 
         var bufferFun;
         if (it == 0) {
@@ -173,7 +162,9 @@ function loadMatrixMarket(args) {
     return;
 }
 
-/** HDF5 **/
+/**************************
+ ****** HDF5 loaders ******
+ **************************/
 
 function load10XRaw(files) {
     utils.freeCache(cache.matrix);
@@ -210,10 +201,6 @@ function load10XRaw(files) {
         cache.genes = dummyGenes(cache.matrix.numberOfRows());
     }
     scran.permuteFeatures(cache.matrix, cache.genes);
-
-    if ("reloaded" in cache) {
-        delete cache.reloaded;
-    }
 
     return;
 }
@@ -286,10 +273,6 @@ function loadH5ADRaw(files, name) {
     }
     scran.permuteFeatures(cache.matrix, cache.genes);
 
-    if ("reloaded" in cache) {
-        delete cache.reloaded;
-    }
-
     return;
 }
 
@@ -299,7 +282,7 @@ function loadHDF5(args, format) {
     // First pass computes an abbreviated version to quickly check for changes.
     // Second pass does the actual readArrayBuffer.
     for (var it = 0; it < 2; it++) {
-        var formatted = { "type": format, "files": [] };
+        var formatted = { "format": format, "files": [] };
 
         var bufferFun;
         if (it == 0) {
@@ -333,145 +316,204 @@ function loadHDF5(args, format) {
     return;
 }
 
-/** Public functions (standard) **/
-export function compute(args) {
-    switch (args.format) {
+/******************************
+ ****** Standard exports ******
+ ******************************/
+
+export function compute(format, files) {
+    switch (format) {
         case "mtx":
-            loadMatrixMarket(args.files);
+            loadMatrixMarket(files);
             break;
         case "hdf5":
         case "tenx":
-            loadHDF5(args.files, "10X");
+            loadHDF5(files, "10X");
             break;
         case "h5ad":
-            loadHDF5(args.files, "H5AD");
+            loadHDF5(files, "H5AD");
             break;
         case "kana":
             // do nothing, this is handled by unserialize.
             break;
         default:
-            throw "unknown matrix file extension: '" + args.format + "'";
+            throw "unknown matrix file extension: '" + format + "'";
     }
-    guessFeatureType();
     return;
 }
 
 export function results() {
-    var output = { "dimensions": fetchDimensions() }
-    if ("reloaded" in cache) {
-        output.genes = { ...cache.reloaded.genes };
-
-        if (cache.annotations) {
-            output.annotations = Object.keys(cache.reloaded.annotations);
-        }
-    } else {
-        output.genes = { ...cache.genes };
-        if (cache.annotations) {
-            output.annotations = Object.keys(cache.annotations);
-        }
+    var output = { 
+        "dimensions": {
+            "num_genes": cache.matrix.numberOfRows(),
+            "num_cells": cache.matrix.numberOfColumns()
+        },
+        "genes": { ...cache.genes }
+    };
+    if (cache.annotations) {
+        output.annotations = Object.keys(cache.annotations);
     }
     return output;
 }
 
-export function serialize() {
-    var contents = {};
-    if ("reloaded" in cache) {
-        contents.genes = { ...cache.reloaded.genes };
-        contents.num_cells = cache.reloaded.num_cells;
-        if (cache.reloaded.annotations) {
-            contents.annotations = cache.reloaded.annotations;
-        }
-    } else {
-        contents.genes = { ...cache.genes };
-        contents.num_cells = cache.matrix.numberOfColumns();
-        if (cache.annotations) {
-            contents.annotations = cache.annotations;
+export async function serialize(handle, saver, embedded) {
+    let ghandle = handle.createGroup("inputs");
+
+    {
+        let phandle = ghandle.createGroup("parameters"); 
+        phandle.writeDataSet("format", "String", [], parameters.format);
+        let fihandle = phandle.createGroup("files");
+
+        let sofar = 0;
+        for (const [index, obj] of parameters.files.entries()) {
+            let curhandle = fihandle.createGroup(String(index));
+            curhandle.writeDataSet("type", "String", [], obj.type);
+            curhandle.writeDataSet("name", "String", [], obj.name);
+
+            let res = await saver(obj);
+            if (embedded) {
+                curhandle.writeDataSet("offset", "Uint32", [], res.offset);
+                curhandle.writeDataSet("size", "Uint32", [], res.size);
+            } else {
+                curhandle.writeDataSet("id", "String", [], res);
+            }
         }
     }
 
-    // Making a deep-ish clone of the parameters so that any fiddling with
-    // buffers during serialization does not compromise internal state.
-    var parameters2 = { ...parameters };
-    parameters2.files = parameters.files.map(x => { return { ...x }; });
+    {
+        let perm = cache.matrix.permutation({ copy: "view" });
+        let dims = [
+            cache.matrix.numberOfRows(),
+            cache.matrix.numberOfColumns()
+        ];
 
-    return {
-        "parameters": parameters2,
-        "contents": contents
-    };
-}
+        let rhandle = ghandle.createGroup("results"); 
+        rhandle.writeDataSet("dimensions", "Int32", null, dims);
+        rhandle.writeDataSet("permutation", "Int32", null, perm);
+    }
 
-export function unserialize(saved) {
-    parameters = saved.parameters;
-    cache.reloaded = saved.contents;
-    guessFeatureType();
     return;
 }
 
-/** Public functions (custom) **/
-export function fetchCountMatrix() {
-    if ("reloaded" in cache) {
-        if (parameters.type == "MatrixMarket") {
-            loadMatrixMarketRaw(parameters.files);
+export async function unserialize(handle, loader, embedded) {
+    let ghandle = handle.open("inputs");
+    let phandle = ghandle.open("parameters"); 
 
-        } else if (parameters.type == "H5AD") {
-            loadH5ADRaw(parameters.files);
+    // Extracting the files.
+    let fihandle = phandle.open("files");
+    let kids = fihandle.children;
+    let files = new Array(kids.length);
+    
+    for (const x of Object.keys(kids)) {
+        let current = fihandle.open(x);
 
-        } else if (parameters.type == "10X") {
-            load10XRaw(parameters.files);
-
-        } else if (parameters.type == "HDF5") {
-            // legacy support: trying to guess what it is based on its extension.
-            if (parameters.files[0].name.match(/h5ad$/i)) {
-                loadH5ADRaw(parameters.files);
-            } else {
-                load10XRaw(parameters.files);
-            }
-
-        } else {
-            throw `unrecognized count matrix format, ${parameters.type}`;
+        let curfile = {};
+        for (const field of ["type", "name"]) {
+            let dhandle = current.open(field, { load: true });
+            curfile[field] = dhandle.values[0];
         }
+
+        if (!embedded) {
+            let dhandle = current.open("id", { load: true });
+            curfile.buffer = await loader(dhandle.values[0]);
+        } else {
+            let buffer_deets = {};
+            for (const field of ["offset", "size"]) {
+                let dhandle = current.open(field, { load: true });
+                buffer_deets[field] = dhandle.values[0];
+            }
+            curfile.buffer = await loader(buffer_deets.offset, buffer_deets.size);
+        }
+
+        let idx = Number(x);
+        files[idx] = curfile;
     }
+
+    // Run the reloaders now.
+    let format = phandle.open("format", { load: true }).values[0];
+    if (format == "MatrixMarket") {
+        loadMatrixMarketRaw(files);
+
+    } else if (format == "H5AD") {
+        loadH5ADRaw(files);
+
+    } else if (format == "10X") {
+        load10XRaw(files);
+
+    } else if (format == "HDF5") {
+        // legacy support: trying to guess what it is based on its extension.
+        if (files[0].name.match(/h5ad$/i)) {
+            loadH5ADRaw(files);
+        } else {
+            load10XRaw(files);
+        }
+
+    } else {
+        throw `unrecognized count matrix format "${format}"`;
+    }
+
+    parameters = { 
+        format: format, 
+        files: files 
+    };
+
+    // We need to do something if the permutation is not the same.
+    let rhandle = ghandle.open("results"); 
+
+    let perm = null;
+    if ("permutation" in rhandle.children) {
+        let dhandle = rhandle.open("permutation", { load: true });
+        perm = scran.updatePermutation(cache.matrix, dhandle.values);
+    } else {
+        // Otherwise, we're dealing with v0 states. We'll just
+        // assume it was the same, I guess. Should be fine as we didn't change
+        // the permutation code in v0.
+    }
+
+    let permuter;
+    if (perm !== null) {
+        // Adding a permuter function for all per-gene vectors.
+        permuter = (x) => {
+            let temp = x.slice();
+            x.forEach((y, i) => {
+                temp[i] = x[perm[i]];
+            });
+            x.set(temp);
+            return;
+        };
+    } else {
+        permuter = (x) => {}; 
+    }
+
+    return permuter;
+}
+
+/****************************
+ ****** Custom exports ******
+ ****************************/
+
+export function fetchCountMatrix() {
     return cache.matrix;
 }
 
-export function fetchDimensions() {
-    if ("reloaded" in cache) {
-        return {
-            // This should contain at least one element,
-            // and all of them should have the same length,
-            // so indexing by the first element is safe.
-            "num_genes": Object.values(cache.reloaded.genes)[0].length,
-            "num_cells": cache.reloaded.num_cells
-        };
-    } else {
-        return {
-            "num_genes": cache.matrix.numberOfRows(),
-            "num_cells": cache.matrix.numberOfColumns()
-        };
-    }
-}
-
 export function fetchGenes() {
-    if ("reloaded" in cache) {
-        return cache.reloaded.genes;
-    } else {
-        return cache.genes;
-    }
+    return cache.genes;
 }
 
 export function fetchGeneTypes() {
+    if (!("gene_types" in cache)) {
+        var gene_info_type = {};
+        var gene_info = fetchGenes();
+        for (const [key, val] of Object.entries(gene_info)) {
+            gene_info_type[key] = scran.guessFeatures(val);
+        }
+        cache.gene_types = gene_info_type;
+    }
     return cache.gene_types;
 }
 
 export function fetchAnnotations(col) {
-    let annots, asize;
-    if ("reloaded" in cache) {
-        annots = cache.reloaded.annotations;
-        asize = cache.reloaded.matrix.numberOfColumns();
-    } else {
-        annots = cache.annotations;
-        asize = cache.matrix.numberOfColumns();
-    }
+    let annots = cache.annotations;
+    let size = cache.matrix.numberOfColumns();
 
     if (!(col in annots)) {
         throw `column ${col} does not exist in col.tsv`;

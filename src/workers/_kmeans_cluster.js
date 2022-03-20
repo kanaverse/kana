@@ -7,38 +7,36 @@ var parameters = {};
 
 export var changed = false;
 
+export function valid() {
+    return ("raw" in cache);
+}
+
 export function fetchClustersAsWasmArray() {
-    if ("reloaded" in cache) {
-        return cache.reloaded.clusters;
+    if (!valid()) {
+        throw "cannot fetch k-means clusters from an invalid state";
     } else {
         return cache.raw.clusters({ copy: "view" });
     }
 }
 
-export function compute(args) {
-    // Removing the cluster_method so that we don't pick up changes in the
-    // method in the changedParameters() call. This aims to preserve the state
-    // if only the clustering method choice changed, such that a user avoids
-    // recomputation when they switch back to this method.
-    let method = args.cluster_method;
-    delete args.cluster_method;
+export function compute(run_me, k) {
+    changed = false;
 
-    if (changed !== null && !pca.changed && !utils.changedParameters(parameters, args)) {
-        changed = false;
+    let run_k = (pca.changed || k != parameters.k);
+    if (run_me && !valid()) {
+        run_k = true;
+    }
 
-    } else if (method !== "kmeans") {
-        changed = null; // neither changed or unchanged, just skipped.
-        utils.freeCache(cache.raw); // free up some memory as a courtesy.
-        utils.freeReloaded(cache);
-        parameters = args;
-
-    } else {
+    if (run_k) {
         utils.freeCache(cache.raw);
-        var pcs = pca.fetchPCs();
-        cache.raw = scran.clusterKmeans(pcs.pcs, args.k, { numberOfDims: pcs.num_pcs, numberOfCells: pcs.num_obs, initMethod: "pca-part" });
-        parameters = args;
+        if (run_me) {
+            var pcs = pca.fetchPCs();
+            cache.raw = scran.clusterKmeans(pcs.pcs, k, { numberOfDims: pcs.num_pcs, numberOfCells: pcs.num_obs, initMethod: "pca-part" });
+        } else {
+            delete cache.raw; // ensure this step gets re-run later when run_me = true. 
+        }
+        parameters.k = k;
         changed = true;
-        utils.freeReloaded(cache);
     }
 
     return;
@@ -50,35 +48,62 @@ export function results() {
     return {};
 }
 
-export function serialize() {
-    let output = { 
-        "parameters": parameters
-    };
+export function serialize(handle) {
+    let ghandle = handle.createGroup("kmeans_cluster");
 
-    if (changed === null) {
-        output.contents = null;
-    } else {
-        output.contents = {
-            "clusters": fetchClustersAsWasmArray().slice()
-        };
+    {
+        let phandle = ghandle.createGroup("parameters");
+        phandle.writeDataSet("k", "Int32", [], parameters.k);
     }
 
-    return output;
-}
-
-export function unserialize(saved) {
-    parameters = saved.parameters;
-
-    if (saved.contents !== null) {
-        utils.freeReloaded(cache); // free anything that might have been there previously.
-        cache.reloaded = saved.contents;
-
-        var out = scran.createInt32WasmArray(cache.reloaded.clusters.length);
-        out.set(cache.reloaded.clusters);
-        cache.reloaded.clusters = out;
-    } else {
-        changed = null;
+    {
+        let rhandle = ghandle.createGroup("results");
+        if (valid()) {
+            let clusters = fetchClustersAsWasmArray();
+            rhandle.writeDataSet("clusters", "Int32", null, clusters);
+         }
     }
 
     return;
+}
+
+class KmeansMimic {
+    constructor(clusters) {
+        this.buffer = scran.createInt32WasmArray(clusters.length);
+        this.buffer.set(clusters);
+    }
+
+    clusters({ copy }) {
+        return utils.mimicGetter(this.buffer, copy);
+    }
+
+    free() {
+        this.buffer.free();
+    }
+}
+
+export function unserialize(handle) {
+    parameters = {
+        k: 10
+    };
+
+    // Protect against old analysis states that don't have kmeans_cluster.
+    if ("kmeans_cluster" in handle.children) {
+        let ghandle = handle.open("kmeans_cluster");
+
+        {
+            let phandle = ghandle.open("parameters");
+            parameters.k = phandle.open("k", { load: true }).values[0];
+        }
+
+        {
+            let rhandle = ghandle.open("results");
+            if ("clusters" in rhandle.children) {
+                let clusters = rhandle.open("clusters", { load: true }).values;
+                cache.raw = new KmeansMimic(clusters);
+            }
+        }
+    }
+
+    return { ...parameters };
 }

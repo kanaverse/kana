@@ -1,42 +1,52 @@
 import * as scran from "scran.js";
 import * as wa from "wasmarrays.js";
 
+export function copyVectors(data, copy) {
+    if (copy) {
+        for (const k of Object.keys(data)) {
+            data[k] = data[k].slice();
+        }
+    }
+}
+
+export function copyOrView(copy) {
+    if (!copy) {
+        return "view";
+    } else {
+        return copy;
+    }
+}
+
+export function mimicGetter(value, copy) {
+    if (value instanceof wa.WasmArray) {
+        if (copy == "view") {
+            return value.view();
+        } else if (copy) {
+            return value.slice();
+        } else {
+            return value.array();
+        }
+    } else {
+        if (copy === true) {
+            return value.slice();
+        } else {
+            // Includes copy = "view"; we just provide a no-copy and assume
+            // that, if the caller actually wanted a WasmArray, they would
+            // have generated a WasmArray during the unserialization.
+            return value;
+        }
+    }
+}
+
 export function freeCache(object) {
     if (object !== undefined && object !== null) {
-        try { // placeholder try() for now, because older scran.js don't work with double-free.
-            object.free();
-        } catch (e) {
-        }
+        object.free();
     }
     return;
 }
 
-export function freeReloaded(cache) {
-    if ("reloaded" in cache) {
-        for (const [k, v] of Object.entries(cache.reloaded)) {
-            if (v instanceof wa.WasmArray) {
-                v.free();
-            }
-        }
-        delete cache.reloaded;
-    }
-}
-
 export function changedParameters(x, y) {
     return JSON.stringify(x) != JSON.stringify(y);
-}
-
-export function computeRange(arr) {
-    var max = -Infinity, min = Infinity;
-    arr.forEach(function (x) {
-        if (max < x) {
-            max = x;
-        }
-        if (min > x) {
-            min = x;
-        }
-    });
-    return [min, max];
 }
 
 export function allocateCachedArray(size, type, cache, name = "buffer") {

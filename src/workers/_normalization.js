@@ -1,8 +1,6 @@
 import * as scran from "scran.js"; 
 import * as utils from "./_utils.js";
-import * as thresholds from "./_qc_thresholds.js";
-import * as filter from "./_qc_filter.js";
-import * as metrics from "./_qc_metrics.js";
+import * as qc from "./_quality_control.js";
 
 var cache = {};
 var parameters = {};
@@ -10,22 +8,21 @@ var parameters = {};
 export var changed = false;
 
 function rawCompute() {
-    var mat = filter.fetchFilteredMatrix();
+    var mat = qc.fetchFilteredMatrix();
     var buffer = utils.allocateCachedArray(mat.numberOfColumns(), "Float64Array", cache);
 
-    // Better not have any more allocations in between now and filling of size_factors!
-    var sums = metrics.fetchSums({ unsafe: true });
-    var discards = thresholds.fetchDiscards({ unsafe: true });
+    var discards = qc.fetchDiscards();
+    var sums = qc.fetchSums({ unsafe: true }); // Better not have any more allocations in between now and filling of size_factors!
 
     // Reusing the totals computed earlier.
     var size_factors = buffer.array();
     var j = 0;
-    for (var i = 0; i < discards.length; ++i) {
-        if (!discards[i]) {
+    discards.array().forEach((x, i) => {
+        if (!x) {
             size_factors[j] = sums[i];
             j++;
         }
-    }
+    });
 
     if (j != mat.numberOfColumns()) {
         throw "normalization and filtering are not in sync";
@@ -33,18 +30,17 @@ function rawCompute() {
 
     utils.freeCache(cache.matrix);
     cache.matrix = scran.logNormCounts(mat, { sizeFactors: buffer });
-
-    delete cache.reloaded;
     return;
 }
 
-export function compute(args) {
-    if (!metrics.changed && !filter.changed && !utils.changedParameters(parameters, args)) {
-        changed = false;
-    } else {
-        rawCompute();
-        parameters = args;
+export function compute() {
+    changed = false;
+    if (qc.changed) {
         changed = true;
+    } 
+
+    if (changed) {
+        rawCompute();
     }
     return;
 }
@@ -53,21 +49,20 @@ export function results() {
     return {};
 }
 
-export function serialize() {
-    return {
-        "parameters": parameters,
-        "contents": results()
-    };
+export function serialize(handle) {
+    // Token effort.
+    let ghandle = handle.createGroup("normalization");
+    ghandle.createGroup("parameters"); 
+    ghandle.createGroup("results"); 
 }
 
-export function unserialize(saved) {
-    parameters = saved.parameters;
-    cache.reloaded = saved.contents;
+export function unserialize(path) {
+    // Nothing to do here.
     return;
 }
 
 export function fetchNormalizedMatrix() {
-    if ("reloaded" in cache) {
+    if (!("matrix" in cache)) {
         rawCompute();
     }
     return cache.matrix;
