@@ -63,15 +63,13 @@ const AnalysisDialog = ({
 
         if (tabSelected === "load") {
             if (loadImportFormat === "kanadb") {
-                setDatasetName(props?.kanaIDBRecs[parseInt(tmpInputFiles?.file)]?.title);
+                setDatasetName(props?.kanaIDBRecs[parseInt(tmpInputFiles?.[0]?.file)]?.title);
             } else {
-                setDatasetName(tmpInputFiles?.file?.[0]?.name.split(".")[0]);
+                setDatasetName(tmpInputFiles?.[0]?.file?.[0]?.name.split(".")[0]);
             }
         }
 
         setInputFiles({
-            "format": tabSelected === "new" ?
-                newImportFormat : loadImportFormat,
             "files": tmpInputFiles,
             "reset": tabSelected === "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file
         });
@@ -87,6 +85,9 @@ const AnalysisDialog = ({
             handleNewImportTab(newImportFormat);
         } else if (currTab === "load") {
             handleLoadImportTab(loadImportFormat);
+            let tmp = [...tmpInputFiles];
+            tmp[0]["format"] = loadImportFormat;
+            setTmpInputFiles(tmp);
         }
         setTabSelected(currTab);
         setShowStepHelper(0);
@@ -866,7 +867,15 @@ const AnalysisDialog = ({
                         animate={true}
                         renderActiveTabPanelOnly={true}
                         vertical={true}
-                        onChange={handleNewImportTab}
+                        onChange={(ntab, otab) => {
+                            console.log("new, ", ntab);
+
+                            let tmp = [...tmpInputFiles];
+                            tmp[idx]["format"] = ntab;
+                            setTmpInputFiles(tmp);
+
+                            handleNewImportTab(ntab, otab);
+                        }}
                         defaultSelectedTabId={newImportFormat}
                     >
                         <Tab id="mtx" title="Matrix Market file" panel={
@@ -1109,7 +1118,14 @@ const AnalysisDialog = ({
                                                     animate={true}
                                                     renderActiveTabPanelOnly={true}
                                                     vertical={true}
-                                                    onChange={handleLoadImportTab}
+                                                    onChange={(ntab, otab) => {
+                                                        console.log("load, ", ntab);
+                                                        let tmp = [...tmpInputFiles];
+                                                        tmp[0]["format"] = ntab;
+                                                        setTmpInputFiles(tmp);
+
+                                                        handleLoadImportTab(ntab, otab);
+                                                    }}
                                                     defaultSelectedTabId={loadImportFormat}
                                                 >
                                                     <Tab id="kana" title="Load from file" panel={
@@ -1121,7 +1137,17 @@ const AnalysisDialog = ({
                                                             </H5>
                                                             <div className="row">
                                                                 <Label className="row-input">
-                                                                    <FileInput text={inputText.file} onInputChange={(msg) => { setInputText({ ...inputText, "file": msg.target.files[0].name }); setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files }) }} />
+                                                                    <FileInput text={inputText[0].file} onInputChange={(msg) => {
+                                                                        let tmp = [...tmpInputFiles];
+                                                                        tmp[0]["file"] = msg.target.files;
+                                                                        setTmpInputFiles(tmp);
+
+                                                                        let tmpitext = [...inputText];
+                                                                        tmpitext[0]["file"] = msg.target.files[0].name;
+                                                                        setInputText(tmpitext);
+                                                                        // setInputText({ ...inputText, "file": msg.target.files[0].name });
+                                                                        // setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files })
+                                                                    }} />
                                                                 </Label>
                                                             </div>
                                                         </div>
@@ -1138,10 +1164,14 @@ const AnalysisDialog = ({
                                                                     <div className="row">
                                                                         <RadioGroup
                                                                             onChange={(x) => {
-                                                                                setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value });
+                                                                                let tmp = [...tmpInputFiles];
+                                                                                tmp[0]["file"] = x.currentTarget?.value;
+                                                                                setTmpInputFiles(tmp);
+
+                                                                                // setTmpInputFiles({ ...tmpInputFiles, "file": x.currentTarget?.value });
                                                                                 setTmpInputValid(true);
                                                                             }}
-                                                                            selectedValue={tmpInputFiles?.file}
+                                                                            selectedValue={tmpInputFiles[0]?.file}
                                                                         >
                                                                             {
                                                                                 props?.kanaIDBRecs.map((x, i) => {

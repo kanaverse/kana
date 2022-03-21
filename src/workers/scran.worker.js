@@ -352,8 +352,8 @@ onmessage = function (msg) {
     } else if (payload.type == "LOAD") {
         const path = "temp.h5";
 
-        if (payload.payload.files.format == "kana") {
-            let f = payload.payload.files.files.file[0];
+        if (payload.payload.files.files[0].format == "kana") {
+            let f = payload.payload.files.files[0].file[0];
             loaded
                 .then(async (x) => {
                     const reader = new FileReaderSync();
@@ -379,8 +379,8 @@ onmessage = function (msg) {
                     });
                 });
 
-        } else if (payload.payload.files.format == "kanadb") {
-            var id = payload.payload.files.files.file;
+        } else if (payload.payload.files.files[0].format == "kanadb") {
+            var id = payload.payload.files.files[0].file;
             kana_db.loadAnalysis(id)
                 .then(async (res) => {
                     if (res == null) {
