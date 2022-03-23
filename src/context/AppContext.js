@@ -9,6 +9,12 @@ const AppContextProvider = ({ children }) => {
     files: null
   });
 
+  // Pre flight Input State
+  const [preInputFiles, setPreInputFiles] = useState(null);
+
+  // Pre flight Input Status
+  const [preInputFilesStatus, setPreInputFilesStatus] = useState(null);
+
   // default params 
   const [params, setParams] = useState({
     qc: {
@@ -94,7 +100,9 @@ const AppContextProvider = ({ children }) => {
         initLoadState, setInitLoadState,
         loadParamsFor, setLoadParamsFor,
         annotationCols, setAnnotationCols,
-        annotationObj, setAnnotationObj
+        annotationObj, setAnnotationObj,
+        preInputFiles, setPreInputFiles,
+        preInputFilesStatus, setPreInputFilesStatus
       }}
     >
       {children}

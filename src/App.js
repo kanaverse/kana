@@ -126,7 +126,8 @@ const App = () => {
     datasetName, params, loadParams,
     setGeneColSel, setLoadParams,
     setInitLoadState, inputFiles, annotationCols, setAnnotationCols,
-    annotationObj, setAnnotationObj } = useContext(AppContext);
+    annotationObj, setAnnotationObj, preInputFiles,
+    setPreInputFilesStatus } = useContext(AppContext);
 
   // initializes various things on the worker side
   useEffect(() => {
@@ -286,6 +287,35 @@ const App = () => {
       }
     }
   }, [inputFiles, params, wasmInitialized]);
+
+
+  useEffect(() => {
+
+    if (wasmInitialized && preInputFiles && !initLoadState) {
+
+      if (preInputFiles.files) {
+        let all_valid = true;
+
+        for (const f in preInputFiles.files) {
+          let ffile = preInputFiles.files[f];
+
+          if (!(ffile.format) || !(ffile.file)) {
+            all_valid = false;
+          }
+        }
+
+        if (all_valid && tabSelected === "new") {
+          scranWorker.postMessage({
+            "type": "PREFLIGHT_INPUT",
+            "payload": {
+              "files": preInputFiles
+            },
+            "msg": "not much to pass"
+          });
+        }
+      }
+    }
+  }, [preInputFiles, wasmInitialized]);
 
   // callback for all responses from workers
   // all interactions are logged and shown on the UI
@@ -449,6 +479,9 @@ const App = () => {
     } else if (payload.type === "cell_labelling_DATA") {
       const { resp } = payload;
       setCellLabelData(resp);
+    } else if (payload.type === "PREFLIGHT_INPUT_DATA") {
+      const { resp } = payload;
+      setPreInputFilesStatus(resp);
     }
   }
 

@@ -21,10 +21,13 @@ const AnalysisDialog = ({
         params, setParams,
         tabSelected, setTabSelected,
         loadParams,
-        setLoadParamsFor, loadParamsFor, setDatasetName } = useContext(AppContext);
+        setLoadParamsFor, loadParamsFor, setDatasetName,
+        setPreInputFiles, preInputFilesStatus } = useContext(AppContext);
 
     // assuming new is the default tab
-    let [tmpInputFiles, setTmpInputFiles] = useState([{}]);
+    let [tmpInputFiles, setTmpInputFiles] = useState([{
+        "name": "file-1"
+    }]);
 
     const [inputText, setInputText] = useState([{
         mtx: "Choose Matrix Market file",
@@ -69,8 +72,13 @@ const AnalysisDialog = ({
             }
         }
 
+        let mapFiles = {};
+        for (const f of tmpInputFiles) {
+            mapFiles[f.name] = f
+        }
+
         setInputFiles({
-            "files": tmpInputFiles,
+            "files": mapFiles,
             "reset": tabSelected === "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file
         });
 
@@ -157,7 +165,25 @@ const AnalysisDialog = ({
                         all_valid = false;
                     }
                 };
+
+                let tnames = tmpInputFiles.map(x => x.name);
+                if ([...new Set(tnames)].length != tmpInputFiles.length) {
+                    all_valid = false;
+                }
+
                 setTmpInputValid(all_valid);
+
+                if (all_valid) {
+                    let mapFiles = {};
+                    for (const f of tmpInputFiles) {
+                        mapFiles[f.name] = f
+                    }
+
+                    setPreInputFiles({
+                        "files": mapFiles,
+                        "reset": tabSelected === "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file
+                    });
+                }
 
             } else if (tabSelected === "load" && inputText?.file) {
                 if (loadImportFormat === "kana" &&
@@ -863,6 +889,23 @@ const AnalysisDialog = ({
                             Load input files
                         </span>
                     </H5>
+                    <Label className="row-input">
+                        <Text className="text-100">
+                            <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                onMouseEnter={() => setShowStepHelper(1)}>
+                                Name this dataset
+                            </span>
+                        </Text>
+                        <InputGroup
+                            placeholder="name this dataset"
+                            onChange={(nval, val) => {
+                                let tmp = [...tmpInputFiles];
+                                tmp[idx]["name"] = nval?.target?.value;
+                                setTmpInputFiles(tmp);
+                            }}
+                            value={tmpInputFiles[idx]["name"]}
+                        />
+                    </Label>
                     <Tabs
                         animate={true}
                         renderActiveTabPanelOnly={true}
@@ -967,7 +1010,6 @@ const AnalysisDialog = ({
                             </div>
                         } />
                     </Tabs>
-
                 </div>
             </div>
         )
@@ -1021,7 +1063,9 @@ const AnalysisDialog = ({
                                                     }}
                                                     onClick={((x) => {
                                                         // setFileCount([...fileCount, fileCount.length])
-                                                        setTmpInputFiles([...tmpInputFiles, {}]);
+                                                        setTmpInputFiles([...tmpInputFiles, {
+                                                            "name": `file-${tmpInputFiles.length + 1}`
+                                                        }]);
                                                         setInputText([...inputText, {
                                                             mtx: "Choose Matrix Market file",
                                                             gene: "Choose feature/gene annotation",
@@ -1039,6 +1083,31 @@ const AnalysisDialog = ({
                                                     })}
                                                 >Delete last import</Button>
                                             </div>
+                                        }
+
+                                        {
+                                            preInputFilesStatus &&
+
+                                            <Callout intent={preInputFilesStatus.valid ? "primary" : "danger"}
+                                                title="Datasets"
+                                                style={{
+                                                    margin: '10px'
+                                                }}>
+                                                <div>
+                                                    {
+                                                        preInputFilesStatus.valid ?
+                                                            <span>These datasets can be integrated.</span> :
+                                                            <span>Datasets cannot be integrated.</span>
+                                                    }
+
+                                                    {
+                                                        <p>Contain
+                                                            {preInputFilesStatus.common_genes == 0 ? " no " : preInputFilesStatus.common_genes + " "}
+                                                            common genes.</p>
+                                                    }
+                                                </div>
+                                            </Callout>
+
                                         }
 
 
@@ -1065,6 +1134,8 @@ const AnalysisDialog = ({
                                                     <li>features or genes, <code>*.tsv</code> or <code>*.tsv.gz</code></li>
                                                     <li>HDF5 (10x or h5ad) - <code>*.h5</code> or <code>*.hdf5</code> or <code>*.h5ad</code></li>
                                                 </ul>
+
+                                                Note: Names of dataset must be unique!
                                             </Callout>
                                         }
                                         {showStepHelper === 1 &&
@@ -1294,7 +1365,7 @@ const AnalysisDialog = ({
                         <div style={{ marginBottom: "10px" }} className={Classes.DIALOG_FOOTER} >
                             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
                                 <Tooltip2 content="Run Analysis">
-                                    <Button disabled={!tmpInputValid} icon="function" onClick={handleImport}>Analyze</Button>
+                                    <Button disabled={!tmpInputValid || !preInputFilesStatus?.valid} icon="function" onClick={handleImport}>Analyze</Button>
                                 </Tooltip2>
                             </div>
                         </div>

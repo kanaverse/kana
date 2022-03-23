@@ -9,7 +9,7 @@ var abbreviated = {};
 
 export var changed = false;
 
-function dummyGenes(numberOfRows) {
+export function dummyGenes(numberOfRows) {
     let genes = []
     for (let i = 0; i < numberOfRows; i++) {
         genes.push(`Gene ${i + 1}`);

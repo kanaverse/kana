@@ -1,5 +1,6 @@
 import * as scran from "scran.js";
 import * as inputs from "./_inputs.js";
+import * as preflight from "./_preflight_inputs.js";
 import * as qc from "./_quality_control.js";
 import * as normalization from "./_normalization.js";
 import * as variance from "./_model_gene_var.js";
@@ -62,7 +63,7 @@ function runAllSteps(state) {
         }
     }
 
-    inputs.compute(state.files.format, state.files.files);
+    inputs.compute(state.files.files);
     postSuccess(inputs, step_inputs, "Count matrix loaded");
 
     qc.compute(
@@ -482,7 +483,25 @@ onmessage = function (msg) {
                     });
                 }
             });
-  
+
+    } else if (payload.type == "PREFLIGHT_INPUT") {
+        loaded
+        .then(x => {
+            let validation = preflight.compute(payload.payload.files.files);
+
+            postMessage({
+                type: "PREFLIGHT_INPUT_DATA",
+                resp: validation,
+                msg: "Success: PREFLIGHT_INPUT done"
+            });
+        })
+        .catch(error => {
+            console.error(error);
+            postMessage({
+                type: "run_ERROR",
+                msg: error.toString()
+            });
+        });
     /**************** OTHER EVENTS FROM UI *******************/
     } else if (payload.type == "getMarkersForCluster") {
         loaded.then(x => {
