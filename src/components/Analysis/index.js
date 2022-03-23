@@ -24,11 +24,6 @@ const AnalysisDialog = ({
         setLoadParamsFor, loadParamsFor, setDatasetName,
         setPreInputFiles, preInputFilesStatus } = useContext(AppContext);
 
-    // assuming new is the default tab
-    let [tmpInputFiles, setTmpInputFiles] = useState([{
-        "name": "file-1"
-    }]);
-
     const [inputText, setInputText] = useState([{
         mtx: "Choose Matrix Market file",
         gene: "Choose feature/gene annotation",
@@ -42,6 +37,12 @@ const AnalysisDialog = ({
     // const [hdfFormat, sethdfFormat] = useState("tenx");
 
     let [tmpInputParams, setTmpInputParams] = useState(tabSelected === "new" ? params : loadParams);
+
+    // assuming new is the default tab
+    let [tmpInputFiles, setTmpInputFiles] = useState([{
+        "name": "file-1",
+        "format": tabSelected === "new" ? newImportFormat : loadImportFormat
+    }]);
 
     const [isOpen, setIsOpen] = useState(false);
     const [showStepHelper, setShowStepHelper] = useState(1);
@@ -1086,7 +1087,7 @@ const AnalysisDialog = ({
                                         }
 
                                         {
-                                            preInputFilesStatus &&
+                                            preInputFilesStatus && tmpInputFiles.length > 1 && 
 
                                             <Callout intent={preInputFilesStatus.valid ? "primary" : "danger"}
                                                 title="Datasets"
@@ -1102,7 +1103,7 @@ const AnalysisDialog = ({
 
                                                     {
                                                         <p>Contain
-                                                            {preInputFilesStatus.common_genes == 0 ? " no " : preInputFilesStatus.common_genes + " "}
+                                                            {preInputFilesStatus.common_genes == 0 ? " no " : " " + preInputFilesStatus.common_genes + " "}
                                                             common genes.</p>
                                                     }
                                                 </div>

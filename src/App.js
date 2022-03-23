@@ -299,7 +299,7 @@ const App = () => {
         for (const f in preInputFiles.files) {
           let ffile = preInputFiles.files[f];
 
-          if (!(ffile.format) || !(ffile.file)) {
+          if (!(ffile.format) || !(ffile.file || ffile.mtx)) {
             all_valid = false;
           }
         }
