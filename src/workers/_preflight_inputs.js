@@ -10,36 +10,51 @@ function validate_files(datasets) {
     // possible check if genes is empty in atleast one of them
     let all_valid = true;
     let common_genes = 0;
+    let annotation_names = [];
+
     for (const f in datasets) {
         if (!datasets[f].genes) {
             all_valid = false;
+        }
+
+        if (datasets[f].annotations) {
+            annotation_names.push(Object.keys(datasets[f].annotations));
+        } else {
+            annotation_names.push(null);
         }
     }
 
     if (all_valid) {
         // now perform intersection
         // TODO: choose ids for intersection ?
+        // scran.guessFeatures needs to be here
         let intersection = datasets[Object.keys(datasets)[0]].genes?.id;
-        for (const f in datasets) {
-            intersection = intersection.filter(function (n) {
-                return datasets[f].genes.id.indexOf(n) > -1;
-            });
-        }
 
-        common_genes = intersection.length;
+        if (intersection) {
+            for (const f in datasets) {
+                intersection = intersection.filter(function (n) {
+                    return datasets[f].genes.id.indexOf(n) > -1;
+                });
+            }
+
+            common_genes = intersection.length;
+        }
     }
 
-    if (common_genes <= 0) {
+    // if there are no common genes
+    if (common_genes == 0) {
         all_valid = false;
     }
 
+    // if there's only a single dataset; its probably valid
     if (Object.keys(datasets).length == 1) {
         all_valid = true;
     }
 
     return {
         "valid": all_valid,
-        "common_genes": common_genes
+        "common_genes": common_genes,
+        "annotations": annotation_names
     }
 }
 
@@ -56,31 +71,13 @@ export function compute(files) {
         switch (files[f].format) {
             case "mtx":
                 obj = new MtxReader(files[f]);
-                formatted = obj.formatFiles();
-                // datasets[f].genes = mobj.extractFeatures(formatted);
-                // datasets[f].annotations = mobj.extractAnnotations(formatted);
-                obj.loadRaw(formatted.files);
-                utils.freeCache(obj.cache.matrix);
-                datasets[f] = obj.cache;
                 break;
             case "hdf5":
             case "tenx":
                 obj = new H5Reader(files[f]);
-                formatted = obj.formatFiles();
-                obj.loadRaw(formatted.files);
-                utils.freeCache(obj.cache.matrix);
-                datasets[f] = obj.cache;
-                // datasets[f].genes = obj.extractFeatures(formatted);
-                // datasets[f].annotations = obj.extractAnnotations(formatted);
                 break;
             case "h5ad":
                 obj = new H5ADReader(files[f]);
-                formatted = obj.formatFiles();
-                obj.loadRaw(formatted.files);
-                utils.freeCache(obj.cache.matrix);
-                datasets[f] = obj.cache;
-                // datasets[f].genes = obj.extractFeatures(formatted);
-                // datasets[f].annotations = obj.extractAnnotations(formatted);
                 break;
             case "kana":
                 // do nothing, this is handled by unserialize.
@@ -88,6 +85,11 @@ export function compute(files) {
             default:
                 throw "unknown matrix file extension: '" + format + "'";
         }
+
+        formatted = obj.formatFiles();
+        obj.loadRaw(formatted.files, true);
+        utils.freeCache(obj.cache.matrix);
+        datasets[f] = obj.cache;
     }
 
     return validate_files(datasets);

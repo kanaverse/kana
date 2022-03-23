@@ -85,7 +85,7 @@ export class MtxReader {
 
     }
 
-    loadRaw(files) {
+    loadRaw(files, ignore_matrix=false) {
         utils.freeCache(this.cache.matrix);
 
         // In theory, this section may support multiple files (e.g., for multiple samples).
@@ -94,7 +94,7 @@ export class MtxReader {
         var contents = new Uint8Array(first_mtx.buffer);
         var ext = first_mtx.name.split('.').pop();
         var is_compressed = (ext == "gz");
-        this.cache.matrix = scran.initializeSparseMatrixFromMatrixMarketBuffer(contents, { "compressed": is_compressed });
+        if (ignore_matrix) this.cache.matrix = scran.initializeSparseMatrixFromMatrixMarketBuffer(contents, { "compressed": is_compressed });
 
 
         // extract features

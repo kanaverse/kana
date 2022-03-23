@@ -28,6 +28,7 @@ const AppContextProvider = ({ children }) => {
     pca: {
       "pca-npc": 25,
       "pca-hvg": 2500,
+      "pca-correction": "no_correction",
     },
     cluster: {
       "clus-k": 10,

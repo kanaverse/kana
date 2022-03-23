@@ -61,7 +61,12 @@ export class H5ADReader extends H5Reader{
         return annotations;
     }
 
-    formatFiles(bufferFun = (f) => f.size) {
+    formatFiles(bufferFun) {
+        if (!bufferFun) {
+            var reader = new FileReaderSync();
+            bufferFun = (f) => reader.readAsArrayBuffer(f);
+        }
+
         var formatted = { "format": "H5AD", "files": [] };
 
         for (const f of this.files.file) {
@@ -71,7 +76,7 @@ export class H5ADReader extends H5Reader{
         return formatted;
     }
 
-    loadRaw(formatted) {
+    loadRaw(files, ignore_matrix=false) {
         utils.freeCache(this.cache.matrix);
 
         // In theory, we could support multiple HDF5 buffers.
@@ -80,14 +85,14 @@ export class H5ADReader extends H5Reader{
         scran.writeFile(tmppath, new Uint8Array(first_file.buffer));
 
         try {
-            this.cache.matrix = scran.initializeSparseMatrixFromHDF5(tmppath, "X");
+            if (ignore_matrix) this.cache.matrix = scran.initializeSparseMatrixFromHDF5(tmppath, "X");
             let objects = scran.extractHDF5ObjectNames(tmppath);
 
             // Trying to guess the gene names.
-            this.cache.genes = this.extractH5ADFeatures(objects, tmppath);
+            this.cache.genes = this.extractFeatures(objects, tmppath);
 
             // Adding the annotations.
-            this.cache.annotations = this.extractH5ADAnnotations(objects, tmppath);
+            this.cache.annotations = this.extractAnnotations(objects, tmppath);
 
         } finally {
             scran.removeFile(tmppath);

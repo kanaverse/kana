@@ -89,7 +89,7 @@ export class H5Reader {
         return null;
     }
 
-    loadRaw(files) {
+    loadRaw(files, ignore_matrix=false) {
         utils.freeCache(this.cache.matrix);
 
         // In theory, we could support multiple HDF5 buffers.
@@ -98,7 +98,7 @@ export class H5Reader {
         scran.writeFile(tmppath, new Uint8Array(first_file.buffer));
 
         try {
-            this.cache.matrix = scran.initializeSparseMatrixFromHDF5(tmppath, "matrix");
+            if (ignore_matrix) this.cache.matrix = scran.initializeSparseMatrixFromHDF5(tmppath, "matrix");
 
             // Fetching the gene IDs and names.
             this.cache.genes = this.extractFeatures(tmppath);

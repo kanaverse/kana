@@ -532,6 +532,24 @@ const AnalysisDialog = ({
                                 placeholder="25" value={tmpInputParams["pca"]["pca-npc"]}
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-npc": nval } }) }} />
                         </Label>
+                        {
+                            tmpInputFiles.length > 1 && <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(4)}>
+                                        Method
+                                    </span>
+                                </Text>
+                                <HTMLSelect
+                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-correction": e.target.value } }) }}
+                                    defaultValue={tmpInputParams["pca"]["pca-correction"]}
+                                >
+                                    <option value="no_correction">No Correction</option>
+                                    <option value="linear_regression">Linear Regression</option>
+                                    <option value="mnn_correction">MNN correction</option>
+                                </HTMLSelect>
+                            </Label>
+                        }
                     </div>
                 </div>
             </div>
@@ -879,6 +897,7 @@ const AnalysisDialog = ({
     function get_new_input_files(idx, input) {
         return (
             <div className="col"
+                key={idx}
                 style={{
                     // paddingTop: '10px',
                     paddingBottom: '15px'
@@ -890,23 +909,26 @@ const AnalysisDialog = ({
                             Load input files
                         </span>
                     </H5>
-                    <Label className="row-input">
-                        <Text className="text-100">
-                            <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                onMouseEnter={() => setShowStepHelper(1)}>
-                                Name this dataset
-                            </span>
-                        </Text>
-                        <InputGroup
-                            placeholder="name this dataset"
-                            onChange={(nval, val) => {
-                                let tmp = [...tmpInputFiles];
-                                tmp[idx]["name"] = nval?.target?.value;
-                                setTmpInputFiles(tmp);
-                            }}
-                            value={tmpInputFiles[idx]["name"]}
-                        />
-                    </Label>
+                    <div className="row">
+                        <Label className="row-input">
+                            <Text className="text-100">
+                                <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                    onMouseEnter={() => setShowStepHelper(1)}>
+                                    Name this dataset
+                                </span>
+                            </Text>
+                            <InputGroup
+                                placeholder="name this dataset"
+                                fill={false}
+                                onChange={(nval, val) => {
+                                    let tmp = [...tmpInputFiles];
+                                    tmp[idx]["name"] = nval?.target?.value;
+                                    setTmpInputFiles(tmp);
+                                }}
+                                value={tmpInputFiles[idx]["name"]}
+                            />
+                        </Label>
+                    </div>
                     <Tabs
                         animate={true}
                         renderActiveTabPanelOnly={true}
@@ -1087,7 +1109,7 @@ const AnalysisDialog = ({
                                         }
 
                                         {
-                                            preInputFilesStatus && tmpInputFiles.length > 1 && 
+                                            preInputFilesStatus && tmpInputFiles.length > 1 &&
 
                                             <Callout intent={preInputFilesStatus.valid ? "primary" : "danger"}
                                                 title="Datasets"
@@ -1106,9 +1128,56 @@ const AnalysisDialog = ({
                                                             {preInputFilesStatus.common_genes == 0 ? " no " : " " + preInputFilesStatus.common_genes + " "}
                                                             common genes.</p>
                                                     }
+
+                                                    <p>When multiple files are imported, each dataset is considered as a batch.</p>
                                                 </div>
                                             </Callout>
 
+                                        }
+
+                                        {
+                                            preInputFilesStatus && tmpInputFiles.length == 1 &&
+
+                                            <Callout intent={"warning"}
+                                                title="Choose batch"
+                                                style={{
+                                                    margin: '10px'
+                                                }}>
+                                                <div>
+                                                    {
+                                                        preInputFilesStatus.annotations[0] ?
+                                                            preInputFilesStatus.annotations[0].findIndex(x => "batch".toLowerCase() === x.toLowerCase()) >= 0 ?
+                                                                <span>batch column is available to integrate multiple batches.
+                                                                    Choose the correction method under PCA to perform batch correction or integration
+                                                                </span> :
+                                                                <div className="row">
+                                                                    <Label className="row-input">
+                                                                        <Text className="text-100">
+                                                                            <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                                                                onMouseEnter={() => setShowStepHelper(1)}>
+                                                                                Choose a column for batch correction (if applicable)
+                                                                            </span>
+                                                                        </Text>
+                                                                        <HTMLSelect
+                                                                            onChange={(e) => {
+                                                                                let tmp = [...tmpInputFiles];
+                                                                                tmp[0]["batch"] = e.target.value;
+                                                                                setTmpInputFiles(tmp);
+                                                                            }}
+                                                                            defaultValue={tmpInputFiles[0].batch ? tmpInputFiles[0].batch : "none"}
+                                                                        >
+                                                                            <option value="none">None</option>
+                                                                            {
+                                                                                preInputFilesStatus.annotations[0].map((x, i) => <option key={i} value={x}>{x}</option>)
+                                                                            }
+                                                                        </HTMLSelect>
+                                                                    </Label>
+                                                                </div>
+                                                            :
+                                                            "No annotations found. Cannot perform batch correction."
+                                                    }
+                                                </div>
+                                            </Callout>
                                         }
 
 
@@ -1161,6 +1230,9 @@ const AnalysisDialog = ({
                                                     We assume that the count matrix is stored in the <code>X</code> group.
                                                     We will also try to guess which field in the <code>obs</code> annotation contains gene symbols.
                                                 </p>
+
+                                                <p><strong>Batch correction:</strong> you can now import more than one file to integrate and analyze datasets.
+                                                    If you only import a single dataset, specify the annotation column that contains the batch information.</p>
                                             </Callout>
                                         }
                                         {get_common_tooltips()}
