@@ -3,6 +3,7 @@ import * as utils from "./_utils.js";
 import { H5Reader } from "./_reader_h5.js";
 import { H5ADReader } from "./_reader_h5ad.js";
 import { MtxReader } from "./_reader_mtx.js";
+import * as rutils from "./_reader_utils.js";
 
 function validate_files(datasets) {
     console.log(datasets);
@@ -10,11 +11,18 @@ function validate_files(datasets) {
     // possible check if genes is empty in atleast one of them
     let all_valid = true;
     let common_genes = 0;
+    let fkeys = Object.keys(datasets);
     let annotation_names = [];
+    let error_messages = []
 
+    // do all datasets contain genes ?
     for (const f in datasets) {
         if (!datasets[f].genes) {
             all_valid = false;
+            if (fkeys.length > 1) {
+                error_messages.push("all imported datasets must contain genes for integration/batch correction");
+                break;
+            }
         }
 
         if (datasets[f].annotations) {
@@ -24,37 +32,58 @@ function validate_files(datasets) {
         }
     }
 
+    // if all files contain genes, run checks to see if they have common genes;
+    // we don't do this if the earlier step already failed
     if (all_valid) {
-        // now perform intersection
-        // TODO: choose ids for intersection ?
-        // scran.guessFeatures needs to be here
-        let intersection = datasets[Object.keys(datasets)[0]].genes?.id;
+        let result = rutils.getCommonGenes(datasets);
+        common_genes = result?.num_common_genes;
 
-        if (intersection) {
-            for (const f in datasets) {
-                intersection = intersection.filter(function (n) {
-                    return datasets[f].genes.id.indexOf(n) > -1;
-                });
+        // if there are no common genes
+        if (common_genes == 0) {
+            all_valid = false;
+            error_messages.push("no common genes across datasets");
+        }
+
+        if (fkeys.length !== 1) {
+
+            // also check if the assumptions in guessing the best column to use for genes 
+            // is consistent across datasets
+            // e.g. dataset1 is human and dataset2 cannot be mouse
+            // TODO: not sure if this is useful anymore 
+            // i guess the common genes would've failed in this case
+            let best_assumptions = result?.best_assumptions;
+            let species, type;
+            for (const fba in best_assumptions) {
+                if (!type) {
+                    type = best_assumptions[fba].type;
+                }
+
+                if (!species) {
+                    species = best_assumptions[fba].species;
+                }
+
+                if (species !== best_assumptions[fba].species || type !== best_assumptions[fba].type) {
+                    all_valid = false;
+                    error_messages.push("our guess at finding the best column for genes across datasets is not consistent");
+                    break;
+                }
             }
-
-            common_genes = intersection.length;
         }
     }
 
-    // if there are no common genes
-    if (common_genes == 0) {
-        all_valid = false;
-    }
-
-    // if there's only a single dataset; its probably valid
-    if (Object.keys(datasets).length == 1) {
+    // if there's only a single dataset; none of the above holds
+    // the ui takes care of batch column selection
+    if (fkeys.length == 1) {
         all_valid = true;
     }
+
+    console.log(error_messages);
 
     return {
         "valid": all_valid,
         "common_genes": common_genes,
-        "annotations": annotation_names
+        "annotations": annotation_names,
+        "errors": error_messages
     }
 }
 
@@ -87,9 +116,10 @@ export function compute(files) {
         }
 
         formatted = obj.formatFiles();
-        obj.loadRaw(formatted.files, true);
+        obj.loadRaw(formatted.files, false);
+        // just in case remove matrix at this step
         utils.freeCache(obj.cache.matrix);
-        datasets[f] = obj.cache;
+        datasets[f] = obj.getDataset();
     }
 
     return validate_files(datasets);

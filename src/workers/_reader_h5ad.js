@@ -76,7 +76,7 @@ export class H5ADReader extends H5Reader{
         return formatted;
     }
 
-    loadRaw(files, ignore_matrix=false) {
+    loadRaw(files, read_matrix=true) {
         utils.freeCache(this.cache.matrix);
 
         // In theory, we could support multiple HDF5 buffers.
@@ -85,7 +85,7 @@ export class H5ADReader extends H5Reader{
         scran.writeFile(tmppath, new Uint8Array(first_file.buffer));
 
         try {
-            if (ignore_matrix) this.cache.matrix = scran.initializeSparseMatrixFromHDF5(tmppath, "X");
+            if (read_matrix) this.cache.matrix = scran.initializeSparseMatrixFromHDF5(tmppath, "X");
             let objects = scran.extractHDF5ObjectNames(tmppath);
 
             // Trying to guess the gene names.
@@ -101,7 +101,8 @@ export class H5ADReader extends H5Reader{
         if (this.cache.genes === null) {
             this.cache.genes = rutils.dummyGenes(this.cache.matrix.numberOfRows());
         }
-        scran.permuteFeatures(this.cache.matrix, this.cache.genes);
+        
+        if (read_matrix) scran.permuteFeatures(this.cache.matrix, this.cache.genes);
 
         return;
     }

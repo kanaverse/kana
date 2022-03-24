@@ -85,7 +85,7 @@ export class MtxReader {
 
     }
 
-    loadRaw(files, ignore_matrix=false) {
+    loadRaw(files, read_matrix = true) {
         utils.freeCache(this.cache.matrix);
 
         // In theory, this section may support multiple files (e.g., for multiple samples).
@@ -94,20 +94,22 @@ export class MtxReader {
         var contents = new Uint8Array(first_mtx.buffer);
         var ext = first_mtx.name.split('.').pop();
         var is_compressed = (ext == "gz");
-        if (ignore_matrix) this.cache.matrix = scran.initializeSparseMatrixFromMatrixMarketBuffer(contents, { "compressed": is_compressed });
+        if (read_matrix) this.cache.matrix = scran.initializeSparseMatrixFromMatrixMarketBuffer(contents, { "compressed": is_compressed });
 
 
         // extract features
         this.cache.genes = this.extractFeatures(files);
 
-        if (!this.cache.genes) {
-            this.cache.genes = rutils.dummyGenes(this.cache.matrix.numberOfRows());
+        if (read_matrix) {
+            if (!this.cache.genes) {
+                this.cache.genes = rutils.dummyGenes(this.cache.matrix.numberOfRows());
+            }
+
+            scran.permuteFeatures(this.cache.matrix, this.cache.genes);
         }
 
-        scran.permuteFeatures(this.cache.matrix, this.cache.genes);
-
         // extract annotations
-        this.cache.genes = this.extractAnnotations(files);
+        this.cache.annotations = this.extractAnnotations(files);
 
         return;
     }
@@ -117,7 +119,7 @@ export class MtxReader {
             var reader = new FileReaderSync();
             bufferFun = (f) => reader.readAsArrayBuffer(f);
         }
-        
+
         var formatted = { "format": "MatrixMarket", "files": [] };
 
         for (const f of this.files.mtx) {
@@ -160,7 +162,7 @@ export class MtxReader {
             let formatted = this.formatFiles(bufferFun);
 
             if (it == 0) {
-                if (!utils.changedParameters(abbreviated, formatted)) {
+                if (!utils.changedParameters(this.abbreviated, formatted)) {
                     this.changed = false;
                     return;
                 } else {

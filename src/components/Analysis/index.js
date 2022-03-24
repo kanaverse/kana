@@ -1119,8 +1119,16 @@ const AnalysisDialog = ({
                                                 <div>
                                                     {
                                                         preInputFilesStatus.valid ?
-                                                            <span>These datasets can be integrated.</span> :
-                                                            <span>Datasets cannot be integrated.</span>
+                                                            <span>Datasets can be integrated.</span> :
+                                                            <div>
+                                                                <span>Datasets cannot be integrated.</span>
+                                                                <ul>
+                                                                    {
+                                                                        preInputFilesStatus.errors.map((x,i) => 
+                                                                        <li key={i}>{x}</li>)
+                                                                    }
+                                                                </ul>
+                                                            </div>
                                                     }
 
                                                     {
@@ -1132,7 +1140,6 @@ const AnalysisDialog = ({
                                                     <p>When multiple files are imported, each dataset is considered as a batch.</p>
                                                 </div>
                                             </Callout>
-
                                         }
 
                                         {
