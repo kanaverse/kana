@@ -5,8 +5,6 @@ import { MtxReader } from "./_reader_mtx.js";
 import * as rutils from "./_reader_utils.js";
 
 function validate_files(datasets) {
-    console.log(datasets);
-
     // possible check if genes is empty in atleast one of them
     let all_valid = true;
     let common_genes = 0;
@@ -77,7 +75,6 @@ function validate_files(datasets) {
  ******************************/
 
 export function compute(files) {
-    console.log(files);
     let datasets = {}
     for (const f in files) {
         datasets[f] = {};

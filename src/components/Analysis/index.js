@@ -934,8 +934,6 @@ const AnalysisDialog = ({
                         renderActiveTabPanelOnly={true}
                         vertical={true}
                         onChange={(ntab, otab) => {
-                            console.log("new, ", ntab);
-
                             let tmp = [...tmpInputFiles];
                             tmp[idx]["format"] = ntab;
                             setTmpInputFiles(tmp);
@@ -1276,7 +1274,6 @@ const AnalysisDialog = ({
                                                     renderActiveTabPanelOnly={true}
                                                     vertical={true}
                                                     onChange={(ntab, otab) => {
-                                                        console.log("load, ", ntab);
                                                         let tmp = [...tmpInputFiles];
                                                         tmp[0]["format"] = ntab;
                                                         setTmpInputFiles(tmp);

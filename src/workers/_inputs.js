@@ -9,7 +9,12 @@ var cache = {};
 
 export var changed = false;
 
-function merge_datasets(datasets) {
+function merge_datasets(odatasets) {
+
+    let datasets = {};
+    for (const f in odatasets) {
+        datasets[f] = odatasets[f].getDataset();
+    }
 
     changed = true;
 
@@ -17,7 +22,6 @@ function merge_datasets(datasets) {
 
     if (Object.keys(datasets).length == 1) {
         cache = datasets[Object.keys(datasets)[0]].cache;
-        console.log(cache);
         return;
     }
 
@@ -25,24 +29,25 @@ function merge_datasets(datasets) {
     let result = rutils.getCommonGenes(datasets);
     let best_fields = result?.best_fields;
 
-    console.log(best_fields);
     let gnames = [], mats = [];
-    for (var i = 0; i < keys; i++) {
+    for (var i = 0; i < keys.length; i++) {
         gnames.push(datasets[keys[i]].genes[best_fields[i]]);
         mats.push(datasets[keys[i]].matrix);
     }
 
-    cache.genes = {
-        "id": result?.intersection
-    }
-
     // cbind assays with names
-    cache.matrix = scran.cbindWithNames(mats, gnames);
+    let merged_mats = scran.cbindWithNames(mats, gnames);
+
+    cache.genes = {
+        "id": merged_mats.names
+    };
+
+    cache.matrix = merged_mats.matrix;
 
     let ckeys = [];
     // first pass get all annotations keys across datasets
     for (const i in datasets) {
-        ckeys.push(Object.keys(datasets[i].annotations));
+        if (datasets[i].annotations) ckeys = ckeys.concat(Object.keys(datasets[i].annotations));
     }
 
     ckeys = [...new Set(ckeys)];
@@ -50,19 +55,17 @@ function merge_datasets(datasets) {
     // merge cells
     let combined_annotations = {};
     for (const i of ckeys) {
+        combined_annotations[i] = []
         for (const f in datasets) {
-            if (datasets[f].annotations[i]) {
-                combined_annotations[i] = datasets[f].annotations[i]
+            if (datasets[f].annotations?.[i]) {
+                combined_annotations[i] = combined_annotations[i].concat(datasets[f].annotations[i]);
             } else {
-                combined_annotations[i] = new Array(datasets[f].matrix.numberOfColumns())
+                combined_annotations[i] = combined_annotations[i].concat(new Array(datasets[f].matrix.numberOfColumns()));
             }
         }
     }
 
     cache.annotations = combined_annotations;
-
-    console.log("$$$$$$$$$$$$$$$$$$");
-    console.log(cache);
 }
 
 /******************************

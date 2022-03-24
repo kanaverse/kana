@@ -67,9 +67,8 @@ export function getCommonGenes(datasets) {
 
     let fields = JSON.parse(JSON.stringify(scores));
 
-    for (var i = 0; i < keys.length; i++) {
-        let fscores = guessBestFeatures(datasets[keys[i]]);
-        console.log(fscores);
+    for (let j = 0; j < keys.length; j++) {
+        let fscores = guessBestFeatures(datasets[keys[j]]);
 
         for (const i in fscores.fields) {
             fields[i].push(fscores.fields[i]);
@@ -79,8 +78,6 @@ export function getCommonGenes(datasets) {
             scores[i].push(fscores.scores[i]);
         }
     }
-
-    console.log(fields, scores);
 
     let multiplier = -1000;
     let bscore;
@@ -95,7 +92,6 @@ export function getCommonGenes(datasets) {
         }
     }
 
-    console.log(multiplier, bscore);
     let intersection;
     if (bscore) {
         intersection = datasets[keys[0]].genes?.[fields[bscore][0]];
