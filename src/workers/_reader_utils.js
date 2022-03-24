@@ -39,44 +39,73 @@ export function fetchGeneTypes(obj) {
 }
 
 export function guessBestFeatures(dataset) {
-    let score, bestScore = -100000, best;
+    let scores = {}, fields = {};
     for (const f in dataset.genes) {
-        console.log(f);
         let fscore = scran.guessFeatures(dataset.genes[f]);
-        console.log(fscore);
 
-        if (fscore?.confidence > bestScore) {
-            bestScore = fscore?.confidence;
-            best = f;
+        if ((!scores[`${fscore?.type}-${fscore?.species}`]) ||
+            fscore?.confidence > scores[`${fscore?.type}-${fscore?.species}`]) {
+            scores[`${fscore?.type}-${fscore?.species}`] = fscore?.confidence;
+            fields[`${fscore?.type}-${fscore?.species}`] = f;
         }
-
-        score = fscore;
     }
 
-    return {best, score};
+    return { scores, fields };
 }
 
 export function getCommonGenes(datasets) {
     // now perform intersection
     let num_common_genes = 0;
-    let keys = Object.keys(datasets)
-    let d0score = guessBestFeatures(datasets[keys[0]]);
-    let intersection = datasets[keys[0]].genes?.[d0score.best];
+    let keys = Object.keys(datasets);
 
-    let best_assumptions = {};
-    best_assumptions[keys[0]] = d0score.score;
+    let scores = {
+        "symbol-mouse": [],
+        "symbol-human": [],
+        "ensembl-mouse": [],
+        "ensembl-human": [],
+    };
 
-    if (intersection) {
-        for (var i = 1; i < Object.keys(datasets).length; i++) {
-            d0score = guessBestFeatures(datasets[keys[i]]);
-            best_assumptions[keys[i]] = d0score.score;
-            intersection = intersection.filter(function (n) {
-                return datasets[keys[i]]?.genes?.[d0score.best].indexOf(n) > -1;
-            });
+    let fields = JSON.parse(JSON.stringify(scores));
+
+    for (var i = 0; i < keys.length; i++) {
+        let fscores = guessBestFeatures(datasets[keys[i]]);
+        console.log(fscores);
+
+        for (const i in fscores.fields) {
+            fields[i].push(fscores.fields[i]);
         }
 
-        num_common_genes = intersection.length;
+        for (const i in fscores.scores) {
+            scores[i].push(fscores.scores[i]);
+        }
     }
 
-    return { num_common_genes, intersection, best_assumptions };
+    console.log(fields, scores);
+
+    let multiplier = -1000;
+    let bscore;
+
+    for (const i in scores) {
+        if (scores[i].length == keys.length) {
+            let nscore = scores[i].reduce((a, b) => a * b);
+            if (nscore > multiplier) {
+                multiplier = nscore;
+                bscore = i;
+            }
+        }
+    }
+
+    console.log(multiplier, bscore);
+    let intersection;
+    if (bscore) {
+        intersection = datasets[keys[0]].genes?.[fields[bscore][0]];
+        for (var i = 1; i < Object.keys(datasets).length; i++) {
+            intersection = intersection.filter(function (n) {
+                return datasets[keys[i]]?.genes?.[fields[bscore][i]].indexOf(n) > -1;
+            });
+        }
+        num_common_genes =intersection.length;
+    }
+
+    return { num_common_genes, intersection, best_fields: bscore ? fields[bscore]: null };
 }

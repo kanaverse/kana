@@ -1,4 +1,3 @@
-import * as scran from "scran.js";
 import * as utils from "./_utils.js";
 import { H5Reader } from "./_reader_h5.js";
 import { H5ADReader } from "./_reader_h5ad.js";
@@ -34,8 +33,9 @@ function validate_files(datasets) {
 
     // if all files contain genes, run checks to see if they have common genes;
     // we don't do this if the earlier step already failed
+    let result;
     if (all_valid) {
-        let result = rutils.getCommonGenes(datasets);
+        result = rutils.getCommonGenes(datasets);
         common_genes = result?.num_common_genes;
 
         // if there are no common genes
@@ -45,28 +45,14 @@ function validate_files(datasets) {
         }
 
         if (fkeys.length !== 1) {
-
             // also check if the assumptions in guessing the best column to use for genes 
             // is consistent across datasets
             // e.g. dataset1 is human and dataset2 cannot be mouse
             // TODO: not sure if this is useful anymore 
-            // i guess the common genes would've failed in this case
-            let best_assumptions = result?.best_assumptions;
-            let species, type;
-            for (const fba in best_assumptions) {
-                if (!type) {
-                    type = best_assumptions[fba].type;
-                }
-
-                if (!species) {
-                    species = best_assumptions[fba].species;
-                }
-
-                if (species !== best_assumptions[fba].species || type !== best_assumptions[fba].type) {
-                    all_valid = false;
-                    error_messages.push("our guess at finding the best column for genes across datasets is not consistent");
-                    break;
-                }
+            // I guess the common genes would've failed in this case
+            if (!result?.best_fields) {
+                all_valid = false;
+                error_messages.push("we cannot guess the best set of feature columns to use for integrating datasets");
             }
         }
     }
@@ -77,13 +63,12 @@ function validate_files(datasets) {
         all_valid = true;
     }
 
-    console.log(error_messages);
-
     return {
         "valid": all_valid,
         "common_genes": common_genes,
         "annotations": annotation_names,
-        "errors": error_messages
+        "errors": error_messages,
+        "best_genes": result.best_fields
     }
 }
 

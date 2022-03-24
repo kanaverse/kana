@@ -13,6 +13,8 @@ function merge_datasets(datasets) {
 
     changed = true;
 
+    let keys = Object.keys(datasets);
+
     if (Object.keys(datasets).length == 1) {
         cache = datasets[Object.keys(datasets)[0]].cache;
         console.log(cache);
@@ -21,13 +23,46 @@ function merge_datasets(datasets) {
 
     // get gene columns to use
     let result = rutils.getCommonGenes(datasets);
-    let common_genes = result?.num_common_genes;
-    let intersection = result?.intersection;
-    let best_assumptions = result?.best_assumptions;
+    let best_fields = result?.best_fields;
+
+    console.log(best_fields);
+    let gnames = [], mats = [];
+    for (var i = 0; i < keys; i++) {
+        gnames.push(datasets[keys[i]].genes[best_fields[i]]);
+        mats.push(datasets[keys[i]].matrix);
+    }
+
+    cache.genes = {
+        "id": result?.intersection
+    }
 
     // cbind assays with names
+    cache.matrix = scran.cbindWithNames(mats, gnames);
+
+    let ckeys = [];
+    // first pass get all annotations keys across datasets
+    for (const i in datasets) {
+        ckeys.push(Object.keys(datasets[i].annotations));
+    }
+
+    ckeys = [...new Set(ckeys)];
 
     // merge cells
+    let combined_annotations = {};
+    for (const i of ckeys) {
+        for (const f in datasets) {
+            if (datasets[f].annotations[i]) {
+                combined_annotations[i] = datasets[f].annotations[i]
+            } else {
+                combined_annotations[i] = new Array(datasets[f].matrix.numberOfColumns())
+            }
+        }
+    }
+
+    cache.annotations = combined_annotations;
+
+    console.log("$$$$$$$$$$$$$$$$$$");
+    console.log(cache);
 }
 
 /******************************
@@ -66,7 +101,7 @@ export function compute(files) {
 }
 
 export function results() {
-    var output = { 
+    var output = {
         "dimensions": {
             "num_genes": cache.matrix.numberOfRows(),
             "num_cells": cache.matrix.numberOfColumns()
@@ -83,7 +118,7 @@ export async function serialize(handle, saver, embedded) {
     let ghandle = handle.createGroup("inputs");
 
     {
-        let phandle = ghandle.createGroup("parameters"); 
+        let phandle = ghandle.createGroup("parameters");
         phandle.writeDataSet("format", "String", [], parameters.format);
         let fihandle = phandle.createGroup("files");
 
@@ -110,7 +145,7 @@ export async function serialize(handle, saver, embedded) {
             cache.matrix.numberOfColumns()
         ];
 
-        let rhandle = ghandle.createGroup("results"); 
+        let rhandle = ghandle.createGroup("results");
         rhandle.writeDataSet("dimensions", "Int32", null, dims);
         rhandle.writeDataSet("permutation", "Int32", null, perm);
     }
@@ -120,13 +155,13 @@ export async function serialize(handle, saver, embedded) {
 
 export async function unserialize(handle, loader, embedded) {
     let ghandle = handle.open("inputs");
-    let phandle = ghandle.open("parameters"); 
+    let phandle = ghandle.open("parameters");
 
     // Extracting the files.
     let fihandle = phandle.open("files");
     let kids = fihandle.children;
     let files = new Array(kids.length);
-    
+
     for (const x of Object.keys(kids)) {
         let current = fihandle.open(x);
 
@@ -175,13 +210,13 @@ export async function unserialize(handle, loader, embedded) {
         throw `unrecognized count matrix format "${format}"`;
     }
 
-    parameters = { 
-        format: format, 
-        files: files 
+    parameters = {
+        format: format,
+        files: files
     };
 
     // We need to do something if the permutation is not the same.
-    let rhandle = ghandle.open("results"); 
+    let rhandle = ghandle.open("results");
 
     let perm = null;
     if ("permutation" in rhandle.children) {
@@ -205,7 +240,7 @@ export async function unserialize(handle, loader, embedded) {
             return;
         };
     } else {
-        permuter = (x) => {}; 
+        permuter = (x) => { };
     }
 
     return permuter;

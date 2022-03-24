@@ -1087,7 +1087,8 @@ const AnalysisDialog = ({
                                                     onClick={((x) => {
                                                         // setFileCount([...fileCount, fileCount.length])
                                                         setTmpInputFiles([...tmpInputFiles, {
-                                                            "name": `file-${tmpInputFiles.length + 1}`
+                                                            "name": `file-${tmpInputFiles.length + 1}`,
+                                                            "format": newImportFormat
                                                         }]);
                                                         setInputText([...inputText, {
                                                             mtx: "Choose Matrix Market file",
@@ -1124,8 +1125,8 @@ const AnalysisDialog = ({
                                                                 <span>Datasets cannot be integrated.</span>
                                                                 <ul>
                                                                     {
-                                                                        preInputFilesStatus.errors.map((x,i) => 
-                                                                        <li key={i}>{x}</li>)
+                                                                        preInputFilesStatus.errors.map((x, i) =>
+                                                                            <li key={i}>{x}</li>)
                                                                     }
                                                                 </ul>
                                                             </div>
@@ -1135,6 +1136,11 @@ const AnalysisDialog = ({
                                                         <p>Contain
                                                             {preInputFilesStatus.common_genes == 0 ? " no " : " " + preInputFilesStatus.common_genes + " "}
                                                             common genes.</p>
+                                                    }
+
+                                                    {
+                                                        <p>Using feature columns:
+                                                            {preInputFilesStatus.best_genes ? " " + preInputFilesStatus.best_genes.join(", ") : " "}</p>
                                                     }
 
                                                     <p>When multiple files are imported, each dataset is considered as a batch.</p>
