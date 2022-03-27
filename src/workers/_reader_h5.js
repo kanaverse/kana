@@ -6,12 +6,7 @@ import * as rutils from "./_reader_utils.js";
 export class H5Reader {
     constructor(files) {
         this.files = files;
-
         this.cache = {};
-        this.parameters = {};
-        this.abbreviated = {};
-
-        this.changed = false;
 
         // this.loadFile(files, files.format);
     }
@@ -38,34 +33,12 @@ export class H5Reader {
     loadFile() {
         var reader = new FileReaderSync();
 
-        // First pass computes an abbreviated version to quickly check for changes.
-        // Second pass does the actual readArrayBuffer.
-        for (var it = 0; it < 2; it++) {
+        var bufferFun = (f) => reader.readAsArrayBuffer(f);
 
-            var bufferFun;
-            if (it == 0) {
-                bufferFun = (f) => f.size;
-            } else {
-                bufferFun = (f) => reader.readAsArrayBuffer(f);
-            }
+        let formatted = this.formatFiles(bufferFun);
 
-            let formatted = this.formatFiles(bufferFun);
-
-            if (it == 0) {
-                if (!utils.changedParameters(this.abbreviated, formatted)) {
-                    this.changed = false;
-                    return;
-                } else {
-                    this.abbreviated = formatted;
-                    this.changed = true;
-                }
-            } else {
-                this.parameters = formatted;
-                this.loadRaw(formatted.files);
-            }
-        }
-
-        return;
+        this.parameters = formatted;
+        return this.loadRaw(formatted.files);
     }
 
     extractFeatures(path) {
@@ -89,7 +62,7 @@ export class H5Reader {
         return null;
     }
 
-    loadRaw(files, read_matrix=true) {
+    loadRaw(files, read_matrix = true) {
         utils.freeCache(this.cache.matrix);
 
         // In theory, we could support multiple HDF5 buffers.
@@ -112,9 +85,9 @@ export class H5Reader {
         if (this.cache.genes === null) {
             this.cache.genes = rutils.dummyGenes(this.cache.matrix.numberOfRows());
         }
-        
+
         if (read_matrix) scran.permuteFeatures(this.cache.matrix, this.cache.genes);
 
-        return;
+        return this.cache;
     }
 }

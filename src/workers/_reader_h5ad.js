@@ -104,6 +104,6 @@ export class H5ADReader extends H5Reader{
         
         if (read_matrix) scran.permuteFeatures(this.cache.matrix, this.cache.genes);
 
-        return;
+        return this.cache;
     }
 }

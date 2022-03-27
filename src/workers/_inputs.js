@@ -6,6 +6,7 @@ import { MtxReader } from "./_reader_mtx.js";
 import * as rutils from "./_reader_utils.js";
 
 var cache = {};
+var parameters = {};
 
 export var changed = false;
 
@@ -27,7 +28,7 @@ function merge_datasets(odatasets) {
 
     // get gene columns to use
     let result = rutils.getCommonGenes(datasets);
-    let best_fields = result?.best_fields;
+    let best_fields = result.best_fields;
 
     let gnames = [], mats = [];
     for (var i = 0; i < keys.length; i++) {
@@ -57,7 +58,7 @@ function merge_datasets(odatasets) {
     for (const i of ckeys) {
         combined_annotations[i] = []
         for (const f in datasets) {
-            if (datasets[f].annotations?.[i]) {
+            if (datasets[f].annotations && datasets[f].annotations[i]) {
                 combined_annotations[i] = combined_annotations[i].concat(datasets[f].annotations[i]);
             } else {
                 combined_annotations[i] = combined_annotations[i].concat(new Array(datasets[f].matrix.numberOfColumns()));
@@ -66,6 +67,12 @@ function merge_datasets(odatasets) {
     }
 
     cache.annotations = combined_annotations;
+
+    // also after the merged dataset is created, the individual 
+    // dataset matrices are no longer useful
+    for (const f in odatasets) {
+        utils.freeCache(odatasets[f].getDataset().matrix);
+    }
 }
 
 /******************************
@@ -73,6 +80,13 @@ function merge_datasets(odatasets) {
  ******************************/
 
 export function compute(files) {
+
+    // super dirty check if anything has changed
+    if (JSON.stringify(parameters) === JSON.stringify(files)) {
+        changed = false;
+        return;
+    }
+
     let datasets = {}
     for (const f in files) {
         datasets[f] = {};

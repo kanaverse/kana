@@ -6,13 +6,7 @@ import * as rutils from "./_reader_utils.js";
 export class MtxReader {
     constructor(files) {
         this.files = files;
-
         this.cache = {};
-        this.parameters = {};
-        this.abbreviated = {};
-
-        this.changed = false;
-
         // this.loadFile(files);
     }
 
@@ -111,7 +105,7 @@ export class MtxReader {
         // extract annotations
         this.cache.annotations = this.extractAnnotations(files);
 
-        return;
+        return this.cache;
     }
 
     formatFiles(bufferFun) {
@@ -147,34 +141,11 @@ export class MtxReader {
 
     loadFile() {
         var reader = new FileReaderSync();
+        var bufferFun = (f) => reader.readAsArrayBuffer(f);
 
-        // First pass computes an abbreviated version to quickly check for changes.
-        // Second pass does the actual readArrayBuffer.
-        for (var it = 0; it < 2; it++) {
+        let formatted = this.formatFiles(bufferFun);
 
-            var bufferFun;
-            if (it == 0) {
-                bufferFun = (f) => f.size;
-            } else {
-                bufferFun = (f) => reader.readAsArrayBuffer(f);
-            }
-
-            let formatted = this.formatFiles(bufferFun);
-
-            if (it == 0) {
-                if (!utils.changedParameters(this.abbreviated, formatted)) {
-                    this.changed = false;
-                    return;
-                } else {
-                    this.abbreviated = formatted;
-                    this.changed = true;
-                }
-            } else {
-                this.parameters = formatted;
-                this.loadRaw(formatted.files);
-            }
-        }
-
-        return;
+        this.parameters = formatted;
+        return this.loadRaw(formatted.files);
     }
 }

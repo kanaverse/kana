@@ -43,10 +43,10 @@ export function guessBestFeatures(dataset) {
     for (const f in dataset.genes) {
         let fscore = scran.guessFeatures(dataset.genes[f]);
 
-        if ((!scores[`${fscore?.type}-${fscore?.species}`]) ||
-            fscore?.confidence > scores[`${fscore?.type}-${fscore?.species}`]) {
-            scores[`${fscore?.type}-${fscore?.species}`] = fscore?.confidence;
-            fields[`${fscore?.type}-${fscore?.species}`] = f;
+        if ((!scores[`${fscore.type}-${fscore.species}`]) ||
+            fscore.confidence > scores[`${fscore.type}-${fscore.species}`]) {
+            scores[`${fscore.type}-${fscore.species}`] = fscore.confidence;
+            fields[`${fscore.type}-${fscore.species}`] = f;
         }
     }
 
@@ -94,14 +94,19 @@ export function getCommonGenes(datasets) {
 
     let intersection;
     if (bscore) {
-        intersection = datasets[keys[0]].genes?.[fields[bscore][0]];
+        intersection = datasets[keys[0]].genes[fields[bscore][0]];
         for (var i = 1; i < Object.keys(datasets).length; i++) {
-            intersection = intersection.filter(function (n) {
-                return datasets[keys[i]]?.genes?.[fields[bscore][i]].indexOf(n) > -1;
+            let dset = new Set(datasets[keys[i]].genes[fields[bscore][i]]);
+            intersection = intersection.filter((n) => {
+                return dset.has(n);
             });
         }
-        num_common_genes =intersection.length;
+        num_common_genes = intersection.length;
     }
 
-    return { num_common_genes, intersection, best_fields: bscore ? fields[bscore]: null };
+    return {
+        "num_common_genes": num_common_genes,
+        "intersection": intersection,
+        "best_fields": bscore ? fields[bscore] : null
+    };
 }
