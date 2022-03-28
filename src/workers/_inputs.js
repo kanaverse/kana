@@ -314,3 +314,8 @@ export function fetchAnnotations(col) {
         "factor": uTypedAray
     }
 }
+
+export fetchBlock() {
+    /* TODO: actually return a blocking vector as a Int32WasmArray. */
+    return null;
+}
