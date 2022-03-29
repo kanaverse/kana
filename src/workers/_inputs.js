@@ -25,7 +25,7 @@ function merge_datasets(odatasets) {
         cache = datasets[keys[0]];
 
         let batchfield = parameters[keys[0]].batch;
-        if (batchfield && batchfield != "none") {
+        if (batchfield && batchfield.toLowerCase() != "none") {
 
             let anno_batch = cache.annotations[batchfield]
             if (anno_batch && anno_batch.length == cache.matrix.numberOfColumns()) {

@@ -11,10 +11,10 @@ var parameters = {};
 export var changed = false;
 
 function fetchPCsAsWasmArray() {
-    if (parameters.block_method == "none") {
-        return cache.pcs.principalComponents({ copy: "view" });
-    } else {
+    if (parameters.block_method == "mnn") {
         return cache.corrected;
+    } else {
+        return cache.pcs.principalComponents({ copy: "view" });
     }
 }
 
