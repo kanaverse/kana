@@ -21,8 +21,29 @@ function merge_datasets(odatasets) {
 
     let keys = Object.keys(datasets);
 
-    if (Object.keys(datasets).length == 1) {
-        cache = datasets[Object.keys(datasets)[0]].cache;
+    if (keys.length == 1) {
+        cache = datasets[keys[0]];
+
+        let batchfield = parameters[keys[0]].batch;
+        if (batchfield && batchfield != "none") {
+
+            let anno_batch = cache.annotations[batchfield]
+            if (anno_batch && anno_batch.length == cache.matrix.numberOfColumns()) {
+                let uvals = {};
+                
+                // everything is a single batch to start with
+                cache.batch = new Array(cache.matrix.numberOfColumns()).fill(0);
+
+                anno_batch.map((x, i) => {
+                    if (!(x in uvals)) {
+                        uvals[x] = Object.keys(uvals).length;
+                    }
+            
+                    cache.batch[i] = uvals[x];
+                });
+            }
+        }
+
         return;
     }
 
@@ -31,14 +52,19 @@ function merge_datasets(odatasets) {
     let best_fields = result.best_fields;
 
     let gnames = [], mats = [];
+    cache.batch = [];
     for (var i = 0; i < keys.length; i++) {
         gnames.push(datasets[keys[i]].genes[best_fields[i]]);
         mats.push(datasets[keys[i]].matrix);
+
+        let arr = new Array(datasets[keys[i]].matrix.numberOfColumns()).fill(i);
+        cache.batch = cache.batch.concat(arr);
     }
 
     // cbind assays with names
     let merged_mats = scran.cbindWithNames(mats, gnames);
 
+    // TODO: use indices when available
     cache.genes = {
         "id": merged_mats.names
     };
@@ -86,6 +112,8 @@ export function compute(files) {
         changed = false;
         return;
     }
+
+    parameters = files;
 
     let datasets = {}
     for (const f in files) {
@@ -315,7 +343,16 @@ export function fetchAnnotations(col) {
     }
 }
 
-export fetchBlock() {
-    /* TODO: actually return a blocking vector as a Int32WasmArray. */
-    return null;
+export function fetchBlock() {
+
+    if (!cache.batch) {
+        return null;
+    }
+
+    if (!cache.batchBuffer) {
+        cache.batchBuffer = scran.createInt32WasmArray(cache.batch.length);
+        cache.batchBuffer.set(cache.batch);
+    }
+
+    return cache.batchBuffer;
 }
