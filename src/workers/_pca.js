@@ -1,6 +1,7 @@
 import * as scran from "scran.js";
 import * as utils from "./_utils.js";
 import * as normalization from "./_normalization.js";
+import * as qc from "./_quality_control.js";
 import * as variance from "./_model_gene_var.js";
 import * as wa from "wasmarrays.js";
 
@@ -59,7 +60,7 @@ export function compute(num_hvgs, num_pcs, block_method = "none") {
 
         if (block_method == "mnn") {
             let pcs =  cache.pcs.principalComponents({ copy:"view" });
-            let corrected = utils.allocateCachedWasmArray(pcs.length, "Float64Array", cache, "corrected");
+            let corrected = utils.allocateCachedArray(pcs.length, "Float64Array", cache, "corrected");
             scran.mnnCorrect(cache.pcs, block, { buffer: corrected });
         }
 
@@ -154,7 +155,7 @@ export function unserialize(handle) {
         // downstream steps don't care about the distinction.
         if (parameters.block_method != "none") {
             let pcs =  cache.pcs.principalComponents({ copy:"view" });
-            let corrected = utils.allocateCachedWasmArray(pcs.length, "Float64Array", cache, "corrected");
+            let corrected = utils.allocateCachedArray(pcs.length, "Float64Array", cache, "corrected");
             corrected.set(pcs);
         }
     }
