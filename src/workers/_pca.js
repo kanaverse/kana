@@ -1,6 +1,7 @@
 import * as scran from "scran.js";
 import * as utils from "./_utils.js";
 import * as normalization from "./_normalization.js";
+import * as qc from "./_quality_control.js";
 import * as variance from "./_model_gene_var.js";
 import * as wa from "wasmarrays.js";
 
@@ -10,7 +11,11 @@ var parameters = {};
 export var changed = false;
 
 function fetchPCsAsWasmArray() {
-    return cache.pcs.principalComponents({ copy: "view" });
+    if (parameters.block_method == "mnn") {
+        return cache.corrected;
+    } else {
+        return cache.pcs.principalComponents({ copy: "view" });
+    }
 }
 
 function chooseFeatures(num_hvgs) {
@@ -23,7 +28,7 @@ function chooseFeatures(num_hvgs) {
     });
 }
 
-export function compute(num_hvgs, num_pcs) {
+export function compute(num_hvgs, num_pcs, block_method = "none") {
     changed = false;
     
     if (variance.changed || num_hvgs !== parameters.num_hvgs) {
@@ -41,11 +46,26 @@ export function compute(num_hvgs, num_pcs) {
         }
         let sub = cache.hvg_buffer;
 
+        let block = qc.fetchFilteredBlock();
+        let block_type = "block";
+        if (block_method == "none") {
+            block = null;
+        } else if (block_method == "mnn") {
+            block_type = "weight";
+        }
+
         var mat = normalization.fetchNormalizedMatrix();
         utils.freeCache(cache.pcs);
-        cache.pcs = scran.runPCA(mat, { features: sub, numberOfPCs: num_pcs });
+        cache.pcs = scran.runPCA(mat, { features: sub, numberOfPCs: num_pcs, block: block, blockMethod: block_type });
+
+        if (block_method == "mnn") {
+            let pcs =  cache.pcs.principalComponents({ copy:"view" });
+            let corrected = utils.allocateCachedArray(pcs.length, "Float64Array", cache, "corrected");
+            scran.mnnCorrect(cache.pcs, block, { buffer: corrected });
+        }
 
         parameters.num_pcs = num_pcs;
+        parameters.block_method = block_method;
         changed = true;
     }
 
@@ -69,6 +89,7 @@ export function serialize(handle) {
         let phandle = ghandle.createGroup("parameters"); 
         phandle.writeDataSet("num_hvgs", "Int32", [], parameters.num_hvgs);
         phandle.writeDataSet("num_pcs", "Int32", [], parameters.num_pcs);
+        phandle.writeDataSet("block_method", "Int32", [], parameters.block_method);
     }
 
     {
@@ -115,6 +136,13 @@ export function unserialize(handle) {
             num_hvgs: phandle.open("num_hvgs", { load: true }).values[0],
             num_pcs: phandle.open("num_pcs", { load: true }).values[0]
         };
+
+        // For back-compatibility.
+        if ("block_method" in phandle.children) {
+            parameters.block_method = phandle.open("block_method", { load: true }).values[0]
+        } else {
+            parameters.block_method = "none";
+        }
     }
 
     {
@@ -122,6 +150,14 @@ export function unserialize(handle) {
         let var_exp = rhandle.open("var_exp", { load: true }).values;
         let pcs = rhandle.open("pcs", { load: true }).values
         cache.pcs = new PCAMimic(pcs, var_exp);
+
+        // Just duplicating this so that fetchPCsAsWasmArray() works; 
+        // downstream steps don't care about the distinction.
+        if (parameters.block_method != "none") {
+            let pcs =  cache.pcs.principalComponents({ copy:"view" });
+            let corrected = utils.allocateCachedArray(pcs.length, "Float64Array", cache, "corrected");
+            corrected.set(pcs);
+        }
     }
 
     return { ...parameters };

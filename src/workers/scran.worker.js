@@ -81,7 +81,8 @@ function runAllSteps(state) {
 
     pca.compute(
         state.params.pca["pca-hvg"], 
-        state.params.pca["pca-npc"]
+        state.params.pca["pca-npc"],
+        state.params.pca["pca-correction"]
     );
     postSuccess(pca, step_pca, "Principal components analysis completed");
 

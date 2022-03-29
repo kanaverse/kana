@@ -533,7 +533,7 @@ const AnalysisDialog = ({
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-npc": nval } }) }} />
                         </Label>
                         {
-                            tmpInputFiles.length > 1 && <Label className="row-input">
+                            (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none")) && <Label className="row-input">
                                 <Text className="text-100">
                                     <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                         onMouseEnter={() => setShowStepHelper(4)}>
@@ -544,9 +544,9 @@ const AnalysisDialog = ({
                                     onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-correction": e.target.value } }) }}
                                     defaultValue={tmpInputParams["pca"]["pca-correction"]}
                                 >
-                                    <option value="no_correction">No Correction</option>
-                                    <option value="linear_regression">Linear Regression</option>
-                                    <option value="mnn_correction">MNN correction</option>
+                                    <option value="none">No Correction</option>
+                                    <option value="regress">Linear Regression</option>
+                                    <option value="mnn">MNN correction</option>
                                 </HTMLSelect>
                             </Label>
                         }

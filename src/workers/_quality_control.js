@@ -47,8 +47,9 @@ function computeMetrics(use_mito_default, mito_prefix) {
 }
 
 function computeFilters(nmads) {
+    let block = inputs.fetchBlock();
     utils.freeCache(cache.filters);
-    cache.filters = scran.computePerCellQCFilters(cache.metrics, { numberOfMADs: nmads });
+    cache.filters = scran.computePerCellQCFilters(cache.metrics, { numberOfMADs: nmads, block: block });
     return;
 }
 
@@ -57,6 +58,25 @@ function applyFilters() {
     var disc = fetchDiscards();
     utils.freeCache(cache.matrix);
     cache.matrix = scran.filterCells(mat, disc);
+
+    let block = inputs.fetchBlock();
+
+    cache.blocked = (block !== null);
+    if (cache.blocked) {
+        let bcache = utils.allocateCachedArray(cache.matrix.numberOfColumns(), "Int32Array", cache, "block_buffer");
+
+        let bcache_arr = bcache.array();
+        let block_arr = block.array();
+        let disc_arr = disc.array();
+        let j = 0;
+        for (let i = 0; i < block_arr.length; i++) {
+            if (disc_arr[i] == 0) {
+                bcache_arr[j] = block_arr[i];
+                j++;
+            }
+        }
+    }
+
     return;
 }
 
@@ -313,4 +333,15 @@ export function fetchFilteredMatrix() {
         applyFilters();
     }
     return cache.matrix;
+}
+
+export function fetchFilteredBlock() {
+    if (!("blocked" in cache)) {
+        applyFilters();
+    }
+    if (cache.blocked) {
+        return cache.block_buffer;
+    } else {
+        return null;
+    }
 }

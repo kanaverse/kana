@@ -28,8 +28,10 @@ function rawCompute() {
         throw "normalization and filtering are not in sync";
     }
 
+    var block = qc.fetchFilteredBlock();
+
     utils.freeCache(cache.matrix);
-    cache.matrix = scran.logNormCounts(mat, { sizeFactors: buffer });
+    cache.matrix = scran.logNormCounts(mat, { sizeFactors: buffer, block: block });
     return;
 }
 

@@ -1,6 +1,7 @@
 import * as scran from "scran.js"; 
 import * as utils from "./_utils.js";
 import * as normalization from "./_normalization.js";
+import * as qc from "./_quality_control.js";
   
 var cache = {};
 var parameters = {};
@@ -14,7 +15,8 @@ export function compute(span) {
         utils.freeCache(cache.results);
 
         let mat = normalization.fetchNormalizedMatrix();
-        cache.results = scran.modelGeneVar(mat, { span: span });
+        let block = qc.fetchFilteredBlock();
+        cache.results = scran.modelGeneVar(mat, { span: span, block: block });
 
         cache.sorted_residuals = cache.results.residuals().slice(); // a separate copy.
         cache.sorted_residuals.sort();
