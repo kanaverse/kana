@@ -1,8 +1,5 @@
 import * as utils from "./_utils.js";
-import { H5Reader } from "./_reader_h5.js";
-import { H5ADReader } from "./_reader_h5ad.js";
-import { MtxReader } from "./_reader_mtx.js";
-import * as rutils from "./_reader_utils.js";
+import * as iutils from "./_utils_inputs.js";
 
 function validate_files(datasets) {
     // possible check if genes is empty in atleast one of them
@@ -13,27 +10,22 @@ function validate_files(datasets) {
     let error_messages = []
 
     // do all datasets contain genes ?
-    for (const f in datasets) {
-        if (!datasets[f].genes) {
+    for (const [key, val] of Object.entries(datasets)) {
+        if (!("genes" in val)) {
             all_valid = false;
             if (fkeys.length > 1) {
                 error_messages.push("all imported datasets must contain genes for integration/batch correction");
                 break;
             }
         }
-
-        if (datasets[f].annotations) {
-            annotation_names.push(Object.keys(datasets[f].annotations));
-        } else {
-            annotation_names.push(null);
-        }
+        annotation_names.push(val.annotations);
     }
 
     // if all files contain genes, run checks to see if they have common genes;
     // we don't do this if the earlier step already failed
     let result;
     if (all_valid) {
-        result = rutils.getCommonGenes(datasets);
+        result = iutils.getCommonGenes(datasets);
         common_genes = result?.num_common_genes;
 
         // if there are no common genes
@@ -75,33 +67,13 @@ function validate_files(datasets) {
  ******************************/
 
 export function compute(files) {
-    let datasets = {}
-    for (const f in files) {
-        datasets[f] = {};
-        let obj, formatted;
-        switch (files[f].format) {
-            case "mtx":
-                obj = new MtxReader(files[f]);
-                break;
-            case "hdf5":
-            case "tenx":
-                obj = new H5Reader(files[f]);
-                break;
-            case "h5ad":
-                obj = new H5ADReader(files[f]);
-                break;
-            case "kana":
-                // do nothing, this is handled by unserialize.
-                break;
-            default:
-                throw "unknown matrix file extension: '" + format + "'";
-        }
+    let datasets = {};
+    console.log(files);
 
-        formatted = obj.formatFiles();
-        obj.loadRaw(formatted.files, false);
-        // just in case remove matrix at this step
-        utils.freeCache(obj.cache.matrix);
-        datasets[f] = obj.getDataset();
+    for (const [key, val] of Object.entries(files)) {
+        let namespace = iutils.chooseNamespace(val.format);
+        let formatted = namespace.formatFiles(val, f => (new FileReaderSync()).readAsArrayBuffer(f));
+        datasets[key] = namespace.loadPreflight(formatted);
     }
 
     return validate_files(datasets);

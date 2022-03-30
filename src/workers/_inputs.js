@@ -1,9 +1,6 @@
 import * as scran from "scran.js";
 import * as utils from "./_utils.js";
-import { H5Reader } from "./_reader_h5.js";
-import { H5ADReader } from "./_reader_h5ad.js";
-import { MtxReader } from "./_reader_mtx.js";
-import * as rutils from "./_reader_utils.js";
+import * as iutils from "./_utils_inputs.js";
 
 var cache = {};
 var parameters = {};
@@ -11,151 +8,215 @@ var abbreviated = {};
 
 export var changed = false;
 
-function merge_datasets(odatasets) {
+function dummy_genes(numberOfRows) {
+    let genes = []
+    for (let i = 0; i < numberOfRows; i++) {
+        genes.push(`Gene ${i + 1}`);
+    }
+    return { "id": genes };
+}
+
+function process_datasets(files, sample_factor) {
+    // Loading all of the individual matrices.
     let datasets = {};
-    for (const f in odatasets) {
-        datasets[f] = odatasets[f].getDataset();
+    try {
+        for (const [key, val] of Object.entries(files)) {
+            let namespace = iutils.chooseNamespace(val.format);
+            let current = namespace.loadData(val);
+
+            if (!("genes" in current)) {
+                current.genes = dummy_genes(current.matrix.numberOfRows());
+            } 
+            if (current.matrix.isPermuted()) {
+                scran.permuteFeatures(current.matrix, current.genes);
+            }
+
+            datasets[key] = current;
+        }
+    } catch (e) {
+        // If any one fails, we free the rest.
+        for (const [key, val] of Object.entries(datasets)){
+            utils.freeCache(val.matrix);
+        }
+        throw e;
     }
 
-    changed = true;
+    let dkeys = Object.keys(datasets)
+    if (dkeys.length == 1) {
+        let current = datasets[dkeys[0]];
+        let blocks = null;
+        let block_levels = null;
 
-    let keys = Object.keys(datasets);
+        if (sample_factor !== null) {
+            // Single matrix with a batch factor.
+            try {
+                let anno_batch = cache.annotations[sample_factor];
+                if (anno_batch.length != cache.matrix.numberOfColumns()) {
+                    throw new Error("length of sample factor '" + sample_factor + "' should be equal to the number of cells"); 
+                }
+                blocks = scran.createInt32WasmArray(current.matrix.numberOfColumns());
+                block_levels = [];
 
-    if (keys.length == 1) {
-        cache = datasets[keys[0]];
-
-        let batchfield = parameters[keys[0]].batch;
-        if (batchfield && batchfield.toLowerCase() != "none") {
-
-            let anno_batch = cache.annotations[batchfield]
-            if (anno_batch && anno_batch.length == cache.matrix.numberOfColumns()) {
+                let block_arr = blocks.array();
                 let uvals = {};
-                
-                // everything is a single batch to start with
-                cache.batch = new Array(cache.matrix.numberOfColumns()).fill(0);
-
-                anno_batch.map((x, i) => {
+                anno_batch.forEach((x, i) => {
                     if (!(x in uvals)) {
-                        uvals[x] = Object.keys(uvals).length;
+                        uvals[x] = block_levels.length;
+                        block_levels.push(x);
                     }
-            
-                    cache.batch[i] = uvals[x];
+                    block_arr[i] = uvals[x];
                 });
+            } catch (e) {
+                utils.freeCache(blocks);
+                utils.freeCache(current.matrix);
+                throw e;
             }
         }
 
-        return;
-    }
+        current.block_id = blocks;
+        current.block_levels = block_levels;
+        return current;
 
-    // get gene columns to use
-    let result = rutils.getCommonGenes(datasets);
-    let best_fields = result.best_fields;
+    } else {
+        // Multiple matrices, each of which represents a batch.
+        let output = {}
+        let blocks;
 
-    let gnames = [], mats = [];
-    cache.batch = [];
-    for (var i = 0; i < keys.length; i++) {
-        gnames.push(datasets[keys[i]].genes[best_fields[i]]);
-        mats.push(datasets[keys[i]].matrix);
+        try {
+            // Identify the gene columns to use
+            let result = iutils.getCommonGenes(datasets);
+            let best_fields = result.best_fields;
 
-        let arr = new Array(datasets[keys[i]].matrix.numberOfColumns()).fill(i);
-        cache.batch = cache.batch.concat(arr);
-    }
+            let gnames = [];
+            let mats = [];
+            let total = 0;
+            for (const d of dkeys) {
+                let current = datasets[d];
+                gnames.push(current.genes[best_fields[i]]);
+                mats.push(current.matrix);
+                total += current.matrix.numberOfColumns();
+            }
 
-    // cbind assays with names
-    let merged_mats = scran.cbindWithNames(mats, gnames);
+            blocks = scran.createInt32WasmArray(total);
+            let barr = blocks.array();
+            let sofar = 0;
+            for (var i = 0; i < datasets.length; i++) {
+                let old = sofar;
+                sofar += datasets[i].matrix.numberOfColumns();
+                barr.fill(i, old, sofar);
+            }
+            output.block_ids = blocks;
+            output.block_levels = dkeys;
 
-    // TODO: use indices when available
-    cache.genes = {
-        "id": merged_mats.names
-    };
+            let merged = scran.cbindWithNames(mats, gnames);
+            output.matrix = merged.matrix;
+            output.indices = merged.indices;
 
-    cache.matrix = merged_mats.matrix;
-    cache.indices = merged_mats.indices;
+            // Extracting gene information from the first object. We won't make
+            // any attempt at merging and deduplication across objects.
+            let included = new Set(merged.indices);
+            output.genes = {};
+            let first_genes = datasets[dkeys[0]].genes;
+            for (const [key, val] of Object.entries(first_genes)) {
+                output.genes[key] = val.filter((x, i) => included.has(i));
+            }
 
-    let ckeys = [];
-    // first pass get all annotations keys across datasets
-    for (const i in datasets) {
-        if (datasets[i].annotations) ckeys = ckeys.concat(Object.keys(datasets[i].annotations));
-    }
+            // Get all annotations keys across datasets; we then concatenate
+            // columns with the same name, or we just fill them with missings.
+            let ckeys = new Set();
+            for (const d of dkeys) {
+                let current = datasets[d];
+                if ("annotations" in current) {
+                    for (const a of Object.keys(current.annotations)) {
+                        ckeys.add(a);
+                    }
+                }
+            }
+            let anno_keys = [...ckeys];
 
-    ckeys = [...new Set(ckeys)];
+            let combined_annotations = {};
+            for (const i of anno_keys) {
+                let current_combined = [];
+                for (const d of datasets) {
+                    let x;
+                    if (d.annotations && d.annotations[i]) {
+                        x = d.annotations[i];
+                        if (!(x instanceof Array)) {
+                            x = Array.from(x);
+                        }
+                    } else {
+                        x = new Array(d.matrix.numberOfColumns());
+                    }
+                    current_combined = current_combined.concat(x);
+                }
+                combined_annotations[i] = current_combined;
+            }
+            output.annotations = combined_annotations;
 
-    // merge cells
-    let combined_annotations = {};
-    for (const i of ckeys) {
-        combined_annotations[i] = []
-        for (const f in datasets) {
-            if (datasets[f].annotations && datasets[f].annotations[i]) {
-                combined_annotations[i] = combined_annotations[i].concat(datasets[f].annotations[i]);
-            } else {
-                combined_annotations[i] = combined_annotations[i].concat(new Array(datasets[f].matrix.numberOfColumns()));
+        } catch (e) {
+            utils.freeCache(blocks);
+            throw e;
+
+        } finally {
+            // Once the merged dataset is created, the individual dataset
+            // matrices are no longer useful, so we need to delete them anyway.
+            for (const f of datasets) {
+                utils.freeCache(f.matrix);
             }
         }
-    }
 
-    cache.annotations = combined_annotations;
-
-    // also after the merged dataset is created, the individual 
-    // dataset matrices are no longer useful
-    for (const f in odatasets) {
-        utils.freeCache(odatasets[f].getDataset().matrix);
+        return output;
     }
+}
+
+export function process_and_cache(new_files, sample_factor) {
+    let contents = process_datasets(new_files, sample_factor);
+    cache.matrix = contents.matrix;
+    cache.genes = contents.genes;
+    cache.annotations = contents.annotations;
+    cache.block_ids = contents.block_ids;
+    cache.block_levels = contents.block_levels;
+    cache.indices = contents.indices;
+    return 
+}
+
+export function permute_indices(mat, indices) {
+    let perm = mat.permutation({ restore: false });
+    return indices.map(i => perm[i]);
 }
 
 /******************************
  ****** Standard exports ******
  ******************************/
 
-export function compute(files) {
-    parameters.files = [];
-    for (const f in files) {
-        datasets[f] = {};
-        let curf = files[f];
+export function compute(files, sample_factor) {
+    changed = true;
 
-        let obj;
-        switch (files[f].format) {
-            case "mtx":
-                obj = new MtxReader(files[f]);
-                break;
-            case "hdf5":
-            case "tenx":
-                obj = new H5Reader(files[f]);
-                break;
-            case "h5ad":
-                obj = new H5ADReader(files[f]);
-                break;
-            case "kana":
-                // do nothing, this is handled by unserialize.
-                break;
-            default:
-                throw "unknown matrix file extension: '" + format + "'";
-        }
-
-        parameters.files.push(obj);
+    let tmp_abbreviated = {};
+    for (const [key, val] of Object.entries(files)) {
+        let namespace = iutils.chooseNamespace(val.format);
+        tmp_abbreviated[key] = namespace.formatFiles(val, f => f.size);
     }
 
-    // Constructing the abbrievation.
-    let test_abbreviated = [];
-    for (const obj of parameters.files) {
-        test_abbreviated.push(obj.formatFiles(f => f.size));
-    }
-    if (!utils.changedParameters(abbreviated, test_abbreviated)) {
+    if (!utils.changedParameters(tmp_abbreviated, abbreviated) && parameters.sample_factor != sample_factor) {
         changed = false;
         return;
     }
 
-    // Otherwise loading in the buffers.
-    parameters.files = [];
-    for (const obj of parameters.files) {
-        let curfiles = files[f];
-        parameters.files.push(obj.formatFiles(curfiles, f => {
-            var reader = new FileReaderSync();
-            bufferFun = (f) => reader.readAsArrayBuffer(f);
-        }));
+    let new_files = {};
+    for (const [key, val] of Object.entries(files)) {
+        let namespace = iutils.chooseNamespace(val.format);
+        new_files[key] = namespace.formatFiles(val, f => (new FileReaderSync()).readAsArrayBuffer(f));
     }
 
-    // Constructing a matrix.
-    merge_datasets();
+    utils.freeCache(cache.matrix);
+    utils.freeCache(cache.block_ids);
+    process_and_cache(new_files, sample_factor);
+
+    abbreviated = tmp_abbreviated;
+    parameters.files = new_files;
+    parameters.sample_factor = sample_factor;
+
     return;
 }
 
@@ -184,13 +245,13 @@ export async function serialize(handle, saver, embedded) {
         let names = [];
         let numbers = [];
 
-        for (const obj of parameters.files) {
-            formats.push(obj.format);
-            for (const x of obj.files) {
+        for (const [key, val] of Object.entries(parameters.files)) {
+            formats.push(val.format);
+            for (const x of val.files) {
                 files.push(x);
             }
-            names.push(obj.name);
-            numbers.push(obj.files.length);
+            names.push(key);
+            numbers.push(val.files.length);
         }
 
         if (formats.length > 1) {
@@ -222,14 +283,10 @@ export async function serialize(handle, saver, embedded) {
         let rhandle = ghandle.createGroup("results");
         let dims = [cache.matrix.numberOfRows(), cache.matrix.numberOfColumns()];
         rhandle.writeDataSet("dimensions", "Int32", null, dims);
-
         if (formats.length > 1) {
-            let perm = cache.matrix.permutation({ restore: false });
-            let permed_indices = cache.indices.map(i => perm[i]);
-            rhandle.writeDataSet("indices", "Int32", null, permed_indices);
+            rhandle.writeDataSet("indices", "Int32", null, permute_indices(cache.matrix, cache.indices));
         } else {
-            let perm = cache.matrix.permutation({ copy: "view" });
-            rhandle.writeDataSet("permutation", "Int32", null, perm);
+            rhandle.writeDataSet("permutation", "Int32", null, cache.matrix.permutation({ copy: "view" }));
         }
     }
 
@@ -243,7 +300,7 @@ export async function unserialize(handle, loader, embedded) {
     // Extracting the files.
     let fihandle = phandle.open("files");
     let kids = fihandle.children;
-    let files = new Array(kids.length);
+    let all_files = new Array(kids.length);
 
     for (const x of Object.keys(kids)) {
         let current = fihandle.open(x);
@@ -267,63 +324,98 @@ export async function unserialize(handle, loader, embedded) {
         }
 
         let idx = Number(x);
-        files[idx] = curfile;
+        all_files[idx] = curfile;
     }
 
-    // Run the reloaders now.
-    let format = phandle.open("format", { load: true }).values[0];
-    if (format == "MatrixMarket") {
-        loadMatrixMarketRaw(files);
+    // Extracting the format and organizing the files.
+    parameters = { files: {}, sample_factor: null };
+    let solofile = (fohandle.shape.length == 0);
+    let fohandle = phandle.open("format", { load: true });
+    if (solofile) {
+        parameters.files["default"] = {
+            format: fohandle.values[0],
+            files: all_files
+        };
 
-    } else if (format == "H5AD") {
-        loadH5ADRaw(files);
-
-    } else if (format == "10X") {
-        load10XRaw(files);
-
-    } else if (format == "HDF5") {
-        // legacy support: trying to guess what it is based on its extension.
-        if (files[0].name.match(/h5ad$/i)) {
-            loadH5ADRaw(files);
-        } else {
-            load10XRaw(files);
+        let sf = null;
+        if ("sample_factor" in phandle.children) {
+            sf = phandle.open("sample_factor", { load: true }).values[0];
         }
+        parameters.sample_factor = sf;
 
     } else {
-        throw `unrecognized count matrix format "${format}"`;
+        let formats = fohandle.values;
+        let sample_names = phandle.open("sample_names", { load: true }).values;
+        let sample_groups = phandle.open("sample_groups", { load: true }).values;
+
+        let sofar = 0;
+        for (var i = 0; i < formats.length; i++) {
+            let curfiles = [];
+            for (var j = 0; j < sample_groups[i]; j++) {
+                curfiles.push(all_files[sofar]);
+                sofar++;
+            }
+
+            parameters.files[sample_names[i]] = {
+                format: formats[i],
+                files: curfiles
+            };
+        }
     }
 
-    parameters = {
-        format: format,
-        files: files
-    };
+    // Loading matrix data.
+    process_and_cache(new_files, sample_factor);
 
     // We need to do something if the permutation is not the same.
     let rhandle = ghandle.open("results");
-
-    let perm = null;
-    if ("permutation" in rhandle.children) {
-        let dhandle = rhandle.open("permutation", { load: true });
-        perm = scran.updatePermutation(cache.matrix, dhandle.values);
-    } else {
-        // Otherwise, we're dealing with v0 states. We'll just
-        // assume it was the same, I guess. Should be fine as we didn't change
-        // the permutation code in v0.
-    }
-
     let permuter;
-    if (perm !== null) {
-        // Adding a permuter function for all per-gene vectors.
-        permuter = (x) => {
-            let temp = x.slice();
-            x.forEach((y, i) => {
-                temp[i] = x[perm[i]];
-            });
-            x.set(temp);
-            return;
-        };
+    if (solofile) {
+        let perm = null;
+        if ("permutation" in rhandle.children) {
+            let dhandle = rhandle.open("permutation", { load: true });
+            perm = scran.updatePermutation(cache.matrix, dhandle.values);
+        } else {
+            // Otherwise, we're dealing with v0 states. We'll just
+            // assume it was the same, I guess. Should be fine as we didn't change
+            // the permutation code in v0.
+        }
+
+        if (perm !== null) {
+            // Adding a permuter function for all per-gene vectors.
+            permuter = (x) => {
+                let temp = x.slice();
+                x.forEach((y, i) => {
+                    temp[i] = x[perm[i]];
+                });
+                x.set(temp);
+                return;
+            };
+        } else {
+            permuter = (x) => { };
+        }
     } else {
-        permuter = (x) => { };
+        let old_indices = rhandle.open("indices", { load: true }).values;
+        let new_indices = permute_indices(cache.matrix, cache.indices);
+        if (old_indices.length != new_indices.length) {
+            throw new Error("old and new indices must have the same length for results to be interpretable");
+        }
+
+        let remap = {};
+        old_indices.forEach((x, i) => {
+            remap[x] = i;
+        });
+        let perm = new_indices.map(o => {
+            if (!(o in remap) || remap[o] === null) {
+                throw new Error("old and new indices should contain the same row identities");
+            }
+            let pos = remap[o];
+            remap[o] = null;
+            return pos;
+        });
+
+        permuter => (x) => {
+            return x.map((y, i) => x[perm[i]]);
+        };
     }
 
     return permuter;
@@ -382,15 +474,5 @@ export function fetchAnnotations(col) {
 }
 
 export function fetchBlock() {
-
-    if (!cache.batch) {
-        return null;
-    }
-
-    if (!cache.batchBuffer) {
-        cache.batchBuffer = scran.createInt32WasmArray(cache.batch.length);
-        cache.batchBuffer.set(cache.batch);
-    }
-
-    return cache.batchBuffer;
+    return cache.block_ids;
 }

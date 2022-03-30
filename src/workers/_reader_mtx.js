@@ -1,151 +1,127 @@
+import * as d3 from "d3-dsv";
+import * as pako from "pako";
 import * as scran from "scran.js";
 import * as utils from "./_utils.js";
-import * as rutils from "./_reader_utils.js";
 
+export function formatFiles(args, bufferFun) {
+    var formatted = { "format": "MatrixMarket", "files": [] };
 
-export class MtxReader {
-    constructor(files) {
-        this.files = files;
-        this.cache = {};
-        // this.loadFile(files);
+    if (args.mtx.length != 1) {
+        throw new Error("expected exactly one 'mtx' file");
+    }
+    var mtx_file = args.mtx[0];
+    formatted.files.push({ "type": "mtx", "name": mtx_file.name, "buffer": bufferFun(mtx_file) });
+
+    if ("gene" in args) {
+        if (args.gene.length !== 1) {
+            throw "expected no more than one gene file";
+        }
+        var genes_file = args.gene[0];
+        formatted.files.push({ "type": "genes", "name": genes_file.name, "buffer": bufferFun(genes_file) });
     }
 
-    getDataset() {
-        return this.cache;
+    if ("barcode" in args) {
+        if (args.barcode.length !== 1) {
+            throw "expected no more than one cell annotation file";
+        }
+        var annotations_file = args.barcode[0];
+        formatted.files.push({ "type": "annotations", "name": annotations_file.name, "buffer": bufferFun(annotations_file) });
     }
 
-    extractFeatures(files) {
-        let genes;
-        const genes_file = files.filter(x => x.type == "genes");
-        if (genes_file.length == 1) {
-            const gene_file = genes_file[0]
-            const content = new Uint8Array(gene_file.buffer);
+    return formatted;
+}
 
-            let parsed = rutils.readDSVFromBuffer(content, gene_file);
+export function extractFeatures(files, { numberOfRows = null } = {}) {
+    let genes = null;
+    const genes_file = files.filter(x => x.type == "genes");
 
-            if (parsed.length != this.cache.matrix.numberOfRows()) {
-                throw "number of matrix rows is not equal to the number of genes in '" + gene_file.name + "'";
-            }
+    if (genes_file.length == 1) {
+        const gene_file = genes_file[0]
+        const content = new Uint8Array(gene_file.buffer);
 
-            var ids = [], symb = [];
-            parsed.forEach(x => {
-                ids.push(x[0]);
-                symb.push(x[1]);
-            });
-
-            genes = { "id": ids, "symbol": symb };
+        let parsed = rutils.readDSVFromBuffer(content, gene_file);
+        if (parsed.length != this.cache.matrix.numberOfRows()) {
+            throw "number of matrix rows is not equal to the number of genes in '" + gene_file.name + "'";
         }
 
-        return genes;
+        var ids = [], symb = [];
+        parsed.forEach(x => {
+            ids.push(x[0]);
+            symb.push(x[1]);
+        });
+
+        genes = { "id": ids, "symbol": symb };
     }
 
-    extractAnnotations(files) {
-        let annotations;
-        const annotations_file = files.filter(x => x.type == "annotations");
-        if (annotations_file.length == 1) {
-            const annotation_file = annotations_file[0]
-            const content = new Uint8Array(annotation_file.buffer);
+    return genes;
+}
 
-            let parsed = rutils.readDSVFromBuffer(content, annotation_file);
+function extractAnnotations(files, { numberOfColumns = null, namesOnly = false } = {}) {
+    let annotations = null;
+    const annotations_file = files.filter(x => x.type == "annotations");
 
-            let diff = this.cache.matrix.numberOfColumns() - parsed.length;
-            // check if a header is present or not
-            let headerFlag = false;
+    if (annotations_file.length == 1) {
+        const annotation_file = annotations_file[0]
+        const content = new Uint8Array(annotation_file.buffer);
+        let parsed = rutils.readDSVFromBuffer(content, annotation_file);
+
+        // Check if a header is present or not
+        let headerFlag = true;
+        if (numberOfColumns !== null) {
+            let diff = numberOfColumns - parsed.length;
             if (diff === 0) {
                 headerFlag = false;
-            } else if (diff === -1) {
-                headerFlag = true;
-            } else {
+            } else if (diff !== -1) {
                 throw "number of annotations rows is not equal to the number of cells in '" + annotation_file.name + "'";
             }
-
-            let headers = [];
-            if (headerFlag) {
-                headers = parsed.shift();
-            } else {
-                parsed[0].forEach((x, i) => {
-                    headers.push(`Column_${i + 1}`);
-                })
-            }
-
-            this.cache.annotations = {}
-            headers.forEach((x, i) => {
-                cache.annotations[x] = parsed.map(y => y[i]);
-            });
-
         }
 
-        return annotations;
+        if (namesOnly) {
+            return parsed[0];
+        }
 
+        let headers = [];
+        if (headerFlag) {
+            headers = parsed.shift();
+        } else {
+            parsed[0].forEach((x, i) => {
+                headers.push(`Column_${i + 1}`);
+            })
+        }
+
+        annotations = {}
+        headers.forEach((x, i) => {
+            annotations[x] = parsed.map(y => y[i]);
+        });
     }
 
-    loadRaw(files, read_matrix = true) {
-        utils.freeCache(this.cache.matrix);
+    return annotations;
+}
 
-        // In theory, this section may support multiple files (e.g., for multiple samples).
-        var mtx_files = files.filter(x => x.type == "mtx");
-        var first_mtx = mtx_files[0];
-        var contents = new Uint8Array(first_mtx.buffer);
-        var ext = first_mtx.name.split('.').pop();
-        var is_compressed = (ext == "gz");
-        if (read_matrix) this.cache.matrix = scran.initializeSparseMatrixFromMatrixMarketBuffer(contents, { "compressed": is_compressed });
+export function loadPreflight(input) {
+    return {
+        genes: extractFeatures(input.files),
+        annotations: extractAnnotationNames(input.files, { namesOnly: true })
+    };
+}
 
+export function loadData(input) {
+    var mtx_files = input.files.filter(x => x.type == "mtx");
 
-        // extract features
-        this.cache.genes = this.extractFeatures(files);
+    var first_mtx = mtx_files[0];
+    var contents = new Uint8Array(first_mtx.buffer);
+    var ext = first_mtx.name.split('.').pop();
+    var is_compressed = (ext == "gz");
 
-        if (read_matrix) {
-            if (!this.cache.genes) {
-                this.cache.genes = rutils.dummyGenes(this.cache.matrix.numberOfRows());
-            }
-
-            scran.permuteFeatures(this.cache.matrix, this.cache.genes);
-        }
-
-        // extract annotations
-        this.cache.annotations = this.extractAnnotations(files);
-
-        return this.cache;
+    let output = {};
+    try {
+        output.matrix = scran.initializeSparseMatrixFromMatrixMarketBuffer(contents, { "compressed": is_compressed });
+        output.genes = extractFeatures(input.files, { numberOfRows: output.matrix.numberOfRows() });
+        output.annotations = extractAnnotations(input.files, { numberOfColumns: output.matrix.numberOfColumns() });
+    } catch (e) {
+        utils.freeCache(output.matrix);
+        throw e;
     }
 
-    formatFiles(bufferFun) {
-        if (!bufferFun) {
-            var reader = new FileReaderSync();
-            bufferFun = (f) => reader.readAsArrayBuffer(f);
-        }
-
-        var formatted = { "format": "MatrixMarket", "files": [] };
-
-        for (const f of this.files.mtx) {
-            formatted.files.push({ "type": "mtx", "name": f.name, "buffer": bufferFun(f) });
-        }
-
-        if (this.files.gene && Array.isArray(this.files.gene)) {
-            if (this.files.gene.length !== 1) {
-                throw "expected no more than one gene file";
-            }
-            var genes_file = this.files.gene[0];
-            formatted.files.push({ "type": "genes", "name": genes_file.name, "buffer": bufferFun(genes_file) });
-        }
-
-        if (this.files.barcode && Array.isArray(this.files.barcode)) {
-            if (this.files.barcode.length !== 1) {
-                throw "expected no more than one cell annotation file";
-            }
-            var annotations_file = this.files.barcode[0];
-            formatted.files.push({ "type": "annotations", "name": annotations_file.name, "buffer": bufferFun(annotations_file) });
-        }
-
-        return formatted;
-    }
-
-    loadFile() {
-        var reader = new FileReaderSync();
-        var bufferFun = (f) => reader.readAsArrayBuffer(f);
-
-        let formatted = this.formatFiles(bufferFun);
-
-        this.parameters = formatted;
-        return this.loadRaw(formatted.files);
-    }
+    return output;
 }
