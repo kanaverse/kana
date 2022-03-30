@@ -196,6 +196,14 @@ const AnalysisDialog = ({
                     setTmpInputValid(true);
                 }
             }
+
+            if (tmpInputFiles.length > 1) {
+                setTmpInputParams({
+                    ...tmpInputParams,
+                    "pca": { ...tmpInputParams["pca"], "pca-correction": "mnn" }
+                })
+
+            }
         }
     }, [tmpInputFiles]);
 
@@ -909,26 +917,28 @@ const AnalysisDialog = ({
                             Load input files
                         </span>
                     </H5>
-                    <div className="row">
-                        <Label className="row-input">
-                            <Text className="text-100">
-                                <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(1)}>
-                                    Name this dataset
-                                </span>
-                            </Text>
-                            <InputGroup
-                                placeholder="name this dataset"
-                                fill={false}
-                                onChange={(nval, val) => {
-                                    let tmp = [...tmpInputFiles];
-                                    tmp[idx]["name"] = nval?.target?.value;
-                                    setTmpInputFiles(tmp);
-                                }}
-                                value={tmpInputFiles[idx]["name"]}
-                            />
-                        </Label>
-                    </div>
+                    {tmpInputFiles.length > 1 &&
+                        <div className="row">
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(1)}>
+                                        Name this dataset
+                                    </span>
+                                </Text>
+                                <InputGroup
+                                    placeholder="name this dataset"
+                                    fill={false}
+                                    onChange={(nval, val) => {
+                                        let tmp = [...tmpInputFiles];
+                                        tmp[idx]["name"] = nval?.target?.value;
+                                        setTmpInputFiles(tmp);
+                                    }}
+                                    value={tmpInputFiles[idx]["name"]}
+                                />
+                            </Label>
+                        </div>
+                    }
                     <Tabs
                         animate={true}
                         renderActiveTabPanelOnly={true}
@@ -1111,14 +1121,14 @@ const AnalysisDialog = ({
                                             preInputFilesStatus && tmpInputFiles.length > 1 &&
 
                                             <Callout intent={preInputFilesStatus.valid ? "primary" : "danger"}
-                                                title="Datasets"
+                                                title="Batch Correction/Integrate Datasets"
                                                 style={{
                                                     margin: '10px'
                                                 }}>
                                                 <div>
                                                     {
                                                         preInputFilesStatus.valid ?
-                                                            <span>Datasets can be integrated.</span> :
+                                                            <span>Imported datasets can be integrated.</span> :
                                                             <div>
                                                                 <span>Datasets cannot be integrated.</span>
                                                                 <ul>
@@ -1131,17 +1141,25 @@ const AnalysisDialog = ({
                                                     }
 
                                                     {
-                                                        <p>Contain
-                                                            {preInputFilesStatus.common_genes == 0 ? " no " : " " + preInputFilesStatus.common_genes + " "}
-                                                            common genes.</p>
+                                                        <span> These datasets contain
+                                                            <strong>{preInputFilesStatus.common_genes == 0 ? " no " : " " + preInputFilesStatus.common_genes + " "}</strong>
+                                                            common genes.</span>
                                                     }
 
                                                     {
-                                                        <p>Using feature columns:
-                                                            {preInputFilesStatus.best_genes ? " " + preInputFilesStatus.best_genes.join(", ") : " "}</p>
+                                                        preInputFilesStatus.best_genes ?
+                                                            <p>We automagically detect features to use for integration across datasets:
+                                                                <ul>
+                                                                    {
+                                                                        tmpInputFiles.map((x, i) =>
+                                                                            <li key={x.name}>from <strong>{x.name}</strong>, we use <strong>{preInputFilesStatus.best_genes[i]}</strong></li>)
+                                                                    }
+                                                                </ul>
+                                                            </p>
+                                                            : " "
                                                     }
 
-                                                    <p>When multiple files are imported, each dataset is considered as a batch.</p>
+                                                    <strong>When multiple files are imported, each dataset is considered a batch.</strong>
                                                 </div>
                                             </Callout>
                                         }
@@ -1150,42 +1168,43 @@ const AnalysisDialog = ({
                                             preInputFilesStatus && tmpInputFiles.length == 1 &&
 
                                             <Callout intent={"warning"}
-                                                title="Choose batch"
+                                                title="Batch Correction"
                                                 style={{
                                                     margin: '10px'
                                                 }}>
                                                 <div>
                                                     {
                                                         preInputFilesStatus.annotations[0] ?
-                                                            preInputFilesStatus.annotations[0].findIndex(x => "batch".toLowerCase() === x.toLowerCase()) >= 0 ?
-                                                                <span>batch column is available to integrate multiple batches.
-                                                                    Choose the correction method under PCA to perform batch correction or integration
-                                                                </span> :
-                                                                <div className="row">
-                                                                    <Label className="row-input">
-                                                                        <Text className="text-100">
-                                                                            <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                                                                onMouseEnter={() => setShowStepHelper(1)}>
-                                                                                Choose a column for batch correction (if applicable)
-                                                                            </span>
-                                                                        </Text>
-                                                                        <HTMLSelect
-                                                                            onChange={(e) => {
-                                                                                let tmp = [...tmpInputFiles];
-                                                                                tmp[0]["batch"] = e.target.value;
-                                                                                setTmpInputFiles(tmp);
-                                                                            }}
-                                                                            defaultValue={tmpInputFiles[0].batch ? tmpInputFiles[0].batch : "none"}
-                                                                        >
-                                                                            <option value="none">None</option>
-                                                                            {
-                                                                                preInputFilesStatus.annotations[0].map((x, i) => <option key={i} value={x}>{x}</option>)
-                                                                            }
-                                                                        </HTMLSelect>
-                                                                    </Label>
-                                                                </div>
+                                                            <div className="row">
+                                                                <span>Dataset contains annotations, choose a field that specifies batch or samples.
+                                                                </span>
+                                                                <Label className="row-input">
+                                                                    <Text className="text-100">
+                                                                        <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                                                            onMouseEnter={() => setShowStepHelper(1)}>
+                                                                            Choose annotation for batch (if applicable)
+                                                                        </span>
+                                                                    </Text>
+                                                                    <HTMLSelect
+                                                                        onChange={(e) => {
+                                                                            let tmp = [...tmpInputFiles];
+                                                                            tmp[0]["batch"] = e.target.value;
+                                                                            setTmpInputFiles(tmp);
+                                                                        }}
+                                                                        defaultValue={tmpInputFiles[0].batch ? tmpInputFiles[0].batch : "none"}
+                                                                    >
+                                                                        <option value="none">None</option>
+                                                                        {
+                                                                            preInputFilesStatus.annotations[0].map((x, i) => <option key={i} value={x}>{x}</option>)
+                                                                        }
+                                                                    </HTMLSelect>
+                                                                </Label>
+                                                                <span>MNN correction is the default method. Choose a different correction method
+                                                                    in the parameters step.
+                                                                </span>
+                                                            </div>
                                                             :
-                                                            "No annotations found. Cannot perform batch correction."
+                                                            "Dataset does not contain any annotations. batch correction parameters are disabled but you can continue with the analysis."
                                                     }
                                                 </div>
                                             </Callout>

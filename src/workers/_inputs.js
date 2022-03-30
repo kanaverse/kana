@@ -105,12 +105,14 @@ function process_datasets(files, sample_factor) {
 
             blocks = scran.createInt32WasmArray(total);
             let barr = blocks.array();
+            let nice_barr = new Array(total);
             let sofar = 0;
             for (var i = 0; i < dkeys.length; i++) {
                 let old = sofar;
                 let current = datasets[dkeys[i]];
                 sofar += current.matrix.numberOfColumns();
                 barr.fill(i, old, sofar);
+                nice_barr.fill(dkeys[i], old, sofar);
             }
             output.block_ids = blocks;
             output.block_levels = dkeys;
@@ -162,7 +164,9 @@ function process_datasets(files, sample_factor) {
                 }
                 combined_annotations[i] = current_combined;
             }
+
             output.annotations = combined_annotations;
+            output.annotations["__batch__"] = nice_barr;
 
         } catch (e) {
             utils.freeCache(blocks);
