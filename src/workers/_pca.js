@@ -10,14 +10,6 @@ var parameters = {};
 
 export var changed = false;
 
-function fetchPCsAsWasmArray() {
-    if (parameters.block_method == "mnn") {
-        return cache.corrected;
-    } else {
-        return cache.pcs.principalComponents({ copy: "view" });
-    }
-}
-
 function chooseFeatures(num_hvgs) {
     var sorted_resids = variance.fetchSortedResiduals();
     var threshold_at = sorted_resids[sorted_resids.length - num_hvgs];
@@ -98,8 +90,13 @@ export function serialize(handle) {
         let ve = results().var_exp;
         rhandle.writeDataSet("var_exp", "Float64", null, ve);
 
-        let pcs = fetchPCs();
+        let pcs = fetchPCs(true);
         rhandle.writeDataSet("pcs", "Float64", [pcs.num_obs, pcs.num_pcs], pcs.pcs); // remember, it's transposed.
+
+        if (parameters.block_method == "mnn") {
+            let corrected = cache.corrected;
+            rhandle.writeDataSet("corrected", "Float64", [pcs.num_obs, pcs.num_pcs], corrected); 
+        }
     }
 }
 
@@ -148,23 +145,26 @@ export function unserialize(handle) {
     {
         let rhandle = ghandle.open("results");
         let var_exp = rhandle.open("var_exp", { load: true }).values;
-        let pcs = rhandle.open("pcs", { load: true }).values
+        let pcs = rhandle.open("pcs", { load: true }).values;
         cache.pcs = new PCAMimic(pcs, var_exp);
 
-        // Just duplicating this so that fetchPCsAsWasmArray() works; 
-        // downstream steps don't care about the distinction.
         if (parameters.block_method != "none") {
-            let pcs =  cache.pcs.principalComponents({ copy:"view" });
-            let corrected = utils.allocateCachedArray(pcs.length, "Float64Array", cache, "corrected");
-            corrected.set(pcs);
+            let corrected = rhandle.open("corrected", { load: true }).values;
+            let corbuffer = utils.allocateCachedArray(corrected.length, "Float64Array", cache, "corrected");
+            corbuffer.set(corrected);
         }
     }
 
     return { ...parameters };
 }
 
-export function fetchPCs() {
-    var pcs = fetchPCsAsWasmArray();
+export function fetchPCs(original = false) {
+    let pcs;
+    if (!original && parameters.block_method == "mnn") {
+        pcs = cache.corrected;
+    } else {
+        pcs = cache.pcs.principalComponents({ copy: "view" });
+    }
     return {
         "pcs": pcs,
         "num_pcs": parameters.num_pcs,
