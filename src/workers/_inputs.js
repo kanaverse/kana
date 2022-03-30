@@ -7,11 +7,11 @@ import * as rutils from "./_reader_utils.js";
 
 var cache = {};
 var parameters = {};
+var abbreviated = {};
 
 export var changed = false;
 
 function merge_datasets(odatasets) {
-
     let datasets = {};
     for (const f in odatasets) {
         datasets[f] = odatasets[f].getDataset();
@@ -70,6 +70,7 @@ function merge_datasets(odatasets) {
     };
 
     cache.matrix = merged_mats.matrix;
+    cache.indices = merged_mats.indices;
 
     let ckeys = [];
     // first pass get all annotations keys across datasets
@@ -106,18 +107,11 @@ function merge_datasets(odatasets) {
  ******************************/
 
 export function compute(files) {
-
-    // super dirty check if anything has changed
-    if (JSON.stringify(parameters) === JSON.stringify(files)) {
-        changed = false;
-        return;
-    }
-
-    parameters = files;
-
-    let datasets = {}
+    parameters.files = [];
     for (const f in files) {
         datasets[f] = {};
+        let curf = files[f];
+
         let obj;
         switch (files[f].format) {
             case "mtx":
@@ -137,11 +131,31 @@ export function compute(files) {
                 throw "unknown matrix file extension: '" + format + "'";
         }
 
-        obj.loadFile();
-        datasets[f] = obj;
+        parameters.files.push(obj);
     }
 
-    merge_datasets(datasets);
+    // Constructing the abbrievation.
+    let test_abbreviated = [];
+    for (const obj of parameters.files) {
+        test_abbreviated.push(obj.formatFiles(f => f.size));
+    }
+    if (!utils.changedParameters(abbreviated, test_abbreviated)) {
+        changed = false;
+        return;
+    }
+
+    // Otherwise loading in the buffers.
+    parameters.files = [];
+    for (const obj of parameters.files) {
+        let curfiles = files[f];
+        parameters.files.push(obj.formatFiles(curfiles, f => {
+            var reader = new FileReaderSync();
+            bufferFun = (f) => reader.readAsArrayBuffer(f);
+        }));
+    }
+
+    // Constructing a matrix.
+    merge_datasets();
     return;
 }
 
@@ -164,11 +178,32 @@ export async function serialize(handle, saver, embedded) {
 
     {
         let phandle = ghandle.createGroup("parameters");
-        phandle.writeDataSet("format", "String", [], parameters.format);
-        let fihandle = phandle.createGroup("files");
 
+        let formats = [];
+        let files = [];
+        let names = [];
+        let numbers = [];
+
+        for (const obj of parameters.files) {
+            formats.push(obj.format);
+            for (const x of obj.files) {
+                files.push(x);
+            }
+            names.push(obj.name);
+            numbers.push(obj.files.length);
+        }
+
+        if (formats.length > 1) {
+            phandle.writeDataSet("format", "String", null, formats);
+            phandle.writeDataSet("sample_groups", "Int32", null, numbers);
+            phandle.writeDataSet("sample_names", "Int32", null, names);
+        } else {
+            phandle.writeDataSet("format", "String", [], formats[0]);
+        }
+
+        let fihandle = phandle.createGroup("files");
         let sofar = 0;
-        for (const [index, obj] of parameters.files.entries()) {
+        for (const [index, obj] of files.entries()) {
             let curhandle = fihandle.createGroup(String(index));
             curhandle.writeDataSet("type", "String", [], obj.type);
             curhandle.writeDataSet("name", "String", [], obj.name);
@@ -184,15 +219,18 @@ export async function serialize(handle, saver, embedded) {
     }
 
     {
-        let perm = cache.matrix.permutation({ copy: "view" });
-        let dims = [
-            cache.matrix.numberOfRows(),
-            cache.matrix.numberOfColumns()
-        ];
-
         let rhandle = ghandle.createGroup("results");
+        let dims = [cache.matrix.numberOfRows(), cache.matrix.numberOfColumns()];
         rhandle.writeDataSet("dimensions", "Int32", null, dims);
-        rhandle.writeDataSet("permutation", "Int32", null, perm);
+
+        if (formats.length > 1) {
+            let perm = cache.matrix.permutation({ restore: false });
+            let permed_indices = cache.indices.map(i => perm[i]);
+            rhandle.writeDataSet("indices", "Int32", null, permed_indices);
+        } else {
+            let perm = cache.matrix.permutation({ copy: "view" });
+            rhandle.writeDataSet("permutation", "Int32", null, perm);
+        }
     }
 
     return;
