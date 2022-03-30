@@ -41,7 +41,11 @@ function process_datasets(files, sample_factor) {
         throw e;
     }
 
-    let dkeys = Object.keys(datasets)
+    // Ensure we have a reproducible order; otherwise the batch
+    // order becomes dependent on the JS engine's ordering.
+    let dkeys = Object.keys(datasets);
+    dkeys.sort();
+
     if (dkeys.length == 1) {
         let current = datasets[dkeys[0]];
         let blocks = null;
@@ -50,7 +54,6 @@ function process_datasets(files, sample_factor) {
         if (sample_factor !== null) {
             // Single matrix with a batch factor.
             try {
-                console.log(sample_factor);
                 let anno_batch = current.annotations[sample_factor];
                 let ncols = current.matrix.numberOfColumns();
                 if (anno_batch.length != ncols) {
@@ -114,7 +117,11 @@ function process_datasets(files, sample_factor) {
 
             let merged = scran.cbindWithNames(mats, gnames);
             output.matrix = merged.matrix;
-            output.indices = merged.indices;
+
+            // Storing the identities of the genes in terms of the
+            // original row indices of the first matrix.
+            let firstperm = mats[0].permutation({ restore: false });
+            output.indices = merged.indices.map(i => firstperm[i]);
 
             // Extracting gene information from the first object. We won't make
             // any attempt at merging and deduplication across objects.
@@ -184,11 +191,6 @@ export function process_and_cache(new_files, sample_factor) {
     return 
 }
 
-export function permute_indices(mat, indices) {
-    let perm = mat.permutation({ restore: false });
-    return indices.map(i => perm[i]);
-}
-
 /******************************
  ****** Standard exports ******
  ******************************/
@@ -241,6 +243,7 @@ export function results() {
 export async function serialize(handle, saver, embedded) {
     let ghandle = handle.createGroup("inputs");
 
+    let multifile = false;
     {
         let phandle = ghandle.createGroup("parameters");
 
@@ -259,15 +262,15 @@ export async function serialize(handle, saver, embedded) {
         }
 
         if (formats.length > 1) {
+            multifile = true;
             phandle.writeDataSet("format", "String", null, formats);
             phandle.writeDataSet("sample_groups", "Int32", null, numbers);
-            phandle.writeDataSet("sample_names", "Int32", null, names);
+            phandle.writeDataSet("sample_names", "String", null, names);
         } else {
             phandle.writeDataSet("format", "String", [], formats[0]);
         }
 
         let fihandle = phandle.createGroup("files");
-        let sofar = 0;
         for (const [index, obj] of files.entries()) {
             let curhandle = fihandle.createGroup(String(index));
             curhandle.writeDataSet("type", "String", [], obj.type);
@@ -285,10 +288,9 @@ export async function serialize(handle, saver, embedded) {
 
     {
         let rhandle = ghandle.createGroup("results");
-        let dims = [cache.matrix.numberOfRows(), cache.matrix.numberOfColumns()];
-        rhandle.writeDataSet("dimensions", "Int32", null, dims);
-        if (formats.length > 1) {
-            rhandle.writeDataSet("indices", "Int32", null, permute_indices(cache.matrix, cache.indices));
+        rhandle.writeDataSet("dimensions", "Int32", null, [cache.matrix.numberOfRows(), cache.matrix.numberOfColumns()]);
+        if (multifile) {
+            rhandle.writeDataSet("indices", "Int32", null, cache.indices);
         } else {
             rhandle.writeDataSet("permutation", "Int32", null, cache.matrix.permutation({ copy: "view" }));
         }
@@ -399,27 +401,38 @@ export async function unserialize(handle, loader, embedded) {
         }
     } else {
         let old_indices = rhandle.open("indices", { load: true }).values;
-        let new_indices = permute_indices(cache.matrix, cache.indices);
+        let new_indices = cache.indices;
         if (old_indices.length != new_indices.length) {
             throw new Error("old and new indices must have the same length for results to be interpretable");
         }
 
-        let remap = {};
-        old_indices.forEach((x, i) => {
-            remap[x] = i;
-        });
-        let perm = new_indices.map(o => {
-            if (!(o in remap) || remap[o] === null) {
-                throw new Error("old and new indices should contain the same row identities");
+        let same = true;
+        for (var i = 0; i < old_indices.length; i++) {
+            if (old_indices[i] != new_indices[i]) {
+                same = false
+                break
             }
-            let pos = remap[o];
-            remap[o] = null;
-            return pos;
-        });
+        }
 
-        permuter => (x) => {
-            return x.map((y, i) => x[perm[i]]);
-        };
+        if (same) {
+            permuter = (x) => {};
+        } else {
+            let remap = {};
+            old_indices.forEach((x, i) => {
+                remap[x] = i;
+            });
+            let perm = new_indices.map(o => {
+                if (!(o in remap) || remap[o] === null) {
+                    throw new Error("old and new indices should contain the same row identities");
+                }
+                let pos = remap[o];
+                remap[o] = null;
+                return pos;
+            });
+            permuter = (x) => {
+                return x.map((y, i) => x[perm[i]]);
+            };
+        }
     }
 
     return permuter;
