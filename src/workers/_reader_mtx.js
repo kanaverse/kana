@@ -2,6 +2,7 @@ import * as d3 from "d3-dsv";
 import * as pako from "pako";
 import * as scran from "scran.js";
 import * as utils from "./_utils.js";
+import * as rutils from "./_utils_reader.js";
 
 export function formatFiles(args, bufferFun) {
     var formatted = { "format": "MatrixMarket", "files": [] };
@@ -40,8 +41,8 @@ export function extractFeatures(files, { numberOfRows = null } = {}) {
         const content = new Uint8Array(gene_file.buffer);
 
         let parsed = rutils.readDSVFromBuffer(content, gene_file);
-        if (parsed.length != this.cache.matrix.numberOfRows()) {
-            throw "number of matrix rows is not equal to the number of genes in '" + gene_file.name + "'";
+        if (numberOfRows !== null && parsed.length !== numberOfRows) {
+            throw new Error("number of matrix rows is not equal to the number of genes in '" + gene_file.name + "'");
         }
 
         var ids = [], symb = [];
@@ -76,23 +77,21 @@ function extractAnnotations(files, { numberOfColumns = null, namesOnly = false }
             }
         }
 
-        if (namesOnly) {
-            return parsed[0];
-        }
-
-        let headers = [];
+        let headers;
         if (headerFlag) {
             headers = parsed.shift();
         } else {
-            parsed[0].forEach((x, i) => {
-                headers.push(`Column_${i + 1}`);
-            })
+            headers = parsed[0]; // whatever, just using the first row. Hope they're unique enough!
         }
 
-        annotations = {}
-        headers.forEach((x, i) => {
-            annotations[x] = parsed.map(y => y[i]);
-        });
+        if (namesOnly) {
+            annotations = headers;
+        } else {
+            annotations = {}
+            headers.forEach((x, i) => {
+                annotations[x] = parsed.map(y => y[i]);
+            });
+        }
     }
 
     return annotations;
@@ -101,7 +100,7 @@ function extractAnnotations(files, { numberOfColumns = null, namesOnly = false }
 export function loadPreflight(input) {
     return {
         genes: extractFeatures(input.files),
-        annotations: extractAnnotationNames(input.files, { namesOnly: true })
+        annotations: extractAnnotations(input.files, { namesOnly: true })
     };
 }
 

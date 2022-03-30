@@ -91,12 +91,16 @@ export function getCommonGenes(datasets) {
 export function chooseNamespace(format) {
     let namespace;
     switch (format) {
+        case "mtx":
         case "MatrixMarket":
             namespace = MtxReader;
             break;
+        case "tenx":
+        case "hdf5":
         case "10X":
             namespace = TENxReader;
             break;
+        case "h5ad":
         case "H5AD":
             namespace = H5ADReader;
             break;

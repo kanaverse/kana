@@ -50,14 +50,17 @@ function process_datasets(files, sample_factor) {
         if (sample_factor !== null) {
             // Single matrix with a batch factor.
             try {
-                let anno_batch = cache.annotations[sample_factor];
-                if (anno_batch.length != cache.matrix.numberOfColumns()) {
+                console.log(sample_factor);
+                let anno_batch = current.annotations[sample_factor];
+                let ncols = current.matrix.numberOfColumns();
+                if (anno_batch.length != ncols) {
                     throw new Error("length of sample factor '" + sample_factor + "' should be equal to the number of cells"); 
                 }
-                blocks = scran.createInt32WasmArray(current.matrix.numberOfColumns());
-                block_levels = [];
 
+                blocks = scran.createInt32WasmArray(ncols);
+                block_levels = [];
                 let block_arr = blocks.array();
+
                 let uvals = {};
                 anno_batch.forEach((x, i) => {
                     if (!(x in uvals)) {
@@ -73,7 +76,7 @@ function process_datasets(files, sample_factor) {
             }
         }
 
-        current.block_id = blocks;
+        current.block_ids = blocks;
         current.block_levels = block_levels;
         return current;
 
@@ -90,8 +93,8 @@ function process_datasets(files, sample_factor) {
             let gnames = [];
             let mats = [];
             let total = 0;
-            for (const d of dkeys) {
-                let current = datasets[d];
+            for (var i = 0; i < dkeys.length; i++) {
+                let current = datasets[dkeys[i]];
                 gnames.push(current.genes[best_fields[i]]);
                 mats.push(current.matrix);
                 total += current.matrix.numberOfColumns();
@@ -100,9 +103,10 @@ function process_datasets(files, sample_factor) {
             blocks = scran.createInt32WasmArray(total);
             let barr = blocks.array();
             let sofar = 0;
-            for (var i = 0; i < datasets.length; i++) {
+            for (var i = 0; i < dkeys.length; i++) {
                 let old = sofar;
-                sofar += datasets[i].matrix.numberOfColumns();
+                let current = datasets[dkeys[i]];
+                sofar += current.matrix.numberOfColumns();
                 barr.fill(i, old, sofar);
             }
             output.block_ids = blocks;
@@ -126,7 +130,7 @@ function process_datasets(files, sample_factor) {
             let ckeys = new Set();
             for (const d of dkeys) {
                 let current = datasets[d];
-                if ("annotations" in current) {
+                if (current.annotations !== null) {
                     for (const a of Object.keys(current.annotations)) {
                         ckeys.add(a);
                     }
@@ -160,8 +164,8 @@ function process_datasets(files, sample_factor) {
         } finally {
             // Once the merged dataset is created, the individual dataset
             // matrices are no longer useful, so we need to delete them anyway.
-            for (const f of datasets) {
-                utils.freeCache(f.matrix);
+            for (const v of Object.values(datasets)) {
+                utils.freeCache(v.matrix);
             }
         }
 

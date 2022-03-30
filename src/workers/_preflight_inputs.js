@@ -68,7 +68,6 @@ function validate_files(datasets) {
 
 export function compute(files) {
     let datasets = {};
-    console.log(files);
 
     for (const [key, val] of Object.entries(files)) {
         let namespace = iutils.chooseNamespace(val.format);
