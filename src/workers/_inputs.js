@@ -44,6 +44,7 @@ function merge_datasets(odatasets) {
             }
         }
 
+        cache.annotations["batch"] = cache.batch;
         return;
     }
 
@@ -92,6 +93,7 @@ function merge_datasets(odatasets) {
         }
     }
 
+    combined_annotations["batch"] = cache.batch;
     cache.annotations = combined_annotations;
 
     // also after the merged dataset is created, the individual 
