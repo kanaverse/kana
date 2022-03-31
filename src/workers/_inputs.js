@@ -216,7 +216,7 @@ export function compute(files, sample_factor) {
         tmp_abbreviated[key] = namespace.formatFiles(val, f => f.size);
     }
 
-    if (!utils.changedParameters(tmp_abbreviated, abbreviated) && parameters.sample_factor != sample_factor) {
+    if (!utils.changedParameters(tmp_abbreviated, abbreviated) && parameters.sample_factor === sample_factor) {
         changed = false;
         return;
     }
