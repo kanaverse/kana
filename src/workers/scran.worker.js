@@ -220,7 +220,8 @@ async function unserializeAllSteps(path, loader, embedded) {
         postSuccess(pca, step_pca, "Reloaded principal components");
         response["pca"] = {
             "pca-hvg": params.num_hvgs,
-            "pca-npc": params.num_pcs
+            "pca-npc": params.num_pcs,
+            "pca-correction": params.block_method
         };
     }
 
