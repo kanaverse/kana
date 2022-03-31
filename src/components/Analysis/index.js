@@ -2,7 +2,7 @@ import {
     Button, Classes, Text, FileInput, NumericInput,
     Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
     RadioGroup, Radio, Icon, Position,
-    InputGroup, FormGroup, Checkbox,
+    InputGroup, Checkbox,
     Drawer
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
@@ -80,7 +80,10 @@ const AnalysisDialog = ({
 
         setInputFiles({
             "files": mapFiles,
-            "reset": tabSelected === "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file
+            "reset": tabSelected === "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file,
+            "batch": tabSelected === "new" ? Object.keys(mapFiles).length == 1 ?
+                mapFiles[Object.keys(mapFiles)[0]]?.batch == undefined || mapFiles[Object.keys(mapFiles)[0]]?.batch == "none"
+                    ? null : mapFiles[Object.keys(mapFiles)[0]]?.batch : null : null,
         });
 
         setLoadParamsFor(tabSelected === "new" ?
@@ -186,23 +189,28 @@ const AnalysisDialog = ({
                     });
                 }
 
-            } else if (tabSelected === "load" && inputText?.file) {
-                if (loadImportFormat === "kana" &&
-                    tmpInputFiles?.file != null && !(tmpInputFiles[0]?.file.toLowerCase().endsWith("kana")
-                    )
-                ) {
+            } else if (tabSelected === "load") {
+                if (!tmpInputFiles?.[0]?.file) {
                     setTmpInputValid(false);
                 } else {
-                    setTmpInputValid(true);
+                    if (loadImportFormat === "kana" &&
+                        inputText?.[0]?.file != null && !(inputText?.[0]?.file.toLowerCase().endsWith("kana")
+                        )
+                    ) {
+                        setTmpInputValid(false);
+                    } else if (loadImportFormat === "kanadb" && tmpInputFiles?.[0]?.file === null) {
+                        setTmpInputValid(false);
+                    } else {
+                        setTmpInputValid(true);
+                    }
                 }
             }
 
-            if (tmpInputFiles.length > 1) {
+            if (!loadParams && (tmpInputFiles[0]?.batch !== undefined && tmpInputFiles[0]?.batch !== "none") || (tmpInputFiles.length > 1)) {
                 setTmpInputParams({
                     ...tmpInputParams,
                     "pca": { ...tmpInputParams["pca"], "pca-correction": "mnn" }
                 })
-
             }
         }
     }, [tmpInputFiles]);
@@ -541,7 +549,8 @@ const AnalysisDialog = ({
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-npc": nval } }) }} />
                         </Label>
                         {
-                            (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none")) && <Label className="row-input">
+                            (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none")
+                                || (loadParams && loadParamsFor === loadImportFormat)) && <Label className="row-input">
                                 <Text className="text-100">
                                     <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                         onMouseEnter={() => setShowStepHelper(4)}>
@@ -900,8 +909,6 @@ const AnalysisDialog = ({
 
     const [showSection, setShowSection] = useState("input");
 
-    const [fileCount, setFileCount] = useState([0]);
-
     function get_new_input_files(idx, input) {
         return (
             <div className="col"
@@ -1093,7 +1100,6 @@ const AnalysisDialog = ({
                                                         margin: "3px"
                                                     }}
                                                     onClick={((x) => {
-                                                        // setFileCount([...fileCount, fileCount.length])
                                                         setTmpInputFiles([...tmpInputFiles, {
                                                             "name": `file-${tmpInputFiles.length + 1}`,
                                                             "format": newImportFormat
@@ -1111,7 +1117,6 @@ const AnalysisDialog = ({
                                                     onClick={(() => {
                                                         setTmpInputFiles([...tmpInputFiles].slice(-1));
                                                         setInputText([...inputText].slice(-1));
-                                                        // setFileCount([...fileCount].slice(-1))
                                                     })}
                                                 >Delete last import</Button>
                                             </div>
@@ -1148,14 +1153,14 @@ const AnalysisDialog = ({
 
                                                     {
                                                         preInputFilesStatus.best_genes ?
-                                                            <p>We automagically detect features to use for integration across datasets:
+                                                            <div>We automagically detect features to use for integration across datasets:
                                                                 <ul>
                                                                     {
                                                                         tmpInputFiles.map((x, i) =>
-                                                                            <li key={x.name}>from <strong>{x.name}</strong>, we use <strong>{preInputFilesStatus.best_genes[i]}</strong></li>)
+                                                                            <li key={i}>from <strong>{x.name}</strong>, we use <strong>{preInputFilesStatus.best_genes[i]}</strong></li>)
                                                                     }
                                                                 </ul>
-                                                            </p>
+                                                            </div>
                                                             : " "
                                                     }
 
@@ -1209,7 +1214,6 @@ const AnalysisDialog = ({
                                                 </div>
                                             </Callout>
                                         }
-
 
                                         {showSection == "params" && get_input_qc()}
                                         {showSection == "params" && get_input_fsel()}
@@ -1467,7 +1471,7 @@ const AnalysisDialog = ({
                         <div style={{ marginBottom: "10px" }} className={Classes.DIALOG_FOOTER} >
                             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
                                 <Tooltip2 content="Run Analysis">
-                                    <Button disabled={!tmpInputValid || !preInputFilesStatus?.valid} icon="function" onClick={handleImport}>Analyze</Button>
+                                    <Button disabled={tabSelected == "new" ? !tmpInputValid || !preInputFilesStatus?.valid : tabSelected == "load" ? !tmpInputValid : false} icon="function" onClick={handleImport}>Analyze</Button>
                                 </Tooltip2>
                             </div>
                         </div>

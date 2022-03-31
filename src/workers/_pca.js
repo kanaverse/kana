@@ -81,7 +81,7 @@ export function serialize(handle) {
         let phandle = ghandle.createGroup("parameters"); 
         phandle.writeDataSet("num_hvgs", "Int32", [], parameters.num_hvgs);
         phandle.writeDataSet("num_pcs", "Int32", [], parameters.num_pcs);
-        phandle.writeDataSet("block_method", "Int32", [], parameters.block_method);
+        phandle.writeDataSet("block_method", "String", [], parameters.block_method);
     }
 
     {
@@ -148,7 +148,7 @@ export function unserialize(handle) {
         let pcs = rhandle.open("pcs", { load: true }).values;
         cache.pcs = new PCAMimic(pcs, var_exp);
 
-        if (parameters.block_method != "none") {
+        if (parameters.block_method == "mnn") {
             let corrected = rhandle.open("corrected", { load: true }).values;
             let corbuffer = utils.allocateCachedArray(corrected.length, "Float64Array", cache, "corrected");
             corbuffer.set(corrected);

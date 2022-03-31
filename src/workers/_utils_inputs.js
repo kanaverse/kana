@@ -1,30 +1,7 @@
-import * as d3 from "d3-dsv";
-import * as pako from "pako";
 import * as scran from "scran.js";
-
-
-export function dummyGenes(numberOfRows) {
-    let genes = []
-    for (let i = 0; i < numberOfRows; i++) {
-        genes.push(`Gene ${i + 1}`);
-    }
-    return { "id": genes };
-}
-
-export function readDSVFromBuffer(content, fname, delim = "\t") {
-    var ext = fname.name.split('.').pop();
-
-    if (ext == "gz") {
-        content = pako.ungzip(content);
-    }
-
-    const dec = new TextDecoder();
-    let decoded = dec.decode(content);
-    const tsv = d3.dsvFormat(delim);
-    let parsed = tsv.parseRows(decoded);
-
-    return parsed;
-}
+import * as TENxReader from "./_reader_10x.js";
+import * as H5ADReader from "./_reader_h5ad.js";
+import * as MtxReader from "./_reader_mtx.js";
 
 export function fetchGeneTypes(obj) {
     if (!("gene_types" in obj.cache)) {
@@ -109,4 +86,26 @@ export function getCommonGenes(datasets) {
         "intersection": intersection,
         "best_fields": bscore ? fields[bscore] : null
     };
+}
+
+export function chooseNamespace(format) {
+    let namespace;
+    switch (format) {
+        case "mtx":
+        case "MatrixMarket":
+            namespace = MtxReader;
+            break;
+        case "tenx":
+        case "hdf5":
+        case "10X":
+            namespace = TENxReader;
+            break;
+        case "h5ad":
+        case "H5AD":
+            namespace = H5ADReader;
+            break;
+        default:
+            throw "unknown matrix file extension: '" + format + "'";
+    }
+    return namespace;
 }

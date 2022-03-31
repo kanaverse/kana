@@ -17,6 +17,7 @@ import * as custom_markers from "./_custom_markers.js";
 import * as kana_db from "./KanaDBHandler.js";
 import * as utils from "./_utils.js";
 import * as serialize_utils from "./_utils_serialize.js";
+import * as rutils from "./_utils_reader.js";
 
 /***************************************/
 
@@ -63,7 +64,7 @@ function runAllSteps(state) {
         }
     }
 
-    inputs.compute(state.files.files);
+    inputs.compute(state.files.files, state.files.batch);
     postSuccess(inputs, step_inputs, "Count matrix loaded");
 
     qc.compute(
@@ -219,7 +220,8 @@ async function unserializeAllSteps(path, loader, embedded) {
         postSuccess(pca, step_pca, "Reloaded principal components");
         response["pca"] = {
             "pca-hvg": params.num_hvgs,
-            "pca-npc": params.num_pcs
+            "pca-npc": params.num_pcs,
+            "pca-correction": params.block_method
         };
     }
 
@@ -352,10 +354,11 @@ onmessage = function (msg) {
 
     /**************** LOADING EXISTING ANALYSES *******************/
     } else if (payload.type == "LOAD") {
-        const path = "temp.h5";
+        const path = rutils.generateRandomName("state_", ".h5");
+        let fs = payload.payload.files.files;
 
-        if (payload.payload.files.files[0].format == "kana") {
-            let f = payload.payload.files.files[0].file[0];
+        if (fs[Object.keys(fs)[0]].format == "kana") {
+            let f = fs[Object.keys(fs)[0]].file[0];
             loaded
                 .then(async (x) => {
                     const reader = new FileReaderSync();
@@ -381,8 +384,8 @@ onmessage = function (msg) {
                     });
                 });
 
-        } else if (payload.payload.files.files[0].format == "kanadb") {
-            var id = payload.payload.files.files[0].file;
+        } else if (fs[Object.keys(fs)[0]].format == "kanadb") {
+            var id = fs[Object.keys(fs)[0]].file;
             kana_db.loadAnalysis(id)
                 .then(async (res) => {
                     if (res == null) {
