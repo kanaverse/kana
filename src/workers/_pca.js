@@ -81,7 +81,7 @@ export function serialize(handle) {
         let phandle = ghandle.createGroup("parameters"); 
         phandle.writeDataSet("num_hvgs", "Int32", [], parameters.num_hvgs);
         phandle.writeDataSet("num_pcs", "Int32", [], parameters.num_pcs);
-        phandle.writeDataSet("block_method", "Int32", [], parameters.block_method);
+        phandle.writeDataSet("block_method", "String", [], parameters.block_method);
     }
 
     {
