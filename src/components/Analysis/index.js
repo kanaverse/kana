@@ -186,14 +186,18 @@ const AnalysisDialog = ({
                     });
                 }
 
-            } else if (tabSelected === "load" && inputText?.file) {
-                if (loadImportFormat === "kana" &&
-                    tmpInputFiles?.file != null && !(tmpInputFiles[0]?.file.toLowerCase().endsWith("kana")
-                    )
-                ) {
+            } else if (tabSelected === "load") {
+                if (!inputText?.[0]?.file) {
                     setTmpInputValid(false);
                 } else {
-                    setTmpInputValid(true);
+                    if (loadImportFormat === "kana" &&
+                        inputText?.[0]?.file != null && !(inputText?.[0]?.file.toLowerCase().endsWith("kana")
+                        )
+                    ) {
+                        setTmpInputValid(false);
+                    } else {
+                        setTmpInputValid(true);
+                    }
                 }
             }
 
@@ -1148,14 +1152,14 @@ const AnalysisDialog = ({
 
                                                     {
                                                         preInputFilesStatus.best_genes ?
-                                                            <p>We automagically detect features to use for integration across datasets:
+                                                            <div>We automagically detect features to use for integration across datasets:
                                                                 <ul>
                                                                     {
                                                                         tmpInputFiles.map((x, i) =>
-                                                                            <li key={x.name}>from <strong>{x.name}</strong>, we use <strong>{preInputFilesStatus.best_genes[i]}</strong></li>)
+                                                                            <li key={i}>from <strong>{x.name}</strong>, we use <strong>{preInputFilesStatus.best_genes[i]}</strong></li>)
                                                                     }
                                                                 </ul>
-                                                            </p>
+                                                            </div>
                                                             : " "
                                                     }
 
@@ -1467,7 +1471,7 @@ const AnalysisDialog = ({
                         <div style={{ marginBottom: "10px" }} className={Classes.DIALOG_FOOTER} >
                             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
                                 <Tooltip2 content="Run Analysis">
-                                    <Button disabled={!tmpInputValid || !preInputFilesStatus?.valid} icon="function" onClick={handleImport}>Analyze</Button>
+                                    <Button disabled={tabSelected == "new" ? !tmpInputValid || !preInputFilesStatus?.valid : tabSelected == "load" ? !tmpInputValid : false} icon="function" onClick={handleImport}>Analyze</Button>
                                 </Tooltip2>
                             </div>
                         </div>
