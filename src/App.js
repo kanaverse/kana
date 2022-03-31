@@ -299,8 +299,18 @@ const App = () => {
         for (const f in preInputFiles.files) {
           let ffile = preInputFiles.files[f];
 
-          if (!(ffile.format) || !(ffile.file || ffile.mtx)) {
+          if (!(ffile.format)) {
             all_valid = false;
+          } else {
+            if(ffile.format == "mtx") {
+              if (!ffile.mtx) {
+                all_valid = false;
+              }
+            } else if (ffile.format == "tenx" || ffile.format == "h5ad") {
+              if (!ffile.file) {
+                all_valid = false;
+              }
+            }
           }
         }
 
