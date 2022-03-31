@@ -17,6 +17,7 @@ import * as custom_markers from "./_custom_markers.js";
 import * as kana_db from "./KanaDBHandler.js";
 import * as utils from "./_utils.js";
 import * as serialize_utils from "./_utils_serialize.js";
+import * as rutils from "./_utils_reader.js";
 
 /***************************************/
 
@@ -352,8 +353,7 @@ onmessage = function (msg) {
 
     /**************** LOADING EXISTING ANALYSES *******************/
     } else if (payload.type == "LOAD") {
-        const path = "temp.h5";
-
+        const path = rutils.generateRandomName("state_", ".h5");
         let fs = payload.payload.files.files;
 
         if (fs[Object.keys(fs)[0]].format == "kana") {

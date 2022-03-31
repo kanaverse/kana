@@ -88,7 +88,7 @@ function extract_annotations(handle, { namesOnly = false } = {}) {
 export function loadPreflight(input) {
     let output = {};
 
-    const tmppath = "temp.h5";
+    const tmppath = rutils.generateRandomName("h5ad_", ".h5");
     scran.writeFile(tmppath, new Uint8Array(input.files[0].buffer));
     try {
         let handle = new scran.H5File(tmppath);
@@ -105,7 +105,7 @@ export function loadPreflight(input) {
 export function loadData(input){
     let output = {};
 
-    const tmppath = "temp.h5";
+    const tmppath = rutils.generateRandomName("h5ad_", ".h5");
     scran.writeFile(tmppath, new Uint8Array(input.files[0].buffer));
     try {
         output.matrix = scran.initializeSparseMatrixFromHDF5(tmppath, "X");

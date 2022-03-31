@@ -33,3 +33,7 @@ export function readDSVFromBuffer(content, fname, delim = "\t") {
 
     return parsed;
 }
+
+export function generateRandomName(prefix = "", suffix = "") {
+    return prefix + String(Number(new Date())) + suffix
+}
