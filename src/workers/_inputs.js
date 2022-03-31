@@ -51,7 +51,7 @@ function process_datasets(files, sample_factor) {
         let blocks = null;
         let block_levels = null;
 
-        if (sample_factor !== null) {
+        if (sample_factor && sample_factor !== null) {
             // Single matrix with a batch factor.
             try {
                 let anno_batch = current.annotations[sample_factor];
@@ -339,8 +339,8 @@ export async function unserialize(handle, loader, embedded) {
 
     // Extracting the format and organizing the files.
     parameters = { files: {}, sample_factor: null };
-    let solofile = (fohandle.shape.length == 0);
     let fohandle = phandle.open("format", { load: true });
+    let solofile = (fohandle.shape.length == 0);
     if (solofile) {
         parameters.files["default"] = {
             format: fohandle.values[0],
@@ -374,7 +374,7 @@ export async function unserialize(handle, loader, embedded) {
     }
 
     // Loading matrix data.
-    process_and_cache(new_files, sample_factor);
+    process_and_cache(parameters.files, parameters.sample_factor);
 
     // We need to do something if the permutation is not the same.
     let rhandle = ghandle.open("results");
