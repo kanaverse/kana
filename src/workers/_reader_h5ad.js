@@ -102,7 +102,7 @@ export function loadPreflight(input) {
     return output;
 }
 
-export function loadData(files){
+export function loadData(input){
     let output = {};
 
     const tmppath = "temp.h5";
