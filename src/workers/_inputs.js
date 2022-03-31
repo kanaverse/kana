@@ -301,6 +301,12 @@ export async function serialize(handle, saver, embedded) {
     {
         let rhandle = ghandle.createGroup("results");
         rhandle.writeDataSet("dimensions", "Int32", null, [cache.matrix.numberOfRows(), cache.matrix.numberOfColumns()]);
+
+        // For diagnostic purposes, we store the number of samples;
+        // this may not be captured by the parameters if we're dealing
+        // with a sample_factor from a single file.
+        rhandle.writeDataSet("num_samples", "Int32", [], cache.block_levels.length); 
+
         if (multifile) {
             rhandle.writeDataSet("indices", "Int32", null, cache.indices);
         } else {
