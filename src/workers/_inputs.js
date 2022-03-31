@@ -513,3 +513,7 @@ export function fetchAnnotations(col) {
 export function fetchBlock() {
     return cache.block_ids;
 }
+
+export function fetchBlockLevels() {
+    return cache.block_levels;
+}
