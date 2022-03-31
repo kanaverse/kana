@@ -580,6 +580,18 @@ onmessage = function (msg) {
         loaded.then(x => {
             let annot = payload.payload.annotation;
             var vec = inputs.fetchAnnotations(annot);
+
+            // Filter to match QC unless requested otherwise.
+            if (payload.payload.unfiltered !== false) {
+                var discard = new Set(qc.fetchDiscards().array());
+                let filterfun = (x, i) => !discard.has(i);
+                if ("factor" in vec) {
+                    vec.factor = vec.factor.filter(filterfun);
+                } else {
+                    vec = vec.filter(filterfun);
+                }
+            }
+
             postMessage({
                 type: "setAnnotation",
                 resp: {
