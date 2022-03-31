@@ -200,10 +200,17 @@ export function process_and_cache(new_files, sample_factor) {
  ******************************/
 
 export function compute(files, sample_factor) {
+    // Don't bother proceeding with any of the below
+    // if we're operating from a reloaded state.
+    let entries = Object.entries(files);
+    if (entries.length == 1 && entries[0][1].format == "kana") {
+        return;
+    }
+
     changed = true;
 
     let tmp_abbreviated = {};
-    for (const [key, val] of Object.entries(files)) {
+    for (const [key, val] of entries) {
         let namespace = iutils.chooseNamespace(val.format);
         tmp_abbreviated[key] = namespace.formatFiles(val, f => f.size);
     }
