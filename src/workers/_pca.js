@@ -148,7 +148,7 @@ export function unserialize(handle) {
         let pcs = rhandle.open("pcs", { load: true }).values;
         cache.pcs = new PCAMimic(pcs, var_exp);
 
-        if (parameters.block_method != "none") {
+        if (parameters.block_method == "mnn") {
             let corrected = rhandle.open("corrected", { load: true }).values;
             let corbuffer = utils.allocateCachedArray(corrected.length, "Float64Array", cache, "corrected");
             corbuffer.set(corrected);
