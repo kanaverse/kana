@@ -150,15 +150,16 @@ function process_datasets(files, sample_factor) {
             let combined_annotations = {};
             for (const i of anno_keys) {
                 let current_combined = [];
-                for (const d of datasets) {
+                for (const d of dkeys) {
+                    let current = datasets[d];
                     let x;
-                    if (d.annotations && d.annotations[i]) {
-                        x = d.annotations[i];
+                    if (current.annotations && current.annotations[i]) {
+                        x = current.annotations[i];
                         if (!(x instanceof Array)) {
                             x = Array.from(x);
                         }
                     } else {
-                        x = new Array(d.matrix.numberOfColumns());
+                        x = new Array(current.matrix.numberOfColumns());
                     }
                     current_combined = current_combined.concat(x);
                 }
