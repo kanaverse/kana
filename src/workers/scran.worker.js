@@ -63,7 +63,7 @@ function runAllSteps(state) {
         }
     }
 
-    inputs.compute(state.files.files);
+    inputs.compute(state.files.files, state.files.batch);
     postSuccess(inputs, step_inputs, "Count matrix loaded");
 
     qc.compute(

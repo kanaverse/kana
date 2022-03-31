@@ -2,7 +2,7 @@ import {
     Button, Classes, Text, FileInput, NumericInput,
     Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
     RadioGroup, Radio, Icon, Position,
-    InputGroup, FormGroup, Checkbox,
+    InputGroup, Checkbox,
     Drawer
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
@@ -80,7 +80,10 @@ const AnalysisDialog = ({
 
         setInputFiles({
             "files": mapFiles,
-            "reset": tabSelected === "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file
+            "reset": tabSelected === "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file,
+            "batch": Object.keys(mapFiles).length == 1 ?
+                mapFiles[Object.keys(mapFiles)[0]]?.batch == undefined || mapFiles[Object.keys(mapFiles)[0]]?.batch == "none"
+                    ? null : mapFiles[Object.keys(mapFiles)[0]]?.batch : null,
         });
 
         setLoadParamsFor(tabSelected === "new" ?
