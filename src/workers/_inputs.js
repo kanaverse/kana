@@ -305,7 +305,9 @@ export async function serialize(handle, saver, embedded) {
         // For diagnostic purposes, we store the number of samples;
         // this may not be captured by the parameters if we're dealing
         // with a sample_factor from a single file.
-        rhandle.writeDataSet("num_samples", "Int32", [], cache.block_levels.length); 
+        if (cache.block_levels !== null) {
+            rhandle.writeDataSet("num_samples", "Int32", [], cache.block_levels.length); 
+        }
 
         if (multifile) {
             rhandle.writeDataSet("indices", "Int32", null, cache.indices);
