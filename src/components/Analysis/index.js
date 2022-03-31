@@ -206,12 +206,11 @@ const AnalysisDialog = ({
                 }
             }
 
-            if (tmpInputFiles.length > 1) {
+            if (!loadParams && (tmpInputFiles[0]?.batch !== undefined && tmpInputFiles[0]?.batch !== "none") || (tmpInputFiles.length > 1)) {
                 setTmpInputParams({
                     ...tmpInputParams,
                     "pca": { ...tmpInputParams["pca"], "pca-correction": "mnn" }
                 })
-
             }
         }
     }, [tmpInputFiles]);
@@ -550,7 +549,8 @@ const AnalysisDialog = ({
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-npc": nval } }) }} />
                         </Label>
                         {
-                            (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none")) && <Label className="row-input">
+                            (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none")
+                                || (loadParams && loadParamsFor === loadImportFormat)) && <Label className="row-input">
                                 <Text className="text-100">
                                     <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                         onMouseEnter={() => setShowStepHelper(4)}>
@@ -1214,7 +1214,6 @@ const AnalysisDialog = ({
                                                 </div>
                                             </Callout>
                                         }
-
 
                                         {showSection == "params" && get_input_qc()}
                                         {showSection == "params" && get_input_fsel()}
