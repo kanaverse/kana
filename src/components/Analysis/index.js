@@ -81,9 +81,9 @@ const AnalysisDialog = ({
         setInputFiles({
             "files": mapFiles,
             "reset": tabSelected === "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file,
-            "batch": Object.keys(mapFiles).length == 1 ?
+            "batch": tabSelected === "new" ? Object.keys(mapFiles).length == 1 ?
                 mapFiles[Object.keys(mapFiles)[0]]?.batch == undefined || mapFiles[Object.keys(mapFiles)[0]]?.batch == "none"
-                    ? null : mapFiles[Object.keys(mapFiles)[0]]?.batch : null,
+                    ? null : mapFiles[Object.keys(mapFiles)[0]]?.batch : null : null,
         });
 
         setLoadParamsFor(tabSelected === "new" ?
@@ -190,13 +190,15 @@ const AnalysisDialog = ({
                 }
 
             } else if (tabSelected === "load") {
-                if (!inputText?.[0]?.file) {
+                if (!tmpInputFiles?.[0]?.file) {
                     setTmpInputValid(false);
                 } else {
                     if (loadImportFormat === "kana" &&
                         inputText?.[0]?.file != null && !(inputText?.[0]?.file.toLowerCase().endsWith("kana")
                         )
                     ) {
+                        setTmpInputValid(false);
+                    } else if (loadImportFormat === "kanadb" && tmpInputFiles?.[0]?.file === null) {
                         setTmpInputValid(false);
                     } else {
                         setTmpInputValid(true);
@@ -907,8 +909,6 @@ const AnalysisDialog = ({
 
     const [showSection, setShowSection] = useState("input");
 
-    const [fileCount, setFileCount] = useState([0]);
-
     function get_new_input_files(idx, input) {
         return (
             <div className="col"
@@ -1100,7 +1100,6 @@ const AnalysisDialog = ({
                                                         margin: "3px"
                                                     }}
                                                     onClick={((x) => {
-                                                        // setFileCount([...fileCount, fileCount.length])
                                                         setTmpInputFiles([...tmpInputFiles, {
                                                             "name": `file-${tmpInputFiles.length + 1}`,
                                                             "format": newImportFormat
@@ -1118,7 +1117,6 @@ const AnalysisDialog = ({
                                                     onClick={(() => {
                                                         setTmpInputFiles([...tmpInputFiles].slice(-1));
                                                         setInputText([...inputText].slice(-1));
-                                                        // setFileCount([...fileCount].slice(-1))
                                                     })}
                                                 >Delete last import</Button>
                                             </div>
