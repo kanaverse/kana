@@ -113,9 +113,11 @@ const AnalysisDialog = ({
 
             setTmpInputFiles([{
                 "name": "dataset-1",
-                "format": tabSelected === "new" ? newImportFormat : loadImportFormat
+                "format": loadImportFormat
             }]);
+
             handleLoadImportTab(loadImportFormat);
+
             let tmp = { ...stmpInputFiles };
             tmp["format"] = loadImportFormat;
             ssetTmpInputFiles(tmp);
@@ -1361,11 +1363,11 @@ const AnalysisDialog = ({
                                                         });
 
                                                         ssetTmpInputFiles({
-                                                            "name": `dataset-${tmpInputFiles.length + 1}`,
+                                                            "name": `dataset-${tmpInputFiles.length + 2}`,
                                                             "format": "mtx"
                                                         });
                                                     })}
-                                                >Import</Button>
+                                                >Add</Button>
                                             </div>
                                         }
 
