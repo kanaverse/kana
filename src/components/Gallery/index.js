@@ -8,6 +8,8 @@ import { AppContext } from './../../context/AppContext';
 import { Card, Elevation, Classes } from "@blueprintjs/core";
 import QCPlotMgr from "../Plots/QCPlotMgr";
 
+import { isObject } from "../../context/utils.js";
+
 import './Gallery.css';
 import ImgPlot from "../Plots/ImgPlot";
 
@@ -20,11 +22,20 @@ const Gallery = (props) => {
     <>
       <div className="gallery-cont">
         {
-          props?.qcData && props?.qcData?.["thresholds"] ?
-            <Card className="gallery-elem" elevation={Elevation.ONE}>
-              <h5>QC Statistics</h5>
-              <QCPlotMgr title={datasetName.split(" ").join("_")} data={props?.qcData} />
-            </Card>
+          props?.qcData && isObject(props?.qcData?.data) ?
+            Object.keys(props?.qcData?.data).map((x) => {
+              let tqc = {
+                "data": props?.qcData?.data[x],
+                "ranges": props?.qcData?.ranges[x],
+                "thresholds": props?.qcData?.thresholds[x]
+              };
+              return (
+                <Card key={x} className="gallery-elem" elevation={Elevation.ONE}>
+                  <h5>QC for {x}</h5>
+                  <QCPlotMgr title={x} data={tqc} />
+                </Card>
+              )
+            })
             : ""
         }
         {

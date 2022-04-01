@@ -89,3 +89,7 @@ export const get_colors = (data) => {
 
     return cluster_colors;
 }
+
+export function isObject(object) {
+    return typeof object === 'object' && Array.isArray(object) === false;
+}

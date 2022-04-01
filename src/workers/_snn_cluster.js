@@ -89,7 +89,7 @@ export function serialize(handle) {
     {
         let phandle = ghandle.createGroup("parameters");
         phandle.writeDataSet("k", "Int32", [], parameters.k);
-        phandle.writeDataSet("scheme", "Scheme", [], ["rank", "number", "jaccard"][parameters.scheme]); // TODO: scheme should just directly be the string.
+        phandle.writeDataSet("scheme", "String", [], ["rank", "number", "jaccard"][parameters.scheme]); // TODO: parameters.scheme should just directly be the string.
         phandle.writeDataSet("resolution", "Float64", [], parameters.resolution);
     }
 

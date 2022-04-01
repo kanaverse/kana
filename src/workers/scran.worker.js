@@ -1,5 +1,6 @@
 import * as scran from "scran.js";
 import * as inputs from "./_inputs.js";
+import * as preflight from "./_preflight_inputs.js";
 import * as qc from "./_quality_control.js";
 import * as normalization from "./_normalization.js";
 import * as variance from "./_model_gene_var.js";
@@ -16,6 +17,7 @@ import * as custom_markers from "./_custom_markers.js";
 import * as kana_db from "./KanaDBHandler.js";
 import * as utils from "./_utils.js";
 import * as serialize_utils from "./_utils_serialize.js";
+import * as rutils from "./_utils_reader.js";
 
 /***************************************/
 
@@ -62,7 +64,7 @@ function runAllSteps(state) {
         }
     }
 
-    inputs.compute(state.files.format, state.files.files);
+    inputs.compute(state.files.files, state.files.batch);
     postSuccess(inputs, step_inputs, "Count matrix loaded");
 
     qc.compute(
@@ -80,7 +82,8 @@ function runAllSteps(state) {
 
     pca.compute(
         state.params.pca["pca-hvg"], 
-        state.params.pca["pca-npc"]
+        state.params.pca["pca-npc"],
+        state.params.pca["pca-correction"]
     );
     postSuccess(pca, step_pca, "Principal components analysis completed");
 
@@ -217,7 +220,8 @@ async function unserializeAllSteps(path, loader, embedded) {
         postSuccess(pca, step_pca, "Reloaded principal components");
         response["pca"] = {
             "pca-hvg": params.num_hvgs,
-            "pca-npc": params.num_pcs
+            "pca-npc": params.num_pcs,
+            "pca-correction": params.block_method
         };
     }
 
@@ -350,10 +354,11 @@ onmessage = function (msg) {
 
     /**************** LOADING EXISTING ANALYSES *******************/
     } else if (payload.type == "LOAD") {
-        const path = "temp.h5";
+        const path = rutils.generateRandomName("state_", ".h5");
+        let fs = payload.payload.files.files;
 
-        if (payload.payload.files.format == "kana") {
-            let f = payload.payload.files.files.file[0];
+        if (fs[Object.keys(fs)[0]].format == "kana") {
+            let f = fs[Object.keys(fs)[0]].file[0];
             loaded
                 .then(async (x) => {
                     const reader = new FileReaderSync();
@@ -379,8 +384,8 @@ onmessage = function (msg) {
                     });
                 });
 
-        } else if (payload.payload.files.format == "kanadb") {
-            var id = payload.payload.files.files.file;
+        } else if (fs[Object.keys(fs)[0]].format == "kanadb") {
+            var id = fs[Object.keys(fs)[0]].file;
             kana_db.loadAnalysis(id)
                 .then(async (res) => {
                     if (res == null) {
@@ -482,7 +487,25 @@ onmessage = function (msg) {
                     });
                 }
             });
-  
+
+    } else if (payload.type == "PREFLIGHT_INPUT") {
+        loaded
+        .then(x => {
+            let validation = preflight.compute(payload.payload.files.files);
+
+            postMessage({
+                type: "PREFLIGHT_INPUT_DATA",
+                resp: validation,
+                msg: "Success: PREFLIGHT_INPUT done"
+            });
+        })
+        .catch(error => {
+            console.error(error);
+            postMessage({
+                type: "run_ERROR",
+                msg: error.toString()
+            });
+        });
     /**************** OTHER EVENTS FROM UI *******************/
     } else if (payload.type == "getMarkersForCluster") {
         loaded.then(x => {
@@ -557,6 +580,18 @@ onmessage = function (msg) {
         loaded.then(x => {
             let annot = payload.payload.annotation;
             var vec = inputs.fetchAnnotations(annot);
+
+            // Filter to match QC unless requested otherwise.
+            if (payload.payload.unfiltered !== false) {
+                var discard = new Set(qc.fetchDiscards().array());
+                let filterfun = (x, i) => !discard.has(i);
+                if ("factor" in vec) {
+                    vec.factor = vec.factor.filter(filterfun);
+                } else {
+                    vec = vec.filter(filterfun);
+                }
+            }
+
             postMessage({
                 type: "setAnnotation",
                 resp: {

@@ -47,8 +47,9 @@ function computeMetrics(use_mito_default, mito_prefix) {
 }
 
 function computeFilters(nmads) {
+    let block = inputs.fetchBlock();
     utils.freeCache(cache.filters);
-    cache.filters = scran.computePerCellQCFilters(cache.metrics, { numberOfMADs: nmads });
+    cache.filters = scran.computePerCellQCFilters(cache.metrics, { numberOfMADs: nmads, block: block });
     return;
 }
 
@@ -57,6 +58,25 @@ function applyFilters() {
     var disc = fetchDiscards();
     utils.freeCache(cache.matrix);
     cache.matrix = scran.filterCells(mat, disc);
+
+    let block = inputs.fetchBlock();
+
+    cache.blocked = (block !== null);
+    if (cache.blocked) {
+        let bcache = utils.allocateCachedArray(cache.matrix.numberOfColumns(), "Int32Array", cache, "block_buffer");
+
+        let bcache_arr = bcache.array();
+        let block_arr = block.array();
+        let disc_arr = disc.array();
+        let j = 0;
+        for (let i = 0; i < block_arr.length; i++) {
+            if (disc_arr[i] == 0) {
+                bcache_arr[j] = block_arr[i];
+                j++;
+            }
+        }
+    }
+
     return;
 }
 
@@ -122,21 +142,54 @@ function getThresholds(copy = true) {
 }
 
 export function results() {
-    var data = getData();
-    var thresholds = getThresholds();
+    var data = {};
+    var blocks = inputs.fetchBlockLevels();
+    if (blocks === null) {
+        blocks = [ "default" ];
+        data["default"] = getData();
+    } else {
+        let metrics = getData();
+        let bids = inputs.fetchBlock();
+        let barray = bids.array();
+
+        for (var b = 0; b < blocks.length; b++) {
+            let current = {};
+            for (const [key, val] of Object.entries(metrics)) {
+                current[key] = val.filter((x, i) => barray[i] == b);
+            }
+            data[blocks[b]] = current;
+        }
+    }
+
+    var thresholds = {};
+    let listed = getThresholds();
+    for (var b = 0; b < blocks.length; b++) {
+        let current = {};
+        for (const [key, val] of Object.entries(listed)) {
+            current[key] = val[b];
+        }
+        thresholds[blocks[b]] = current;
+    }
 
     var ranges = {};
-    for (const k of Object.keys(data)) {
-        var max = -Infinity, min = Infinity;
-        data[k].forEach(function (x) {
-            if (max < x) {
-                max = x;
-            }
-            if (min > x) {
-                min = x;
-            }
-        });
-        ranges[k] = [min, max];
+    for (var b = 0; b < blocks.length; b++) {
+        let curranges = {};
+        let curdata = data[blocks[b]];
+
+        for (const [key, val] of Object.entries(curdata)) {
+            var max = -Infinity, min = Infinity;
+            val.forEach(function (x) {
+                if (max < x) {
+                    max = x;
+                }
+                if (min > x) {
+                    min = x;
+                }
+            });
+            curranges[key] = [min, max];
+        }
+
+        ranges[blocks[b]] = curranges;
     }
 
     let remaining = 0;
@@ -313,4 +366,15 @@ export function fetchFilteredMatrix() {
         applyFilters();
     }
     return cache.matrix;
+}
+
+export function fetchFilteredBlock() {
+    if (!("blocked" in cache)) {
+        applyFilters();
+    }
+    if (cache.blocked) {
+        return cache.block_buffer;
+    } else {
+        return null;
+    }
 }

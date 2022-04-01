@@ -1,6 +1,7 @@
 import * as scran from "scran.js"; 
 import * as utils from "./_utils.js";
 import * as normalization from "./_normalization.js";
+import * as qc from "./_quality_control.js";
 import * as choice from "./_choose_clustering.js";
 import * as markers from "./_utils_markers.js";
 
@@ -15,9 +16,10 @@ export function compute() {
     if (normalization.changed || choice.changed) {
         var mat = normalization.fetchNormalizedMatrix();
         var clusters = choice.fetchClustersAsWasmArray();
+        var block = qc.fetchFilteredBlock();
         
         utils.freeCache(cache.raw);
-        cache.raw = scran.scoreMarkers(mat, clusters);
+        cache.raw = scran.scoreMarkers(mat, clusters, { block: block });
 
         // No parameters to set.
         changed = true;
