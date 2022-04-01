@@ -204,8 +204,11 @@ export function compute(files, sample_factor) {
     // Don't bother proceeding with any of the below
     // if we're operating from a reloaded state.
     let entries = Object.entries(files);
-    if (entries.length == 1 && entries[0][1].format == "kana") {
-        return;
+    if (entries.length == 1) {
+        let form = entries[0][1].format;
+        if (form == "kana" || form == "kanadb") {
+            return;
+        }
     }
 
     changed = true;
