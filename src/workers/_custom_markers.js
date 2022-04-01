@@ -162,6 +162,6 @@ export function removeSelection(id) {
 }
 
 export function fetchResults(id, rank_type) {
-    var current = cache.results[id];
+    var current = cache.results[id].raw;
     return markers.fetchGroupResults(current, rank_type, 1); 
 }
