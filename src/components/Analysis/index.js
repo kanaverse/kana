@@ -263,7 +263,7 @@ const AnalysisDialog = ({
                         all_valid = false;
                     }
 
-                    if (!x.mtx) all_valid = false;
+                    // if (!x.mtx) all_valid = false;
                 } else if (x.format === "tenx") {
 
                     if (x?.file && !(
@@ -274,7 +274,7 @@ const AnalysisDialog = ({
                         all_valid = false;
                     }
 
-                    if (!x.file) all_valid = false;
+                    // if (!x.file) all_valid = false;
 
                 } else if (
                     x.format === "h5ad") {
@@ -285,7 +285,7 @@ const AnalysisDialog = ({
                         all_valid = false;
                     }
 
-                    if (!x.file) all_valid = false;
+                    // if (!x.file) all_valid = false;
                 }
 
                 // setTmpInputValid(all_valid);
@@ -1237,6 +1237,9 @@ const AnalysisDialog = ({
             case 3:
                 cname = "action";
                 break;
+            case 4:
+                cname = "annotation";
+                break;
             default:
                 throw Error("Idx does not exist");
                 break;
@@ -1246,17 +1249,13 @@ const AnalysisDialog = ({
     }
 
     function table_render_cell(rowIdx, colIdx) {
-        console.log(rowIdx, colIdx)
         let key = get_table_colname(colIdx);
-
         let row = tmpInputFiles[rowIdx];
 
-        console.log(key)
-        console.log(row);
         if (key === "name") {
-            console.log(row[key]);
             return (
                 <EditableCell2
+                    className="cell-top"
                     value={row[key] == null ? "" : row[key]}
                     onConfirm={(val) => {
                         let tmp = [...tmpInputFiles];
@@ -1282,11 +1281,9 @@ const AnalysisDialog = ({
             } else {
                 tname += ` file: ${row.file[0].name} `;
             }
-            console.log(tname);
-            return (<Cell>{tname}</Cell>);
+            return (<Cell className="cell-top">{tname}</Cell>);
         } else if (key == "format") {
-            console.log(row["format"]);
-            return (<Cell>{row["format"]}</Cell>);
+            return (<Cell className="cell-top">{row["format"]}</Cell>);
         } else if (key == "action") {
             return (<Cell><Button
                 minimal={true}
@@ -1304,6 +1301,39 @@ const AnalysisDialog = ({
                     setTmpInputValid(false);
                     setPreInputFilesStatus(null);
                 }}>remove</Button></Cell>)
+        } else if (key == "annotation") {
+
+            if (preInputFilesStatus && tmpInputFiles.length == 1) {
+
+                if (preInputFilesStatus.annotations[0]) {
+                    return (
+                        <Cell>
+                            <HTMLSelect
+                                minimal={true}
+                                onChange={(e) => {
+                                    let tmp = [...tmpInputFiles];
+                                    tmp[0]["batch"] = e.target.value;
+                                    setTmpInputFiles(tmp);
+                                }}
+                                defaultValue={tmpInputFiles[0].batch ? tmpInputFiles[0].batch : "none"}
+                            >
+                                <option value="none">None</option>
+                                {
+                                    preInputFilesStatus && preInputFilesStatus?.annotations?.[0] ? preInputFilesStatus.annotations[0].map((x, i) => <option key={i} value={x}>{x}</option>) : "-"
+                                }
+                            </HTMLSelect>
+                        </Cell>
+                    )
+                } else {
+                    return (
+                        <Cell className="cell-top">No annotations!</Cell>
+                    )
+                }
+            } else {
+                return (
+                    <Cell className="cell-top">{preInputFilesStatus && preInputFilesStatus?.best_genes?.[rowIdx]}</Cell>
+                )
+            }
         }
     }
 
@@ -1356,7 +1386,7 @@ const AnalysisDialog = ({
                                                     style={{
                                                         margin: "3px"
                                                     }}
-                                                    onClick={((x) => {
+                                                    onClick={(() => {
                                                         setTmpInputFiles([...tmpInputFiles, stmpInputFiles]);
                                                         setInputText([...inputText, sinputText]);
 
@@ -1370,12 +1400,15 @@ const AnalysisDialog = ({
                                                             "name": `dataset-${tmpInputFiles.length + 2}`,
                                                             "format": newImportFormat
                                                         });
+
+                                                        setTmpInputValid(false);
+                                                        setPreInputFilesStatus(null);
                                                     })}
                                                 >Add</Button>
                                             </div>
                                         }
 
-                                        {
+                                        {/* {
                                             preInputFilesStatus && tmpInputFiles.length > 1 &&
                                             <Callout intent={preInputFilesStatus.valid ? "primary" : "danger"}
                                                 title="Batch Correction/Integrate Datasets"
@@ -1419,9 +1452,9 @@ const AnalysisDialog = ({
                                                     <strong>When multiple files are imported, each dataset is considered a batch.</strong>
                                                 </div>
                                             </Callout>
-                                        }
+                                        } */}
 
-                                        {
+                                        {/* {
                                             preInputFilesStatus && tmpInputFiles.length == 1 &&
                                             preInputFilesStatus.annotations[0] &&
                                             <Callout intent={"primary"}
@@ -1467,7 +1500,7 @@ const AnalysisDialog = ({
                                                     }
                                                 </div>
                                             </Callout>
-                                        }
+                                        } */}
 
                                         {
                                             showSection == "input" &&
@@ -1476,18 +1509,71 @@ const AnalysisDialog = ({
                                                 height: ((tmpInputFiles.length + 1) * 30) + "px"
                                             }}>
                                                 <h4>Selected datasets:</h4>
-                                                <Table2
-                                                    numRows={tmpInputFiles.length}
-                                                    rowHeights={tmpInputFiles.map(x => 22)}
-                                                    selectionModes={"NONE"}
-                                                >
-                                                    <Column key="name" intent="primary" name="name" cellRenderer={table_render_cell} />
-                                                    <Column key="files" name="files" cellRenderer={table_render_cell} />
-                                                    <Column key="format" name="format" cellRenderer={table_render_cell} />
-                                                    <Column key="action" name="action" cellRenderer={table_render_cell} />
-                                                </Table2>
-                                            </div>
+                                                {
+                                                    preInputFilesStatus && tmpInputFiles.length == 1 ?
+                                                        <>
+                                                            {
+                                                                preInputFilesStatus.annotations[0] ?
+                                                                    <Table2
+                                                                        numRows={tmpInputFiles.length}
+                                                                        rowHeights={tmpInputFiles.map(() => 25)}
+                                                                        selectionModes={"NONE"}
+                                                                    >
+                                                                        <Column key="name" intent="primary" name="name" cellRenderer={table_render_cell} />
+                                                                        <Column key="files" name="files" cellRenderer={table_render_cell} />
+                                                                        <Column key="format" name="format" cellRenderer={table_render_cell} />
+                                                                        <Column key="action" name="action" cellRenderer={table_render_cell} />
+                                                                        <Column key="batch" name="batch" cellRenderer={table_render_cell} />
+                                                                    </Table2>
+                                                                    :
+                                                                    <>
+                                                                        <Table2
+                                                                            numRows={tmpInputFiles.length}
+                                                                            rowHeights={tmpInputFiles.map(() => 25)}
+                                                                            selectionModes={"NONE"}
+                                                                        >
+                                                                            <Column key="name" intent="primary" name="name" cellRenderer={table_render_cell} />
+                                                                            <Column key="files" name="files" cellRenderer={table_render_cell} />
+                                                                            <Column key="format" name="format" cellRenderer={table_render_cell} />
+                                                                            <Column key="action" name="action" cellRenderer={table_render_cell} />
+                                                                        </Table2>
+                                                                        <p style={{
+                                                                            paddingTop: "5px"
+                                                                        }}>
+                                                                            <strong>No annotations were found in this dataset</strong>
 
+                                                                        </p>
+                                                                    </>
+                                                            }
+                                                        </>
+                                                        :
+                                                        <>
+                                                            <div>
+                                                                <Table2
+                                                                    numRows={tmpInputFiles.length}
+                                                                    rowHeights={tmpInputFiles.map(() => 25)}
+                                                                    selectionModes={"NONE"}
+                                                                >
+                                                                    <Column key="name" name="name" cellRenderer={table_render_cell} />
+                                                                    <Column key="files" name="files" cellRenderer={table_render_cell} />
+                                                                    <Column key="format" name="format" cellRenderer={table_render_cell} />
+                                                                    <Column key="action" name="action" cellRenderer={table_render_cell} />
+                                                                    <Column key="annotation" name="annotation" cellRenderer={table_render_cell} />
+                                                                </Table2>
+                                                            </div>
+                                                            <p style={{
+                                                                paddingTop: "5px"
+                                                            }}>
+                                                                {preInputFilesStatus && preInputFilesStatus.common_genes && <span> These datasets contain
+                                                                    <strong>{preInputFilesStatus.common_genes == 0 ? " no " : " " + preInputFilesStatus.common_genes + " "}</strong>
+                                                                    common genes.</span>}
+                                                                <br />
+                                                                <strong>Note: when multiple files are imported, each dataset is considered a batch.</strong>
+
+                                                            </p>
+                                                        </>
+                                                }
+                                            </div>
                                         }
 
                                         {showSection == "params" && get_input_qc()}
