@@ -29,6 +29,7 @@ const AnalysisDialog = ({
     const [inputText, setInputText] = useState([]);
 
     let [tmpInputValid, setTmpInputValid] = useState(true);
+    let [stmpInputValid, ssetTmpInputValid] = useState(true);
 
     const [newImportFormat, setNewImportFormat] = useState("mtx");
     const [loadImportFormat, setLoadImportFormat] = useState("kana");
@@ -273,21 +274,14 @@ const AnalysisDialog = ({
 
                 setTmpInputValid(all_valid);
 
-            } else if (tabSelected === "load") {
-                if (!stmpInputFiles?.file) {
-                    setTmpInputValid(false);
+                if (x.format === "mtx") {
+                    if (!x.mtx) all_valid = false;
                 } else {
-                    if (loadImportFormat === "kana" &&
-                        sinputText?.file != null && !(sinputText?.file.toLowerCase().endsWith("kana")
-                        )
-                    ) {
-                        setTmpInputValid(false);
-                    } else if (loadImportFormat === "kanadb" && stmpInputFiles?.file === null) {
-                        setTmpInputValid(false);
-                    } else {
-                        setTmpInputValid(true);
-                    }
+                    if (!x.file) all_valid = false;
                 }
+
+                ssetTmpInputValid(all_valid);
+
             }
         }
     }, [stmpInputFiles]);
@@ -1349,6 +1343,7 @@ const AnalysisDialog = ({
                                             }}>
                                                 <Button intent="warning"
                                                     icon="add"
+                                                    disabled={!stmpInputValid}
                                                     style={{
                                                         margin: "3px"
                                                     }}
@@ -1419,7 +1414,8 @@ const AnalysisDialog = ({
 
                                         {
                                             preInputFilesStatus && tmpInputFiles.length == 1 &&
-                                            <Callout intent={"warning"}
+                                            preInputFilesStatus.annotations[0] &&
+                                            <Callout intent={"primary"}
                                                 title="Batch Correction"
                                                 style={{
                                                     margin: '10px'
