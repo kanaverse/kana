@@ -248,38 +248,47 @@ const AnalysisDialog = ({
             if (tabSelected === "new") {
                 let all_valid = true;
                 let x = stmpInputFiles;
-                if (
-                    (x?.mtx && !(sinputText?.mtx.toLowerCase().endsWith("mtx") ||
-                        sinputText?.mtx.toLowerCase().endsWith("mtx.gz")
-                    )) ||
-                    (x?.gene && !(sinputText?.gene.toLowerCase().endsWith("tsv") ||
-                        sinputText?.gene.toLowerCase().endsWith("tsv.gz")
-                    )) ||
-                    (x?.barcode && !(sinputText?.barcode.toLowerCase().endsWith("tsv") ||
-                        sinputText?.barcode.toLowerCase().endsWith("tsv.gz")
-                    ))
-                ) {
-                    all_valid = false;
-                }
+                if (x.format === "mtx") {
+                    if (
+                        (x?.mtx && !(sinputText?.mtx.toLowerCase().endsWith("mtx") ||
+                            sinputText?.mtx.toLowerCase().endsWith("mtx.gz")
+                        )) ||
+                        (x?.gene && !(sinputText?.gene.toLowerCase().endsWith("tsv") ||
+                            sinputText?.gene.toLowerCase().endsWith("tsv.gz")
+                        )) ||
+                        (x?.barcode && !(sinputText?.barcode.toLowerCase().endsWith("tsv") ||
+                            sinputText?.barcode.toLowerCase().endsWith("tsv.gz")
+                        ))
+                    ) {
+                        all_valid = false;
+                    }
 
-                if (
-                    x?.file && !(
+                    if (!x.mtx) all_valid = false;
+                } else if (x.format === "tenx") {
+
+                    if (x?.file && !(
                         sinputText?.file.toLowerCase().endsWith("hdf5") ||
-                        sinputText?.file.toLowerCase().endsWith("h5") ||
+                        sinputText?.file.toLowerCase().endsWith("h5")
+                    )
+                    ) {
+                        all_valid = false;
+                    }
+
+                    if (!x.file) all_valid = false;
+
+                } else if (
+                    x.format === "h5ad") {
+                    if (x?.file && !(
                         sinputText?.file.toLowerCase().endsWith("h5ad")
                     )
-                ) {
-                    all_valid = false;
-                }
+                    ) {
+                        all_valid = false;
+                    }
 
-                setTmpInputValid(all_valid);
-
-                if (x.format === "mtx") {
-                    if (!x.mtx) all_valid = false;
-                } else {
                     if (!x.file) all_valid = false;
                 }
 
+                // setTmpInputValid(all_valid);
                 ssetTmpInputValid(all_valid);
 
             }
@@ -1279,7 +1288,7 @@ const AnalysisDialog = ({
             console.log(row["format"]);
             return (<Cell>{row["format"]}</Cell>);
         } else if (key == "action") {
-            return (<Cell><Button 
+            return (<Cell><Button
                 minimal={true}
                 small={true}
                 style={{
@@ -1288,13 +1297,13 @@ const AnalysisDialog = ({
                     fontSize: "12px"
                 }}
                 onClick={() => {
-                let tmp = [...tmpInputFiles];
-                tmp.splice(rowIdx - 1, 1);
-                setTmpInputFiles(tmp);
+                    let tmp = [...tmpInputFiles];
+                    tmp.splice(rowIdx - 1, 1);
+                    setTmpInputFiles(tmp);
 
-                setTmpInputValid(false);
-                setPreInputFilesStatus(null);
-            }}>remove</Button></Cell>)
+                    setTmpInputValid(false);
+                    setPreInputFilesStatus(null);
+                }}>remove</Button></Cell>)
         }
     }
 
@@ -1359,7 +1368,7 @@ const AnalysisDialog = ({
 
                                                         ssetTmpInputFiles({
                                                             "name": `dataset-${tmpInputFiles.length + 2}`,
-                                                            "format": "mtx"
+                                                            "format": newImportFormat
                                                         });
                                                     })}
                                                 >Add</Button>
@@ -1469,7 +1478,7 @@ const AnalysisDialog = ({
                                                 <h4>Selected datasets:</h4>
                                                 <Table2
                                                     numRows={tmpInputFiles.length}
-                                                    rowHeights={tmpInputFiles.map(x=> 22)}
+                                                    rowHeights={tmpInputFiles.map(x => 22)}
                                                     selectionModes={"NONE"}
                                                 >
                                                     <Column key="name" intent="primary" name="name" cellRenderer={table_render_cell} />
@@ -1492,7 +1501,7 @@ const AnalysisDialog = ({
 
                                     <div className="row-input-tooltips">
                                         {
-                                            !tmpInputValid &&
+                                            (!tmpInputValid || !stmpInputValid) &&
                                             <Callout intent="danger"
                                                 title="Incorrect file format"
                                                 style={{
@@ -1701,7 +1710,7 @@ const AnalysisDialog = ({
                                     </div>
                                     <div className='row-input-tooltips'>
                                         {
-                                            !tmpInputValid &&
+                                            (!tmpInputValid || !stmpInputValid) &&
                                             <Callout intent="danger"
                                                 title="Incorrect file format"
                                                 style={{
