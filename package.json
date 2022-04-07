@@ -29,6 +29,7 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "bakana": "^0.1.0",
     "comlink": "^4.3.1",
     "d3": "^7.1.1",
     "d3-dsv": "^3.0.1",

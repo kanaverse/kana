@@ -1,295 +1,195 @@
 import * as scran from "scran.js";
-import * as inputs from "./_inputs.js";
-import * as preflight from "./_preflight_inputs.js";
-import * as qc from "./_quality_control.js";
-import * as normalization from "./_normalization.js";
-import * as variance from "./_model_gene_var.js";
-import * as pca from "./_pca.js";
-import * as index from "./_neighbor_index.js";
-import * as cluster_choice from "./_choose_clustering.js";
-import * as kmeans_cluster from "./_kmeans_cluster.js";
-import * as snn_cluster from "./_snn_cluster.js";
-import * as tsne from "./_tsne_monitor.js";
-import * as umap from "./_umap_monitor.js";
-import * as cluster_markers from "./_score_markers.js";
-import * as label_cells from "./_label_cells.js";
-import * as custom_markers from "./_custom_markers.js";
+import * as bakana from "bakana";
 import * as kana_db from "./KanaDBHandler.js";
-import * as utils from "./_utils.js";
-import * as serialize_utils from "./_utils_serialize.js";
-import * as rutils from "./_utils_reader.js";
+import * as downloads from "./DownloadsDBHandler.js";
 
 /***************************************/
 
-function postSuccess_(info, step, message) {
+function extractBuffers(object, store) {
+    if (Array.isArray(object)) {
+        for (const element of object) {
+            extractBuffers(element, store);
+        }
+    } else if (object.constructor == Object) {
+        for (const [key, element] of Object.entries(object)) {
+            extractBuffers(element, store);
+        }
+    } else if (ArrayBuffer.isView(object)) {
+        if (! (object.buffer instanceof ArrayBuffer)) {
+            throw "only ArrayBuffers should be in the message payload";
+        }
+        store.push(object.buffer);
+    }
+}
+
+function postSuccess(step, info) {
     var transferable = [];
-    utils.extractBuffers(info, transferable);
+    extractBuffers(info, transferable);
     postMessage({
         type: `${step}_DATA`,
-        resp: info,
-        msg: "Success: " + message
+        resp: info
     }, transferable);
 }
 
 /***************************************/
 
-const step_inputs = "inputs";
-const step_qc = "quality_control";
-const step_norm = "normalizaton";
-const step_feat = "feature_selecton";
-const step_pca = "pca";
-const step_neighbors = "neighbor_index";
-const step_tsne = "tsne";
-const step_umap = "umap";
-const step_kmeans = "kmeans_cluster";
-const step_snn = "snn_cluster_graph";
-const step_choice = "choose_clustering";
-const step_markers = "marker_detection";
-const step_labels = "cell_labelling";
-const step_custom = "custom_marker_management";
+let superstate;
 
-function runAllSteps(state) {
-    var postSuccess = function (namespace, step, message) {
-        if (namespace.changed) {
-            postSuccess_(namespace.results(), step, message);
-        }
-    }
+bakana.setCellLabellingDownload(downloads.get);
 
-    var postSuccessAsync = function (namespace, step, message) {
-        if (namespace.changed) {
-            namespace.results()
-                .then(res => {
-                    postSuccess_(res, step, message);
-                });
-        }
-    }
+bakana.setVisualizationAnimate((type, x, y, iter) => {
+    postMessage({
+        type: type + "_iter",
+        x: x,
+        y: y,
+        iteration: iter
+    }, [x.buffer, y.buffer]);
+});
 
-    inputs.compute(state.files.files, state.files.batch);
-    postSuccess(inputs, step_inputs, "Count matrix loaded");
+function runAllSteps(inputs, params) {
+    // Assembling the giant parameter list.
+    let formatted = {
+        inputs: {
+            sample_factor: inputs.batch
+        },
+        quality_control: {
+            use_mito_default: params.qc["qc-usemitodefault"], 
+            mito_prefix: params.qc["qc-mito"], 
+            nmads: params.qc["qc-nmads"]
+        },
+        normalization: {},
+        feature_selection: {
+            span: params.fSelection["fsel-span"]
+        },
+        pca: {
+            num_hvgs: params.pca["pca-hvg"], 
+            num_pcs: params.pca["pca-npc"],
+            block_method: params.pca["pca-correction"]
+        },
+        neighbor_index: {
+            approximate: params.cluster["clus-approx"]
+        },
+        tsne: {
+            perplexity: params.tsne["tsne-perp"], 
+            iterations: params.tsne["tsne-iter"], 
+            animate: params.tsne["animate"]
+        },
+        umap: {
+            num_neighbors: params.umap["umap-nn"], 
+            num_epochs: params.umap["umap-epochs"], 
+            min_dist: params.umap["umap-min_dist"], 
+            animate: params.umap["animate"]
+        },
+        kmeans_cluster: {
+            k: params.cluster["kmeans-k"]
+        },
+        snn_graph_cluster: {
+            k: params.cluster["clus-k"], 
+            scheme: params.cluster["clus-scheme"],
+            resolution: params.cluster["clus-res"]
+        },
+        markers: {},
+        cell_labelling: {
+            human_references: params.annotateCells["annotateCells-human_references"],
+            mouse_references: params.annotateCells["annotateCells-mouse_references"]
+        },
+        custom_markers: {}
+    };
 
-    qc.compute(
-        state.params.qc["qc-usemitodefault"], 
-        state.params.qc["qc-mito"], 
-        state.params.qc["qc-nmads"]
-    );
-    postSuccess(qc, step_qc, "Applying quality control filters");
- 
-    normalization.compute();
-    postSuccess(normalization, step_norm, "Log-normalization completed");
-
-    variance.compute(state.params.fSelection["fsel-span"]);
-    postSuccess(variance, step_feat, "Variance modelling completed");
-
-    pca.compute(
-        state.params.pca["pca-hvg"], 
-        state.params.pca["pca-npc"],
-        state.params.pca["pca-correction"]
-    );
-    postSuccess(pca, step_pca, "Principal components analysis completed");
-
-    index.compute(state.params.cluster["clus-approx"]);
-    postSuccess(index, step_neighbors, "Neighbor search index constructed");
-
-    tsne.compute(
-        state.params.tsne["tsne-perp"], 
-        state.params.tsne["tsne-iter"], 
-        state.params.tsne["animate"]
-    );
-    postSuccessAsync(tsne, step_tsne, "t-SNE completed");
-
-    umap.compute(
-        state.params.umap["umap-nn"], 
-        state.params.umap["umap-epochs"], 
-        state.params.umap["umap-min_dist"], 
-        state.params.umap["animate"]
-    );
-    postSuccessAsync(umap, step_umap, "UMAP completed");
-
-    let method = state.params.cluster["clus-method"];
-    kmeans_cluster.compute(
-        method == "kmeans", 
-        state.params.cluster["kmeans-k"]
-    );
-    postSuccess(kmeans_cluster, step_kmeans, "K-means clustering completed");
-
-    snn_cluster.compute(
-        method == "snn_graph", 
-        state.params.cluster["clus-k"], 
-        state.params.cluster["clus-scheme"], 
-        state.params.cluster["clus-res"]
-    );
-    postSuccess(snn_cluster, step_snn, "SNN graph clustering completed");
-  
-    cluster_choice.compute(state.params.cluster["clus-method"]);
-    postSuccess(cluster_choice, step_choice, "Clustering of interest chosen");
-
-    cluster_markers.compute();
-    postSuccess(cluster_markers, step_markers, "Marker detection complete");
-
-    label_cells.compute(
-        state.params.annotateCells["annotateCells-human_references"],
-        state.params.annotateCells["annotateCells-mouse_references"]
-    );
-    postSuccessAsync(label_cells, step_labels, "Cell type labelling complete");
-
-    custom_markers.compute();
-    postSuccess(custom_markers, step_custom, "Pruning of custom markers finished");
-
-    return;
+    return bakana.runAnalysis(superstate, inputs.files, formatted, { finishFun: postSuccess });
 }
  
 /***************************************/
- 
-async function serializeAllSteps(saver, embedded) {
-    const path = "temp.h5";
+
+async function linkKanaDb(obj) {
+    var md5 = await hashwasm.md5(new Uint8Array(obj.buffer));
+    var id = obj.type + "_" + obj.name + "_" + obj.buffer.byteLength + "_" + md5;
+    var ok = await kana_db.saveFile(id, obj.buffer);
+    if (!ok) {
+        throw "failed to save file '" + id + "' to KanaDB";
+    }
+    output.collected.push(id);
+    return id;
+};
+
+bakana.setCreateLink(linkKanaDb);
+bakana.setResolveLink(kana_db.loadFile);
+
+async function serializeAllSteps(embedded) {
+    const h5path = "serialized_in.h5";
 
     let output;
     try {
-        let handle = scran.createNewHDF5File(path);
+        let collected = await bakana.saveAnalysis(superstate, h5path, { embedded: embedded });
 
-        await inputs.serialize(handle, saver, embedded);
-        qc.serialize(handle);
-        normalization.serialize(handle);
-        variance.serialize(handle);
-        pca.serialize(handle);
-        index.serialize(handle);
-        await tsne.serialize(handle);
-        await umap.serialize(handle);
-        kmeans_cluster.serialize(handle);
-        snn_cluster.serialize(handle);
-        cluster_choice.serialize(handle);
-        cluster_markers.serialize(handle);
-        await label_cells.serialize(handle);
-        custom_markers.serialize(handle);
-
-        output = scran.readFile(path);
+        if (embedded) {
+            output = bakana.createKanaFile(h5path, collected.collected);
+        } else {
+            output = {
+                state: bakana.createKanaFile(h5path, null),
+                files: collected.collected
+            };
+        }
     } finally {
-        if (scran.fileExists(path)) {
-            scran.removeFile(path);
+        if (scran.fileExists(h5path)) {
+            scran.removeFile(h5path);
         }
     }
 
     return output;
 }
+ 
+async function unserializeAllSteps(contents) {
+    const h5path = "serialized_out.h5";
 
-async function unserializeAllSteps(path, loader, embedded) {
-    var postSuccess = function (namespace, step, message) {
-        postSuccess_(namespace.results(), step, message);
-    }
+    let output = {};
+    try {
+        let loader = await bakana.parseKanaFile(contents, h5path);
+        let response = await bakana.loadAnalysis(h5path, loader, { finishFun: postSuccess });
 
-    var postSuccessAsync = function (namespace, step, message) {
-        namespace.results()
-            .then(res => {
-                postSuccess_(res, step, message);
-            });
-    }
-
-    let response = {};
-    let handle = new scran.H5File(path);
-
-    let permuter = await inputs.unserialize(handle, loader, embedded);
-    response["files"] = {
-        "format": "kana",
-        "files": []
-    };
-    postSuccess(inputs, step_inputs, "Reloaded count matrix");
-
-    {
-        let params = qc.unserialize(handle);
-        postSuccess(qc, step_qc, "Reloaded QC metrics");
-        response["qc"] = {
-            "qc-usemitodefault": params.use_mito_default,
-            "qc-mito": params.mito_prefix,
-            "qc-nmads": params.nmads
-        };
-    }
-
-    normalization.unserialize(handle);
-    postSuccess(normalization, step_norm, "Reloaded log-normalization");
-
-    {
-        let params = variance.unserialize(handle, permuter);
-        postSuccess(variance, step_feat, "Reloaded variance modelling statistics");
-        response["fSelection"] = {
-            "fsel-span": params.span
-        };
-    }
-
-    {
-        let params = pca.unserialize(handle);
-        postSuccess(pca, step_pca, "Reloaded principal components");
-        response["pca"] = {
-            "pca-hvg": params.num_hvgs,
-            "pca-npc": params.num_pcs,
-            "pca-correction": params.block_method
-        };
-    }
-
-    {
-        let params = index.unserialize(handle);
-        postSuccess(index, step_neighbors, "Reloaded neighbor search index");
-        response["cluster"] = {
-            "clus-approx": params.approximate
-        };
-    }
-
-    {
-        let params = tsne.unserialize(handle);
-        postSuccessAsync(tsne, step_tsne, "t-SNE reloaded");
-        response["tsne"] = {
-            "tsne-perp": params.perplexity,
-            "tsne-iter": params.iterations,
-            "animate": params.animate
-        };
-    }
-
-    {
-        let params = umap.unserialize(handle);
-        postSuccessAsync(umap, step_umap, "UMAP reloaded");
-        response["umap"] = {
-            "umap-epochs": params.num_epochs,
-            "umap-nn": params.num_neighbors,
-            "umap-min_dist": params.min_dist,
-            "animate": params.animate
-        };
-    }
-
-    {
-        let params = kmeans_cluster.unserialize(handle);
-        postSuccess(kmeans_cluster, step_kmeans, "K-means clustering reloaded");
-        response["cluster"]["kmeans-k"] = params.k; // 'cluster' already added above.
-    }
-
-    {
-        let params = snn_cluster.unserialize(handle);
-        postSuccess(snn_cluster, step_snn, "SNN graph clustering reloaded");
-        response["cluster"]["clus-k"] = params.k;
-        response["cluster"]["clus-scheme"] = params.scheme;
-        response["cluster"]["clus-res"] = params.resolution;
-    }
-
-    {
-        let params = cluster_choice.unserialize(handle);
-        postSuccess(cluster_choice, step_choice, "Clustering of interest chosen");
-        response["cluster"]["clus-method"] = params.method;
-    }
-
-    cluster_markers.unserialize(handle, permuter);
-    postSuccess(cluster_markers, step_markers, "Reloaded per-cluster markers");
-
-    {
-        let params = label_cells.unserialize(handle);    
-        postSuccessAsync(label_cells, step_labels, "Reloaded cell type labels");
-        response["annotateCells"] = {
-            "annotateCells-human_references": params.human_references,
-            "annotateCells-mouse_references": params.mouse_references
-        };
-    }
-
-    {
-        let params = custom_markers.unserialize(handle, permuter);
-        postSuccess(custom_markers, step_custom, "Pruning of custom markers finished");
-        response["custom-selections"] = params;
+        output = {
+            qc: {
+                "qc-usemitodefault": response.quality_control.use_mito_default,
+                "qc-mito": response.quality_control.mito_prefix,
+                "qc-nmads": response.quality_control.nmads
+            },
+            fSelection: {
+                "fsel-span": response.feature_selection.span
+            },
+            pca: {
+                "pca-hvg": response.pca.num_hvgs,
+                "pca-npc": response.pca.num_pcs,
+                "pca-correction": response.pca.block_method
+            },
+            cluster: {
+                "clus-approx": response.neighbor_index.approximate,
+                "kmeans-k": response.kmeans_cluster.k,
+                "clus-k": response.snn_graph_cluster.k,
+                "clus-scheme": response.snn_graph_cluster.scheme,
+                "clus-res": response.snn_graph_cluster.resolution,
+                "clus-method": response.choose_clustering.method
+            },
+            tsne: {
+                "tsne-perp": response.tsne.perplexity,
+                "tsne-iter": response.tsne.iterations,
+                "animate": response.tsne.animate
+            },
+            umap: {
+                "umap-epochs": response.umap.num_epochs,
+                "umap-nn": response.umap.num_neighbors,
+                "umap-min_dist": response.umap.min_dist,
+                "animate": response.umap.animate
+            },
+            annotateCells: {
+                "annotateCells-human_references": response.cell_labelling.human_references,
+                "annotateCells-mouse_references": response.cell_labelling.mouse_references
+            },
+            custom_selections: response.custom_selections
+        }
+    } finally {
+        if (scran.fileExists(h5path)) {
+            scran.removeFile(h5path);
+        }
     }
 
     return response;
@@ -302,12 +202,24 @@ onmessage = function (msg) {
     const payload = msg.data;
     if (payload.type == "INIT") {
         let nthreads = Math.round(navigator.hardwareConcurrency * 2 / 3);
-        let scran_init = scran.initialize({ numberOfThreads: nthreads });
-        scran_init 
+        let back_init = bakana.initialize({ numberOfThreads: nthreads });
+        back_init 
             .then(x => {
                 postMessage({
                     type: payload.type,
-                    msg: `Success: ScranJS/WASM initialized`
+                    msg: "Success: bakana initialized"
+                });
+            });
+
+        let state_init = back_init
+            .then(x => {
+                return bakana.createAnalysis();
+            })
+            .then(x => {
+                superstate = x;
+                postMessage({
+                    type: payload.type,
+                    msg: "Success: analysis state created"
                 });
             });
 
@@ -318,31 +230,28 @@ onmessage = function (msg) {
                     postMessage({
                         type: "KanaDB_store",
                         resp: result,
-                        msg: "Success"
+                        msg: "Success: KanaDB initialized"
                     });
                 } else {
                     console.error(error);
                     postMessage({
                         type: "KanaDB_ERROR",
-                        msg: `Fail: Cannot initialize DB`
+                        msg: "Error: Cannot initialize KanaDB"
                     });
                 }
             });
 
-        let tsne_init = tsne.initialize();
-        let umap_init = umap.initialize();
-
         loaded = Promise.all([
-            scran_init,
+            back_init,
             kana_init,
-            tsne_init,
-            umap_init
+            state_init
         ]);
 
+    /**************** RUNNING AN ANALYSIS *******************/
     } else if (payload.type == "RUN") {
         loaded
             .then(x => {
-                runAllSteps(payload.payload)
+                runAllSteps(payload.payload.files, payload.payload.params)
             })
             .catch(error => {
                 console.error(error);
@@ -354,7 +263,6 @@ onmessage = function (msg) {
 
     /**************** LOADING EXISTING ANALYSES *******************/
     } else if (payload.type == "LOAD") {
-        const path = rutils.generateRandomName("state_", ".h5");
         let fs = payload.payload.files.files;
 
         if (fs[Object.keys(fs)[0]].format == "kana") {
@@ -363,18 +271,11 @@ onmessage = function (msg) {
                 .then(async (x) => {
                     const reader = new FileReaderSync();
                     let res = reader.readAsArrayBuffer(f);
-                    try {
-                        let loaders = await serialize_utils.load(res, path);
-                        let response = await unserializeAllSteps(path, loaders.loader, loaders.embedded);
-                        postMessage({
-                            type: "loadedParameters",
-                            resp: response
-                        });
-                    } finally {
-                        if (scran.fileExists(path)) {
-                            scran.removeFile(path);
-                        }
-                    }
+                    let response = await unserializeAllSteps(res);
+                    postMessage({
+                        type: "loadedParameters",
+                        resp: response
+                    });
                 })
                 .catch(error => {
                     console.error(error);
@@ -394,18 +295,11 @@ onmessage = function (msg) {
                             msg: `Fail: cannot load analysis ID '${id}'`
                         });
                     } else {
-                        try {
-                            let loaders = await serialize_utils.load(res, path);
-                            let response = await unserializeAllSteps(path, loaders.loader, loaders.embedded);
-                            postMessage({
-                                type: "loadedParameters",
-                                resp: response
-                            });
-                        } finally {
-                            if (scran.fileExists(path)) {
-                                scran.removeFile(path);
-                            }
-                        }
+                        let response = await unserializeAllSteps(res);
+                        postMessage({
+                            type: "loadedParameters",
+                            resp: response
+                        });
                     }
                 })
                 .catch(error => {
@@ -421,14 +315,12 @@ onmessage = function (msg) {
     } else if (payload.type == "EXPORT") { 
         loaded
             .then(async (x) => {
-                var savers = await serialize_utils.createSaver(true);
-                var state = await serializeAllSteps(savers.saver, true);
-                var output = await serialize_utils.saveEmbedded(state, savers.collected, true);
+                var contents = await serializeAllSteps(true);
                 postMessage({
                     type: "exportState",
-                    resp: output,
+                    resp: contents,
                     msg: "Success: application state exported"
-                }, [output]);
+                }, [contents]);
             })
             .catch(error => {
                 console.error(error);
@@ -442,9 +334,8 @@ onmessage = function (msg) {
         var title = payload.payload.title;
         loaded
             .then(async (x) => {
-                var savers = await serialize_utils.createSaver(false);
-                var state = await serializeAllSteps(savers.saver, false);
-                var output = await serialize_utils.saveLinked(state, savers.collected, title);
+                var contents = await serializeAllSteps(false);
+                let id = await kana_db.saveAnalysis(null, contents.state, contents.files, title);
                 if (id !== null) {
                     let recs = await kana_db.getRecords();
                     postMessage({
@@ -456,7 +347,7 @@ onmessage = function (msg) {
                     console.error(error);
                     postMessage({
                         type: "KanaDB_ERROR",
-                        msg: `Fail: Cannot save analysis to cache (${id})`
+                        msg: `Fail: Cannot save analysis to cache`
                     });
                 }
             })
@@ -468,6 +359,7 @@ onmessage = function (msg) {
                 });
             });
   
+    /**************** KANADB EVENTS *******************/
     } else if (payload.type == "REMOVEKDB") { // remove a saved analysis
         var id = payload.payload.id;
         kana_db.removeAnalysis(id)
@@ -491,11 +383,18 @@ onmessage = function (msg) {
     } else if (payload.type == "PREFLIGHT_INPUT") {
         loaded
         .then(x => {
-            let validation = preflight.compute(payload.payload.files.files);
+            let resp = {};
+            try {
+                resp.status = "SUCCESS";
+                resp.details = bakana.validateAnnotations(payload.payload.files.files);
+            } catch (e) {
+                resp.status = "ERROR";
+                resp.reason = e.toString();
+            }
 
             postMessage({
                 type: "PREFLIGHT_INPUT_DATA",
-                resp: validation,
+                resp: resp,
                 msg: "Success: PREFLIGHT_INPUT done"
             });
         })
@@ -506,15 +405,16 @@ onmessage = function (msg) {
                 msg: error.toString()
             });
         });
+
     /**************** OTHER EVENTS FROM UI *******************/
     } else if (payload.type == "getMarkersForCluster") {
         loaded.then(x => {
             let cluster = payload.payload.cluster;
             let rank_type = payload.payload.rank_type;
-            var resp = cluster_markers.fetchGroupResults(rank_type, cluster);
+            var resp = superstate.marker_detection.fetchGroupResults(cluster, rank_type);
       
             var transferrable = [];
-            utils.extractBuffers(resp, transferrable);
+            extractBuffers(resp, transferrable);
             postMessage({
                 type: "setMarkersForCluster",
                 resp: resp,
@@ -525,7 +425,7 @@ onmessage = function (msg) {
     } else if (payload.type == "getGeneExpression") {
         loaded.then(x => {
             let row_idx = payload.payload.gene;
-            var vec = normalization.fetchExpression(row_idx);
+            var vec = superstate.normalization.fetchExpression(row_idx);
             postMessage({
                 type: "setGeneExpression",
                 resp: {
@@ -538,7 +438,7 @@ onmessage = function (msg) {
   
     } else if (payload.type == "computeCustomMarkers") {
         loaded.then(x => {
-            custom_markers.addSelection(payload.payload.id, payload.payload.selection);
+            superstate.custom_selection.addSelection(payload.payload.id, payload.payload.selection);
             postMessage({
                 type: "computeCustomMarkers",
                 msg: "Success: COMPUTE_CUSTOM_MARKERS done"
@@ -547,9 +447,9 @@ onmessage = function (msg) {
   
     } else if (payload.type == "getMarkersForSelection") {
         loaded.then(x => {
-            var resp = custom_markers.fetchResults(payload.payload.cluster, payload.payload.rank_type);
+            var resp = superstate.custom_selection.fetchResults(payload.payload.cluster, payload.payload.rank_type);
             var transferrable = [];
-            utils.extractBuffers(resp, transferrable);
+            extractBuffers(resp, transferrable);
             postMessage({
                 type: "setMarkersForCustomSelection",
                 resp: resp,
@@ -559,50 +459,49 @@ onmessage = function (msg) {
   
     } else if (payload.type == "removeCustomMarkers") {
         loaded.then(x => {
-            custom_markers.removeSelection(payload.payload.id);
+            superstate.custom_selection.removeSelection(payload.payload.id);
         });
   
     } else if (payload.type == "animateTSNE") {
         loaded.then(async (x) => {
-            await tsne.animate();
-            var res = await tsne.results();
-            postSuccess_(res, "tsne", "Resending t-SNE coordinates");
+            await superstate.tsne.animate();
+            postMessage({
+                type: "tsne", 
+                resp: await superstate.umap.results()
+            });
         });
   
     } else if (payload.type == "animateUMAP") {
         loaded.then(async (x) => {
-            await umap.animate();
-            var res = await umap.results();
-            postSuccess_(res, "umap", "Resending UMAP coordinates");
+            await superstate.umap.animate();
+            postMessage({
+                type: "umap",
+                resp: await superstate.umap.results()
+            });
         });
 
     } else if (payload.type == "getAnnotation") {
         loaded.then(x => {
             let annot = payload.payload.annotation;
-            var vec = inputs.fetchAnnotations(annot);
+            var vec;
 
             // Filter to match QC unless requested otherwise.
             if (payload.payload.unfiltered !== false) {
-                var discard = new Set(qc.fetchDiscards().array());
-                let filterfun = (x, i) => !discard.has(i);
-                if ("factor" in vec) {
-                    vec.factor = vec.factor.filter(filterfun);
-                } else {
-                    vec = vec.filter(filterfun);
-                }
+                vec = superstate.quality_control.fetchFilteredAnnotations(annot);
+            } else {
+                vec = superstate.inputs.fetchAnnotations(annot);
             }
 
+            let extracted;
+            extractBuffers(vec, extracted);
             postMessage({
                 type: "setAnnotation",
                 resp: {
                     annotation: annot,
-                    values: {
-                        "index": vec.index,
-                        "factor": vec.factor
-                    }
+                    values: vec
                 },
                 msg: "Success: GET_ANNOTATION done"
-            }, [vec.factor.buffer]);
+            }, extracted);
         });
   
     } else {
