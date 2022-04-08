@@ -1,7 +1,7 @@
-import * as scran from "scran.js";
 import * as bakana from "bakana";
 import * as kana_db from "./KanaDBHandler.js";
 import * as downloads from "./DownloadsDBHandler.js";
+import * as hashwasm from "hash-wasm";
 
 /***************************************/
 
@@ -108,22 +108,23 @@ function runAllSteps(inputs, params) {
  
 /***************************************/
 
-async function linkKanaDb(obj) {
-    var md5 = await hashwasm.md5(new Uint8Array(obj.buffer));
-    var id = obj.type + "_" + obj.name + "_" + obj.buffer.byteLength + "_" + md5;
-    var ok = await kana_db.saveFile(id, obj.buffer);
-    if (!ok) {
-        throw "failed to save file '" + id + "' to KanaDB";
-    }
-    output.collected.push(id);
-    return id;
-};
-
-bakana.setCreateLink(linkKanaDb);
-bakana.setResolveLink(kana_db.loadFile);
+function linkKanaDb(collected) {
+    return async (type, name, buffer) => {
+        var md5 = await hashwasm.md5(new Uint8Array(buffer));
+        var id = type + "_" + name + "_" + buffer.byteLength + "_" + md5;
+        var ok = await kana_db.saveFile(id, buffer);
+        if (!ok) {
+            throw "failed to save file '" + id + "' to KanaDB";
+        }
+        collected.push(id);
+        return id;
+    };
+}
 
 async function serializeAllSteps(embedded) {
     const h5path = "serialized_in.h5";
+    let collected = [];
+    let old = bakana.setCreateLink(linkKanaDb(collected));
 
     let output;
     try {
@@ -134,15 +135,18 @@ async function serializeAllSteps(embedded) {
         } else {
             output = {
                 state: bakana.createKanaFile(h5path, null),
-                files: collected.collected
+                files: collected
             };
         }
     } finally {
         bakana.removeHDF5File(h5path);
+        bakana.setCreateLink(old);
     }
 
     return output;
 }
+
+bakana.setResolveLink(kana_db.loadFile);
  
 async function unserializeAllSteps(contents) {
     const h5path = "serialized_out.h5";
