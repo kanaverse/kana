@@ -37,7 +37,7 @@ function postSuccess(step, info) {
 
 /***************************************/
 
-let superstate;
+let superstate = null;
 
 bakana.setCellLabellingDownload(downloads.get);
 
@@ -156,50 +156,56 @@ async function unserializeAllSteps(contents) {
         let loader = await bakana.parseKanaFile(contents, h5path);
         let response = await bakana.loadAnalysis(h5path, loader, { finishFun: postSuccess });
 
+        if (superstate !== null) {
+            await bakana.freeAnalysis(superstate);
+        }
+        superstate = response.state;
+
+        let params = response.parameters;
         output = {
             qc: {
-                "qc-usemitodefault": response.quality_control.use_mito_default,
-                "qc-mito": response.quality_control.mito_prefix,
-                "qc-nmads": response.quality_control.nmads
+                "qc-usemitodefault": params.quality_control.use_mito_default,
+                "qc-mito": params.quality_control.mito_prefix,
+                "qc-nmads": params.quality_control.nmads
             },
             fSelection: {
-                "fsel-span": response.feature_selection.span
+                "fsel-span": params.feature_selection.span
             },
             pca: {
-                "pca-hvg": response.pca.num_hvgs,
-                "pca-npc": response.pca.num_pcs,
-                "pca-correction": response.pca.block_method
+                "pca-hvg": params.pca.num_hvgs,
+                "pca-npc": params.pca.num_pcs,
+                "pca-correction": params.pca.block_method
             },
             cluster: {
-                "clus-approx": response.neighbor_index.approximate,
-                "kmeans-k": response.kmeans_cluster.k,
-                "clus-k": response.snn_graph_cluster.k,
-                "clus-scheme": response.snn_graph_cluster.scheme,
-                "clus-res": response.snn_graph_cluster.resolution,
-                "clus-method": response.choose_clustering.method
+                "clus-approx": params.neighbor_index.approximate,
+                "kmeans-k": params.kmeans_cluster.k,
+                "clus-k": params.snn_graph_cluster.k,
+                "clus-scheme": params.snn_graph_cluster.scheme,
+                "clus-res": params.snn_graph_cluster.resolution,
+                "clus-method": params.choose_clustering.method
             },
             tsne: {
-                "tsne-perp": response.tsne.perplexity,
-                "tsne-iter": response.tsne.iterations,
-                "animate": response.tsne.animate
+                "tsne-perp": params.tsne.perplexity,
+                "tsne-iter": params.tsne.iterations,
+                "animate": params.tsne.animate
             },
             umap: {
-                "umap-epochs": response.umap.num_epochs,
-                "umap-nn": response.umap.num_neighbors,
-                "umap-min_dist": response.umap.min_dist,
-                "animate": response.umap.animate
+                "umap-epochs": params.umap.num_epochs,
+                "umap-nn": params.umap.num_neighbors,
+                "umap-min_dist": params.umap.min_dist,
+                "animate": params.umap.animate
             },
             annotateCells: {
-                "annotateCells-human_references": response.cell_labelling.human_references,
-                "annotateCells-mouse_references": response.cell_labelling.mouse_references
+                "annotateCells-human_references": params.cell_labelling.human_references,
+                "annotateCells-mouse_references": params.cell_labelling.mouse_references
             },
-            custom_selections: response.custom_selections
+            custom_selections: params.custom_selections
         }
     } finally {
         bakana.removeHDF5File(h5path);
     }
 
-    return response;
+    return output;
 }
 
 /***************************************/
@@ -280,10 +286,10 @@ onmessage = function (msg) {
                 .then(async (x) => {
                     const reader = new FileReaderSync();
                     let res = reader.readAsArrayBuffer(f);
-                    let response = await unserializeAllSteps(res);
+                    let params = await unserializeAllSteps(res);
                     postMessage({
                         type: "loadedParameters",
-                        resp: response
+                        resp: params
                     });
                 })
                 .catch(error => {
