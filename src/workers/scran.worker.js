@@ -503,19 +503,13 @@ onmessage = function (msg) {
     } else if (type == "animateTSNE") {
         loaded.then(async (x) => {
             await superstate.tsne.animate();
-            postMessage({
-                type: "tsne", 
-                resp: await superstate.umap.results()
-            });
+            postSuccess("tsne", await superstate.tsne.summary());
         });
   
     } else if (type == "animateUMAP") {
         loaded.then(async (x) => {
             await superstate.umap.animate();
-            postMessage({
-                type: "umap",
-                resp: await superstate.umap.results()
-            });
+            postSuccess("umap", await superstate.umap.summary());
         });
 
     } else if (type == "getAnnotation") {
