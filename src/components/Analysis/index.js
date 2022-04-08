@@ -216,18 +216,23 @@ const AnalysisDialog = ({
                 }
 
             } else if (tabSelected === "load") {
-                if (!tmpInputFiles?.[0]?.file) {
-                    setTmpInputValid(false);
+
+                if (inputText?.[0]?.file == null) {
+                    setTmpInputValid(true);
                 } else {
-                    if (loadImportFormat === "kana" &&
-                        inputText?.[0]?.file != null && !(inputText?.[0]?.file.toLowerCase().endsWith("kana")
-                        )
-                    ) {
-                        setTmpInputValid(false);
-                    } else if (loadImportFormat === "kanadb" && tmpInputFiles?.[0]?.file === null) {
+                    if (!tmpInputFiles?.[0]?.file) {
                         setTmpInputValid(false);
                     } else {
-                        setTmpInputValid(true);
+                        if (loadImportFormat === "kana" &&
+                            inputText?.[0]?.file != null && !(inputText?.[0]?.file.toLowerCase().endsWith("kana")
+                            )
+                        ) {
+                            setTmpInputValid(false);
+                        } else if (loadImportFormat === "kanadb" && tmpInputFiles?.[0]?.file === null) {
+                            setTmpInputValid(false);
+                        } else {
+                            setTmpInputValid(true);
+                        }
                     }
                 }
             }
