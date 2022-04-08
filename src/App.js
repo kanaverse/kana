@@ -252,8 +252,8 @@ const App = () => {
 
   useEffect(() => {
 
-    if (wasmInitialized && inputFiles.files != null && !initLoadState) {
-      if (tabSelected === "new") {
+    if (wasmInitialized && !initLoadState) {
+      if (inputFiles.files != null && tabSelected === "new" ) {
         scranWorker.postMessage({
           "type": "RUN",
           "payload": {
@@ -262,7 +262,7 @@ const App = () => {
           },
         });
       } else if (tabSelected === "load") {
-        if (loadParams == null || inputFiles?.reset) {
+        if (loadParams == null) {
           scranWorker.postMessage({
             "type": "LOAD",
             "payload": {
@@ -274,6 +274,10 @@ const App = () => {
           scranWorker.postMessage({
             "type": "RUN",
             "payload": {
+              "inputs": {
+                "files": null,
+                "batch": loadParams?.inputs?.batch
+              },
               "params": params
             },
           });

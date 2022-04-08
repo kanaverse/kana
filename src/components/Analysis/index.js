@@ -77,7 +77,7 @@ const AnalysisDialog = ({
             if (loadImportFormat === "kanadb") {
                 setDatasetName(props?.kanaIDBRecs[parseInt(tmpInputFiles?.[0]?.file)]?.title);
             } else {
-                setDatasetName(tmpInputFiles?.[0]?.file?.[0]?.name.split(".")[0]);
+                setDatasetName(tmpInputFiles?.[0]?.file?.name.split(".")[0]);
             }
         }
 
@@ -1179,7 +1179,7 @@ const AnalysisDialog = ({
                             >
                                 <option value="none">None</option>
                                 {
-                                    preInputFilesStatus && preInputFilesStatus?.annotations?.[row["name"]] ? 
+                                    preInputFilesStatus && preInputFilesStatus?.annotations?.[row["name"]] ?
                                         preInputFilesStatus.annotations[row["name"]].map((x, i) => <option key={i} value={x}>{x}</option>) : "-"
                                 }
                             </HTMLSelect>
