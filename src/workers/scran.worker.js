@@ -138,9 +138,7 @@ async function serializeAllSteps(embedded) {
             };
         }
     } finally {
-        if (scran.fileExists(h5path)) {
-            scran.removeFile(h5path);
-        }
+        bakana.removeHDF5File(h5path);
     }
 
     return output;
@@ -194,9 +192,7 @@ async function unserializeAllSteps(contents) {
             custom_selections: response.custom_selections
         }
     } finally {
-        if (scran.fileExists(h5path)) {
-            scran.removeFile(h5path);
-        }
+        bakana.removeHDF5File(h5path);
     }
 
     return response;
