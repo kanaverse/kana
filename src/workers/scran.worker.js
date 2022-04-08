@@ -456,7 +456,8 @@ onmessage = function (msg) {
   
     } else if (type == "getMarkersForSelection") {
         loaded.then(x => {
-            var resp = superstate.custom_selections.fetchResults(payload.cluster, payload.rank_type);
+            let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
+            var resp = superstate.custom_selections.fetchResults(payload.cluster, rank_type);
             var transferrable = [];
             extractBuffers(resp, transferrable);
             postMessage({
