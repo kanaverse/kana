@@ -252,9 +252,28 @@ onmessage = function (msg) {
                 }
             });
 
+        let down_init = downloads.initialize();
+        down_init
+            .then(result => {
+                postMessage({
+                    type: "DownloadsDB_store",
+                    resp: result,
+                    msg: "Success: DownloadsDB initialized"
+                });
+            })
+            .catch(error => {
+                console.error(error);
+                postMessage({
+                    type: "DownloadsDB_ERROR",
+                    msg: "Error: Cannot initialize DownloadsDB"
+                });
+            });
+
+
         loaded = Promise.all([
             back_init,
             kana_init,
+            down_init,
             state_init
         ]);
 
