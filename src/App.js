@@ -297,7 +297,7 @@ const App = () => {
           if (!(ffile.format)) {
             all_valid = false;
           } else {
-            if(ffile.format == "MatrixMarket") {
+            if (ffile.format == "MatrixMarket") {
               if (!ffile.mtx) {
                 all_valid = false;
               }
@@ -364,6 +364,20 @@ const App = () => {
       }
     } else if (payload.type === "quality_control_DATA") {
       const { resp } = payload;
+
+      var ranges = {}, data = resp["data"], all = {};
+
+      for (const [group, gvals] of Object.entries(data)) {
+        for (const [key, val] of Object.entries(gvals)) {
+          if (!all[key]) all[key] = [Infinity, -Infinity];
+          let [min, max] = getMinMax(val);
+          if (min < all[key][0]) all[key][0] = min;
+          if (max > all[key][1]) all[key][1] = max;
+        }
+        ranges[group] = all;
+      }
+
+      resp["ranges"] = ranges;
       setQcData(resp);
       setQcDims(`${resp.retained}`);
     } else if (payload.type === "feature_selection_DATA") {
