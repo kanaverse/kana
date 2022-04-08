@@ -275,7 +275,7 @@ onmessage = function (msg) {
         let fs = payload.inputs.files;
 
         if (fs[Object.keys(fs)[0]].format == "kana") {
-            let f = fs[Object.keys(fs)[0]].file[0];
+            let f = fs[Object.keys(fs)[0]].file;
             loaded
                 .then(async (x) => {
                     const reader = new FileReaderSync();

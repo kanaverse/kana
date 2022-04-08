@@ -87,6 +87,10 @@ const AnalysisDialog = ({
 
             if (f.format === "MatrixMarket") {
                 // do nothing for now
+                f.genes = f.gene;
+                f.annotations = f.barcode;
+                delete f.gene;
+                delete f.barcode;
             } else if (f.format === "10X") {
                 f.h5 = f.file;
                 delete f.file;

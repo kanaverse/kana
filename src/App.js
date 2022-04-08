@@ -274,7 +274,6 @@ const App = () => {
           scranWorker.postMessage({
             "type": "RUN",
             "payload": {
-              "inputs": inputFiles,
               "params": params
             },
           });
