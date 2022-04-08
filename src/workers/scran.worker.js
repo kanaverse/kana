@@ -163,6 +163,9 @@ async function unserializeAllSteps(contents) {
 
         let params = response.parameters;
         output = {
+            inputs: {
+                "batch": params.inputs.sample_factor
+            },
             qc: {
                 "qc-usemitodefault": params.quality_control.use_mito_default,
                 "qc-mito": params.quality_control.mito_prefix,
