@@ -437,8 +437,7 @@ const App = () => {
       setShowAnimation(false);
       setTriggerAnimation(false);
     } else if (payload.type === "tsne_iter" || payload.type === "umap_iter") {
-      const { resp } = payload;
-      setAnimateData(resp);
+      setAnimateData(payload);
     } else if (payload.type === "umap_DATA") {
       const { resp } = payload;
       setUmapData(resp);
