@@ -447,7 +447,7 @@ onmessage = function (msg) {
   
     } else if (type == "computeCustomMarkers") {
         loaded.then(x => {
-            superstate.custom_selection.addSelection(payload.id, payload.selection);
+            superstate.custom_selections.addSelection(payload.id, payload.selection);
             postMessage({
                 type: "computeCustomMarkers",
                 msg: "Success: COMPUTE_CUSTOM_MARKERS done"
@@ -456,7 +456,7 @@ onmessage = function (msg) {
   
     } else if (type == "getMarkersForSelection") {
         loaded.then(x => {
-            var resp = superstate.custom_selection.fetchResults(payload.cluster, payload.rank_type);
+            var resp = superstate.custom_selections.fetchResults(payload.cluster, payload.rank_type);
             var transferrable = [];
             extractBuffers(resp, transferrable);
             postMessage({
@@ -468,7 +468,7 @@ onmessage = function (msg) {
   
     } else if (type == "removeCustomMarkers") {
         loaded.then(x => {
-            superstate.custom_selection.removeSelection(payload.id);
+            superstate.custom_selections.removeSelection(payload.id);
         });
   
     } else if (type == "animateTSNE") {

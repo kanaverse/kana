@@ -327,8 +327,6 @@ const App = () => {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    console.log("MAIN RCV:", payload);
-
     if (payload?.msg) {
       let tmp = [...logs];
       let d = new Date();
