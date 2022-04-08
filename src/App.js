@@ -215,7 +215,6 @@ const App = () => {
           "files": inputFiles,
           "params": params
         },
-        "msg": "not much to pass"
       });
 
       AppToaster.show({ icon: "download", intent: "primary", message: "Exporting analysis in the background" });
@@ -232,7 +231,6 @@ const App = () => {
         "payload": {
           "title": datasetName,
         },
-        "msg": "not much to pass"
       });
 
       AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Saving analysis in the background. Note: analysis is saved within the browser!!" });
@@ -259,29 +257,26 @@ const App = () => {
         scranWorker.postMessage({
           "type": "RUN",
           "payload": {
-            "files": inputFiles,
+            "inputs": inputFiles,
             "params": params
           },
-          "msg": "not much to pass"
         });
       } else if (tabSelected === "load") {
         if (loadParams == null || inputFiles?.reset) {
           scranWorker.postMessage({
             "type": "LOAD",
             "payload": {
-              "files": inputFiles
+              "inputs": inputFiles
             },
-            "msg": "not much to pass"
           });
           setInitLoadState(true);
         } else {
           scranWorker.postMessage({
             "type": "RUN",
             "payload": {
-              "files": inputFiles,
+              "inputs": inputFiles,
               "params": params
             },
-            "msg": "not much to pass"
           });
         }
       }
@@ -302,14 +297,15 @@ const App = () => {
           if (!(ffile.format)) {
             all_valid = false;
           } else {
-            if(ffile.format == "mtx") {
+            if(ffile.format == "MatrixMarket") {
               if (!ffile.mtx) {
                 all_valid = false;
               }
-            } else if (ffile.format == "tenx" || ffile.format == "h5ad") {
+            } else if (ffile.format == "10X" || ffile.format == "H5AD") {
               if (!ffile.file) {
                 all_valid = false;
               }
+              preInputFiles.files[f].h5 = ffile.file;
             }
           }
         }
@@ -318,9 +314,8 @@ const App = () => {
           scranWorker.postMessage({
             "type": "PREFLIGHT_INPUT",
             "payload": {
-              "files": preInputFiles
+              inputs: preInputFiles
             },
-            "msg": "not much to pass"
           });
         }
       }
@@ -332,6 +327,8 @@ const App = () => {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
+    console.log("MAIN RCV:", payload);
+
     if (payload?.msg) {
       let tmp = [...logs];
       let d = new Date();
@@ -340,8 +337,14 @@ const App = () => {
       setLogs(tmp);
     }
 
-    if (payload?.type.endsWith("ERROR")) {
-      setScranError(payload);
+    const { resp } = payload;
+
+    if (resp?.status?.endsWith("ERROR")) {
+      setScranError({
+        type: payload.type,
+        msg: resp.reason
+      });
+      return;
     }
 
     if (payload.type === "INIT") {
@@ -491,7 +494,7 @@ const App = () => {
       setCellLabelData(resp);
     } else if (payload.type === "PREFLIGHT_INPUT_DATA") {
       const { resp } = payload;
-      setPreInputFilesStatus(resp);
+      setPreInputFilesStatus(resp.details);
     }
   }
 

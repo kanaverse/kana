@@ -6,6 +6,10 @@ import * as downloads from "./DownloadsDBHandler.js";
 /***************************************/
 
 function extractBuffers(object, store) {
+    if (!object) {
+        return;
+    }
+
     if (Array.isArray(object)) {
         for (const element of object) {
             extractBuffers(element, store);
@@ -68,6 +72,9 @@ function runAllSteps(inputs, params) {
         },
         neighbor_index: {
             approximate: params.cluster["clus-approx"]
+        },
+        choose_clustering: {
+            method: params.cluster["clus-method"]
         },
         tsne: {
             perplexity: params.tsne["tsne-perp"], 
@@ -199,26 +206,21 @@ async function unserializeAllSteps(contents) {
 
 var loaded;
 onmessage = function (msg) {
-    const payload = msg.data;
-    if (payload.type == "INIT") {
+    const { type, payload } = msg.data;
+    if (type == "INIT") {
         let nthreads = Math.round(navigator.hardwareConcurrency * 2 / 3);
         let back_init = bakana.initialize({ numberOfThreads: nthreads });
-        back_init 
-            .then(x => {
-                postMessage({
-                    type: payload.type,
-                    msg: "Success: bakana initialized"
-                });
-            });
 
         let state_init = back_init
-            .then(x => {
-                return bakana.createAnalysis();
-            })
+            .then(() => {
+                return bakana.createAnalysis()
+            });
+
+        state_init
             .then(x => {
                 superstate = x;
                 postMessage({
-                    type: payload.type,
+                    type: type,
                     msg: "Success: analysis state created"
                 });
             });
@@ -247,11 +249,18 @@ onmessage = function (msg) {
             state_init
         ]);
 
+        loaded.then(() => {
+            postMessage({
+                type: type,
+                msg: "Success: bakana initialized"
+            });
+        });
+
     /**************** RUNNING AN ANALYSIS *******************/
-    } else if (payload.type == "RUN") {
+    } else if (type == "RUN") {
         loaded
             .then(x => {
-                runAllSteps(payload.payload.files, payload.payload.params)
+                runAllSteps(payload.inputs, payload.params)
             })
             .catch(error => {
                 console.error(error);
@@ -262,8 +271,8 @@ onmessage = function (msg) {
             });
 
     /**************** LOADING EXISTING ANALYSES *******************/
-    } else if (payload.type == "LOAD") {
-        let fs = payload.payload.files.files;
+    } else if (type == "LOAD") {
+        let fs = payload.inputs.files;
 
         if (fs[Object.keys(fs)[0]].format == "kana") {
             let f = fs[Object.keys(fs)[0]].file[0];
@@ -312,7 +321,7 @@ onmessage = function (msg) {
         }
   
     /**************** SAVING EXISTING ANALYSES *******************/
-    } else if (payload.type == "EXPORT") { 
+    } else if (type == "EXPORT") { 
         loaded
             .then(async (x) => {
                 var contents = await serializeAllSteps(true);
@@ -330,8 +339,8 @@ onmessage = function (msg) {
                 });
             });
  
-    } else if (payload.type == "SAVEKDB") { // save analysis to inbrowser indexedDB 
-        var title = payload.payload.title;
+    } else if (type == "SAVEKDB") { // save analysis to inbrowser indexedDB 
+        var title = payload.title;
         loaded
             .then(async (x) => {
                 var contents = await serializeAllSteps(false);
@@ -360,8 +369,8 @@ onmessage = function (msg) {
             });
   
     /**************** KANADB EVENTS *******************/
-    } else if (payload.type == "REMOVEKDB") { // remove a saved analysis
-        var id = payload.payload.id;
+    } else if (type == "REMOVEKDB") { // remove a saved analysis
+        var id = payload.id;
         kana_db.removeAnalysis(id)
             .then(async (result) => {
                 if (result) {
@@ -380,13 +389,13 @@ onmessage = function (msg) {
                 }
             });
 
-    } else if (payload.type == "PREFLIGHT_INPUT") {
+    } else if (type == "PREFLIGHT_INPUT") {
         loaded
         .then(x => {
             let resp = {};
             try {
                 resp.status = "SUCCESS";
-                resp.details = bakana.validateAnnotations(payload.payload.files.files);
+                resp.details = bakana.validateAnnotations(payload.inputs.files);
             } catch (e) {
                 resp.status = "ERROR";
                 resp.reason = e.toString();
@@ -407,10 +416,10 @@ onmessage = function (msg) {
         });
 
     /**************** OTHER EVENTS FROM UI *******************/
-    } else if (payload.type == "getMarkersForCluster") {
+    } else if (type == "getMarkersForCluster") {
         loaded.then(x => {
-            let cluster = payload.payload.cluster;
-            let rank_type = payload.payload.rank_type;
+            let cluster = payload.cluster;
+            let rank_type = payload.rank_type;
             var resp = superstate.marker_detection.fetchGroupResults(cluster, rank_type);
       
             var transferrable = [];
@@ -422,9 +431,9 @@ onmessage = function (msg) {
             }, transferrable);
         });
   
-    } else if (payload.type == "getGeneExpression") {
+    } else if (type == "getGeneExpression") {
         loaded.then(x => {
-            let row_idx = payload.payload.gene;
+            let row_idx = payload.gene;
             var vec = superstate.normalization.fetchExpression(row_idx);
             postMessage({
                 type: "setGeneExpression",
@@ -436,18 +445,18 @@ onmessage = function (msg) {
             }, [vec.buffer]);
         });
   
-    } else if (payload.type == "computeCustomMarkers") {
+    } else if (type == "computeCustomMarkers") {
         loaded.then(x => {
-            superstate.custom_selection.addSelection(payload.payload.id, payload.payload.selection);
+            superstate.custom_selection.addSelection(payload.id, payload.selection);
             postMessage({
                 type: "computeCustomMarkers",
                 msg: "Success: COMPUTE_CUSTOM_MARKERS done"
             });
         });
   
-    } else if (payload.type == "getMarkersForSelection") {
+    } else if (type == "getMarkersForSelection") {
         loaded.then(x => {
-            var resp = superstate.custom_selection.fetchResults(payload.payload.cluster, payload.payload.rank_type);
+            var resp = superstate.custom_selection.fetchResults(payload.cluster, payload.rank_type);
             var transferrable = [];
             extractBuffers(resp, transferrable);
             postMessage({
@@ -457,12 +466,12 @@ onmessage = function (msg) {
             }, transferrable);
         });
   
-    } else if (payload.type == "removeCustomMarkers") {
+    } else if (type == "removeCustomMarkers") {
         loaded.then(x => {
-            superstate.custom_selection.removeSelection(payload.payload.id);
+            superstate.custom_selection.removeSelection(payload.id);
         });
   
-    } else if (payload.type == "animateTSNE") {
+    } else if (type == "animateTSNE") {
         loaded.then(async (x) => {
             await superstate.tsne.animate();
             postMessage({
@@ -471,7 +480,7 @@ onmessage = function (msg) {
             });
         });
   
-    } else if (payload.type == "animateUMAP") {
+    } else if (type == "animateUMAP") {
         loaded.then(async (x) => {
             await superstate.umap.animate();
             postMessage({
@@ -480,13 +489,13 @@ onmessage = function (msg) {
             });
         });
 
-    } else if (payload.type == "getAnnotation") {
+    } else if (type == "getAnnotation") {
         loaded.then(x => {
-            let annot = payload.payload.annotation;
+            let annot = payload.annotation;
             var vec;
 
             // Filter to match QC unless requested otherwise.
-            if (payload.payload.unfiltered !== false) {
+            if (payload.unfiltered !== false) {
                 vec = superstate.quality_control.fetchFilteredAnnotations(annot);
             } else {
                 vec = superstate.inputs.fetchAnnotations(annot);
