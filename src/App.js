@@ -79,7 +79,7 @@ const App = () => {
   // ordering of genes for the selected cluster
   const [selectedClusterIndex, setSelectedClusterIndex] = useState([]);
   // set Cluster rank-type
-  const [clusterRank, setClusterRank] = useState(null);
+  const [clusterRank, setClusterRank] = useState("cohen-min-rank");
 
   // Cluster Analysis
   // cluster assignments
@@ -290,24 +290,24 @@ const App = () => {
       if (preInputFiles.files) {
         let all_valid = true;
 
-        for (const f in preInputFiles.files) {
-          let ffile = preInputFiles.files[f];
+        // for (const f in preInputFiles.files) {
+        //   let ffile = preInputFiles.files[f];
 
-          if (!(ffile.format)) {
-            all_valid = false;
-          } else {
-            if (ffile.format == "MatrixMarket") {
-              if (!ffile.mtx) {
-                all_valid = false;
-              }
-            } else if (ffile.format == "10X" || ffile.format == "H5AD") {
-              if (!ffile.file) {
-                all_valid = false;
-              }
-              preInputFiles.files[f].h5 = ffile.file;
-            }
-          }
-        }
+        //   if (!(ffile.format)) {
+        //     all_valid = false;
+        //   } else {
+        //     if (ffile.format == "MatrixMarket") {
+        //       if (!ffile.mtx) {
+        //         all_valid = false;
+        //       }
+        //     } else if (ffile.format == "10X" || ffile.format == "H5AD") {
+        //       if (!ffile.file) {
+        //         all_valid = false;
+        //       }
+        //       preInputFiles.files[f].h5 = ffile.file;
+        //     }
+        //   }
+        // }
 
         if (all_valid && tabSelected === "new") {
           scranWorker.postMessage({
