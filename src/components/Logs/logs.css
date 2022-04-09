@@ -1,0 +1,25 @@
+
+.logs-container {
+  background-color: black;
+  background-image: radial-gradient(rgba(206, 202, 202, 0.75), black 120%);
+  padding: 2rem;
+  color: white;
+  font-family: 'Courier New', Courier, monospace;
+  /* font-weight: bold; */
+}
+
+.logs-container::after {
+  content: "";
+  position: absolute;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 2px);
+  pointer-events: none;
+}
+
+::selection {
+  background: #0080FF;
+  text-shadow: none;
+}
+
+.logs-container > pre {
+  margin: 0;
+}

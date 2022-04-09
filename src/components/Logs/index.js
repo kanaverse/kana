@@ -6,6 +6,8 @@ import {
 } from "@blueprintjs/core";
 import React, { useState } from 'react';
 
+import "./logs.css";
+
 const Logs = (props) => {
 
     const [state, setState] = useState({
@@ -36,13 +38,13 @@ const Logs = (props) => {
             >
                 <div className={Classes.DRAWER_BODY}>
                     <div className={Classes.DIALOG_BODY}>
-                        <ul className="list">
+                        <div className="logs-container">
                             {
                                 props?.logs.map((x, i) => (
-                                    <li key={i}>{x}</li>
+                                    <pre key={i}>{x}</pre>
                                 ))
                             }
-                        </ul>
+                        </div>
                     </div>
                 </div>
             </Drawer>
