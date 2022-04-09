@@ -922,68 +922,7 @@ const AnalysisDialog = ({
                                 <Checkbox defaultChecked={isCheckIncluded("mouse", "MouseRNAseq")} inline={true} label="Mouse RNA-seq"
                                     onChange={(e) => { handleCheckbox(e, "mouse", "MouseRNAseq") }} />
                             </div>
-                            {/* <select
-                                multiple={true}
-                                onChange={(e) => {
-                                    setTmpInputParams({
-                                        ...tmpInputParams,
-                                        "annotateCells": {
-                                            ...tmpInputParams["annotateCells"],
-                                            "annotateCells-human_references": [...e.target.options].filter(option => option.selected && option.value.startsWith("human_")).map(option => option.value.replace("human_", "")),
-                                            "annotateCells-mouse_references": [...e.target.options].filter(option => option.selected && option.value.startsWith("mouse_")).map(option => option.value.replace("mouse_", ""))
-                                        }
-                                    })
-                                }}
-                            // defaultValue={tmpInputParams["annotateCells"]["annotateCells-reference"]}
-                            >
-                                <option value="human_BlueprintEncode">Blueprint Encode (human)</option>
-                                <option value="human_DatabaseImmuneCellExpression">Database Immune Cell Expression (human)</option>
-                                <option value="human_HumanPrimaryCellAtlas">Human Primary Cell Atlas (human)</option>
-                                <option value="human_MonacoImmune">Monaco Immune (human)</option>
-                                <option value="human_NovershternHematopoietic">Novershtern Hematopoietic (human)</option>
-                                <option value="mouse_ImmGen">Imm Gen (mouse)</option>
-                                <option value="mouse_MouseRNAseq">Mouse RNA-seq (mouse)</option>
-                            </select> */}
                         </Label>
-
-                        {/* {tmpInputParams["annotateCells"]["annotateCells"] && tmpInputParams["annotateCells"]["annotateCells-species"] == "human" && <Label className="row-input">
-                            <Text className="text-100">
-                                <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(8)}>
-                                    Reference Dataset
-                                </span>
-                            </Text>
-                            <select
-                                multiple={true}
-                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "annotateCells": { ...tmpInputParams["annotateCells"], "annotateCells-references": [...e.target.options].filter(option => option.selected).map(option => option.value) } }) }}
-                                // defaultValue={tmpInputParams["annotateCells"]["annotateCells-reference"]}
-                            >
-                                <option value="BlueprintEncode">Blueprint Encode</option>
-                                <option value="DatabaseImmuneCellExpression">Database Immune Cell Expression</option>
-                                <option value="HumanPrimaryCellAtlas">Human Primary Cell Atlas</option>
-                                <option value="MonacoImmune">Monaco Immune</option>
-                                <option value="NovershternHematopoietic">Novershtern Hematopoietic</option>
-                            </select>
-                        </Label>
-                        }
-                        {tmpInputParams["annotateCells"]["annotateCells"] && tmpInputParams["annotateCells"]["annotateCells-species"] == "mouse" &&
-                            <Label className="row-input">
-                                <Text className="text-100">
-                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(8)}>
-                                        Reference Dataset
-                                    </span>
-                                </Text>
-                                <select
-                                    multiple={true}
-                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "annotateCells": { ...tmpInputParams["annotateCells"], "annotateCells-references": [...e.target.options].filter(option => option.selected).map(option => option.value) } }) }}
-                                    // defaultValue={tmpInputParams["annotateCells"]["annotateCells-reference"]}
-                                >
-                                    <option value="ImmGen">Imm Gen</option>
-                                    <option value="MouseRNAseq">Mouse RNA-seq</option>
-                                </select>
-                            </Label>
-                        } */}
                     </div>
                 </div>
             </div>
@@ -1047,18 +986,6 @@ const AnalysisDialog = ({
                                             ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
                                         }} />
                                 </Label>
-
-                                {/* <Label className="row-input">
-                                                            <Text className="text-100">
-                                                                <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}>
-                                                                    HDF5 format
-                                                                </span>
-                                                            </Text>
-                                                            <HTMLSelect onChange={(nval, val) => sethdfFormat(nval?.currentTarget.key)}>
-                                                                <option key="tenx">10x genomics</option>
-                                                                <option key="h5ad">H5ad</option>
-                                                            </HTMLSelect>
-                                                        </Label> */}
                             </div>
                         } />
                         <Tab id="H5AD" title="H5AD" panel={
@@ -1192,7 +1119,7 @@ const AnalysisDialog = ({
                 }
             } else {
                 return (
-                    <Cell className="cell-top">{preInputFilesStatus && preInputFilesStatus?.best_genes?.[rowIdx]}</Cell>
+                    <Cell className="cell-top">{preInputFilesStatus && preInputFilesStatus?.best_gene_fields?.[row["name"]]}</Cell>
                 )
             }
         }
@@ -1269,100 +1196,6 @@ const AnalysisDialog = ({
                                             </div>
                                         }
 
-                                        {/* {
-                                            preInputFilesStatus && tmpInputFiles.length > 1 &&
-                                            <Callout intent={preInputFilesStatus.valid ? "primary" : "danger"}
-                                                title="Batch Correction/Integrate Datasets"
-                                                style={{
-                                                    margin: '10px'
-                                                }}>
-                                                <div>
-                                                    {
-                                                        preInputFilesStatus.valid ?
-                                                            <span>Imported datasets can be integrated.</span> :
-                                                            <div>
-                                                                <span>Datasets cannot be integrated.</span>
-                                                                <ul>
-                                                                    {
-                                                                        preInputFilesStatus.errors.map((x, i) =>
-                                                                            <li key={i}>{x}</li>)
-                                                                    }
-                                                                </ul>
-                                                            </div>
-                                                    }
-
-                                                    {
-                                                        <span> These datasets contain
-                                                            <strong>{preInputFilesStatus.common_genes == 0 ? " no " : " " + preInputFilesStatus.common_genes + " "}</strong>
-                                                            common genes.</span>
-                                                    }
-
-                                                    {
-                                                        preInputFilesStatus.best_genes ?
-                                                            <div>We automagically detect features to use for integration across datasets:
-                                                                <ul>
-                                                                    {
-                                                                        tmpInputFiles.map((x, i) =>
-                                                                            <li key={i}>from <strong>{x.name}</strong>, we use <strong>{preInputFilesStatus.best_genes[i]}</strong></li>)
-                                                                    }
-                                                                </ul>
-                                                            </div>
-                                                            : " "
-                                                    }
-
-                                                    <strong>When multiple files are imported, each dataset is considered a batch.</strong>
-                                                </div>
-                                            </Callout>
-                                        } */}
-
-                                        {/* {
-                                            preInputFilesStatus && tmpInputFiles.length == 1 &&
-                                            preInputFilesStatus.annotations[0] &&
-                                            <Callout intent={"primary"}
-                                                title="Batch Correction"
-                                                style={{
-                                                    margin: '10px'
-                                                }}>
-                                                <div>
-                                                    {
-                                                        preInputFilesStatus.annotations[0] ?
-                                                            <div className="row">
-                                                                <span>Dataset contains annotations, choose a field that specifies batch or samples.
-                                                                </span>
-                                                                <span>MNN correction is the default method. Choose a different correction method
-                                                                    in the parameters step.
-                                                                </span>
-                                                                <div>
-                                                                    <Label className="row-input">
-                                                                        <Text className="text-100">
-                                                                            <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                                                                onMouseEnter={() => setShowStepHelper(1)}>
-                                                                                Choose annotation for batch (if applicable)
-                                                                            </span>
-                                                                        </Text>
-                                                                        <HTMLSelect
-                                                                            onChange={(e) => {
-                                                                                let tmp = [...tmpInputFiles];
-                                                                                tmp[0]["batch"] = e.target.value;
-                                                                                setTmpInputFiles(tmp);
-                                                                            }}
-                                                                            defaultValue={tmpInputFiles[0].batch ? tmpInputFiles[0].batch : "none"}
-                                                                        >
-                                                                            <option value="none">None</option>
-                                                                            {
-                                                                                preInputFilesStatus.annotations[0].map((x, i) => <option key={i} value={x}>{x}</option>)
-                                                                            }
-                                                                        </HTMLSelect>
-                                                                    </Label>
-                                                                </div>
-                                                            </div>
-                                                            :
-                                                            "Dataset does not contain any annotations. batch correction parameters are disabled but you can continue with the analysis."
-                                                    }
-                                                </div>
-                                            </Callout>
-                                        } */}
-
                                         {
                                             showSection == "input" &&
                                             tmpInputFiles.length > 0 &&
@@ -1419,7 +1252,7 @@ const AnalysisDialog = ({
                                                                     <Column key="files" name="files" cellRenderer={table_render_cell} />
                                                                     <Column key="format" name="format" cellRenderer={table_render_cell} />
                                                                     <Column key="action" name="action" cellRenderer={table_render_cell} />
-                                                                    <Column key="annotation" name="annotation" cellRenderer={table_render_cell} />
+                                                                    <Column key="annotation" name="annotation fields" cellRenderer={table_render_cell} />
                                                                 </Table2>
                                                             </div>
                                                             <p style={{
