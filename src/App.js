@@ -493,6 +493,19 @@ const App = () => {
       const { resp } = payload;
       setLoadParams(resp);
 
+      if (resp?.custom_selections?.selections) {
+        let cluster_count = clusterColors.length + Object.keys(resp?.custom_selections?.selections).length;
+        let cluster_colors = null;
+        if (cluster_count > Object.keys(palette).length) {
+          cluster_colors = randomColor({ luminosity: 'dark', count: cluster_count + 1 });
+        } else {
+          cluster_colors = palette[cluster_count.toString()];
+        }
+        setClusterColors(cluster_colors);
+  
+        setCustomSelection(resp?.custom_selections?.selections);
+      }
+
       setTimeout(() => {
         setInitLoadState(false);
       }, 1000);
@@ -510,18 +523,6 @@ const App = () => {
       const { resp } = payload;
       setPreInputFilesStatus(resp.details);
     } else if (payload.type === "custom_selections_DATA") {
-      const { resp } = payload;
-
-      let cluster_count = clusterColors.length + Object.keys(resp.selections).length;
-      let cluster_colors = null;
-      if (cluster_count > Object.keys(palette).length) {
-        cluster_colors = randomColor({ luminosity: 'dark', count: cluster_count + 1 });
-      } else {
-        cluster_colors = palette[cluster_count.toString()];
-      }
-      setClusterColors(cluster_colors);
-
-      setCustomSelection(resp.selections);
     }
   }
 
