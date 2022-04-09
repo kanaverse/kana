@@ -336,7 +336,7 @@ const DimPlot = (props) => {
                 setPlotFactors(tmp.factor);
             }
         }
-    }, [colorByAnotation, annotationObj, props?.clusterData,]);
+    }, [colorByAnotation, annotationObj, props?.clusterData, props?.clusterColors]);
 
     const setInteraction = (x) => {
         if (x === "SELECT") {
