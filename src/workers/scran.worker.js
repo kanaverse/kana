@@ -524,7 +524,7 @@ onmessage = function (msg) {
                 vec = superstate.inputs.fetchAnnotations(annot);
             }
 
-            let extracted;
+            let extracted = [];
             extractBuffers(vec, extracted);
             postMessage({
                 type: "setAnnotation",
