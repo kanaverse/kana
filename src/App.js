@@ -329,11 +329,19 @@ const App = () => {
   // all interactions are logged and shown on the UI
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
+    console.log(payload);
 
-    if (payload?.msg) {
+    if (payload) {
       let tmp = [...logs];
       let d = new Date();
-      tmp.push(`${d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds()} - ${payload?.type} - ${payload?.msg}`);
+      let msg = `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+      if (payload.type.indexOf("_store") != -1) {
+        tmp.push(`${msg} - Worker backend: (${payload.type.replace("_store", "")}) store initialized`);
+      } else if (payload.type.indexOf("INIT") != -1) {
+        tmp.push(`${msg} - Kana Intialized`);
+      } else {
+        tmp.push(`${msg} - Step: ${payload.type.replace("_DATA", "")} complete`);
+      }
 
       setLogs(tmp);
     }
