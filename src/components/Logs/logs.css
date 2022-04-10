@@ -1,7 +1,7 @@
 
 .logs-container {
-  background-color: black;
-  background-image: radial-gradient(rgba(206, 202, 202, 0.75), black 120%);
+  background-color: #252A31;
+  /* background-image: radial-gradient(rgba(206, 202, 202, 0.75), black 120%); */
   padding: 2rem;
   color: white;
   font-family: 'Courier New', Courier, monospace;
@@ -15,8 +15,20 @@
   pointer-events: none;
 }
 
+.logs-error {
+    color: #e8666a;
+}
+
+.logs-warn {
+    color: #faae57;
+}
+
+.logs-success {
+    color: #66f872;
+}
+
 ::selection {
-  background: #0080FF;
+  background: #70b0f0;
   text-shadow: none;
 }
 

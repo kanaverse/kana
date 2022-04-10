@@ -333,13 +333,13 @@ const App = () => {
     if (payload) {
       let tmp = [...logs];
       let d = new Date();
-      let msg = `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+      let msg = `${d.toLocaleTimeString()}`;
       if (payload.type.indexOf("_store") != -1) {
-        tmp.push(`${msg} - Kana: (${payload.type.replace("_store", "")}) store initialized`);
+        tmp.push(["info, "`${msg} - Kana: (${payload.type.replace("_store", "")}) store initialized`]);
       } else if (payload.type.indexOf("INIT") != -1) {
-        tmp.push(`${msg} - Kana: ${payload.msg.replace("Success: ", "")}`);
+        tmp.push(["warning", `${msg} - Kana: ${payload.msg.replace("Success: ", "")}`]);
       } else {
-        tmp.push(`${msg} - Step: ${payload.type.replace("_DATA", "")} complete`);
+        tmp.push(["success", `${msg} - Step: ${payload.type.replace("_DATA", "")} complete`]);
       }
 
       setLogs(tmp);
@@ -348,10 +348,16 @@ const App = () => {
     const { resp } = payload;
 
     if (resp?.status?.endsWith("ERROR")) {
+      let tmp = [...logs];
+      let d = new Date();
+      let msg = `${d.toLocaleTimeString()}`;
+      tmp.push(["error", `${msg} - Error: ${resp.reason}`]);
+
       setScranError({
         type: payload.type,
         msg: resp.reason
       });
+
       return;
     }
 

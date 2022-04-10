@@ -41,7 +41,7 @@ const Logs = (props) => {
                         <div className="logs-container">
                             {
                                 props?.logs.map((x, i) => (
-                                    <pre key={i}>{x}</pre>
+                                    <pre className={`logs-${x[0]}`} key={i}>{x[1]}</pre>
                                 ))
                             }
                         </div>
