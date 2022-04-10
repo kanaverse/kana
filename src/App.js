@@ -293,26 +293,6 @@ const App = () => {
 
       if (preInputFiles.files) {
         let all_valid = true;
-
-        // for (const f in preInputFiles.files) {
-        //   let ffile = preInputFiles.files[f];
-
-        //   if (!(ffile.format)) {
-        //     all_valid = false;
-        //   } else {
-        //     if (ffile.format == "MatrixMarket") {
-        //       if (!ffile.mtx) {
-        //         all_valid = false;
-        //       }
-        //     } else if (ffile.format == "10X" || ffile.format == "H5AD") {
-        //       if (!ffile.file) {
-        //         all_valid = false;
-        //       }
-        //       preInputFiles.files[f].h5 = ffile.file;
-        //     }
-        //   }
-        // }
-
         if (all_valid && tabSelected === "new") {
           scranWorker.postMessage({
             "type": "PREFLIGHT_INPUT",
@@ -335,9 +315,9 @@ const App = () => {
       let d = new Date();
       let msg = `${d.toLocaleTimeString()}`;
       if (payload.type.indexOf("_store") != -1) {
-        tmp.push(["info, "`${msg} - Kana: (${payload.type.replace("_store", "")}) store initialized`]);
+        tmp.push(["info", `${msg} - Kana: (${payload.type.replace("_store", "")}) store initialized`]);
       } else if (payload.type.indexOf("INIT") != -1) {
-        tmp.push(["warning", `${msg} - Kana: ${payload.msg.replace("Success: ", "")}`]);
+        tmp.push(["info", `${msg} - Kana: ${payload.msg.replace("Success: ", "")}`]);
       } else {
         tmp.push(["success", `${msg} - Step: ${payload.type.replace("_DATA", "")} complete`]);
       }
