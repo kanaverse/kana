@@ -324,19 +324,19 @@ const DimPlot = (props) => {
                 props?.setReqAnnotation(colorByAnotation);
             } else {
                 let tmp = annotationObj[colorByAnotation];
-                setPlotGroups(tmp.index);
+                setPlotGroups(tmp.levels);
 
                 let cluster_colors;
-                if (tmp.index.length > Object.keys(palette).length) {
-                    cluster_colors = randomColor({ luminosity: 'dark', count: tmp.index.length + 1 });
+                if (tmp.levels.length > Object.keys(palette).length) {
+                    cluster_colors = randomColor({ luminosity: 'dark', count: tmp.levels.length + 1 });
                 } else {
-                    cluster_colors = palette[tmp.index.length.toString()];
+                    cluster_colors = palette[tmp.levels.length.toString()];
                 }
                 setPlotColorMappings(cluster_colors);
-                setPlotFactors(tmp.factor);
+                setPlotFactors(tmp.index);
             }
         }
-    }, [colorByAnotation, annotationObj, props?.clusterData,]);
+    }, [colorByAnotation, annotationObj, props?.clusterData, props?.clusterColors]);
 
     const setInteraction = (x) => {
         if (x === "SELECT") {

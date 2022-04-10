@@ -34,7 +34,7 @@ const AppContextProvider = ({ children }) => {
       "clus-k": 10,
       "kmeans-k": 10,
       "clus-res": 0.5,
-      "clus-scheme": 0,
+      "clus-scheme": "rank",
       "clus-approx": true,
       "clus-method": "snn_graph",
     },

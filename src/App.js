@@ -79,7 +79,7 @@ const App = () => {
   // ordering of genes for the selected cluster
   const [selectedClusterIndex, setSelectedClusterIndex] = useState([]);
   // set Cluster rank-type
-  const [clusterRank, setClusterRank] = useState(null);
+  const [clusterRank, setClusterRank] = useState("cohen-min-rank");
 
   // Cluster Analysis
   // cluster assignments
@@ -215,7 +215,6 @@ const App = () => {
           "files": inputFiles,
           "params": params
         },
-        "msg": "not much to pass"
       });
 
       AppToaster.show({ icon: "download", intent: "primary", message: "Exporting analysis in the background" });
@@ -232,7 +231,6 @@ const App = () => {
         "payload": {
           "title": datasetName,
         },
-        "msg": "not much to pass"
       });
 
       AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Saving analysis in the background. Note: analysis is saved within the browser!!" });
@@ -254,34 +252,34 @@ const App = () => {
 
   useEffect(() => {
 
-    if (wasmInitialized && inputFiles.files != null && !initLoadState) {
-      if (tabSelected === "new") {
+    if (wasmInitialized && !initLoadState) {
+      if (inputFiles.files != null && tabSelected === "new" ) {
         scranWorker.postMessage({
           "type": "RUN",
           "payload": {
-            "files": inputFiles,
+            "inputs": inputFiles,
             "params": params
           },
-          "msg": "not much to pass"
         });
       } else if (tabSelected === "load") {
-        if (loadParams == null || inputFiles?.reset) {
+        if (loadParams == null) {
           scranWorker.postMessage({
             "type": "LOAD",
             "payload": {
-              "files": inputFiles
+              "inputs": inputFiles
             },
-            "msg": "not much to pass"
           });
           setInitLoadState(true);
         } else {
           scranWorker.postMessage({
             "type": "RUN",
             "payload": {
-              "files": inputFiles,
+              "inputs": {
+                "files": null,
+                "batch": loadParams?.inputs?.batch
+              },
               "params": params
             },
-            "msg": "not much to pass"
           });
         }
       }
@@ -295,32 +293,12 @@ const App = () => {
 
       if (preInputFiles.files) {
         let all_valid = true;
-
-        for (const f in preInputFiles.files) {
-          let ffile = preInputFiles.files[f];
-
-          if (!(ffile.format)) {
-            all_valid = false;
-          } else {
-            if(ffile.format == "mtx") {
-              if (!ffile.mtx) {
-                all_valid = false;
-              }
-            } else if (ffile.format == "tenx" || ffile.format == "h5ad") {
-              if (!ffile.file) {
-                all_valid = false;
-              }
-            }
-          }
-        }
-
         if (all_valid && tabSelected === "new") {
           scranWorker.postMessage({
             "type": "PREFLIGHT_INPUT",
             "payload": {
-              "files": preInputFiles
+              inputs: preInputFiles
             },
-            "msg": "not much to pass"
           });
         }
       }
@@ -332,16 +310,35 @@ const App = () => {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    if (payload?.msg) {
+    if (payload) {
       let tmp = [...logs];
       let d = new Date();
-      tmp.push(`${d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds()} - ${payload?.type} - ${payload?.msg}`);
+      let msg = `${d.toLocaleTimeString()}`;
+      if (payload.type.indexOf("_store") != -1) {
+        tmp.push(["info", `${msg} - Kana: (${payload.type.replace("_store", "")}) store initialized`]);
+      } else if (payload.type.indexOf("INIT") != -1) {
+        tmp.push(["info", `${msg} - Kana: ${payload.msg.replace("Success: ", "")}`]);
+      } else {
+        tmp.push(["success", `${msg} - Step: ${payload.type.replace("_DATA", "")} complete`]);
+      }
 
       setLogs(tmp);
     }
 
-    if (payload?.type.endsWith("ERROR")) {
-      setScranError(payload);
+    const { resp } = payload;
+
+    if (resp?.status?.endsWith("ERROR")) {
+      let tmp = [...logs];
+      let d = new Date();
+      let msg = `${d.toLocaleTimeString()}`;
+      tmp.push(["error", `${msg} - Error: ${resp.reason}`]);
+
+      setScranError({
+        type: payload.type,
+        msg: resp.reason
+      });
+
+      return;
     }
 
     if (payload.type === "INIT") {
@@ -363,6 +360,20 @@ const App = () => {
       }
     } else if (payload.type === "quality_control_DATA") {
       const { resp } = payload;
+
+      var ranges = {}, data = resp["data"], all = {};
+
+      for (const [group, gvals] of Object.entries(data)) {
+        for (const [key, val] of Object.entries(gvals)) {
+          if (!all[key]) all[key] = [Infinity, -Infinity];
+          let [min, max] = getMinMax(val);
+          if (min < all[key][0]) all[key][0] = min;
+          if (max > all[key][1]) all[key][1] = max;
+        }
+        ranges[group] = all;
+      }
+
+      resp["ranges"] = ranges;
       setQcData(resp);
       setQcDims(`${resp.retained}`);
     } else if (payload.type === "feature_selection_DATA") {
@@ -419,8 +430,7 @@ const App = () => {
       setShowAnimation(false);
       setTriggerAnimation(false);
     } else if (payload.type === "tsne_iter" || payload.type === "umap_iter") {
-      const { resp } = payload;
-      setAnimateData(resp);
+      setAnimateData(payload);
     } else if (payload.type === "umap_DATA") {
       const { resp } = payload;
       setUmapData(resp);
@@ -476,6 +486,19 @@ const App = () => {
       const { resp } = payload;
       setLoadParams(resp);
 
+      if (resp?.custom_selections?.selections) {
+        let cluster_count = clusterColors.length + Object.keys(resp?.custom_selections?.selections).length;
+        let cluster_colors = null;
+        if (cluster_count > Object.keys(palette).length) {
+          cluster_colors = randomColor({ luminosity: 'dark', count: cluster_count + 1 });
+        } else {
+          cluster_colors = palette[cluster_count.toString()];
+        }
+        setClusterColors(cluster_colors);
+  
+        setCustomSelection(resp?.custom_selections?.selections);
+      }
+
       setTimeout(() => {
         setInitLoadState(false);
       }, 1000);
@@ -491,7 +514,8 @@ const App = () => {
       setCellLabelData(resp);
     } else if (payload.type === "PREFLIGHT_INPUT_DATA") {
       const { resp } = payload;
-      setPreInputFilesStatus(resp);
+      setPreInputFilesStatus(resp.details);
+    } else if (payload.type === "custom_selections_DATA") {
     }
   }
 

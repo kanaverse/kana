@@ -1,7 +1,7 @@
 {
   "name": "kana",
   "description": "Single cell data analysis in the browser",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "author": {
     "name": "Jayaram Kancherla",
@@ -29,6 +29,7 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "bakana": "^0.2.1",
     "comlink": "^4.3.1",
     "d3": "^7.1.1",
     "d3-dsv": "^3.0.1",
@@ -42,8 +43,6 @@
     "react-dom": "^17.0.2",
     "react-scripts": "5.0.0",
     "react-virtuoso": "^2.3.1",
-    "scran.js": "0.0.19",
-    "wasmarrays.js": "0.0.2",
     "web-vitals": "^1.0.1",
     "workbox-background-sync": "^5.1.3",
     "workbox-broadcast-update": "^5.1.3",

@@ -1,0 +1,41 @@
+
+.logs-container {
+  background-color: #252A31;
+  /* background-image: radial-gradient(rgba(206, 202, 202, 0.75), black 120%); */
+  padding: 2rem;
+  color: white;
+  font-family: 'Courier New', Courier, monospace;
+  /* font-weight: bold; */
+}
+
+.logs-container::after {
+  content: "";
+  position: absolute;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 2px);
+  pointer-events: none;
+}
+
+.logs-error {
+    color: #f38286;
+}
+
+.logs-warn {
+    color: #f4b875;
+}
+
+.logs-success {
+    color: #70f87c;
+}
+
+.logs-info {
+    color: #76b6f7;
+}
+
+::selection {
+  background: #70b0f0;
+  text-shadow: none;
+}
+
+.logs-container > pre {
+  margin: 0;
+}

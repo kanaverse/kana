@@ -31,7 +31,7 @@ const AnalysisDialog = ({
     let [tmpInputValid, setTmpInputValid] = useState(true);
     let [stmpInputValid, ssetTmpInputValid] = useState(true);
 
-    const [newImportFormat, setNewImportFormat] = useState("mtx");
+    const [newImportFormat, setNewImportFormat] = useState("MatrixMarket");
     const [loadImportFormat, setLoadImportFormat] = useState("kana");
     // const [hdfFormat, sethdfFormat] = useState("tenx");
 
@@ -42,8 +42,8 @@ const AnalysisDialog = ({
 
     const [sinputText, ssetInputText] = useState({
         mtx: "Choose Matrix Market file",
-        gene: "Choose feature/gene annotation",
-        barcode: "Choose barcode annotation",
+        genes: "Choose feature/gene file",
+        annotations: "Choose barcode/annotation file",
     });
 
     let [stmpInputFiles, ssetTmpInputFiles] = useState({
@@ -77,7 +77,7 @@ const AnalysisDialog = ({
             if (loadImportFormat === "kanadb") {
                 setDatasetName(props?.kanaIDBRecs[parseInt(tmpInputFiles?.[0]?.file)]?.title);
             } else {
-                setDatasetName(tmpInputFiles?.[0]?.file?.[0]?.name.split(".")[0]);
+                setDatasetName(tmpInputFiles?.[0]?.file?.name.split(".")[0]);
             }
         }
 
@@ -88,7 +88,6 @@ const AnalysisDialog = ({
 
         setInputFiles({
             "files": mapFiles,
-            "reset": tabSelected === "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file,
             "batch": tabSelected === "new" ? Object.keys(mapFiles).length == 1 ?
                 mapFiles[Object.keys(mapFiles)[0]]?.batch == undefined || mapFiles[Object.keys(mapFiles)[0]]?.batch == "none"
                     ? null : mapFiles[Object.keys(mapFiles)[0]]?.batch : null : null,
@@ -108,8 +107,8 @@ const AnalysisDialog = ({
         } else if (currTab === "load") {
             setInputText([{
                 mtx: "Choose Matrix Market file",
-                gene: "Choose feature/gene annotation",
-                barcode: "Choose barcode annotation",
+                genes: "Choose feature/gene file",
+                annotations: "Choose barcode/annotation file",
             }]);
 
             setTmpInputFiles([{
@@ -171,30 +170,30 @@ const AnalysisDialog = ({
                         (x?.mtx && !(inputText[ix]?.mtx.toLowerCase().endsWith("mtx") ||
                             inputText[ix]?.mtx.toLowerCase().endsWith("mtx.gz")
                         )) ||
-                        (x?.gene && !(inputText[ix]?.gene.toLowerCase().endsWith("tsv") ||
-                            inputText[ix]?.gene.toLowerCase().endsWith("tsv.gz")
+                        (x?.genes && !(inputText[ix]?.genes.toLowerCase().endsWith("tsv") ||
+                            inputText[ix]?.genes.toLowerCase().endsWith("tsv.gz")
                         )) ||
-                        (x?.barcode && !(inputText[ix]?.barcode.toLowerCase().endsWith("tsv") ||
-                            inputText[ix]?.barcode.toLowerCase().endsWith("tsv.gz")
+                        (x?.annotations && !(inputText[ix]?.annotations.toLowerCase().endsWith("tsv") ||
+                            inputText[ix]?.annotations.toLowerCase().endsWith("tsv.gz")
                         ))
                     ) {
                         all_valid = false;
                     }
 
                     if (
-                        x?.file && !(
-                            inputText[ix]?.file.toLowerCase().endsWith("hdf5") ||
-                            inputText[ix]?.file.toLowerCase().endsWith("h5") ||
-                            inputText[ix]?.file.toLowerCase().endsWith("h5ad")
+                        x?.h5 && !(
+                            inputText[ix]?.h5.toLowerCase().endsWith("hdf5") ||
+                            inputText[ix]?.h5.toLowerCase().endsWith("h5") ||
+                            inputText[ix]?.h5.toLowerCase().endsWith("h5ad")
                         )
                     ) {
                         all_valid = false;
                     }
 
-                    if (x.format === "mtx") {
+                    if (x.format === "MatrixMarket") {
                         if (!x.mtx) all_valid = false;
                     } else {
-                        if (!x.file) all_valid = false;
+                        if (!x.h5) all_valid = false;
                     }
                 };
 
@@ -213,23 +212,27 @@ const AnalysisDialog = ({
 
                     setPreInputFiles({
                         "files": mapFiles,
-                        "reset": tabSelected === "new" ? false : tmpInputFiles?.file !== inputFiles?.files?.file
                     });
                 }
 
             } else if (tabSelected === "load") {
-                if (!tmpInputFiles?.[0]?.file) {
-                    setTmpInputValid(false);
+
+                if (inputText?.[0]?.file == null) {
+                    setTmpInputValid(true);
                 } else {
-                    if (loadImportFormat === "kana" &&
-                        inputText?.[0]?.file != null && !(inputText?.[0]?.file.toLowerCase().endsWith("kana")
-                        )
-                    ) {
-                        setTmpInputValid(false);
-                    } else if (loadImportFormat === "kanadb" && tmpInputFiles?.[0]?.file === null) {
+                    if (!tmpInputFiles?.[0]?.file) {
                         setTmpInputValid(false);
                     } else {
-                        setTmpInputValid(true);
+                        if (loadImportFormat === "kana" &&
+                            inputText?.[0]?.file != null && !(inputText?.[0]?.file.toLowerCase().endsWith("kana")
+                            )
+                        ) {
+                            setTmpInputValid(false);
+                        } else if (loadImportFormat === "kanadb" && tmpInputFiles?.[0]?.file === null) {
+                            setTmpInputValid(false);
+                        } else {
+                            setTmpInputValid(true);
+                        }
                     }
                 }
             }
@@ -248,27 +251,27 @@ const AnalysisDialog = ({
             if (tabSelected === "new") {
                 let all_valid = true;
                 let x = stmpInputFiles;
-                if (x.format === "mtx") {
+                if (x.format === "MatrixMarket") {
                     if (
                         (x?.mtx && !(sinputText?.mtx.toLowerCase().endsWith("mtx") ||
                             sinputText?.mtx.toLowerCase().endsWith("mtx.gz")
                         )) ||
-                        (x?.gene && !(sinputText?.gene.toLowerCase().endsWith("tsv") ||
-                            sinputText?.gene.toLowerCase().endsWith("tsv.gz")
+                        (x?.genes && !(sinputText?.genes.toLowerCase().endsWith("tsv") ||
+                            sinputText?.genes.toLowerCase().endsWith("tsv.gz")
                         )) ||
-                        (x?.barcode && !(sinputText?.barcode.toLowerCase().endsWith("tsv") ||
-                            sinputText?.barcode.toLowerCase().endsWith("tsv.gz")
+                        (x?.annotations && !(sinputText?.annotations.toLowerCase().endsWith("tsv") ||
+                            sinputText?.annotations.toLowerCase().endsWith("tsv.gz")
                         ))
                     ) {
                         all_valid = false;
                     }
 
                     // if (!x.mtx) all_valid = false;
-                } else if (x.format === "tenx") {
+                } else if (x.format === "10X") {
 
-                    if (x?.file && !(
-                        sinputText?.file.toLowerCase().endsWith("hdf5") ||
-                        sinputText?.file.toLowerCase().endsWith("h5")
+                    if (x?.h5 && !(
+                        sinputText?.h5.toLowerCase().endsWith("hdf5") ||
+                        sinputText?.h5.toLowerCase().endsWith("h5")
                     )
                     ) {
                         all_valid = false;
@@ -277,9 +280,9 @@ const AnalysisDialog = ({
                     // if (!x.file) all_valid = false;
 
                 } else if (
-                    x.format === "h5ad") {
-                    if (x?.file && !(
-                        sinputText?.file.toLowerCase().endsWith("h5ad")
+                    x.format === "H5AD") {
+                    if (x?.h5 && !(
+                        sinputText?.h5.toLowerCase().endsWith("h5ad")
                     )
                     ) {
                         all_valid = false;
@@ -726,9 +729,9 @@ const AnalysisDialog = ({
                                     onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-scheme": parseInt(e.target.value) } }) }}
                                     defaultValue={tmpInputParams["cluster"]["clus-scheme"]}
                                 >
-                                    <option value="0">Rank</option>
-                                    <option value="1">Number</option>
-                                    <option value="2">Jaccard</option>
+                                    <option value="rank">Rank</option>
+                                    <option value="number">Number</option>
+                                    <option value="jaccard">Jaccard</option>
                                 </HTMLSelect>
                             </Label>
                             <Label className="row-input">
@@ -919,68 +922,7 @@ const AnalysisDialog = ({
                                 <Checkbox defaultChecked={isCheckIncluded("mouse", "MouseRNAseq")} inline={true} label="Mouse RNA-seq"
                                     onChange={(e) => { handleCheckbox(e, "mouse", "MouseRNAseq") }} />
                             </div>
-                            {/* <select
-                                multiple={true}
-                                onChange={(e) => {
-                                    setTmpInputParams({
-                                        ...tmpInputParams,
-                                        "annotateCells": {
-                                            ...tmpInputParams["annotateCells"],
-                                            "annotateCells-human_references": [...e.target.options].filter(option => option.selected && option.value.startsWith("human_")).map(option => option.value.replace("human_", "")),
-                                            "annotateCells-mouse_references": [...e.target.options].filter(option => option.selected && option.value.startsWith("mouse_")).map(option => option.value.replace("mouse_", ""))
-                                        }
-                                    })
-                                }}
-                            // defaultValue={tmpInputParams["annotateCells"]["annotateCells-reference"]}
-                            >
-                                <option value="human_BlueprintEncode">Blueprint Encode (human)</option>
-                                <option value="human_DatabaseImmuneCellExpression">Database Immune Cell Expression (human)</option>
-                                <option value="human_HumanPrimaryCellAtlas">Human Primary Cell Atlas (human)</option>
-                                <option value="human_MonacoImmune">Monaco Immune (human)</option>
-                                <option value="human_NovershternHematopoietic">Novershtern Hematopoietic (human)</option>
-                                <option value="mouse_ImmGen">Imm Gen (mouse)</option>
-                                <option value="mouse_MouseRNAseq">Mouse RNA-seq (mouse)</option>
-                            </select> */}
                         </Label>
-
-                        {/* {tmpInputParams["annotateCells"]["annotateCells"] && tmpInputParams["annotateCells"]["annotateCells-species"] == "human" && <Label className="row-input">
-                            <Text className="text-100">
-                                <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(8)}>
-                                    Reference Dataset
-                                </span>
-                            </Text>
-                            <select
-                                multiple={true}
-                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "annotateCells": { ...tmpInputParams["annotateCells"], "annotateCells-references": [...e.target.options].filter(option => option.selected).map(option => option.value) } }) }}
-                                // defaultValue={tmpInputParams["annotateCells"]["annotateCells-reference"]}
-                            >
-                                <option value="BlueprintEncode">Blueprint Encode</option>
-                                <option value="DatabaseImmuneCellExpression">Database Immune Cell Expression</option>
-                                <option value="HumanPrimaryCellAtlas">Human Primary Cell Atlas</option>
-                                <option value="MonacoImmune">Monaco Immune</option>
-                                <option value="NovershternHematopoietic">Novershtern Hematopoietic</option>
-                            </select>
-                        </Label>
-                        }
-                        {tmpInputParams["annotateCells"]["annotateCells"] && tmpInputParams["annotateCells"]["annotateCells-species"] == "mouse" &&
-                            <Label className="row-input">
-                                <Text className="text-100">
-                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(8)}>
-                                        Reference Dataset
-                                    </span>
-                                </Text>
-                                <select
-                                    multiple={true}
-                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "annotateCells": { ...tmpInputParams["annotateCells"], "annotateCells-references": [...e.target.options].filter(option => option.selected).map(option => option.value) } }) }}
-                                    // defaultValue={tmpInputParams["annotateCells"]["annotateCells-reference"]}
-                                >
-                                    <option value="ImmGen">Imm Gen</option>
-                                    <option value="MouseRNAseq">Mouse RNA-seq</option>
-                                </select>
-                            </Label>
-                        } */}
                     </div>
                 </div>
             </div>
@@ -989,149 +931,6 @@ const AnalysisDialog = ({
 
     const [showSection, setShowSection] = useState("input");
 
-    function get_new_input_files(idx, input) {
-        return (
-            <div className="col"
-                key={idx}
-                style={{
-                    // paddingTop: '10px',
-                    paddingBottom: '15px'
-                }}>
-                <div>
-                    <H5><Tag round={true}>1</Tag>
-                        <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                            onMouseEnter={() => setShowStepHelper(1)}>
-                            Load input files
-                        </span>
-                    </H5>
-                    {/* {tmpInputFiles.length > 1 &&
-                        <div className="row">
-                            <Label className="row-input">
-                                <Text className="text-100">
-                                    <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(1)}>
-                                        Name this dataset
-                                    </span>
-                                </Text>
-                                <InputGroup
-                                    placeholder="name this dataset"
-                                    fill={false}
-                                    onChange={(nval, val) => {
-                                        let tmp = [...tmpInputFiles];
-                                        tmp[idx]["name"] = nval?.target?.value;
-                                        setTmpInputFiles(tmp);
-                                    }}
-                                    value={tmpInputFiles[idx]["name"]}
-                                />
-                            </Label>
-                        </div>
-                    } */}
-                    <Tabs
-                        animate={true}
-                        renderActiveTabPanelOnly={true}
-                        vertical={true}
-                        onChange={(ntab, otab) => {
-                            let tmp = [...tmpInputFiles];
-                            tmp[idx]["format"] = ntab;
-                            setTmpInputFiles(tmp);
-
-                            handleNewImportTab(ntab, otab);
-                        }}
-                        defaultSelectedTabId={newImportFormat}
-                    >
-                        <Tab id="mtx" title="Matrix Market file" panel={
-                            <div className="row"
-                            >
-                                <Label className="row-input">
-                                    <FileInput text={inputText[idx].mtx} onInputChange={(msg) => {
-                                        let tmp = [...tmpInputFiles];
-                                        tmp[idx]["mtx"] = msg.target.files;
-                                        setTmpInputFiles(tmp);
-
-                                        let tmpitext = [...inputText];
-                                        tmpitext[idx]["mtx"] = msg.target.files[0].name;
-                                        setInputText(tmpitext);
-                                        // setInputText({ ...inputText, "mtx": msg.target.files[0].name }); 
-                                        // setTmpInputFiles({ ...tmpInputFiles, "mtx": msg.target.files }) 
-                                    }} />
-                                </Label>
-                                <Label className="row-input">
-                                    <FileInput text={inputText[idx].gene} onInputChange={(msg) => {
-                                        let tmp = [...tmpInputFiles];
-                                        tmp[idx]["gene"] = msg.target.files;
-                                        setTmpInputFiles(tmp);
-
-                                        let tmpitext = [...inputText];
-                                        tmpitext[idx]["gene"] = msg.target.files[0].name;
-                                        setInputText(tmpitext);
-                                        // setInputText({ ...inputText, "gene": msg.target.files[0].name }); 
-                                        // setTmpInputFiles({ ...tmpInputFiles, "gene": msg.target.files }) 
-                                    }} />
-                                </Label>
-                                <Label className="row-input">
-                                    <FileInput text={inputText[idx].barcode} onInputChange={(msg) => {
-                                        let tmp = [...tmpInputFiles];
-                                        tmp[idx]["barcode"] = msg.target.files;
-                                        setTmpInputFiles(tmp);
-
-                                        let tmpitext = [...inputText];
-                                        tmpitext[idx]["barcode"] = msg.target.files[0].name;
-                                        setInputText(tmpitext);
-                                        // setInputText({ ...inputText, "barcode": msg.target.files[0].name }); 
-                                        // setTmpInputFiles({ ...tmpInputFiles, "barcode": msg.target.files }) 
-                                    }} />
-                                </Label>
-                            </div>
-                        } />
-                        <Tab id="tenx" title="10x HDF5 matrix" panel={
-                            <div className="row"
-                            >
-                                <Label className="row-input">
-                                    <FileInput style={{
-                                        marginTop: '5px'
-                                    }}
-                                        text={inputText[idx].file}
-                                        onInputChange={(msg) => {
-                                            let tmp = [...tmpInputFiles];
-                                            tmp[idx]["file"] = msg.target.files;
-                                            setTmpInputFiles(tmp);
-
-                                            let tmpitext = [...inputText];
-                                            tmpitext[idx]["file"] = msg.target.files[0].name;
-                                            setInputText(tmpitext);
-                                            // setInputText({ ...inputText, "file": msg.target.files[0].name });
-                                            // setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files })
-                                        }} />
-                                </Label>
-                            </div>
-                        } />
-                        <Tab id="h5ad" title="H5AD" panel={
-                            <div className="row"
-                            >
-                                <Label className="row-input">
-                                    <FileInput style={{
-                                        marginTop: '5px'
-                                    }}
-                                        text={inputText[idx].file}
-                                        onInputChange={(msg) => {
-                                            let tmp = [...tmpInputFiles];
-                                            tmp[idx]["file"] = msg.target.files;
-                                            setTmpInputFiles(tmp);
-
-                                            let tmpitext = [...inputText];
-                                            tmpitext[idx]["file"] = msg.target.files[0].name;
-                                            setInputText(tmpitext);
-                                            // setInputText({ ...inputText, "file": msg.target.files[0].name });
-                                            // setTmpInputFiles({ ...tmpInputFiles, "file": msg.target.files })
-                                        }} />
-                                </Label>
-                            </div>
-                        } />
-                    </Tabs>
-                </div>
-            </div>
-        )
-    }
 
     function get_inputs_import() {
         return (
@@ -1160,58 +959,46 @@ const AnalysisDialog = ({
                         }}
                         defaultSelectedTabId={newImportFormat}
                     >
-                        <Tab id="mtx" title="Matrix Market file" panel={
+                        <Tab id="MatrixMarket" title="Matrix Market file" panel={
                             <div className="row"
                             >
                                 <Label className="row-input">
-                                    <FileInput text={sinputText.mtx} onInputChange={(msg) => { ssetInputText({ ...sinputText, "mtx": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "mtx": msg.target.files }) }} />
+                                    <FileInput text={sinputText.mtx} onInputChange={(msg) => { ssetInputText({ ...sinputText, "mtx": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "mtx": msg.target.files[0] }) }} />
                                 </Label>
                                 <Label className="row-input">
-                                    <FileInput text={sinputText.gene} onInputChange={(msg) => { ssetInputText({ ...sinputText, "gene": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "gene": msg.target.files }) }} />
+                                    <FileInput text={sinputText.genes} onInputChange={(msg) => { ssetInputText({ ...sinputText, "genes": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "genes": msg.target.files[0] }) }} />
                                 </Label>
                                 <Label className="row-input">
-                                    <FileInput text={sinputText.barcode} onInputChange={(msg) => { ssetInputText({ ...sinputText, "barcode": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "barcode": msg.target.files }) }} />
+                                    <FileInput text={sinputText.annotations} onInputChange={(msg) => { ssetInputText({ ...sinputText, "annotations": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "annotations": msg.target.files[0] }) }} />
                                 </Label>
                             </div>
                         } />
-                        <Tab id="tenx" title="10x HDF5 matrix" panel={
+                        <Tab id="10X" title="10x HDF5 matrix" panel={
                             <div className="row"
                             >
                                 <Label className="row-input">
                                     <FileInput style={{
                                         marginTop: '5px'
                                     }}
-                                        text={sinputText.file}
+                                        text={sinputText.h5}
                                         onInputChange={(msg) => {
-                                            ssetInputText({ ...sinputText, "file": msg.target.files[0].name });
-                                            ssetTmpInputFiles({ ...stmpInputFiles, "file": msg.target.files })
+                                            ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
+                                            ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
                                         }} />
                                 </Label>
-
-                                {/* <Label className="row-input">
-                                                            <Text className="text-100">
-                                                                <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight': 'row-tooltip'}>
-                                                                    HDF5 format
-                                                                </span>
-                                                            </Text>
-                                                            <HTMLSelect onChange={(nval, val) => sethdfFormat(nval?.currentTarget.key)}>
-                                                                <option key="tenx">10x genomics</option>
-                                                                <option key="h5ad">H5ad</option>
-                                                            </HTMLSelect>
-                                                        </Label> */}
                             </div>
                         } />
-                        <Tab id="h5ad" title="H5AD" panel={
+                        <Tab id="H5AD" title="H5AD" panel={
                             <div className="row"
                             >
                                 <Label className="row-input">
                                     <FileInput style={{
                                         marginTop: '5px'
                                     }}
-                                        text={sinputText.file}
+                                        text={sinputText.h5}
                                         onInputChange={(msg) => {
-                                            ssetInputText({ ...sinputText, "file": msg.target.files[0].name });
-                                            ssetTmpInputFiles({ ...stmpInputFiles, "file": msg.target.files })
+                                            ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
+                                            ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
                                         }} />
                                 </Label>
                             </div>
@@ -1266,20 +1053,20 @@ const AnalysisDialog = ({
             )
         } else if (key == "file") {
             let tname = ""
-            if (row["format"] == "mtx") {
+            if (row["format"] == "MatrixMarket") {
                 if (row.mtx) {
-                    tname += ` mtx: ${row.mtx[0].name} `;
+                    tname += ` mtx: ${row.mtx.name} `;
                 }
 
-                if (row.gene) {
-                    tname += ` gene: ${row.gene[0].name} `;
+                if (row.genes) {
+                    tname += ` genes: ${row.genes.name} `;
                 }
 
-                if (row.barcode) {
-                    tname += ` barcode: ${row.barcode[0].name} `;
+                if (row.annotations) {
+                    tname += ` annotations: ${row.annotations.name} `;
                 }
             } else {
-                tname += ` file: ${row.file[0].name} `;
+                tname += ` file: ${row.h5.name} `;
             }
             return (<Cell className="cell-top">{tname}</Cell>);
         } else if (key == "format") {
@@ -1305,7 +1092,7 @@ const AnalysisDialog = ({
 
             if (preInputFilesStatus && tmpInputFiles.length == 1) {
 
-                if (preInputFilesStatus.annotations[0]) {
+                if (preInputFilesStatus.annotations[row["name"]]) {
                     return (
                         <Cell>
                             <HTMLSelect
@@ -1319,7 +1106,8 @@ const AnalysisDialog = ({
                             >
                                 <option value="none">None</option>
                                 {
-                                    preInputFilesStatus && preInputFilesStatus?.annotations?.[0] ? preInputFilesStatus.annotations[0].map((x, i) => <option key={i} value={x}>{x}</option>) : "-"
+                                    preInputFilesStatus && preInputFilesStatus?.annotations?.[row["name"]] ?
+                                        preInputFilesStatus.annotations[row["name"]].map((x, i) => <option key={i} value={x}>{x}</option>) : "-"
                                 }
                             </HTMLSelect>
                         </Cell>
@@ -1331,7 +1119,7 @@ const AnalysisDialog = ({
                 }
             } else {
                 return (
-                    <Cell className="cell-top">{preInputFilesStatus && preInputFilesStatus?.best_genes?.[rowIdx]}</Cell>
+                    <Cell className="cell-top">{preInputFilesStatus && preInputFilesStatus?.best_gene_fields?.[row["name"]]}</Cell>
                 )
             }
         }
@@ -1392,8 +1180,8 @@ const AnalysisDialog = ({
 
                                                         ssetInputText({
                                                             mtx: "Choose Matrix Market file",
-                                                            gene: "Choose feature/gene annotation",
-                                                            barcode: "Choose barcode annotation",
+                                                            genes: "Choose feature/gene file",
+                                                            annotations: "Choose barcode/annotation file",
                                                         });
 
                                                         ssetTmpInputFiles({
@@ -1408,100 +1196,6 @@ const AnalysisDialog = ({
                                             </div>
                                         }
 
-                                        {/* {
-                                            preInputFilesStatus && tmpInputFiles.length > 1 &&
-                                            <Callout intent={preInputFilesStatus.valid ? "primary" : "danger"}
-                                                title="Batch Correction/Integrate Datasets"
-                                                style={{
-                                                    margin: '10px'
-                                                }}>
-                                                <div>
-                                                    {
-                                                        preInputFilesStatus.valid ?
-                                                            <span>Imported datasets can be integrated.</span> :
-                                                            <div>
-                                                                <span>Datasets cannot be integrated.</span>
-                                                                <ul>
-                                                                    {
-                                                                        preInputFilesStatus.errors.map((x, i) =>
-                                                                            <li key={i}>{x}</li>)
-                                                                    }
-                                                                </ul>
-                                                            </div>
-                                                    }
-
-                                                    {
-                                                        <span> These datasets contain
-                                                            <strong>{preInputFilesStatus.common_genes == 0 ? " no " : " " + preInputFilesStatus.common_genes + " "}</strong>
-                                                            common genes.</span>
-                                                    }
-
-                                                    {
-                                                        preInputFilesStatus.best_genes ?
-                                                            <div>We automagically detect features to use for integration across datasets:
-                                                                <ul>
-                                                                    {
-                                                                        tmpInputFiles.map((x, i) =>
-                                                                            <li key={i}>from <strong>{x.name}</strong>, we use <strong>{preInputFilesStatus.best_genes[i]}</strong></li>)
-                                                                    }
-                                                                </ul>
-                                                            </div>
-                                                            : " "
-                                                    }
-
-                                                    <strong>When multiple files are imported, each dataset is considered a batch.</strong>
-                                                </div>
-                                            </Callout>
-                                        } */}
-
-                                        {/* {
-                                            preInputFilesStatus && tmpInputFiles.length == 1 &&
-                                            preInputFilesStatus.annotations[0] &&
-                                            <Callout intent={"primary"}
-                                                title="Batch Correction"
-                                                style={{
-                                                    margin: '10px'
-                                                }}>
-                                                <div>
-                                                    {
-                                                        preInputFilesStatus.annotations[0] ?
-                                                            <div className="row">
-                                                                <span>Dataset contains annotations, choose a field that specifies batch or samples.
-                                                                </span>
-                                                                <span>MNN correction is the default method. Choose a different correction method
-                                                                    in the parameters step.
-                                                                </span>
-                                                                <div>
-                                                                    <Label className="row-input">
-                                                                        <Text className="text-100">
-                                                                            <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                                                                onMouseEnter={() => setShowStepHelper(1)}>
-                                                                                Choose annotation for batch (if applicable)
-                                                                            </span>
-                                                                        </Text>
-                                                                        <HTMLSelect
-                                                                            onChange={(e) => {
-                                                                                let tmp = [...tmpInputFiles];
-                                                                                tmp[0]["batch"] = e.target.value;
-                                                                                setTmpInputFiles(tmp);
-                                                                            }}
-                                                                            defaultValue={tmpInputFiles[0].batch ? tmpInputFiles[0].batch : "none"}
-                                                                        >
-                                                                            <option value="none">None</option>
-                                                                            {
-                                                                                preInputFilesStatus.annotations[0].map((x, i) => <option key={i} value={x}>{x}</option>)
-                                                                            }
-                                                                        </HTMLSelect>
-                                                                    </Label>
-                                                                </div>
-                                                            </div>
-                                                            :
-                                                            "Dataset does not contain any annotations. batch correction parameters are disabled but you can continue with the analysis."
-                                                    }
-                                                </div>
-                                            </Callout>
-                                        } */}
-
                                         {
                                             showSection == "input" &&
                                             tmpInputFiles.length > 0 &&
@@ -1513,7 +1207,7 @@ const AnalysisDialog = ({
                                                     preInputFilesStatus && tmpInputFiles.length == 1 ?
                                                         <>
                                                             {
-                                                                preInputFilesStatus.annotations[0] ?
+                                                                preInputFilesStatus.annotations && Object.keys(preInputFilesStatus.annotations).length == 1 ?
                                                                     <Table2
                                                                         numRows={tmpInputFiles.length}
                                                                         rowHeights={tmpInputFiles.map(() => 25)}
@@ -1558,7 +1252,7 @@ const AnalysisDialog = ({
                                                                     <Column key="files" name="files" cellRenderer={table_render_cell} />
                                                                     <Column key="format" name="format" cellRenderer={table_render_cell} />
                                                                     <Column key="action" name="action" cellRenderer={table_render_cell} />
-                                                                    <Column key="annotation" name="annotation" cellRenderer={table_render_cell} />
+                                                                    <Column key="annotation" name="annotation fields" cellRenderer={table_render_cell} />
                                                                 </Table2>
                                                             </div>
                                                             <p style={{
@@ -1677,7 +1371,7 @@ const AnalysisDialog = ({
                                                                 <Label className="row-input">
                                                                     <FileInput text={inputText?.[0]?.file} onInputChange={(msg) => {
                                                                         let tmp = [...tmpInputFiles];
-                                                                        tmp[0]["file"] = msg.target.files;
+                                                                        tmp[0]["file"] = msg.target.files[0];
                                                                         setTmpInputFiles(tmp);
 
                                                                         let tmpitext = [...inputText];
@@ -1832,7 +1526,7 @@ const AnalysisDialog = ({
                         <div style={{ marginBottom: "10px" }} className={Classes.DIALOG_FOOTER} >
                             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
                                 <Tooltip2 content="Run Analysis">
-                                    <Button disabled={tabSelected == "new" ? !tmpInputValid || !preInputFilesStatus?.valid : tabSelected == "load" ? !tmpInputValid : false} icon="function" onClick={handleImport}>Analyze</Button>
+                                    <Button disabled={tabSelected == "new" ? !tmpInputValid || !preInputFilesStatus : tabSelected == "load" ? !tmpInputValid : false} icon="function" onClick={handleImport}>Analyze</Button>
                                 </Tooltip2>
                             </div>
                         </div>
