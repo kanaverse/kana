@@ -26,13 +26,25 @@ function extractBuffers(object, store) {
     }
 }
 
-function postSuccess(step, info) {
-    var transferable = [];
-    extractBuffers(info, transferable);
+function postAttempt(step) {
     postMessage({
-        type: `${step}_DATA`,
-        resp: info
-    }, transferable);
+        type: `${step}_START`
+    });
+}
+
+function postSuccess(step, info) {
+    if (typeof info == "undefined") {
+        postMessage({
+            type: `${step}_CACHE`
+        });
+    } else {
+        var transferable = [];
+        extractBuffers(info, transferable);
+        postMessage({
+            type: `${step}_DATA`,
+            resp: info
+        }, transferable);
+    }
 }
 
 /***************************************/
@@ -103,7 +115,7 @@ function runAllSteps(inputs, params) {
         custom_markers: {}
     };
 
-    return bakana.runAnalysis(superstate, inputs.files, formatted, { finishFun: postSuccess });
+    return bakana.runAnalysis(superstate, inputs.files, formatted, { startFun: postAttempt, finishFun: postSuccess });
 }
  
 /***************************************/
