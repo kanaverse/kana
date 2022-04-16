@@ -1,6 +1,6 @@
 
 .logs-container {
-  background-color: #252A31;
+  background-color: #000000;
   /* background-image: radial-gradient(rgba(206, 202, 202, 0.75), black 120%); */
   padding: 2rem;
   color: white;
@@ -15,24 +15,24 @@
   pointer-events: none;
 }
 
-.logs-error {
-    color: #f38286;
-}
-
-.logs-warn {
-    color: #f4b875;
-}
-
-.logs-success {
-    color: #70f87c;
+.logs-error, .logs-warn {
+    color: #ff0000;
 }
 
 .logs-info {
-    color: #76b6f7;
+    color: #86e9fe;
+}
+
+.logs-start {
+  color: #ffff00;
+}
+
+.logs-success, .logs-complete {
+  color: #00ff00;
 }
 
 ::selection {
-  background: #70b0f0;
+  background: #bebebe;
   text-shadow: none;
 }
 

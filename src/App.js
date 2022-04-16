@@ -253,7 +253,7 @@ const App = () => {
   useEffect(() => {
 
     if (wasmInitialized && !initLoadState) {
-      if (inputFiles.files != null && tabSelected === "new" ) {
+      if (inputFiles.files != null && tabSelected === "new") {
         scranWorker.postMessage({
           "type": "RUN",
           "payload": {
@@ -314,12 +314,14 @@ const App = () => {
       let tmp = [...logs];
       let d = new Date();
       let msg = `${d.toLocaleTimeString()}`;
-      if (payload.type.indexOf("_store") != -1) {
-        tmp.push(["info", `${msg} - Kana: (${payload.type.replace("_store", "")}) store initialized`]);
-      } else if (payload.type.indexOf("INIT") != -1) {
-        tmp.push(["info", `${msg} - Kana: ${payload.msg.replace("Success: ", "")}`]);
+      if (payload.type.toLowerCase().endsWith("start")) {
+        tmp.push(["start", msg, payload.type.toLowerCase().replace("_start", ""), "started"]);
+      } else if (payload.type.indexOf("_store") != -1) {
+        tmp.push(["info", msg, `(${payload.type.toLowerCase().replace("_store", "")}) store`, "initialized"]);
+      } else if (payload.type.toLowerCase().endsWith("init")) {
+        tmp.push(["info", msg, payload.msg.toLowerCase().replace("success: ", "")]);
       } else {
-        tmp.push(["success", `${msg} - Step: ${payload.type.replace("_DATA", "")} complete`]);
+        tmp.push(["complete", msg, payload.type.toLowerCase().replace("_data", ""), "completed"]);
       }
 
       setLogs(tmp);
@@ -327,11 +329,11 @@ const App = () => {
 
     const { resp } = payload;
 
-    if (resp?.status?.endsWith("ERROR")) {
+    if (resp?.status?.toLowerCase().endsWith("error")) {
       let tmp = [...logs];
       let d = new Date();
       let msg = `${d.toLocaleTimeString()}`;
-      tmp.push(["error", `${msg} - Error: ${resp.reason}`]);
+      tmp.push(["error", msg, `${resp.reason}`, "failed"]);
 
       setScranError({
         type: payload.type,
@@ -495,7 +497,7 @@ const App = () => {
           cluster_colors = palette[cluster_count.toString()];
         }
         setClusterColors(cluster_colors);
-  
+
         setCustomSelection(resp?.custom_selections?.selections);
       }
 

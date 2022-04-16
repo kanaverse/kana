@@ -23,7 +23,6 @@ const Logs = (props) => {
     });
 
     const handleOpen = () => setState({ isOpen: true });
-
     const handleClose = () => setState({ isOpen: false });
 
     return (
@@ -40,9 +39,28 @@ const Logs = (props) => {
                     <div className={Classes.DIALOG_BODY}>
                         <div className="logs-container">
                             {
-                                props?.logs.map((x, i) => (
-                                    <pre className={`logs-${x[0]}`} key={i}>{x[1]}</pre>
-                                ))
+                                props?.logs.map((x, i) => {
+                                    if (x[0] == "info") {
+                                        return (
+                                            <pre className={`logs-${x[0]}`} key={i}>⋊> <span
+                                                style={{
+                                                    fontSize: "12px"
+                                                }}>({x[1]}) </span>
+                                                {x[2]}
+                                            </pre>
+                                        )
+                                    } else {
+                                        return (
+                                            <pre key={i}>⋊> <span
+                                                style={{
+                                                    fontSize: "12px"
+                                                }}>({x[1]}) </span>
+                                                {x[2]}
+                                                <span className={`logs-${x[0]}`}> {x[3]}</span>
+                                            </pre>
+                                        )
+                                    }
+                                })
                             }
                         </div>
                     </div>
