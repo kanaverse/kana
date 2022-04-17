@@ -746,6 +746,7 @@ const App = () => {
         <p>
           If not, please report the issue on <a href='https://github.com/jkanche/kana/issues' target="_blank">GitHub</a>.
         </p>
+        <Divider />
         {
           scranError?.fatal &&
           <p>Check logs here <Logs logs={logs} /></p>
