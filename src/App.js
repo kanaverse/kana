@@ -67,6 +67,7 @@ const App = () => {
   const [showAnimation, setShowAnimation] = useState(false);
   // if a user manually triggers an animation (using the play button)
   const [triggerAnimation, setTriggerAnimation] = useState(false);
+  const [showDimPlotLoader, setShowDimPlotLoader] = useState(true);
 
   // PCA
   const [pcaVarExp, setPcaVarExp] = useState(null);
@@ -80,6 +81,7 @@ const App = () => {
   const [selectedClusterIndex, setSelectedClusterIndex] = useState([]);
   // set Cluster rank-type
   const [clusterRank, setClusterRank] = useState("cohen-min-rank");
+  const [showMarkerLoader, setShowMarkerLoader] = useState(true);
 
   // Cluster Analysis
   // cluster assignments
@@ -135,7 +137,15 @@ const App = () => {
       "type": "INIT",
       "msg": "Initial Load"
     });
-  }, [])
+  }, []);
+
+  function add_to_logs(type, msg, status) {
+    let tmp = [...logs];
+    let d = new Date();
+    tmp.push([type, d.toLocaleTimeString(), msg, status]);
+
+    setLogs(tmp);
+  }
 
   // request worker for new markers 
   // if either the cluster or the ranking changes
@@ -151,6 +161,8 @@ const App = () => {
           "rank_type": clusterRank,
         }
       });
+
+      add_to_logs("info", `--- ${type} sent ---`);
     }
   }, [selectedCluster, clusterRank]);
 
@@ -168,6 +180,8 @@ const App = () => {
           "id": csLen
         }
       });
+
+      add_to_logs("info", `--- Compute markers for ${csLen} sent ---`);
     }
   }, [customSelection]);
 
@@ -182,27 +196,37 @@ const App = () => {
       });
 
       setDelCustomSelection(null);
+      add_to_logs("info", `--- Delete custom markers for ${delCustomSelection} ---`);
     }
   }, [delCustomSelection]);
 
   // get expression for a gene from worker
   useEffect(() => {
 
-    reqGene !== null && scranWorker.postMessage({
-      "type": "getGeneExpression",
-      "payload": {
-        "gene": reqGene
-      }
-    });
+    if (reqGene) {
+      scranWorker.postMessage({
+        "type": "getGeneExpression",
+        "payload": {
+          "gene": reqGene
+        }
+      });
+
+      add_to_logs("info", `--- Request gene expression for gene:${reqGene} sent ---`);
+    }
   }, [reqGene]);
 
   useEffect(() => {
-    triggerAnimation && defaultRedDims && scranWorker.postMessage({
-      "type": "animate" + defaultRedDims,
-      payload: {
-        params: params[defaultRedDims.toLowerCase()]
-      }
-    });
+
+    if (triggerAnimation && defaultRedDims) {
+      scranWorker.postMessage({
+        "type": "animate" + defaultRedDims,
+        payload: {
+          params: params[defaultRedDims.toLowerCase()]
+        }
+      });
+
+      add_to_logs("info", `--- Request to animate ${defaultRedDims} sent ---`);
+    }
   }, [triggerAnimation]);
 
   // export an analysis
@@ -218,6 +242,7 @@ const App = () => {
       });
 
       AppToaster.show({ icon: "download", intent: "primary", message: "Exporting analysis in the background" });
+      add_to_logs("info", `--- Export analysis state (to file) initialized ---`);
     } else {
       inputFiles?.files && AppToaster.show({ icon: "download", intent: "primary", message: "Analysis saved. Please check your downloads directory!" });
     }
@@ -234,6 +259,7 @@ const App = () => {
       });
 
       AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Saving analysis in the background. Note: analysis is saved within the browser!!" });
+      add_to_logs("info", `--- Export analysis state (to browser) initialized ---`);
     } else {
       inputFiles?.files && AppToaster.show({ icon: "floppy-disk", intent: "primary", message: "Analysis saved!" });
     }
@@ -242,12 +268,16 @@ const App = () => {
   // get annotation for a column from worker
   useEffect(() => {
 
-    reqAnnotation !== null && scranWorker.postMessage({
-      "type": "getAnnotation",
-      "payload": {
-        "annotation": reqAnnotation
-      }
-    });
+    if (reqAnnotation) {
+      scranWorker.postMessage({
+        "type": "getAnnotation",
+        "payload": {
+          "annotation": reqAnnotation
+        }
+      });
+
+      add_to_logs("info", `--- Request annotation for ${reqAnnotation} sent---`);
+    }
   }, [reqAnnotation]);
 
   useEffect(() => {
@@ -261,6 +291,8 @@ const App = () => {
             "params": params
           },
         });
+
+        add_to_logs("info", `--- Analyis started---`);
       } else if (tabSelected === "load") {
         if (loadParams == null) {
           scranWorker.postMessage({
@@ -270,6 +302,7 @@ const App = () => {
             },
           });
           setInitLoadState(true);
+          add_to_logs("info", `--- Reloading analyis ---`);
         } else {
           scranWorker.postMessage({
             "type": "RUN",
@@ -281,6 +314,8 @@ const App = () => {
               "params": params
             },
           });
+
+          add_to_logs("info", `--- Reanalyzing loaded analysis ---`);
         }
       }
     }
@@ -311,29 +346,28 @@ const App = () => {
     const payload = msg.data;
 
     if (payload) {
-      let tmp = [...logs];
-      let d = new Date();
-      let msg = `${d.toLocaleTimeString()}`;
       if (payload.type.toLowerCase().endsWith("start")) {
-        tmp.push(["start", msg, payload.type.toLowerCase().replace("_start", ""), "started"]);
+        add_to_logs("start", payload.type.toLowerCase().replace("_start", ""), "started");
+        if (payload.type.toLowerCase().startsWith("tsne") || payload.type.toLowerCase().startsWith("umap")) {
+          setShowDimPlotLoader(true);
+        } else if (payload.type.toLowerCase().startsWith("marker_detection")) {
+          setShowMarkerLoader(true);
+        }
       } else if (payload.type.indexOf("_store") != -1) {
-        tmp.push(["info", msg, `(${payload.type.toLowerCase().replace("_store", "")}) store`, "initialized"]);
+        add_to_logs("info", `(${payload.type.toLowerCase().replace("_store", "")}) store initialized`);
       } else if (payload.type.toLowerCase().endsWith("init")) {
-        tmp.push(["info", msg, payload.msg.toLowerCase().replace("success: ", "")]);
+        add_to_logs("info", payload.msg.toLowerCase().replace("success: ", ""));
+      } else if (payload.type.toLowerCase().endsWith("cache")) {
+        add_to_logs("complete", payload.type.toLowerCase().replace("_cache", ""), "finished (from cache)");
       } else {
-        tmp.push(["complete", msg, payload.type.toLowerCase().replace("_data", ""), "completed"]);
+        add_to_logs("complete", payload.type.toLowerCase().replace("_data", ""), "finished");
       }
-
-      setLogs(tmp);
     }
 
     const { resp } = payload;
 
     if (resp?.status?.toLowerCase().endsWith("error")) {
-      let tmp = [...logs];
-      let d = new Date();
-      let msg = `${d.toLocaleTimeString()}`;
-      tmp.push(["error", msg, `${resp.reason}`, "failed"]);
+      add_to_logs("error", `${resp.reason}`, "failed");
 
       setScranError({
         type: payload.type,
@@ -412,9 +446,15 @@ const App = () => {
         setTsneData(tsneData);
         setUmapData(umapData);
       }
-
-      // show markers for the first cluster
-      setSelectedCluster(0);
+    } else if (payload.type=== "marker_detection_START") {
+      setSelectedCluster(null);
+      setSelectedClusterIndex([]);
+      setSelectedClusterSummary([]);
+    } else if (payload.type === "marker_detection_DATA") {
+      if (!selectedCluster) {
+        // show markers for the first cluster
+        setSelectedCluster(0);
+      }
     } else if (payload.type === "tsne_DATA") {
       const { resp } = payload;
       setTsneData(resp);
@@ -431,6 +471,7 @@ const App = () => {
       setShowGame(false);
       setShowAnimation(false);
       setTriggerAnimation(false);
+      setShowDimPlotLoader(false);
     } else if (payload.type === "tsne_iter" || payload.type === "umap_iter") {
       setAnimateData(payload);
     } else if (payload.type === "umap_DATA") {
@@ -442,9 +483,10 @@ const App = () => {
       tmp.push("UMAP");
       setRedDims(tmp);
 
+      setShowGame(false);
       setShowAnimation(false);
       setTriggerAnimation(false);
-    } else if (payload.type === "markerGene_DATA") {
+      setShowDimPlotLoader(false);
     } else if (payload.type === "setMarkersForCluster"
       || payload.type === "setMarkersForCustomSelection") {
       const { resp } = payload;
@@ -464,6 +506,7 @@ const App = () => {
       });
       setSelectedClusterIndex(index);
       setSelectedClusterSummary(records);
+      setShowMarkerLoader(false);
     } else if (payload.type === "setGeneExpression") {
       const { resp } = payload;
       let tmp = [...selectedClusterSummary];
@@ -518,6 +561,10 @@ const App = () => {
       const { resp } = payload;
       setPreInputFilesStatus(resp.details);
     } else if (payload.type === "custom_selections_DATA") {
+    } else if (payload.type === "tsne_CACHE" || payload.type === "umap_CACHE") {
+      setShowDimPlotLoader(false);
+    } else if (payload.type === "marker_detection_CACHE") {
+      setShowMarkerLoader(false);
     }
   }
 
@@ -536,46 +583,107 @@ const App = () => {
       <div className="App-content">
         <div className="plot">
           {
-            defaultRedDims && clusterData ?
-              <DimPlot
-                tsneData={tsneData} umapData={umapData}
-                animateData={animateData}
-                redDims={redDims}
-                defaultRedDims={defaultRedDims}
-                setDefaultRedDims={setDefaultRedDims}
-                showAnimation={showAnimation}
-                setShowAnimation={setShowAnimation}
-                setTriggerAnimation={setTriggerAnimation}
-                selectedClusterSummary={selectedClusterSummary}
-                setSelectedClusterSummary={setSelectedClusterSummary}
-                selectedClusterIndex={selectedClusterIndex}
-                selectedCluster={selectedCluster}
-                savedPlot={savedPlot}
-                setSavedPlot={setSavedPlot}
-                clusterData={clusterData}
-                customSelection={customSelection}
-                setCustomSelection={setCustomSelection}
-                setGene={setGene}
-                gene={gene}
-                clusterColors={clusterColors}
-                setClusterColors={setClusterColors}
-                setDelCustomSelection={setDelCustomSelection}
-                setReqAnnotation={setReqAnnotation}
-              /> :
-              showGame ?
-                <div style={{
-                  height: '100%',
-                  width: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingTop: '50px'
-                }}>
-                  <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
-                  <Button onClick={() => { setShowGame(false) }}>I'm good, go back</Button>
-                  <Pong />
-                </div>
+            showDimPlotLoader ?
+              <div style={{
+                height: '100%',
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingTop: '50px'
+              }}>
+                <Spinner2 />
+                <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+                <Button onClick={() => { setShowGame(true) }}>Play Pong</Button>
+              </div>
+              :
+              defaultRedDims && clusterData ?
+                <DimPlot
+                  tsneData={tsneData} umapData={umapData}
+                  animateData={animateData}
+                  redDims={redDims}
+                  defaultRedDims={defaultRedDims}
+                  setDefaultRedDims={setDefaultRedDims}
+                  showAnimation={showAnimation}
+                  setShowAnimation={setShowAnimation}
+                  setTriggerAnimation={setTriggerAnimation}
+                  selectedClusterSummary={selectedClusterSummary}
+                  setSelectedClusterSummary={setSelectedClusterSummary}
+                  selectedClusterIndex={selectedClusterIndex}
+                  selectedCluster={selectedCluster}
+                  savedPlot={savedPlot}
+                  setSavedPlot={setSavedPlot}
+                  clusterData={clusterData}
+                  customSelection={customSelection}
+                  setCustomSelection={setCustomSelection}
+                  setGene={setGene}
+                  gene={gene}
+                  clusterColors={clusterColors}
+                  setClusterColors={setClusterColors}
+                  setDelCustomSelection={setDelCustomSelection}
+                  setReqAnnotation={setReqAnnotation}
+                /> :
+                showGame ?
+                  <div style={{
+                    height: '100%',
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingTop: '50px'
+                  }}>
+                    <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+                    <Button onClick={() => { setShowGame(false) }}>I'm good, go back</Button>
+                    <Pong />
+                  </div>
+                  :
+                  <div style={{
+                    height: '100%',
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingTop: '50px'
+                  }}>
+                    <Spinner2 />
+                    <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+                    <Button onClick={() => { setShowGame(true) }}>Play Pong</Button>
+                  </div>
+          }
+        </div>
+        <div className="marker">
+          {
+            showMarkerLoader ?
+              <div style={{
+                height: '100%',
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Spinner2 />
+                <Label>Generating nearest neighbor graph to compute clusters....</Label>
+              </div>
+              :
+              clusterData ?
+                selectedClusterSummary && <MarkerPlot
+                  selectedClusterSummary={selectedClusterSummary}
+                  setSelectedClusterSummary={setSelectedClusterSummary}
+                  selectedClusterIndex={selectedClusterIndex}
+                  selectedCluster={selectedCluster}
+                  setSelectedCluster={setSelectedCluster}
+                  setClusterRank={setClusterRank}
+                  clusterData={clusterData}
+                  customSelection={customSelection}
+                  setGene={setGene}
+                  gene={gene}
+                  clusterColors={clusterColors}
+                  setReqGene={setReqGene}
+                />
                 :
                 <div style={{
                   height: '100%',
@@ -583,42 +691,12 @@ const App = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingTop: '50px'
+                  justifyContent: 'center'
                 }}>
                   <Spinner2 />
-                  <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
-                  <Button onClick={() => { setShowGame(true) }}>Play Pong</Button>
+                  <Label>Generating nearest neighbor graph to compute clusters....</Label>
                 </div>
           }
-        </div>
-        <div className="marker">
-          {clusterData ?
-            selectedClusterSummary && <MarkerPlot
-              selectedClusterSummary={selectedClusterSummary}
-              setSelectedClusterSummary={setSelectedClusterSummary}
-              selectedClusterIndex={selectedClusterIndex}
-              selectedCluster={selectedCluster}
-              setSelectedCluster={setSelectedCluster}
-              setClusterRank={setClusterRank}
-              clusterData={clusterData}
-              customSelection={customSelection}
-              setGene={setGene}
-              gene={gene}
-              clusterColors={clusterColors}
-              setReqGene={setReqGene}
-            /> :
-            <div style={{
-              height: '100%',
-              width: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Spinner2 />
-              <Label>Generating nearest neighbor graph to compute clusters....</Label>
-            </div>}
         </div>
         <div className="analysis">
           <Gallery

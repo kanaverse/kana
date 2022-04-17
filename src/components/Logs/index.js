@@ -42,19 +42,25 @@ const Logs = (props) => {
                                 props?.logs.map((x, i) => {
                                     if (x[0] == "info") {
                                         return (
-                                            <pre className={`logs-${x[0]}`} key={i}>⋊> <span
-                                                style={{
-                                                    fontSize: "12px"
-                                                }}>({x[1]}) </span>
+                                            <pre className={`logs-${x[0]}`} key={i}>
+                                                {x[1] + ": "}
+                                                {/* ⋊>
+                                                <span
+                                                    style={{
+                                                        fontSize: "12px"
+                                                    }}>({x[1]}) </span> */}
                                                 {x[2]}
                                             </pre>
                                         )
                                     } else {
                                         return (
-                                            <pre key={i}>⋊> <span
-                                                style={{
-                                                    fontSize: "12px"
-                                                }}>({x[1]}) </span>
+                                            <pre key={i}>
+                                                {x[1] + ": "}
+                                                {/* ⋊> 
+                                                <span
+                                                    style={{
+                                                        fontSize: "12px"
+                                                    }}>({x[1]}) </span> */}
                                                 {x[2]}
                                                 <span className={`logs-${x[0]}`}> {x[3]}</span>
                                             </pre>
