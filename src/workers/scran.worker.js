@@ -19,7 +19,7 @@ function extractBuffers(object, store) {
             extractBuffers(element, store);
         }
     } else if (ArrayBuffer.isView(object)) {
-        if (! (object.buffer instanceof ArrayBuffer)) {
+        if (!(object.buffer instanceof ArrayBuffer)) {
             throw "only ArrayBuffers should be in the message payload";
         }
         store.push(object.buffer);
@@ -69,8 +69,8 @@ function runAllSteps(inputs, params) {
             sample_factor: inputs.batch
         },
         quality_control: {
-            use_mito_default: params.qc["qc-usemitodefault"], 
-            mito_prefix: params.qc["qc-mito"], 
+            use_mito_default: params.qc["qc-usemitodefault"],
+            mito_prefix: params.qc["qc-mito"],
             nmads: params.qc["qc-nmads"]
         },
         normalization: {},
@@ -78,7 +78,7 @@ function runAllSteps(inputs, params) {
             span: params.fSelection["fsel-span"]
         },
         pca: {
-            num_hvgs: params.pca["pca-hvg"], 
+            num_hvgs: params.pca["pca-hvg"],
             num_pcs: params.pca["pca-npc"],
             block_method: params.pca["pca-correction"]
         },
@@ -89,21 +89,21 @@ function runAllSteps(inputs, params) {
             method: params.cluster["clus-method"]
         },
         tsne: {
-            perplexity: params.tsne["tsne-perp"], 
-            iterations: params.tsne["tsne-iter"], 
+            perplexity: params.tsne["tsne-perp"],
+            iterations: params.tsne["tsne-iter"],
             animate: params.tsne["animate"]
         },
         umap: {
-            num_neighbors: params.umap["umap-nn"], 
-            num_epochs: params.umap["umap-epochs"], 
-            min_dist: params.umap["umap-min_dist"], 
+            num_neighbors: params.umap["umap-nn"],
+            num_epochs: params.umap["umap-epochs"],
+            min_dist: params.umap["umap-min_dist"],
             animate: params.umap["animate"]
         },
         kmeans_cluster: {
             k: params.cluster["kmeans-k"]
         },
         snn_graph_cluster: {
-            k: params.cluster["clus-k"], 
+            k: params.cluster["clus-k"],
             scheme: params.cluster["clus-scheme"],
             resolution: params.cluster["clus-res"]
         },
@@ -117,7 +117,7 @@ function runAllSteps(inputs, params) {
 
     return bakana.runAnalysis(superstate, inputs.files, formatted, { startFun: postAttempt, finishFun: postSuccess });
 }
- 
+
 /***************************************/
 
 function linkKanaDb(collected) {
@@ -159,7 +159,7 @@ async function serializeAllSteps(embedded) {
 }
 
 bakana.setResolveLink(kana_db.loadFile);
- 
+
 async function unserializeAllSteps(contents) {
     const h5path = "serialized_out.h5";
 
@@ -223,12 +223,26 @@ async function unserializeAllSteps(contents) {
     return output;
 }
 
+function postError(type, err, fatal) {
+    postMessage({
+        type: `${type}_ERROR`,
+        resp: {
+            reason: err.toString(),
+            fatal: fatal
+        },
+    });
+}
+
 /***************************************/
+
+
 
 var loaded;
 onmessage = function (msg) {
     const { type, payload } = msg.data;
+    let fatal = false;
     if (type == "INIT") {
+        fatal = true;
         let nthreads = Math.round(navigator.hardwareConcurrency * 2 / 3);
         let back_init = bakana.initialize({ numberOfThreads: nthreads });
 
@@ -294,24 +308,27 @@ onmessage = function (msg) {
                 type: type,
                 msg: "Success: bakana initialized"
             });
+        }).catch(err => {
+            console.error(err);
+            postError(type, err, fatal)
         });
-
-    /**************** RUNNING AN ANALYSIS *******************/
+        /**************** RUNNING AN ANALYSIS *******************/
     } else if (type == "RUN") {
+        fatal = true;
         loaded
             .then(x => {
                 runAllSteps(payload.inputs, payload.params)
-            })
-            .catch(error => {
-                console.error(error);
-                postMessage({
-                    type: "run_ERROR",
-                    msg: error.toString()
-                });
+                    .catch(err => {
+                        console.error(err);
+                        postError(type, err, fatal)
+                    });
+            }).catch(err => {
+                console.error(err);
+                postError(type, err, fatal)
             });
-
-    /**************** LOADING EXISTING ANALYSES *******************/
+        /**************** LOADING EXISTING ANALYSES *******************/
     } else if (type == "LOAD") {
+        fatal = true;
         let fs = payload.inputs.files;
 
         if (fs[Object.keys(fs)[0]].format == "kana") {
@@ -325,15 +342,10 @@ onmessage = function (msg) {
                         type: "loadedParameters",
                         resp: params
                     });
-                })
-                .catch(error => {
-                    console.error(error);
-                    postMessage({
-                        type: "load_ERROR",
-                        msg: error.toString()
-                    });
+                }).catch(err => {
+                    console.error(err);
+                    postError(type, err, fatal)
                 });
-
         } else if (fs[Object.keys(fs)[0]].format == "kanadb") {
             var id = fs[Object.keys(fs)[0]].file;
             kana_db.loadAnalysis(id)
@@ -350,18 +362,13 @@ onmessage = function (msg) {
                             resp: response
                         });
                     }
-                })
-                .catch(error => {
-                    console.error(error);
-                    postMessage({
-                        type: "load_ERROR",
-                        msg: error.toString()
-                    });
+                }).catch(err => {
+                    console.error(err);
+                    postError(type, err, fatal)
                 });
         }
-  
-    /**************** SAVING EXISTING ANALYSES *******************/
-    } else if (type == "EXPORT") { 
+        /**************** SAVING EXISTING ANALYSES *******************/
+    } else if (type == "EXPORT") {
         loaded
             .then(async (x) => {
                 var contents = await serializeAllSteps(true);
@@ -370,15 +377,11 @@ onmessage = function (msg) {
                     resp: contents,
                     msg: "Success: application state exported"
                 }, [contents]);
-            })
-            .catch(error => {
-                console.error(error);
-                postMessage({
-                    type: "export_ERROR",
-                    msg: error.toString()
-                });
+            }).catch(err => {
+                console.error(err);
+                postError(type, err, fatal)
             });
- 
+
     } else if (type == "SAVEKDB") { // save analysis to inbrowser indexedDB 
         var title = payload.title;
         loaded
@@ -399,16 +402,12 @@ onmessage = function (msg) {
                         msg: `Fail: Cannot save analysis to cache`
                     });
                 }
-            })
-            .catch(error => {
-                console.error(error);
-                postMessage({
-                    type: "export_ERROR",
-                    msg: error.toString()
-                });
+            }).catch(err => {
+                console.error(err);
+                postError(type, err, fatal)
             });
-  
-    /**************** KANADB EVENTS *******************/
+
+        /**************** KANADB EVENTS *******************/
     } else if (type == "REMOVEKDB") { // remove a saved analysis
         var id = payload.id;
         kana_db.removeAnalysis(id)
@@ -427,41 +426,40 @@ onmessage = function (msg) {
                         msg: `fail: cannot remove file from cache (${id})`
                     });
                 }
-            });
+            }).catch(err => {
+                console.error(err);
+                postError(type, err, fatal)
+            });;
 
     } else if (type == "PREFLIGHT_INPUT") {
         loaded
-        .then(async x => {
-            let resp = {};
-            try {
-                resp.status = "SUCCESS";
-                resp.details = await bakana.validateAnnotations(payload.inputs.files);
-            } catch (e) {
-                resp.status = "ERROR";
-                resp.reason = e.toString();
-            }
+            .then(async x => {
+                let resp = {};
+                try {
+                    resp.status = "SUCCESS";
+                    resp.details = await bakana.validateAnnotations(payload.inputs.files);
+                } catch (e) {
+                    resp.status = "ERROR";
+                    resp.reason = e.toString();
+                }
 
-            postMessage({
-                type: "PREFLIGHT_INPUT_DATA",
-                resp: resp,
-                msg: "Success: PREFLIGHT_INPUT done"
+                postMessage({
+                    type: "PREFLIGHT_INPUT_DATA",
+                    resp: resp,
+                    msg: "Success: PREFLIGHT_INPUT done"
+                });
+            }).catch(err => {
+                console.error(err);
+                postError(type, err, fatal)
             });
-        })
-        .catch(error => {
-            console.error(error);
-            postMessage({
-                type: "run_ERROR",
-                msg: error.toString()
-            });
-        });
 
-    /**************** OTHER EVENTS FROM UI *******************/
+        /**************** OTHER EVENTS FROM UI *******************/
     } else if (type == "getMarkersForCluster") {
         loaded.then(x => {
             let cluster = payload.cluster;
             let rank_type = payload.rank_type;
             var resp = superstate.marker_detection.fetchGroupResults(cluster, rank_type);
-      
+
             var transferrable = [];
             extractBuffers(resp, transferrable);
             postMessage({
@@ -469,8 +467,11 @@ onmessage = function (msg) {
                 resp: resp,
                 msg: "Success: GET_MARKER_GENE done"
             }, transferrable);
+        }).catch(err => {
+            console.error(err);
+            postError(type, err, fatal)
         });
-  
+
     } else if (type == "getGeneExpression") {
         loaded.then(x => {
             let row_idx = payload.gene;
@@ -483,8 +484,11 @@ onmessage = function (msg) {
                 },
                 msg: "Success: GET_GENE_EXPRESSION done"
             }, [vec.buffer]);
+        }).catch(err => {
+            console.error(err);
+            postError(type, err, fatal)
         });
-  
+
     } else if (type == "computeCustomMarkers") {
         loaded.then(x => {
             superstate.custom_selections.addSelection(payload.id, payload.selection);
@@ -492,8 +496,11 @@ onmessage = function (msg) {
                 type: "computeCustomMarkers",
                 msg: "Success: COMPUTE_CUSTOM_MARKERS done"
             });
+        }).catch(err => {
+            console.error(err);
+            postError(type, err, fatal)
         });
-  
+
     } else if (type == "getMarkersForSelection") {
         loaded.then(x => {
             let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
@@ -505,23 +512,35 @@ onmessage = function (msg) {
                 resp: resp,
                 msg: "Success: GET_MARKER_GENE done"
             }, transferrable);
+        }).catch(err => {
+            console.error(err);
+            postError(type, err, fatal)
         });
-  
+
     } else if (type == "removeCustomMarkers") {
         loaded.then(x => {
             superstate.custom_selections.removeSelection(payload.id);
+        }).catch(err => {
+            console.error(err);
+            postError(type, err, fatal)
         });
-  
+
     } else if (type == "animateTSNE") {
         loaded.then(async (x) => {
             await superstate.tsne.animate();
             postSuccess("tsne", await superstate.tsne.summary());
+        }).catch(err => {
+            console.error(err);
+            postError(type, err, fatal)
         });
-  
+
     } else if (type == "animateUMAP") {
         loaded.then(async (x) => {
             await superstate.umap.animate();
             postSuccess("umap", await superstate.umap.summary());
+        }).catch(err => {
+            console.error(err);
+            postError(type, err, fatal)
         });
 
     } else if (type == "getAnnotation") {
@@ -546,9 +565,13 @@ onmessage = function (msg) {
                 },
                 msg: "Success: GET_ANNOTATION done"
             }, extracted);
+        }).catch(err => {
+            console.error(err);
+            postError(type, err, fatal)
         });
-  
+
     } else {
         console.error("MIM:::msg type incorrect")
+        postError(type, "Type not defined", fatal)
     }
 }

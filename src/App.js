@@ -15,6 +15,8 @@ import Pong from './components/Spinners/Pong';
 import Spinner2 from './components/Spinners/Spinner2';
 import { getMinMax } from './components/Plots/utils';
 
+import Logs from './components/Logs';
+
 import { palette } from './components/Plots/utils';
 // App is the single point of contact with the web workers
 // All requests and responses are received here
@@ -359,24 +361,21 @@ const App = () => {
         add_to_logs("info", payload.msg.toLowerCase().replace("success: ", ""));
       } else if (payload.type.toLowerCase().endsWith("cache")) {
         add_to_logs("complete", payload.type.toLowerCase().replace("_cache", ""), "finished (from cache)");
-      } else {
+      } else if (payload.type.toLowerCase().endsWith("data")) {
         add_to_logs("complete", payload.type.toLowerCase().replace("_data", ""), "finished");
+      } else if (payload.type.toLowerCase().endsWith("error")) {
+        const { resp } = payload;
+        add_to_logs("error", `${resp.reason}`, "");
+
+        setScranError({
+          type: payload.type,
+          msg: resp.reason,
+          fatal: resp.fatal
+        });
+
+        return;
       }
     }
-
-    const { resp } = payload;
-
-    if (resp?.status?.toLowerCase().endsWith("error")) {
-      add_to_logs("error", `${resp.reason}`, "failed");
-
-      setScranError({
-        type: payload.type,
-        msg: resp.reason
-      });
-
-      return;
-    }
-
     if (payload.type === "INIT") {
       setLoading(false);
       setWasmInitialized(true);
@@ -446,7 +445,7 @@ const App = () => {
         setTsneData(tsneData);
         setUmapData(umapData);
       }
-    } else if (payload.type=== "marker_detection_START") {
+    } else if (payload.type === "marker_detection_START") {
       setSelectedCluster(null);
       setSelectedClusterIndex([]);
       setSelectedClusterSummary([]);
@@ -724,11 +723,17 @@ const App = () => {
       <Alert
         canEscapeKeyCancel={false}
         canOutsideClickCancel={false}
-        confirmButtonText="Reload App"
+        confirmButtonText={scranError?.fatal ? "Reload App" : "close"}
         icon="warning-sign"
         intent="danger"
         isOpen={scranError != null}
-        onConfirm={() => location.reload()}
+        onConfirm={() => {
+          if (scranError?.fatal) {
+            location.reload()
+          } else {
+            setScranError(null);
+          }
+        }}
       >
         <h3>{scranError?.type.replace("_", " ").toUpperCase()}</h3>
         <Divider />
@@ -741,6 +746,10 @@ const App = () => {
         <p>
           If not, please report the issue on <a href='https://github.com/jkanche/kana/issues' target="_blank">GitHub</a>.
         </p>
+        {
+          scranError?.fatal &&
+          <p>Check logs here <Logs logs={logs} /></p>
+        }
       </Alert>
 
     </div>

@@ -44,11 +44,13 @@ const Logs = (props) => {
                                         return (
                                             <pre className={`logs-${x[0]}`} key={i}>
                                                 {x[1] + ": "}
-                                                {/* ⋊>
-                                                <span
-                                                    style={{
-                                                        fontSize: "12px"
-                                                    }}>({x[1]}) </span> */}
+                                                {x[2]}
+                                            </pre>
+                                        )
+                                    } else if (x[0] == "error") {
+                                        return (
+                                            <pre className={`logs-${x[0]}`} key={i}>
+                                                {x[1] + ": "}
                                                 {x[2]}
                                             </pre>
                                         )
@@ -56,11 +58,6 @@ const Logs = (props) => {
                                         return (
                                             <pre key={i}>
                                                 {x[1] + ": "}
-                                                {/* ⋊> 
-                                                <span
-                                                    style={{
-                                                        fontSize: "12px"
-                                                    }}>({x[1]}) </span> */}
                                                 {x[2]}
                                                 <span className={`logs-${x[0]}`}> {x[3]}</span>
                                             </pre>
