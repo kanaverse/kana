@@ -648,7 +648,7 @@ const DimPlot = (props) => {
                                             paddingTop: '5px'
                                         }}>
                                         <ul>
-                                            {Object.keys(props?.customSelection)?.map((x, i) => {
+                                            {Object.keys(props?.customSelection)?.slice(0,100).map((x, i) => {
                                                 return (<li key={x}
                                                     className={clusHighlight === x ? 'legend-highlight' : ''}
                                                     style={{ color: props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + 1 + i] }}

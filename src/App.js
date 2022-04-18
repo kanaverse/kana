@@ -253,7 +253,7 @@ const App = () => {
   useEffect(() => {
 
     if (wasmInitialized && !initLoadState) {
-      if (inputFiles.files != null && tabSelected === "new" ) {
+      if (inputFiles.files != null && tabSelected === "new") {
         scranWorker.postMessage({
           "type": "RUN",
           "payload": {
@@ -386,7 +386,9 @@ const App = () => {
       const { resp } = payload;
 
       let t_annots = [...annotationCols];
-      t_annots.push("CLUSTERS");
+      if (t_annots.indexOf("CLUSTERS") == -1) {
+        t_annots.push("CLUSTERS");
+      }
 
       setAnnotationCols(t_annots);
 
@@ -495,7 +497,7 @@ const App = () => {
           cluster_colors = palette[cluster_count.toString()];
         }
         setClusterColors(cluster_colors);
-  
+
         setCustomSelection(resp?.custom_selections?.selections);
       }
 
