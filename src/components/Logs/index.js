@@ -3,6 +3,7 @@ import {
     Classes,
     Drawer,
     Position,
+    Spinner,
 } from "@blueprintjs/core";
 import React, { useState } from 'react';
 
@@ -27,8 +28,22 @@ const Logs = (props) => {
 
     return (
         <>
-            <Button onClick={handleOpen} icon="wrench" outlined={true}
-                intent="warning"></Button>
+            <div>
+                {
+                    !props?.loadingStatus ?
+                        <Button onClick={handleOpen} outlined={true}
+                            intent="warning">
+                            <div style={{ display: "flex" }}>
+                                <span style={{ marginRight: "5px" }}>Analyzing...</span>
+                                <Spinner size={20} intent="warning" />
+                            </div>
+                        </Button>
+                        :
+                        <Button onClick={handleOpen} icon="wrench" outlined={true}
+                            intent="warning"></Button>
+                }
+            </div>
+
             <Drawer
                 icon="info-sign"
                 onClose={handleClose}

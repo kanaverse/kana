@@ -46,7 +46,14 @@ const App = () => {
   // dim sizes
   const [initDims, setInitDims] = useState(null);
   const [qcDims, setQcDims] = useState(null);
-  // const [fSelDims, setFSelDims] = useState(null);
+
+  // loaders for UI components
+  const [showDimPlotLoader, setShowDimPlotLoader] = useState(true);
+  const [showMarkerLoader, setShowMarkerLoader] = useState(true);
+  const [showQCLoader, setShowQCLoader] = useState(true);
+  const [showPCALoader, setShowPCALoader] = useState(true);
+  const [showNClusLoader, setShowNClusLoader] = useState(true);
+  const [showCellLabelLoader, setShowCellLabelLoader] = useState(true);
 
   // Logs
   const [logs, setLogs] = useState([]);
@@ -69,7 +76,6 @@ const App = () => {
   const [showAnimation, setShowAnimation] = useState(false);
   // if a user manually triggers an animation (using the play button)
   const [triggerAnimation, setTriggerAnimation] = useState(false);
-  const [showDimPlotLoader, setShowDimPlotLoader] = useState(true);
 
   // PCA
   const [pcaVarExp, setPcaVarExp] = useState(null);
@@ -83,7 +89,6 @@ const App = () => {
   const [selectedClusterIndex, setSelectedClusterIndex] = useState([]);
   // set Cluster rank-type
   const [clusterRank, setClusterRank] = useState("cohen-min-rank");
-  const [showMarkerLoader, setShowMarkerLoader] = useState(true);
 
   // Cluster Analysis
   // cluster assignments
@@ -147,6 +152,15 @@ const App = () => {
     tmp.push([type, d.toLocaleTimeString(), msg, status]);
 
     setLogs(tmp);
+  }
+
+  function setAllLoaders() {
+    setShowDimPlotLoader(true);
+    setShowMarkerLoader(true);
+    setShowQCLoader(true);
+    setShowPCALoader(true);
+    setShowNClusLoader(true);
+    setShowCellLabelLoader(true);
   }
 
   // request worker for new markers 
@@ -295,6 +309,7 @@ const App = () => {
         });
 
         add_to_logs("info", `--- Analyis started---`);
+        setAllLoaders();
       } else if (tabSelected === "load") {
         if (loadParams == null) {
           scranWorker.postMessage({
@@ -318,6 +333,7 @@ const App = () => {
           });
 
           add_to_logs("info", `--- Reanalyzing loaded analysis ---`);
+          setAllLoaders();
         }
       }
     }
@@ -347,14 +363,11 @@ const App = () => {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
+    console.log(payload);
+
     if (payload) {
       if (payload.type.toLowerCase().endsWith("start")) {
         add_to_logs("start", payload.type.toLowerCase().replace("_start", ""), "started");
-        if (payload.type.toLowerCase().startsWith("tsne") || payload.type.toLowerCase().startsWith("umap")) {
-          setShowDimPlotLoader(true);
-        } else if (payload.type.toLowerCase().startsWith("marker_detection")) {
-          setShowMarkerLoader(true);
-        }
       } else if (payload.type.indexOf("_store") != -1) {
         add_to_logs("info", `(${payload.type.toLowerCase().replace("_store", "")}) store initialized`);
       } else if (payload.type.toLowerCase().endsWith("init")) {
@@ -411,12 +424,14 @@ const App = () => {
       resp["ranges"] = ranges;
       setQcData(resp);
       setQcDims(`${resp.retained}`);
+      setShowQCLoader(false);
     } else if (payload.type === "feature_selection_DATA") {
       const { resp } = payload;
       setFSelectionData(resp);
     } else if (payload.type === "pca_DATA") {
       const { resp } = payload;
       setPcaVarExp(resp);
+      setShowPCALoader(false);
     } else if (payload.type === "choose_clustering_DATA") {
       const { resp } = payload;
 
@@ -436,7 +451,6 @@ const App = () => {
         cluster_colors = palette[cluster_count.toString()];
       }
       setClusterColors(cluster_colors);
-
       setClusterData(resp);
 
       // Only really need to do this if we detect that 
@@ -445,6 +459,7 @@ const App = () => {
         setTsneData(tsneData);
         setUmapData(umapData);
       }
+      setShowNClusLoader(false);
     } else if (payload.type === "marker_detection_START") {
       setSelectedCluster(null);
       setSelectedClusterIndex([]);
@@ -556,6 +571,7 @@ const App = () => {
     } else if (payload.type === "cell_labelling_DATA") {
       const { resp } = payload;
       setCellLabelData(resp);
+      setShowCellLabelLoader(false);
     } else if (payload.type === "PREFLIGHT_INPUT_DATA") {
       const { resp } = payload;
       setPreInputFilesStatus(resp.details);
@@ -564,6 +580,14 @@ const App = () => {
       setShowDimPlotLoader(false);
     } else if (payload.type === "marker_detection_CACHE") {
       setShowMarkerLoader(false);
+    } else if (payload.type === "quality_control_CACHE") {
+      setShowQCLoader(false);
+    } else if (payload.type === "pca_CACHE") {
+      setShowPCALoader(false);
+    } else if (payload.type === "choose_clustering_CACHE") {
+      setShowNClusLoader(false);
+    } else if (payload.type === "cell_labelling_CACHE") {
+      setShowCellLabelLoader(false);
     }
   }
 
@@ -578,84 +602,87 @@ const App = () => {
         kanaIDBRecs={kanaIDBRecs}
         setKanaIDBRecs={setKanaIDBRecs}
         deletekdb={deletekdb}
-        setDeletekdb={setDeletekdb} />
+        setDeletekdb={setDeletekdb}
+        loadingStatus={!showQCLoader && !showPCALoader && !showNClusLoader && !showCellLabelLoader && !showMarkerLoader && !showDimPlotLoader}
+      />
       <div className="App-content">
-        <div className="plot">
+        <div className={showDimPlotLoader ? "plot effect-opacitygrayscale" : "plot"}>
           {
-            showDimPlotLoader ?
-              <div style={{
-                height: '100%',
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingTop: '50px'
-              }}>
-                <Spinner2 />
-                <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
-                <Button onClick={() => { setShowGame(true) }}>Play Pong</Button>
-              </div>
-              :
-              defaultRedDims && clusterData ?
-                <DimPlot
-                  tsneData={tsneData} umapData={umapData}
-                  animateData={animateData}
-                  redDims={redDims}
-                  defaultRedDims={defaultRedDims}
-                  setDefaultRedDims={setDefaultRedDims}
-                  showAnimation={showAnimation}
-                  setShowAnimation={setShowAnimation}
-                  setTriggerAnimation={setTriggerAnimation}
-                  selectedClusterSummary={selectedClusterSummary}
-                  setSelectedClusterSummary={setSelectedClusterSummary}
-                  selectedClusterIndex={selectedClusterIndex}
-                  selectedCluster={selectedCluster}
-                  savedPlot={savedPlot}
-                  setSavedPlot={setSavedPlot}
-                  clusterData={clusterData}
-                  customSelection={customSelection}
-                  setCustomSelection={setCustomSelection}
-                  setGene={setGene}
-                  gene={gene}
-                  clusterColors={clusterColors}
-                  setClusterColors={setClusterColors}
-                  setDelCustomSelection={setDelCustomSelection}
-                  setReqAnnotation={setReqAnnotation}
-                /> :
-                showGame ?
-                  <div style={{
-                    height: '100%',
-                    width: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingTop: '50px'
-                  }}>
-                    <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
-                    <Button onClick={() => { setShowGame(false) }}>I'm good, go back</Button>
-                    <Pong />
-                  </div>
-                  :
-                  <div style={{
-                    height: '100%',
-                    width: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingTop: '50px'
-                  }}>
-                    <Spinner2 />
-                    <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
-                    <Button onClick={() => { setShowGame(true) }}>Play Pong</Button>
-                  </div>
+            defaultRedDims && clusterData ?
+              <DimPlot
+                className={"effect-opacitygrayscale"}
+                tsneData={tsneData} umapData={umapData}
+                animateData={animateData}
+                redDims={redDims}
+                defaultRedDims={defaultRedDims}
+                setDefaultRedDims={setDefaultRedDims}
+                showAnimation={showAnimation}
+                setShowAnimation={setShowAnimation}
+                setTriggerAnimation={setTriggerAnimation}
+                selectedClusterSummary={selectedClusterSummary}
+                setSelectedClusterSummary={setSelectedClusterSummary}
+                selectedClusterIndex={selectedClusterIndex}
+                selectedCluster={selectedCluster}
+                savedPlot={savedPlot}
+                setSavedPlot={setSavedPlot}
+                clusterData={clusterData}
+                customSelection={customSelection}
+                setCustomSelection={setCustomSelection}
+                setGene={setGene}
+                gene={gene}
+                clusterColors={clusterColors}
+                setClusterColors={setClusterColors}
+                setDelCustomSelection={setDelCustomSelection}
+                setReqAnnotation={setReqAnnotation}
+              /> :
+              showGame ?
+                <div style={{
+                  height: '100%',
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingTop: '50px'
+                }}>
+                  <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+                  <Button onClick={() => { setShowGame(false) }}>I'm good, go back</Button>
+                  <Pong />
+                </div>
+                :
+                <div style={{
+                  height: '100%',
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingTop: '50px'
+                }}>
+                  <Spinner2 />
+                  <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+                  <Button onClick={() => { setShowGame(true) }}>Play Pong</Button>
+                </div>
           }
         </div>
-        <div className="marker">
+        <div className={showMarkerLoader ? "marker effect-opacitygrayscale" : "marker"}>
           {
-            showMarkerLoader ?
+            clusterData ?
+              selectedClusterSummary && <MarkerPlot
+                selectedClusterSummary={selectedClusterSummary}
+                setSelectedClusterSummary={setSelectedClusterSummary}
+                selectedClusterIndex={selectedClusterIndex}
+                selectedCluster={selectedCluster}
+                setSelectedCluster={setSelectedCluster}
+                setClusterRank={setClusterRank}
+                clusterData={clusterData}
+                customSelection={customSelection}
+                setGene={setGene}
+                gene={gene}
+                clusterColors={clusterColors}
+                setReqGene={setReqGene}
+              />
+              :
               <div style={{
                 height: '100%',
                 width: '100%',
@@ -667,34 +694,6 @@ const App = () => {
                 <Spinner2 />
                 <Label>Generating nearest neighbor graph to compute clusters....</Label>
               </div>
-              :
-              clusterData ?
-                selectedClusterSummary && <MarkerPlot
-                  selectedClusterSummary={selectedClusterSummary}
-                  setSelectedClusterSummary={setSelectedClusterSummary}
-                  selectedClusterIndex={selectedClusterIndex}
-                  selectedCluster={selectedCluster}
-                  setSelectedCluster={setSelectedCluster}
-                  setClusterRank={setClusterRank}
-                  clusterData={clusterData}
-                  customSelection={customSelection}
-                  setGene={setGene}
-                  gene={gene}
-                  clusterColors={clusterColors}
-                  setReqGene={setReqGene}
-                />
-                :
-                <div style={{
-                  height: '100%',
-                  width: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Spinner2 />
-                  <Label>Generating nearest neighbor graph to compute clusters....</Label>
-                </div>
           }
         </div>
         <div className="analysis">
@@ -707,6 +706,10 @@ const App = () => {
             clusterColors={clusterColors}
             cellLabelData={cellLabelData}
             gene={gene}
+            showQCLoader={showQCLoader}
+            showPCALoader={showPCALoader}
+            showNClusLoader={showNClusLoader}
+            showCellLabelLoader={showCellLabelLoader}
           />
         </div>
       </div>
