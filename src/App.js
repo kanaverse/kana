@@ -603,52 +603,88 @@ const App = () => {
         setKanaIDBRecs={setKanaIDBRecs}
         deletekdb={deletekdb}
         setDeletekdb={setDeletekdb}
-        loadingStatus={!showQCLoader && !showPCALoader && !showNClusLoader && !showCellLabelLoader && !showMarkerLoader && !showDimPlotLoader}
+        loadingStatus={inputFiles?.files ? !showQCLoader && !showPCALoader && !showNClusLoader && !showCellLabelLoader && !showMarkerLoader && !showDimPlotLoader : true}
       />
       <div className="App-content">
-        <div className={showDimPlotLoader ? "plot effect-opacitygrayscale" : "plot"}>
-          {
-            defaultRedDims && clusterData ?
-              <DimPlot
-                className={"effect-opacitygrayscale"}
-                tsneData={tsneData} umapData={umapData}
-                animateData={animateData}
-                redDims={redDims}
-                defaultRedDims={defaultRedDims}
-                setDefaultRedDims={setDefaultRedDims}
-                showAnimation={showAnimation}
-                setShowAnimation={setShowAnimation}
-                setTriggerAnimation={setTriggerAnimation}
-                selectedClusterSummary={selectedClusterSummary}
-                setSelectedClusterSummary={setSelectedClusterSummary}
-                selectedClusterIndex={selectedClusterIndex}
-                selectedCluster={selectedCluster}
-                savedPlot={savedPlot}
-                setSavedPlot={setSavedPlot}
-                clusterData={clusterData}
-                customSelection={customSelection}
-                setCustomSelection={setCustomSelection}
-                setGene={setGene}
-                gene={gene}
-                clusterColors={clusterColors}
-                setClusterColors={setClusterColors}
-                setDelCustomSelection={setDelCustomSelection}
-                setReqAnnotation={setReqAnnotation}
-              /> :
-              showGame ?
-                <div style={{
-                  height: '100%',
-                  width: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingTop: '50px'
-                }}>
-                  <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
-                  <Button onClick={() => { setShowGame(false) }}>I'm good, go back</Button>
-                  <Pong />
-                </div>
+        {
+          inputFiles?.files && <div className={showDimPlotLoader ? "plot effect-opacitygrayscale" : "plot"}>
+            {
+              defaultRedDims && clusterData ?
+                <DimPlot
+                  className={"effect-opacitygrayscale"}
+                  tsneData={tsneData} umapData={umapData}
+                  animateData={animateData}
+                  redDims={redDims}
+                  defaultRedDims={defaultRedDims}
+                  setDefaultRedDims={setDefaultRedDims}
+                  showAnimation={showAnimation}
+                  setShowAnimation={setShowAnimation}
+                  setTriggerAnimation={setTriggerAnimation}
+                  selectedClusterSummary={selectedClusterSummary}
+                  setSelectedClusterSummary={setSelectedClusterSummary}
+                  selectedClusterIndex={selectedClusterIndex}
+                  selectedCluster={selectedCluster}
+                  savedPlot={savedPlot}
+                  setSavedPlot={setSavedPlot}
+                  clusterData={clusterData}
+                  customSelection={customSelection}
+                  setCustomSelection={setCustomSelection}
+                  setGene={setGene}
+                  gene={gene}
+                  clusterColors={clusterColors}
+                  setClusterColors={setClusterColors}
+                  setDelCustomSelection={setDelCustomSelection}
+                  setReqAnnotation={setReqAnnotation}
+                /> :
+                showGame ?
+                  <div style={{
+                    height: '100%',
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingTop: '50px'
+                  }}>
+                    <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+                    <Button onClick={() => { setShowGame(false) }}>I'm good, go back</Button>
+                    <Pong />
+                  </div>
+                  :
+                  <div style={{
+                    height: '100%',
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingTop: '50px'
+                  }}>
+                    <Spinner2 />
+                    <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+                    <Button onClick={() => { setShowGame(true) }}>Play Pong</Button>
+                  </div>
+            }
+          </div>
+        }
+        {
+          inputFiles?.files && <div className={showMarkerLoader ? "marker effect-opacitygrayscale" : "marker"}>
+            {
+              clusterData ?
+                selectedClusterSummary && <MarkerPlot
+                  selectedClusterSummary={selectedClusterSummary}
+                  setSelectedClusterSummary={setSelectedClusterSummary}
+                  selectedClusterIndex={selectedClusterIndex}
+                  selectedCluster={selectedCluster}
+                  setSelectedCluster={setSelectedCluster}
+                  setClusterRank={setClusterRank}
+                  clusterData={clusterData}
+                  customSelection={customSelection}
+                  setGene={setGene}
+                  gene={gene}
+                  clusterColors={clusterColors}
+                  setReqGene={setReqGene}
+                />
                 :
                 <div style={{
                   height: '100%',
@@ -656,62 +692,32 @@ const App = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingTop: '50px'
+                  justifyContent: 'center'
                 }}>
                   <Spinner2 />
-                  <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
-                  <Button onClick={() => { setShowGame(true) }}>Play Pong</Button>
+                  <Label>Generating nearest neighbor graph to compute clusters....</Label>
                 </div>
-          }
-        </div>
-        <div className={showMarkerLoader ? "marker effect-opacitygrayscale" : "marker"}>
-          {
-            clusterData ?
-              selectedClusterSummary && <MarkerPlot
-                selectedClusterSummary={selectedClusterSummary}
-                setSelectedClusterSummary={setSelectedClusterSummary}
-                selectedClusterIndex={selectedClusterIndex}
-                selectedCluster={selectedCluster}
-                setSelectedCluster={setSelectedCluster}
-                setClusterRank={setClusterRank}
-                clusterData={clusterData}
-                customSelection={customSelection}
-                setGene={setGene}
-                gene={gene}
-                clusterColors={clusterColors}
-                setReqGene={setReqGene}
-              />
-              :
-              <div style={{
-                height: '100%',
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Spinner2 />
-                <Label>Generating nearest neighbor graph to compute clusters....</Label>
-              </div>
-          }
-        </div>
-        <div className="analysis">
-          <Gallery
-            qcData={qcData}
-            pcaVarExp={pcaVarExp}
-            savedPlot={savedPlot}
-            setSavedPlot={setSavedPlot}
-            clusterData={clusterData}
-            clusterColors={clusterColors}
-            cellLabelData={cellLabelData}
-            gene={gene}
-            showQCLoader={showQCLoader}
-            showPCALoader={showPCALoader}
-            showNClusLoader={showNClusLoader}
-            showCellLabelLoader={showCellLabelLoader}
-          />
-        </div>
+            }
+          </div>
+        }
+        {
+          inputFiles?.files && <div className="analysis">
+            <Gallery
+              qcData={qcData}
+              pcaVarExp={pcaVarExp}
+              savedPlot={savedPlot}
+              setSavedPlot={setSavedPlot}
+              clusterData={clusterData}
+              clusterColors={clusterColors}
+              cellLabelData={cellLabelData}
+              gene={gene}
+              showQCLoader={showQCLoader}
+              showPCALoader={showPCALoader}
+              showNClusLoader={showNClusLoader}
+              showCellLabelLoader={showCellLabelLoader}
+            />
+          </div>
+        }
       </div>
       <Overlay
         isOpen={loading}
