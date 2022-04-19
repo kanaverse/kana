@@ -30,7 +30,7 @@ const Gallery = (props) => {
                 "thresholds": props?.qcData?.thresholds[x]
               };
               return (
-                <Card key={x} className="gallery-elem" elevation={Elevation.ONE}>
+                <Card key={x} className={props?.showQCLoader ? "gallery-elem effect-opacitygrayscale" : "gallery-elem"} elevation={Elevation.ONE}>
                   <h5>QC for {x}</h5>
                   <QCPlotMgr title={x} data={tqc} />
                 </Card>
@@ -40,7 +40,7 @@ const Gallery = (props) => {
         }
         {
           props?.pcaVarExp ?
-            <Card className="gallery-elem" elevation={Elevation.ONE}>
+            <Card className={props?.showPCALoader ? "gallery-elem effect-opacitygrayscale" : "gallery-elem"} elevation={Elevation.ONE}>
               <h5>PCA (% variance explained)</h5>
               <PCABarPlot title={datasetName.split(" ").join("_")} pca={props?.pcaVarExp} />
             </Card>
@@ -48,7 +48,7 @@ const Gallery = (props) => {
         }
         {
           props?.clusterData && props?.clusterColors ?
-            <Card className="gallery-elem" elevation={Elevation.ONE}>
+            <Card className={props?.showNClusLoader ? "gallery-elem effect-opacitygrayscale" : "gallery-elem"} elevation={Elevation.ONE}>
               <h5># of cells per cluster</h5>
               <ClusterBarPlot data={props?.clusterData} clusterColors={props?.clusterColors} />
             </Card>
@@ -56,7 +56,7 @@ const Gallery = (props) => {
         }
         {
           props?.cellLabelData && Object.keys(props?.cellLabelData?.per_reference).length > 0 ?
-            <Card className="gallery-elem" elevation={Elevation.ONE}>
+            <Card className={props?.showCellLabelLoader ? "gallery-elem effect-opacitygrayscale" : "gallery-elem"} elevation={Elevation.ONE}>
               <h5>
                 <Popover2
                   popoverClassName={Classes.POPOVER_CONTENT_SIZING}

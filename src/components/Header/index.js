@@ -100,7 +100,7 @@ const Header = (props) => {
           <NavbarDivider />
 
           <Tooltip2 content="What's happening under the hood? See the blow-by-blow logs as the analysis runs." position={Position.BOTTOM}>
-            <Logs logs={props?.logs} />
+            <Logs logs={props?.logs} loadingStatus={props?.loadingStatus}/>
           </Tooltip2>
           <NavbarDivider />
 
