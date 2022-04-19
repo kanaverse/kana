@@ -224,7 +224,7 @@ const DimPlot = (props) => {
                     } else {
                         if (showToggleFactors) {
                             if (toggleFactorsGradient && factorGradient) {
-                                plot_colors[i] = "#" + factorGradient.colorAt(cluster_mappings[i]);
+                                plot_colors[i] = "#" + factorGradient.colorAt(parseFloat(cluster_mappings[i]));
                                 continue;
                             }
                         }
@@ -347,7 +347,6 @@ const DimPlot = (props) => {
                     if (state == undefined || state == null) {
                         state = true;
                     }
-                    console.log(state);
                     setToggleFactorsGradient(state);
 
                     setShowToggleFactors(true);
@@ -356,7 +355,7 @@ const DimPlot = (props) => {
                     const [minTmp, maxTmp] = getMinMax(tmp.values);
                     setFactorsMinMax([minTmp, maxTmp]);
                     const uniqueTmp = [...new Set(tmp.values)];
-                    let bins = 5;
+                    let bins = 25;
 
                     let type = "ranges";
                     let binWidth = 1;
@@ -397,7 +396,7 @@ const DimPlot = (props) => {
                     if (toggleFactorsGradient && showToggleFactors) {
                         let tmpgradient = new Rainbow();
                         tmpgradient.setSpectrum("#edc775", "#e09351", "#df7e66", "#b75347", "#6d2f20");
-                        tmpgradient.setNumberRange(...factorsMinMax);
+                        tmpgradient.setNumberRange(minTmp, maxTmp);
                         setFactorGradient(tmpgradient);
                     }
 
@@ -410,7 +409,12 @@ const DimPlot = (props) => {
                     }
 
                     setPlotColorMappings(cluster_colors);
-                    setPlotFactors(lvals);
+
+                    if (toggleFactorsGradient) {
+                        setPlotFactors(tmp.values);
+                    } else {
+                        setPlotFactors(lvals);
+                    }
 
                 } else if (tmp.type === "factor") {
                     setShowToggleFactors(false);
@@ -605,7 +609,7 @@ const DimPlot = (props) => {
                                         <div className='dim-slider-gradient'>
                                             <span style={{
                                                 marginRight: "3px",
-                                                "marginTop": "0px"
+                                                marginTop: "0px"
                                             }}>{Math.round(factorsMinMax[0])}</span>
                                             <div
                                                 style={{
@@ -614,23 +618,23 @@ const DimPlot = (props) => {
                                                 }}></div>&nbsp;
                                             <span style={{
                                                 marginLeft: "3px",
-                                                "marginTop": "0px"
+                                                marginTop: "0px"
                                             }}>{Math.round(factorsMinMax[1])}</span>
                                         </div>
                                     </div>
                                     :
                                     <ul>
                                         {
-                                            plotGroups && plotGroups.map((x, i) => {
+                                            plotGroups && [...plotGroups].sort((a, b) => a - b).map((x, i) => {
                                                 return (
                                                     <li key={i}
-                                                        className={clusHover === i || clusHighlight === i ? 'legend-highlight' : ""}
-                                                        style={{ color: plotColorMappings[i] }}
+                                                        className={clusHover === plotGroups.indexOf(x) || clusHighlight === plotGroups.indexOf(x) ? 'legend-highlight' : ""}
+                                                        style={{ color: plotColorMappings[plotGroups.indexOf(x)] }}
                                                         onClick={() => {
-                                                            if (i === clusHighlight) {
+                                                            if (plotGroups.indexOf(x) === clusHighlight) {
                                                                 setClusHighlight(null);
                                                             } else {
-                                                                setClusHighlight(i);
+                                                                setClusHighlight(plotGroups.indexOf(x));
                                                             }
                                                         }}
                                                     > {x ? x : "NA"} </li>
@@ -648,7 +652,7 @@ const DimPlot = (props) => {
                                             paddingTop: '5px'
                                         }}>
                                         <ul>
-                                            {Object.keys(props?.customSelection)?.slice(0,100).map((x, i) => {
+                                            {Object.keys(props?.customSelection)?.slice(0, 100).map((x, i) => {
                                                 return (<li key={x}
                                                     className={clusHighlight === x ? 'legend-highlight' : ''}
                                                     style={{ color: props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + 1 + i] }}
