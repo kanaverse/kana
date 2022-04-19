@@ -578,6 +578,7 @@ const DimPlot = (props) => {
                                         setColorByAnnotation(nval?.currentTarget?.value);
                                         setShowToggleFactors(false);
                                         setFactorsMinMax(null);
+                                        setClusHighlight(null);
 
                                         let state = factorState[colorByAnotation];
                                         if (state == undefined || state == null) {
@@ -600,6 +601,7 @@ const DimPlot = (props) => {
                                             let tmpState = { ...factorState };
                                             tmpState[colorByAnotation] = e.target.checked;
                                             setFactorState(tmpState);
+                                            setClusHighlight(null);
                                         }} />
                                 }
                             </div>
