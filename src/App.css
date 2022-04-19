@@ -76,3 +76,21 @@
   left: 50%;
   top: 40%;
 }
+
+
+.effect-opacity {
+  opacity: 0.6;
+}
+
+.effect-grayscale {
+  filter: grayscale(100%);
+}
+
+.effect-blur {
+  filter: blur(3px);
+}
+
+.effect-opacitygrayscale {
+  opacity: 0.6;
+  filter: grayscale(100%);
+}
