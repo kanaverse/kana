@@ -436,7 +436,9 @@ const App = () => {
       const { resp } = payload;
 
       let t_annots = [...annotationCols];
-      t_annots.push("CLUSTERS");
+      if (t_annots.indexOf("CLUSTERS") == -1) {
+        t_annots.push("CLUSTERS");
+      }
 
       setAnnotationCols(t_annots);
 
