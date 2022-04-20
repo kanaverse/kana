@@ -510,10 +510,10 @@ const App = () => {
         index[resp.ordering[i]] = i;
         records.push({
           "gene": resp?.ordering?.[i],
-          "mean": parseFloat(x.toFixed(2)),
-          "delta": parseFloat(resp?.delta_detected?.[i].toFixed(2)),
-          "lfc": parseFloat(resp?.lfc?.[i].toFixed(2)),
-          "detected": parseFloat(resp?.detected?.[i].toFixed(2)),
+          "mean": isNaN(x) ? 0: parseFloat(x.toFixed(2)),
+          "delta": isNaN(x) ? 0: parseFloat(resp?.delta_detected?.[i].toFixed(2)),
+          "lfc": isNaN(x) ? 0: parseFloat(resp?.lfc?.[i].toFixed(2)),
+          "detected": isNaN(x) ? 0: parseFloat(resp?.detected?.[i].toFixed(2)),
           "expanded": false,
           "expr": null,
         });
