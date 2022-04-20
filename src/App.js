@@ -363,8 +363,6 @@ const App = () => {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    console.log(payload);
-
     if (payload) {
       if (payload.type.toLowerCase().endsWith("start")) {
         add_to_logs("start", payload.type.toLowerCase().replace("_start", ""), "started");
@@ -760,7 +758,7 @@ const App = () => {
         <Divider />
         {
           scranError?.fatal &&
-          <p>Check logs here <Logs logs={logs} /></p>
+          <div>Check logs here <Logs loadingStatus={true} logs={logs} /></div>
         }
       </Alert>
 
