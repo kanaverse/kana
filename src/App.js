@@ -363,8 +363,6 @@ const App = () => {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    console.log(payload);
-
     if (payload) {
       if (payload.type.toLowerCase().endsWith("start")) {
         add_to_logs("start", payload.type.toLowerCase().replace("_start", ""), "started");
@@ -512,10 +510,10 @@ const App = () => {
         index[resp.ordering[i]] = i;
         records.push({
           "gene": resp?.ordering?.[i],
-          "mean": parseFloat(x.toFixed(2)),
-          "delta": parseFloat(resp?.delta_detected?.[i].toFixed(2)),
-          "lfc": parseFloat(resp?.lfc?.[i].toFixed(2)),
-          "detected": parseFloat(resp?.detected?.[i].toFixed(2)),
+          "mean": isNaN(x) ? 0: parseFloat(x.toFixed(2)),
+          "delta": isNaN(x) ? 0: parseFloat(resp?.delta_detected?.[i].toFixed(2)),
+          "lfc": isNaN(x) ? 0: parseFloat(resp?.lfc?.[i].toFixed(2)),
+          "detected": isNaN(x) ? 0: parseFloat(resp?.detected?.[i].toFixed(2)),
           "expanded": false,
           "expr": null,
         });
@@ -760,7 +758,7 @@ const App = () => {
         <Divider />
         {
           scranError?.fatal &&
-          <p>Check logs here <Logs logs={logs} /></p>
+          <div>Check logs here <Logs loadingStatus={true} logs={logs} /></div>
         }
       </Alert>
 

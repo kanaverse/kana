@@ -56,22 +56,22 @@ const MarkerPlot = (props) => {
 
         if (trecs.length === 0) return trecs;
 
-        let tmpmeans = trecs.map(x => x?.mean);
+        let tmpmeans = trecs.map(x => isNaN(x?.mean) ? 0 : x?.mean);
         let tmeanMinMax = d3.extent(tmpmeans)
         let tmeanval = tmeanMinMax[1] === 0 ? 0.01 : tmeanMinMax[1];
         setMeanMinMax([parseFloat(tmeanMinMax[0].toFixed(2)), parseFloat(tmeanval.toFixed(2))]);
 
-        let tmpdeltas = trecs.map(x => x?.delta);
+        let tmpdeltas = trecs.map(x => isNaN(x?.delta) ? 0 : x?.delta);
         let tdeltaMinMax = d3.extent(tmpdeltas)
         let tdeltaval = tdeltaMinMax[1] === 0 ? 0.01 : tdeltaMinMax[1];
         setDeltaMinMax([parseFloat(tdeltaMinMax[0].toFixed(2)), parseFloat(tdeltaval.toFixed(2))]);
 
-        let tmplfcs = trecs.map(x => x?.lfc);
+        let tmplfcs = trecs.map(x => isNaN(x?.lfc) ? 0 : x?.lfc);
         let tlfcsMinMax = d3.extent(tmplfcs)
         let tlfcsval = tlfcsMinMax[1] === 0 ? 0.01 : tlfcsMinMax[1];
         setLfcMinMax([parseFloat(tlfcsMinMax[0].toFixed(2)), parseFloat(tlfcsval.toFixed(2))]);
 
-        let tmpdetects = trecs.map(x => x?.detected);
+        let tmpdetects = trecs.map(x => isNaN(x?.detected) ? 0 : x?.detected);
         let tdetectsMinMax = d3.extent(tmpdetects)
         let tdetecval = tdetectsMinMax[1] === 0 ? 0.01 : tdetectsMinMax[1];
         setDetectedMinMax([parseFloat(tdetectsMinMax[0].toFixed(2)), parseFloat(tdetecval.toFixed(2))]);
@@ -651,7 +651,7 @@ const MarkerPlot = (props) => {
                                             min={lfcMinMax[0]}
                                             max={lfcMinMax[1]}
                                             labelValues={lfcMinMax}
-                                            stepSize={parseFloat((Math.abs(lfcMinMax[1] - lfcMinMax[0]) / 20).toFixed(2))}
+                                            stepSize={Math.max(parseFloat((Math.abs(lfcMinMax[1] - lfcMinMax[0]) / 20).toFixed(2)), 0.01)}
                                             onChange={(val) => handleMarkerFilter(val, "lfc")}
                                             value={markerFilter?.["lfc"]}
                                             vertical={false}
@@ -676,7 +676,7 @@ const MarkerPlot = (props) => {
                                             min={deltaMinMax[0]}
                                             max={deltaMinMax[1]}
                                             labelValues={deltaMinMax}
-                                            stepSize={parseFloat((Math.abs(deltaMinMax[1] - deltaMinMax[0]) / 20).toFixed(2))}
+                                            stepSize={Math.max(parseFloat((Math.abs(deltaMinMax[1] - deltaMinMax[0]) / 20).toFixed(2)), 0.01)}
                                             onChange={(val) => handleMarkerFilter(val, "delta")}
                                             value={markerFilter?.["delta"]}
                                             vertical={false}
@@ -701,7 +701,7 @@ const MarkerPlot = (props) => {
                                             min={meanMinMax[0]}
                                             max={meanMinMax[1]}
                                             labelValues={meanMinMax}
-                                            stepSize={parseFloat((Math.abs(meanMinMax[1] - meanMinMax[0]) / 20).toFixed(2))}
+                                            stepSize={Math.max(parseFloat((Math.abs(meanMinMax[1] - meanMinMax[0]) / 20).toFixed(2)), 0.01)}
                                             onChange={(val) => handleMarkerFilter(val, "mean")}
                                             value={markerFilter?.["mean"]}
                                             vertical={false}
@@ -726,7 +726,7 @@ const MarkerPlot = (props) => {
                                             min={detectedMinMax[0]}
                                             max={detectedMinMax[1]}
                                             labelValues={detectedMinMax}
-                                            stepSize={parseFloat((Math.abs(detectedMinMax[1] - detectedMinMax[0]) / 20).toFixed(2))}
+                                            stepSize={Math.max(parseFloat((Math.abs(detectedMinMax[1] - detectedMinMax[0]) / 20).toFixed(2)), 0.01)}
                                             onChange={(val) => handleMarkerFilter(val, "detected")}
                                             value={markerFilter?.["detected"]}
                                             vertical={false}
