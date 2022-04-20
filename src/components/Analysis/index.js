@@ -266,7 +266,7 @@ const AnalysisDialog = ({
                         all_valid = false;
                     }
 
-                    // if (!x.mtx) all_valid = false;
+                    if (!x.mtx) all_valid = false;
                 } else if (x.format === "10X") {
 
                     if (x?.h5 && !(
@@ -277,7 +277,7 @@ const AnalysisDialog = ({
                         all_valid = false;
                     }
 
-                    // if (!x.file) all_valid = false;
+                    if (!x.h5) all_valid = false;
 
                 } else if (
                     x.format === "H5AD") {
@@ -288,7 +288,7 @@ const AnalysisDialog = ({
                         all_valid = false;
                     }
 
-                    // if (!x.file) all_valid = false;
+                    if (!x.h5) all_valid = false;
                 }
 
                 // setTmpInputValid(all_valid);
@@ -1281,7 +1281,7 @@ const AnalysisDialog = ({
 
                                     <div className="row-input-tooltips">
                                         {
-                                            (!tmpInputValid || !stmpInputValid) &&
+                                            tmpInputFiles.length > 1 && (!tmpInputValid || !stmpInputValid) &&
                                             <Callout intent="danger"
                                                 title="Incorrect file format"
                                                 style={{
