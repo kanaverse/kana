@@ -131,10 +131,10 @@ const App = () => {
   };
 
   const { setWasmInitialized, wasmInitialized,
-    setGenesInfo, initLoadState, tabSelected,
+    setGenesInfo, initLoadState, tabSelected, setTabSelected,
     datasetName, params, loadParams,
     setGeneColSel, setLoadParams,
-    setInitLoadState, inputFiles, annotationCols, setAnnotationCols,
+    setInitLoadState, inputFiles, setInputFiles, annotationCols, setAnnotationCols,
     annotationObj, setAnnotationObj, preInputFiles,
     setPreInputFilesStatus } = useContext(AppContext);
 
@@ -395,6 +395,37 @@ const App = () => {
       if (resp !== undefined) {
         setKanaIDBRecs(resp);
       }
+      
+      // routes 
+      let search = window.location.search;
+      let params = new URLSearchParams(search);
+
+      // IndexedDB ID found in the url
+      // app is pointing to a local version of indexeddb file
+      let idb_id = params.get("kanadb_id");
+      if (idb_id) {
+        add_to_logs("start", `load state from browser: (id: ${idb_id})`, "started");
+
+        let all_ids = resp.map(x => x.id);
+        if (all_ids.indexOf(idb_id) == -1) {
+          setScranError({
+            type: payload.type,
+            msg: `cannot find indexeddb record with ${idb_id}`,
+            fatal: true
+          });
+
+          return;
+        }
+
+        let tfiles = [{
+          "format": "kanadb",
+          file: idb_id
+        }];
+
+        setTabSelected("load");
+        setInputFiles(tfiles);
+      }
+
       setIndexedDBState(false);
     } else if (payload.type === "inputs_DATA") {
       setInitDims(`${payload.resp.dimensions.num_genes} genes, ${payload.resp.dimensions.num_cells} cells`);
