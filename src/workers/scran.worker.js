@@ -368,6 +368,18 @@ onmessage = function (msg) {
                 });
         }
         /**************** SAVING EXISTING ANALYSES *******************/
+    } else if (type == "NEW_SUBSET_SESSION") {
+        var indices = payload.indices;
+        loaded
+            .then(async (x) => {
+                // TODO: fill this part up
+                // let subset_matrix = await superstate.normalization.subetColumns(indices);
+
+            }).catch(err => {
+                console.error(err);
+                postError(type, err, fatal)
+            });
+
     } else if (type == "EXPORT") {
         loaded
             .then(async (x) => {

@@ -632,14 +632,28 @@ const DimPlot = (props) => {
                                                     <li key={i}
                                                         className={clusHover === plotGroups.indexOf(x) || clusHighlight === plotGroups.indexOf(x) ? 'legend-highlight' : ""}
                                                         style={{ color: plotColorMappings[plotGroups.indexOf(x)] }}
+                                                    > <span
                                                         onClick={() => {
                                                             if (plotGroups.indexOf(x) === clusHighlight) {
                                                                 setClusHighlight(null);
                                                             } else {
                                                                 setClusHighlight(plotGroups.indexOf(x));
                                                             }
-                                                        }}
-                                                    > {x ? x : "NA"} </li>
+                                                        }}>
+                                                            {x ? x : "NA"}
+                                                        </span>
+                                                        <Icon icon="one-to-many"
+                                                            onClick={() => {
+                                                                let idx = plotGroups.indexOf(x);
+                                                                let indices = [];
+                                                                for (let ci=0; ci <  props?.clusterData.clusters.length; ci++) {
+                                                                    if (props?.clusterData.clusters[ci] === idx) {
+                                                                        indices.push(ci);
+                                                                    }
+                                                                }
+                                                                props?.setNewSubsetSessionState(indices);
+                                                            }}></Icon>
+                                                    </li>
                                                 )
                                             })
                                         }
