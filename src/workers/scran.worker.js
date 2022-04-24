@@ -69,6 +69,7 @@ function runAllSteps(inputs, params) {
             sample_factor: inputs.batch
         },
         quality_control: {
+            filter: params.qc["qc-filter"],
             use_mito_default: params.qc["qc-usemitodefault"],
             mito_prefix: params.qc["qc-mito"],
             nmads: params.qc["qc-nmads"]
@@ -179,6 +180,7 @@ async function unserializeAllSteps(contents) {
                 "batch": params.inputs.sample_factor
             },
             qc: {
+                "qc-filter": params.quality_control.filter,
                 "qc-usemitodefault": params.quality_control.use_mito_default,
                 "qc-mito": params.quality_control.mito_prefix,
                 "qc-nmads": params.quality_control.nmads

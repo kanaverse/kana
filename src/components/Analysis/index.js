@@ -347,6 +347,10 @@ const AnalysisDialog = ({
                             under the assumption that most cells in the dataset are of acceptable quality.
                         </p>
                         <p>
+                            <strong>Filter cells ?</strong>:
+                            Use this option to turn off filter cells. cells with zero counts across all genes will still be removed.
+                        </p>
+                        <p>
                             <strong>Number of MADs</strong>:
                             Number of median absolute deviations (MADs) from the median,
                             used to define a filter threshold in the appropriate direction for each QC metric.
@@ -529,38 +533,53 @@ const AnalysisDialog = ({
                             <Text className="text-100">
                                 <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(2)}>
-                                    Number of MADs
+                                    QC and Filter cells ?
                                 </span>
                             </Text>
-                            <NumericInput
-                                placeholder="3" value={tmpInputParams["qc"]["qc-nmads"]}
-                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-nmads": nval } }) }} />
-                        </Label>
-                        <Label className="row-input">
-                            <Text className="text-100">
-                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(2)}>
-                                    Use default mitochondrial list ?
-                                </span>
-                            </Text>
-                            <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-usemitodefault"]}
+                            <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-filter"]}
                                 innerLabelChecked="yes" innerLabel="no"
-                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-usemitodefault": e.target.checked } }) }} />
+                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-filter": e.target.checked } }) }} />
                         </Label>
-                        {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
-                            <Text className="text-100">
-                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(2)}>
-                                    Mitochondrial gene prefix
-                                </span>
-                            </Text>
-                            <InputGroup
-                                leftIcon="filter"
-                                onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-mito": nval?.target?.value } }) }}
-                                placeholder="mt-"
-                                value={tmpInputParams["qc"]["qc-mito"]}
-                            />
-                        </Label>}
+                        {
+                            tmpInputParams["qc"]["qc-filter"] && <>
+                                <Label className="row-input">
+                                    <Text className="text-100">
+                                        <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                            onMouseEnter={() => setShowStepHelper(2)}>
+                                            Number of MADs
+                                        </span>
+                                    </Text>
+                                    <NumericInput
+                                        placeholder="3" value={tmpInputParams["qc"]["qc-nmads"]}
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-nmads": nval } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">
+                                        <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                            onMouseEnter={() => setShowStepHelper(2)}>
+                                            Use default mitochondrial list ?
+                                        </span>
+                                    </Text>
+                                    <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-usemitodefault"]}
+                                        innerLabelChecked="yes" innerLabel="no"
+                                        onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-usemitodefault": e.target.checked } }) }} />
+                                </Label>
+                                {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
+                                    <Text className="text-100">
+                                        <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                            onMouseEnter={() => setShowStepHelper(2)}>
+                                            Mitochondrial gene prefix
+                                        </span>
+                                    </Text>
+                                    <InputGroup
+                                        leftIcon="filter"
+                                        onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-mito": nval?.target?.value } }) }}
+                                        placeholder="mt-"
+                                        value={tmpInputParams["qc"]["qc-mito"]}
+                                    />
+                                </Label>}
+                            </>
+                        }
                     </div>
                 </div>
             </div>

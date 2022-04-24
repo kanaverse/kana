@@ -18,6 +18,7 @@ const AppContextProvider = ({ children }) => {
   // default params 
   const [params, setParams] = useState({
     qc: {
+      "qc-filter": true,
       "qc-nmads": 3,
       "qc-usemitodefault": true,
       "qc-mito": "mt-"
