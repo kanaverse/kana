@@ -23,6 +23,8 @@ import IntroDialog from "../Intro";
 
 import { AppContext } from "../../context/AppContext";
 
+import pkgVersion from "../../../package.json";
+
 const Header = (props) => {
   // state for dialogs
   const [state] = useState({
@@ -46,7 +48,9 @@ const Header = (props) => {
       <Navbar className="bp3-dark">
         <NavbarGroup className="navbar-group" align={Alignment.LEFT}>
 
-          <NavbarHeading>kana</NavbarHeading>
+          <NavbarHeading>kana <span style={{
+            fontSize: "8px"
+          }}>v{pkgVersion.version}</span></NavbarHeading>
 
           <NavbarDivider />
           <span>Single cell RNA-seq analysis in the browser</span>
@@ -96,7 +100,7 @@ const Header = (props) => {
           <NavbarDivider />
 
           <Tooltip2 content="What's happening under the hood? See the blow-by-blow logs as the analysis runs." position={Position.BOTTOM}>
-            <Logs logs={props?.logs} />
+            <Logs logs={props?.logs} loadingStatus={props?.loadingStatus}/>
           </Tooltip2>
           <NavbarDivider />
 

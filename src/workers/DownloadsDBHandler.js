@@ -2,30 +2,32 @@ var DownloadsDB;
 var init = null;
 
 export function initialize() {
-    init = new Promise(resolve => {
-        // initialize database on worker creation
-        DownloadsDB = indexedDB.open("DownloadsDB", 3);
+    if (init === null) {
+        init = new Promise((resolve, reject) => {
+            // initialize database on worker creation
+            DownloadsDB = indexedDB.open("DownloadsDB", 3);
 
-        DownloadsDB.onupgradeneeded = (e) => {
-            var DownloadsDBClient = e.target.result;
+            DownloadsDB.onupgradeneeded = (e) => {
+                var DownloadsDBClient = e.target.result;
 
-            // Currently purging all existing stores when the version is updated.
-            // At some point we may add a more sophisticated upgrade mechanism.
-            try {
-                DownloadsDBClient.deleteObjectStore("downloads");
-            } catch (e) {}
+                // Currently purging all existing stores when the version is updated.
+                // At some point we may add a more sophisticated upgrade mechanism.
+                try {
+                    DownloadsDBClient.deleteObjectStore("downloads");
+                } catch (e) {}
 
-            DownloadsDBClient.createObjectStore("downloads", { keyPath: 'url' });
-        };
+                DownloadsDBClient.createObjectStore("downloads", { keyPath: 'url' });
+            };
 
-        DownloadsDB.onsuccess = () => {
-            resolve(null);
-        };
+            DownloadsDB.onsuccess = () => {
+                resolve(null);
+            };
 
-        DownloadsDB.onerror = () => {
-            resolve(null);
-        };
-    });
+            DownloadsDB.onerror = () => {
+                reject("failed to initialize DownloadsDB");
+            };
+        });
+    }
 
     return init;
 }
@@ -37,14 +39,13 @@ export async function list() {
     return download_store.getAllKeys();
 }
 
-export async function get(url, init = null, force = false) {
+export async function get(url, params = null, force = false) {
     await init;
 
     if (!force) {
         let trans = DownloadsDB.result.transaction(["downloads"], "readonly");
         let download_store = trans.objectStore("downloads");
         var data_check = new Promise(resolve => {
-            console.log(url);
             var already = download_store.get(url);
             already.onsuccess = function (event) {
                 if (already.result !== undefined) {
@@ -65,13 +66,16 @@ export async function get(url, init = null, force = false) {
     }
 
     var req;
-    if (init == null) {
+    if (params == null) {
         req = fetch(url);
     } else {
-        req = fetch(url, init);
+        req = fetch(url, params);
     }
 
     var res = await req;
+    if (!res.ok) {
+        throw "failed to download '" + url + "' (" + res.status + ")";
+    }
     var buffer = await res.arrayBuffer();
 
     // Technically, this isn't quite right, because we need to close the read
@@ -84,7 +88,6 @@ export async function get(url, init = null, force = false) {
     let trans = DownloadsDB.result.transaction(["downloads"], "readwrite");
     let download_store = trans.objectStore("downloads");
     var data_saving = new Promise(resolve => {
-        console.log(url);
         var putrequest = download_store.put({ "url": url, "payload": buffer });
         putrequest.onsuccess = function (event) {
             resolve(true);
@@ -95,7 +98,6 @@ export async function get(url, init = null, force = false) {
     });
 
     let success = await data_saving;
-    console.log(success);
     if (!success) {
         throw "failed to download resources for '" + url + "'";
     }

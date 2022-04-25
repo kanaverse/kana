@@ -9,6 +9,12 @@ const AppContextProvider = ({ children }) => {
     files: null
   });
 
+  // Pre flight Input State
+  const [preInputFiles, setPreInputFiles] = useState(null);
+
+  // Pre flight Input Status
+  const [preInputFilesStatus, setPreInputFilesStatus] = useState(null);
+
   // default params 
   const [params, setParams] = useState({
     qc: {
@@ -22,12 +28,13 @@ const AppContextProvider = ({ children }) => {
     pca: {
       "pca-npc": 25,
       "pca-hvg": 2500,
+      "pca-correction": "none",
     },
     cluster: {
       "clus-k": 10,
       "kmeans-k": 10,
       "clus-res": 0.5,
-      "clus-scheme": 0,
+      "clus-scheme": "rank",
       "clus-approx": true,
       "clus-method": "snn_graph",
     },
@@ -42,7 +49,13 @@ const AppContextProvider = ({ children }) => {
       "umap-min_dist": 0.01,
       "animate": false,
     },
-    markerGene: {}
+    markerGene: {},
+    annotateCells: {
+      "annotateCells": false,
+      // "annotateCells-species": "human",
+      "annotateCells-human_references": [],
+      "annotateCells-mouse_references": [],
+    }
   });
 
   // which tab is selected ? defaults to new
@@ -88,7 +101,9 @@ const AppContextProvider = ({ children }) => {
         initLoadState, setInitLoadState,
         loadParamsFor, setLoadParamsFor,
         annotationCols, setAnnotationCols,
-        annotationObj, setAnnotationObj
+        annotationObj, setAnnotationObj,
+        preInputFiles, setPreInputFiles,
+        preInputFilesStatus, setPreInputFilesStatus
       }}
     >
       {children}

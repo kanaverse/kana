@@ -112,6 +112,7 @@
 .dim-slider-gradient {
   display: flex;
   flex-direction: row;
+  align-items: center;
 }
 
 text {

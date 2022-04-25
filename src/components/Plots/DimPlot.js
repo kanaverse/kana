@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useContext, useState } from 'react';
 import {
     ControlGroup, Button, Icon, ButtonGroup, Callout, RangeSlider,
-    Divider, Label, Tag, HTMLSelect
+    Divider, Label, Tag, HTMLSelect, Switch
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
@@ -46,6 +46,16 @@ const DimPlot = (props) => {
 
     // selected colorBy
     const [colorByAnotation, setColorByAnnotation] = useState("clusters");
+
+    // choose between categorical vs gradient factors on numerical arrays
+    const [toggleFactorsGradient, setToggleFactorsGradient] = useState(true);
+    // show the toggle
+    const [showToggleFactors, setShowToggleFactors] = useState(false);
+    // the gradient
+    const [factorGradient, setFactorGradient] = useState(null);
+    const [factorsMinMax, setFactorsMinMax] = useState(null);
+    // capture state across annotations
+    const [factorState, setFactorState] = useState({});
 
     // dim plot color mappins & groups
     const [plotColorMappings, setPlotColorMappings] = useState(null);
@@ -212,6 +222,12 @@ const DimPlot = (props) => {
                         let tmpclus = parseInt(clusHighlight.replace("cs", ""));
                         plot_colors[i] = cluster_colors[max + tmpclus - 1];
                     } else {
+                        if (showToggleFactors) {
+                            if (toggleFactorsGradient && factorGradient) {
+                                plot_colors[i] = "#" + factorGradient.colorAt(parseFloat(cluster_mappings[i]));
+                                continue;
+                            }
+                        }
                         plot_colors[i] = cluster_colors[cluster_mappings[i]];
                     }
                 }
@@ -221,7 +237,7 @@ const DimPlot = (props) => {
                 let xDomain = [(xMinMax[0] - (Math.abs(0.25 * xMinMax[0]))), (xMinMax[1] + (Math.abs(0.25 * xMinMax[1])))];
                 let yDomain = [(yMinMax[0] - (Math.abs(0.25 * yMinMax[0]))), (yMinMax[1] + (Math.abs(0.25 * yMinMax[1])))];
 
-                let aspRatio = containerEl.clientWidth/containerEl.clientHeight;
+                let aspRatio = containerEl.clientWidth / containerEl.clientHeight;
 
                 let xBound = Math.max(...xDomain.map(a => Math.abs(a)));
                 let yBound = Math.max(...yDomain.map(a => Math.abs(a)));
@@ -231,7 +247,6 @@ const DimPlot = (props) => {
                 } else {
                     yBound = yBound / aspRatio;
                 }
-
 
                 let spec = {
                     defaultData: {
@@ -270,12 +285,12 @@ const DimPlot = (props) => {
 
                     let resizeTimeout;
                     window.addEventListener("resize", () => {
-    
+
                         // similar to what we do in epiviz
                         if (resizeTimeout) {
                             clearTimeout(resizeTimeout);
                         }
-                        
+
                         resizeTimeout = setTimeout(() => {
 
                             tmp_scatterplot.setCanvasSize(
@@ -283,11 +298,11 @@ const DimPlot = (props) => {
                                 containerEl.parentNode.clientHeight
                             );
 
-                            aspRatio = containerEl.clientWidth/containerEl.clientHeight;
+                            aspRatio = containerEl.clientWidth / containerEl.clientHeight;
 
                             xBound = Math.max(...xDomain.map(a => Math.abs(a)));
                             yBound = Math.max(...yDomain.map(a => Math.abs(a)));
-            
+
                             if (aspRatio > 1) {
                                 xBound = xBound * aspRatio;
                             } else {
@@ -307,7 +322,7 @@ const DimPlot = (props) => {
             }
         }
     }, [props?.tsneData, props?.umapData, props?.animateData, props?.defaultRedDims,
-        gradient, clusHighlight, plotColorMappings, plotGroups, plotFactors]);
+        gradient, clusHighlight, plotColorMappings, plotGroups, plotFactors, showToggleFactors]);
 
     useEffect(() => {
         if (colorByAnotation.toLowerCase() == "clusters") {
@@ -324,19 +339,100 @@ const DimPlot = (props) => {
                 props?.setReqAnnotation(colorByAnotation);
             } else {
                 let tmp = annotationObj[colorByAnotation];
-                setPlotGroups(tmp.index);
-
                 let cluster_colors;
-                if (tmp.index.length > Object.keys(palette).length) {
-                    cluster_colors = randomColor({ luminosity: 'dark', count: tmp.index.length + 1 });
-                } else {
-                    cluster_colors = palette[tmp.index.length.toString()];
+
+                if (tmp.type === "array") {
+
+                    let state = factorState[colorByAnotation];
+                    if (state == undefined || state == null) {
+                        state = true;
+                    }
+                    setToggleFactorsGradient(state);
+
+                    setShowToggleFactors(true);
+
+                    // convert array to factors
+                    const [minTmp, maxTmp] = getMinMax(tmp.values);
+                    setFactorsMinMax([minTmp, maxTmp]);
+                    const uniqueTmp = [...new Set(tmp.values)];
+                    let bins = 25;
+
+                    let type = "ranges";
+                    let binWidth = 1;
+                    let levels = [];
+                    if (uniqueTmp.length < bins) {
+                        type = "unique";
+                        bins = uniqueTmp.length;
+                    } else if (maxTmp - minTmp < bins) {
+                        type = "diff";
+                        bins = maxTmp - minTmp
+                    }
+
+                    if (type == "ranges") {
+                        binWidth = Math.round((maxTmp - minTmp) / bins);
+                    }
+
+                    for (let i = 0; i < bins; i++) {
+                        if (type === "ranges") {
+                            levels.push(`∈[${minTmp + ((i + 1) * binWidth)}, ${minTmp + ((i + 2) * binWidth)}]`)
+                        } else if (type == "unique") {
+                            levels.push(`${uniqueTmp[i]}`)
+                        } else if (type == "diff") {
+                            levels.push(`${minTmp + ((i + 1) * binWidth)}`)
+                        }
+                    }
+
+                    let lvals = [];
+                    tmp.values.map((x, i) => {
+                        let flevel = (x - minTmp);
+                        if (type === "ranges") {
+                            flevel = (x - minTmp) % bins;
+                        } else if (type === "unique") {
+                            flevel = levels.indexOf(String(x));
+                        }
+                        lvals.push(flevel);
+                    });
+
+                    if (toggleFactorsGradient && showToggleFactors) {
+                        let tmpgradient = new Rainbow();
+                        tmpgradient.setSpectrum("#edc775", "#e09351", "#df7e66", "#b75347", "#6d2f20");
+                        tmpgradient.setNumberRange(minTmp, maxTmp);
+                        setFactorGradient(tmpgradient);
+                    }
+
+                    setPlotGroups(levels);
+
+                    if (levels.length > Object.keys(palette).length) {
+                        cluster_colors = randomColor({ luminosity: 'dark', count: levels.length + 1 });
+                    } else {
+                        cluster_colors = palette[levels.length.toString()];
+                    }
+
+                    setPlotColorMappings(cluster_colors);
+
+                    if (toggleFactorsGradient) {
+                        setPlotFactors(tmp.values);
+                    } else {
+                        setPlotFactors(lvals);
+                    }
+
+                } else if (tmp.type === "factor") {
+                    setShowToggleFactors(false);
+
+                    if (tmp.levels.length > Object.keys(palette).length) {
+                        cluster_colors = randomColor({ luminosity: 'dark', count: tmp.levels.length + 1 });
+                    } else {
+                        cluster_colors = palette[tmp.levels.length.toString()];
+                    }
+
+                    setPlotGroups(tmp.levels);
+                    setPlotColorMappings(cluster_colors);
+                    setPlotFactors(tmp.index);
                 }
-                setPlotColorMappings(cluster_colors);
-                setPlotFactors(tmp.factor);
             }
         }
-    }, [colorByAnotation, annotationObj, props?.clusterData,]);
+    }, [colorByAnotation, annotationObj, props?.clusterData, props?.clusterColors,
+        showToggleFactors, toggleFactorsGradient]);
 
     const setInteraction = (x) => {
         if (x === "SELECT") {
@@ -472,48 +568,83 @@ const DimPlot = (props) => {
                     <div className='right-sidebar-cluster'>
                         <Callout>
                             <p>NOTE: Clusters identified by Kana can be found under <strong>CLUSTERS</strong></p>
-                            <HTMLSelect large={false} minimal={true} defaultValue={"CLUSTERS"}
-                                onChange={(nval, val) => setColorByAnnotation(nval?.currentTarget?.value)}>
+                            <div style={{
+                                display: "flex",
+                                flexDirection: "row",
+                                flexWrap: "wrap"
+                            }}>
+                                <HTMLSelect large={false} minimal={true} defaultValue={"CLUSTERS"}
+                                    onChange={(nval, val) => {
+                                        setColorByAnnotation(nval?.currentTarget?.value);
+                                        setShowToggleFactors(false);
+                                        setFactorsMinMax(null);
+                                        setClusHighlight(null);
+
+                                        let state = factorState[colorByAnotation];
+                                        if (state == undefined || state == null) {
+                                            state = true;
+                                        }
+                                        setToggleFactorsGradient(state);
+                                    }}>
+                                    {
+                                        annotationCols.map((x, i) => (
+                                            <option key={i}>{x}</option>
+                                        ))
+                                    }
+                                </HTMLSelect>
                                 {
-                                    annotationCols.map((x, i) => (
-                                        <option key={i}>{x}</option>
-                                    ))
+                                    showToggleFactors && <Switch large={false} inline={true} checked={toggleFactorsGradient}
+                                        innerLabelChecked="yes" innerLabel="no"
+                                        label='show gradient ?'
+                                        onChange={(e) => {
+                                            setToggleFactorsGradient(e.target.checked);
+                                            let tmpState = { ...factorState };
+                                            tmpState[colorByAnotation] = e.target.checked;
+                                            setFactorState(tmpState);
+                                            setClusHighlight(null);
+                                        }} />
                                 }
-                            </HTMLSelect>
-                            <ul>
-                                {
-                                    plotGroups && plotGroups.map((x, i) => {
-                                        return (
-                                            <li key={i}
-                                                className={clusHover === i || clusHighlight === i ? 'legend-highlight' : ""}
-                                                style={{ color: plotColorMappings[i] }}
-                                                onClick={() => {
-                                                    if (i === clusHighlight) {
-                                                        setClusHighlight(null);
-                                                    } else {
-                                                        setClusHighlight(i);
-                                                    }
-                                                }}
-                                            > {x ? x : "NA"} </li>
-                                        )
-                                    })
-                                }
-                                {/* {props?.clusterColors?.map((x, i) => {
-                                        return i < props?.clusterColors.length - Object.keys(props?.customSelection).length ?
-                                            (<li key={i}
-                                                className={clusHighlight === i ? 'legend-highlight' : ''}
-                                                style={{ color: x }}
-                                                onClick={() => {
-                                                    if (i === clusHighlight) {
-                                                        setClusHighlight(null);
-                                                    } else {
-                                                        setClusHighlight(i);
-                                                    }
-                                                }}
-                                            > Cluster {i + 1} </li>)
-                                            : ""
-                                    })} */}
-                            </ul>
+                            </div>
+                            {
+                                showToggleFactors && toggleFactorsGradient ?
+                                    <div className='dim-slider-container'>
+                                        <div className='dim-slider-gradient'>
+                                            <span style={{
+                                                marginRight: "3px",
+                                                marginTop: "0px"
+                                            }}>{Math.round(factorsMinMax[0])}</span>
+                                            <div
+                                                style={{
+                                                    backgroundImage: `linear-gradient(to right, #edc775, #e09351, #df7e66, #b75347, #6d2f20)`,
+                                                    width: '175px', height: '15px',
+                                                }}></div>&nbsp;
+                                            <span style={{
+                                                marginLeft: "3px",
+                                                marginTop: "0px"
+                                            }}>{Math.round(factorsMinMax[1])}</span>
+                                        </div>
+                                    </div>
+                                    :
+                                    <ul>
+                                        {
+                                            plotGroups && [...plotGroups].sort((a, b) => a - b).map((x, i) => {
+                                                return (
+                                                    <li key={i}
+                                                        className={clusHover === plotGroups.indexOf(x) || clusHighlight === plotGroups.indexOf(x) ? 'legend-highlight' : ""}
+                                                        style={{ color: plotColorMappings[plotGroups.indexOf(x)] }}
+                                                        onClick={() => {
+                                                            if (plotGroups.indexOf(x) === clusHighlight) {
+                                                                setClusHighlight(null);
+                                                            } else {
+                                                                setClusHighlight(plotGroups.indexOf(x));
+                                                            }
+                                                        }}
+                                                    > {x ? x : "NA"} </li>
+                                                )
+                                            })
+                                        }
+                                    </ul>
+                            }
                         </Callout>
                         {
                             (Object.keys(props?.customSelection).length > 0 || (selectedPoints && selectedPoints.length > 0)) ?
@@ -523,7 +654,7 @@ const DimPlot = (props) => {
                                             paddingTop: '5px'
                                         }}>
                                         <ul>
-                                            {Object.keys(props?.customSelection)?.map((x, i) => {
+                                            {Object.keys(props?.customSelection)?.slice(0, 100).map((x, i) => {
                                                 return (<li key={x}
                                                     className={clusHighlight === x ? 'legend-highlight' : ''}
                                                     style={{ color: props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + 1 + i] }}
