@@ -1,34 +1,60 @@
 .gallery-cont {
-    display: flex;
-    /* flex-direction: row-reverse;
+  display: flex;
+  /* flex-direction: row-reverse;
     flex-wrap: wrap; */
-    flex-flow: row-reverse wrap-reverse;
-    align-items: stretch;
-    justify-content: space-evenly;
+  flex-flow: row-reverse wrap-reverse;
+  align-items: stretch;
+  justify-content: space-evenly;
 }
 
 .gallery-elem {
-    margin: 5px;
-    padding: 6px;
+  margin: 5px;
+  padding: 6px;
 }
 
 .gallery-text {
-    text-align: left;
+  text-align: left;
 }
 
 .effect-opacity {
-    opacity: 0.6;
-  }
-  
-  .effect-grayscale {
-    filter: grayscale(100%);
-  }
-  
-  .effect-blur {
-    filter: blur(3px);
-  }
-  
-  .effect-opacitygrayscale {
-    opacity: 0.6;
-    filter: grayscale(100%);
-  }
+  opacity: 0.6;
+}
+
+.effect-grayscale {
+  filter: grayscale(100%);
+}
+
+.effect-blur {
+  filter: blur(3px);
+}
+
+.effect-opacitygrayscale {
+  opacity: 0.6;
+  filter: grayscale(100%);
+}
+
+.gitem {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid gainsboro;
+  margin: 5px;
+}
+
+.gitem-header {
+  display: flex;
+  padding: 3px 10px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gitem-header-title {
+  padding-right: 10px
+}
+
+.gitem-content {
+  display: flex;
+}
+
+.gitem-content > .bp3-card {
+  border: 0px;
+}

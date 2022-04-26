@@ -59,7 +59,7 @@ const ImgPlot = (props) => {
 
     return (
         <div className="imgplot-container">
-            <h5>{title}</h5>
+            {/* <h5>{title}</h5> */}
             <Button small={true} className="imgplot-save" icon="download"
                 onClick={() => {
                     let tmpLink = document.createElement("a");
