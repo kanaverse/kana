@@ -94,9 +94,9 @@ We achieve this by using a service worker to cache the resources and load the bl
 
 ### Friends of Kana
 
-The core analysis workflow is refactored into an independent package: 
-- [ba***kana***](https://github.com/LTLA/bakana): to provide the same functionality in browser and node environments. The Kana front-end is now a wrapper around bakana.
-- [***kana***pi](https://github.com/jkanche/kanapi): provides a node API (using WebSockets) to run single-cell analysis in backend environments. One can extend **Kana** to interact to this API (#good-first-issue)
+ 
+- [ba***kana***](https://github.com/LTLA/bakana): The core analysis workflow is refactored into an independent package to provide the same functionality in browser and node environments. The Kana front-end is now a wrapper around bakana.
+- [***kana***pi](https://github.com/jkanche/kanapi): provides a node API (using WebSockets) to run single-cell analysis in backend environments (extending `bakana`). One can extend **Kana** to interact to this API (#good-first-issue)
 - [***kana***-formats](https://github.com/jkanche/kana-formats): as we add new functionality and features, we need to store and read the exported analysis state (`.kana` files). This package specifies the formats and provides readers for parsing various versions.
 - [***kana***val](https://github.com/LTLA/kanaval): validate the exported analysis results. 
 
