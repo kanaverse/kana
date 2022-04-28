@@ -39,6 +39,7 @@ Briefly, this involves:
 - Marker detection for each cluster
 - Make custom cell selections and detect markers for this selection
 - Cell type annotation for each cluster across user selected reference datasets
+- Perform Integration or Batch correction using MNN correction. You can provide a single dataset containing multiple batches and specify the `batch` column in the cell annotations, or load multiple datasets where each dataset is considered a batch
 
 The interface provides a depiction of the dimensionality reduction of choice,
 a ranking of marker genes for the cluster of interest,
@@ -68,6 +69,8 @@ As promised, there's no need to set up a backend server.
 
 ### Architecture
 
+***We have significantly revamped the entire application and the underlying infrastructure to support hybrid compute - either purely client-side with webassembly, or on backend systems through node, or both.***
+
 **kana** uses the [**scran.js**](https://github.com/jkanche/scran.js) library for efficient client-side execution of scRNA-seq analysis steps.
 This uses a variety of C/C++ libraries compiled to [WebAssembly](https://webassembly.org/) to enable heavy-duty calculations in the browser at near-native speed.
 
@@ -88,6 +91,16 @@ The Wasm code itself is compiled with PThreads support to enable parallelization
 This involves the use of a [`SharedArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer) to efficiently share memory across Web Workers,
 which in turn requires cross origin isolation of the site.
 We achieve this by using a service worker to cache the resources and load the blobs with the relevant headers - hence the need for HTTPS.
+
+### Friends of Kana
+
+The core analysis workflow is refactored into an independent package: 
+- [ba***kana***](https://github.com/LTLA/bakana): to provide the same functionality in browser and node environments. The Kana front-end is now a wrapper around bakana.
+- [***kana***pi](https://github.com/jkanche/kanapi): provides a node API (using WebSockets) to run single-cell analysis in backend environments. One can extend **Kana** to interact to this API (#good-first-issue)
+- [***kana***-formats](https://github.com/jkanche/kana-formats): as we add new functionality and features, we need to store and read the exported analysis state (`.kana` files). This package specifies the formats and provides readers for parsing various versions.
+- [***kana***val](https://github.com/LTLA/kanaval): validate the exported analysis results. 
+
+![Kana Full Architecture](assets/kana.arch.png)
 
 ### Contributing
 
