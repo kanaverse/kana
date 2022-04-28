@@ -11,9 +11,6 @@ import QCPlotMgr from "../Plots/QCPlotMgr";
 import { isObject } from "../../context/utils.js";
 
 import './Gallery.css';
-import '/node_modules/react-grid-layout/css/styles.css';
-import '/node_modules/react-resizable/css/styles.css';
-
 import ImgPlot from "../Plots/ImgPlot";
 import { ReactSortable } from "react-sortablejs";
 
