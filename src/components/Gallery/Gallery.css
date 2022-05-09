@@ -38,6 +38,11 @@
   flex-direction: column;
   border: 1px solid gainsboro;
   margin: 5px;
+  background-color: #fff;
+  box-sizing: border-box;
+  transition: box-shadow 200ms cubic-bezier(0.18, 0.67, 0.6, 1.22);
+  white-space: nowrap;
+  outline: none;
 }
 
 .gitem-header {
