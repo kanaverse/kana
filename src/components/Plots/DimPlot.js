@@ -45,7 +45,7 @@ const DimPlot = (props) => {
     const [plotMode, setPlotMode] = useState('PAN');
 
     // selected colorBy
-    const [colorByAnotation, setColorByAnnotation] = useState("clusters");
+    const [colorByAnnotation, setColorByAnnotation] = useState("clusters");
 
     // choose between categorical vs gradient factors on numerical arrays
     const [toggleFactorsGradient, setToggleFactorsGradient] = useState(true);
@@ -325,7 +325,7 @@ const DimPlot = (props) => {
         gradient, clusHighlight, plotColorMappings, plotGroups, plotFactors, showToggleFactors]);
 
     useEffect(() => {
-        if (colorByAnotation.toLowerCase() == "clusters") {
+        if (colorByAnnotation.toLowerCase() == "clusters") {
 
             setPlotColorMappings(props?.clusterColors);
             let clus_names = [];
@@ -335,15 +335,15 @@ const DimPlot = (props) => {
             setPlotGroups(clus_names);
             setPlotFactors(props?.clusterData?.clusters);
         } else {
-            if (!(colorByAnotation in annotationObj)) {
-                props?.setReqAnnotation(colorByAnotation);
+            if (!(colorByAnnotation in annotationObj)) {
+                props?.setReqAnnotation(colorByAnnotation);
             } else {
-                let tmp = annotationObj[colorByAnotation];
+                let tmp = annotationObj[colorByAnnotation];
                 let cluster_colors;
 
                 if (tmp.type === "array") {
 
-                    let state = factorState[colorByAnotation];
+                    let state = factorState[colorByAnnotation];
                     if (state == undefined || state == null) {
                         state = true;
                     }
@@ -431,7 +431,7 @@ const DimPlot = (props) => {
                 }
             }
         }
-    }, [colorByAnotation, annotationObj, props?.clusterData, props?.clusterColors,
+    }, [colorByAnnotation, annotationObj, props?.clusterData, props?.clusterColors,
         showToggleFactors, toggleFactorsGradient]);
 
     const setInteraction = (x) => {
@@ -477,10 +477,11 @@ const DimPlot = (props) => {
             tmp.push({
                 "image": iData,
                 "config": {
-                    "cluster": props?.selectedCluster,
-                    "gene": props?.gene,
+                    "embedding": props?.defaultRedDims,
+                    "annotation": colorByAnnotation,
                     "highlight": clusHighlight,
-                    "embedding": props?.defaultRedDims
+                    "gene": props?.gene,
+                    
                 }
             });
 
@@ -580,7 +581,7 @@ const DimPlot = (props) => {
                                         setFactorsMinMax(null);
                                         setClusHighlight(null);
 
-                                        let state = factorState[colorByAnotation];
+                                        let state = factorState[colorByAnnotation];
                                         if (state == undefined || state == null) {
                                             state = true;
                                         }
@@ -599,7 +600,7 @@ const DimPlot = (props) => {
                                         onChange={(e) => {
                                             setToggleFactorsGradient(e.target.checked);
                                             let tmpState = { ...factorState };
-                                            tmpState[colorByAnotation] = e.target.checked;
+                                            tmpState[colorByAnnotation] = e.target.checked;
                                             setFactorState(tmpState);
                                             setClusHighlight(null);
                                         }} />

@@ -47,10 +47,20 @@ const ImgPlot = (props) => {
                 text += `⊃ ${genesInfo[geneColSel][props?.gene]} `
             }
 
-            if (data?.config?.highlight) {
-                String(data?.config?.highlight).startsWith("cs") ?
-                text += `⊃ Custom Selection ${data?.config?.highlight} `
-                : text += `⊃ Cluster ${parseInt(data?.config?.highlight) + 1} `
+            if (data?.config?.annotation) {
+
+                if (data?.config?.annotation.toLowerCase() != "clusters") {
+                    text += `⊃ ${data.config?.annotation} `
+                }
+
+                if (data?.config?.highlight) {
+
+                    if (String(data?.config?.highlight).startsWith("cs")) {
+                        text += `(${data?.config?.highlight}) `
+                    } else {
+                        text += `(${parseInt(data?.config?.highlight) + 1}) `
+                    }
+                }
             }
 
             setTitle(text);

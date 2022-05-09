@@ -36,10 +36,16 @@ const Gallery = (props) => {
       text += `⊃ ${genesInfo[geneColSel][props?.gene]} `;
     }
 
-    if (data?.config?.highlight) {
-      String(data?.config?.highlight).startsWith("cs")
-        ? (text += `⊃ Custom Selection ${data?.config?.highlight} `)
-        : (text += `⊃ Cluster ${parseInt(data?.config?.highlight) + 1} `);
+    if (data?.config?.annotation) {
+        text += `⊃ ${data.config?.annotation} `;
+
+      if (data?.config?.highlight) {
+        if (String(data?.config?.highlight).startsWith("cs")) {
+          text += `(selection ${data?.config?.highlight}) `;
+        } else {
+          text += `(cluster ${parseInt(data?.config?.highlight) + 1}) `;
+        }
+      }
     }
 
     return text;
@@ -322,17 +328,13 @@ const Gallery = (props) => {
   //     active.className += " high"
   //   }
   // }
-  // onDragStart={handleDragStart} 
+  // onDragStart={handleDragStart}
 
   return (
     <DndContext modifiers={[restrictToWindowEdges]} onDragEnd={handleDragEnd}>
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
         {items.map((x) => (
-          <SortableItem
-            key={x}
-            id={x}
-            content={itemContent[x]?.content}
-          />
+          <SortableItem key={x} id={x} content={itemContent[x]?.content} />
         ))}
       </SortableContext>
     </DndContext>

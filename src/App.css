@@ -41,7 +41,7 @@
   display: grid;
   grid-gap: 5px;
   grid-template-columns: auto 400px;
-  grid-template-rows: auto 300px;
+  grid-template-rows: 50% 50%;
   background-color: #fff;
   /* color: #444; */
   height: calc(100vh - 70px);
