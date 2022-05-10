@@ -52,8 +52,14 @@
   align-items: center;
 }
 
+.gitem-header:hover {
+  cursor: grab;
+}
+
 .gitem-header-title {
-  padding-right: 10px
+  padding-right: 10px;
+  color: #5F6B7C;
+  font-weight: bold;
 }
 
 .gitem-content {
