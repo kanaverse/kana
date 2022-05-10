@@ -12,15 +12,15 @@ import { isObject } from "../../context/utils.js";
 
 import "./Gallery.css";
 import ImgPlot from "../Plots/ImgPlot";
-// import { ReactSortable } from "react-sortablejs";
-import { DndContext, closestCenter } from "@dnd-kit/core";
+import UDimPlot from "../Plots/uDimPlot";
+
+import { DndContext } from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
-
 import { SortableItem } from "./SortableItem";
 
 import { Popover2 } from "@blueprintjs/popover2";
@@ -37,7 +37,7 @@ const Gallery = (props) => {
     }
 
     if (data?.config?.annotation) {
-        text += `⊃ ${data.config?.annotation} `;
+      text += `⊃ ${data.config?.annotation} `;
 
       if (data?.config?.highlight) {
         if (String(data?.config?.highlight).startsWith("cs")) {
@@ -303,6 +303,42 @@ const Gallery = (props) => {
         };
       });
     }
+
+    tmpItems.push(`${12}`);
+    tmpItemContent[`${12}`] = {
+      id: 12,
+      content: (
+        <div key={"img-" + 12} className={"gitem"}>
+          <div className="gitem-header">
+            <div className="gitem-header-title">{"UMAP"}</div>
+            <div className="gitem-header-actions">
+              <Button icon="select" small={true} />
+              <Button icon="download" small={true} />
+              <Button icon="trash" small={true} />
+            </div>
+          </div>
+          <Divider />
+          <div className="gitem-content">
+            <UDimPlot
+              tsneData={props?.tsneData} 
+              umapData={props?.umapData}
+              selectedPoints={props?.selectedPoints}
+              setSelectedPoints={props?.setSelectedPoints}
+              data={{
+                color: "#fff000",
+                config: {
+                  embedding: "UMAP",
+                  annotation: null,
+                  highlight: null,
+                  gene: null,
+                },
+              }}
+            />
+          </div>
+        </div>
+      ),
+    };
+
     setItems(tmpItems);
     setItemContent(tmpItemContent);
   }

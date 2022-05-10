@@ -39,8 +39,6 @@ const DimPlot = (props) => {
 
     const { genesInfo, geneColSel, annotationCols, annotationObj } = useContext(AppContext);
 
-    // keeps track of what points were selected in lasso selections
-    const [selectedPoints, setSelectedPoints] = useState(null);
     // set mode for plot
     const [plotMode, setPlotMode] = useState('PAN');
 
@@ -61,6 +59,8 @@ const DimPlot = (props) => {
     const [plotColorMappings, setPlotColorMappings] = useState(null);
     const [plotGroups, setPlotGroups] = useState(null);
     const [plotFactors, setPlotFactors] = useState(null);
+
+    const [cellColorArray, setCellColorArray] = useState(null);
 
     const max = getMinMax(props?.clusterData.clusters)[1] + 1;
 
@@ -124,7 +124,7 @@ const DimPlot = (props) => {
                 setScatterplot(tmp_scatterplot);
 
                 tmp_scatterplot.addEventListener("onSelectionEnd", (e) => {
-                    setSelectedPoints(e.detail.data?.selection?.indices);
+                    props?.setSelectedPoints(e.detail.data?.selection?.indices);
                 });
             }
 
@@ -179,8 +179,14 @@ const DimPlot = (props) => {
                 // by expression, commmented out
                 let plot_colors = [];
                 for (let i = 0; i < data.x.length; i++) {
-                    if (selectedPoints && selectedPoints.has(i)) {
-                        plot_colors[i] = "#30404D";
+                    if (props?.selectedPoints && props?.selectedPoints.length > 0) {
+
+                        if (props?.selectedPoints.includes(i)) {
+                            plot_colors[i] = "#BD6BBD";
+                        } else {
+                            plot_colors[i] = "#EDEFF2";
+                        }
+
                         continue;
                     }
 
@@ -231,6 +237,8 @@ const DimPlot = (props) => {
                         plot_colors[i] = cluster_colors[cluster_mappings[i]];
                     }
                 }
+
+                setCellColorArray(plot_colors);
 
                 let xMinMax = getMinMax(data.x);
                 let yMinMax = getMinMax(data.y);
@@ -322,7 +330,8 @@ const DimPlot = (props) => {
             }
         }
     }, [props?.tsneData, props?.umapData, props?.animateData, props?.defaultRedDims,
-        gradient, clusHighlight, plotColorMappings, plotGroups, plotFactors, showToggleFactors]);
+        gradient, clusHighlight, plotColorMappings, plotGroups, plotFactors, showToggleFactors,
+    props?.selectedPoints]);
 
     useEffect(() => {
         if (colorByAnnotation.toLowerCase() == "clusters") {
@@ -445,7 +454,7 @@ const DimPlot = (props) => {
     }
 
     const clearPoints = () => {
-        setSelectedPoints(null);
+        props?.setSelectedPoints(null);
         scatterplot.clearSelection();
     }
 
@@ -460,28 +469,27 @@ const DimPlot = (props) => {
 
         let cid = Object.keys(props?.customSelection).length;
         let tmpSelection = { ...props?.customSelection };
-        tmpSelection[`cs${cid + 1}`] = selectedPoints;
+        tmpSelection[`cs${cid + 1}`] = props?.selectedPoints;
         props?.setCustomSelection(tmpSelection);
 
-        setSelectedPoints(null);
+        props?.setSelectedPoints(null);
         scatterplot.clearSelection();
     }
 
     function handleSaveEmbedding() {
         const containerEl = container.current;
         if (containerEl) {
-            const iData = scatterplot.canvas.toDataURL();
+            // const iData = scatterplot.canvas.toDataURL();
 
             let tmp = [...props?.savedPlot];
 
             tmp.push({
-                "image": iData,
+                "color": cellColorArray,
                 "config": {
                     "embedding": props?.defaultRedDims,
                     "annotation": colorByAnnotation,
                     "highlight": clusHighlight,
-                    "gene": props?.gene,
-                    
+                    "gene": props?.gene
                 }
             });
 
@@ -648,7 +656,7 @@ const DimPlot = (props) => {
                             }
                         </Callout>
                         {
-                            (Object.keys(props?.customSelection).length > 0 || (selectedPoints && selectedPoints.length > 0)) ?
+                            (!(showToggleFactors && toggleFactorsGradient)) && (Object.keys(props?.customSelection).length > 0 || (props?.selectedPoints && props?.selectedPoints.length > 0)) ?
                                 <Callout title="CUSTOM SELECTIONS">
                                     <div
                                         style={{
@@ -704,11 +712,11 @@ const DimPlot = (props) => {
                                         </ul>
                                     </div>
                                     {
-                                        selectedPoints && selectedPoints.length > 0 ?
+                                        props?.selectedPoints && props?.selectedPoints.length > 0 ?
                                             <div>
                                                 <Divider />
                                                 <div className='selection-container'>
-                                                    <span>{selectedPoints.length} cells selected</span>
+                                                    <span>{props?.selectedPoints.length} cells selected</span>
                                                     <div className='selection-button-container'>
                                                         <Button small={true} intent='primary'
                                                             onClick={savePoints}>Save</Button>

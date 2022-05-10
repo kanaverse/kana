@@ -76,6 +76,8 @@ const App = () => {
   const [showAnimation, setShowAnimation] = useState(false);
   // if a user manually triggers an animation (using the play button)
   const [triggerAnimation, setTriggerAnimation] = useState(false);
+  // keeps track of what points were selected in lasso selections
+  const [selectedPoints, setSelectedPoints] = useState(null);
 
   // PCA
   const [pcaVarExp, setPcaVarExp] = useState(null);
@@ -635,6 +637,8 @@ const App = () => {
                   setClusterColors={setClusterColors}
                   setDelCustomSelection={setDelCustomSelection}
                   setReqAnnotation={setReqAnnotation}
+                  selectedPoints={selectedPoints}
+                  setSelectedPoints={setSelectedPoints}
                 /> :
                 showGame ?
                   <div style={{
@@ -715,6 +719,9 @@ const App = () => {
               showPCALoader={showPCALoader}
               showNClusLoader={showNClusLoader}
               showCellLabelLoader={showCellLabelLoader}
+              tsneData={tsneData} umapData={umapData}
+              selectedPoints={selectedPoints}
+              setSelectedPoints={setSelectedPoints}
             />
           </div>
         }

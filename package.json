@@ -37,6 +37,7 @@
     "d3-dsv": "^3.0.1",
     "d3-scale": "^4.0.2",
     "epiviz.gl": "^1.0.2",
+    "epiviz.scatter.gl": "^0.0.5",
     "hash-wasm": "^4.9.0",
     "pako": "^2.0.4",
     "pub-sub-es": "^2.0.1",
