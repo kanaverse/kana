@@ -572,7 +572,7 @@ const DimPlot = (props) => {
                     "embedding": props?.defaultRedDims,
                     "annotation": colorByAnnotation,
                     "highlight": props?.clusHighlight,
-                    "gene": props?.gene
+                    "gene": genesInfo[geneColSel][props?.gene]
                 }
             });
 

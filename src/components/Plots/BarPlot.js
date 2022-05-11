@@ -89,10 +89,11 @@ const BarPlot = (props) => {
 
         if (props?.setState) {
             bars.on("click", (d, i) => {
-                if (state == i.key) {
+                if (props?.state == (i.key - 1)) {
                     props?.setState(null);
+                } else {
+                    props?.setState(i.key - 1);
                 }
-                props?.setState(i.key - 1);
             })
             .on("mouseover", function(d) {
                 d3.select(this).style("cursor", "pointer");
