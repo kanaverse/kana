@@ -60,6 +60,7 @@
   padding-right: 10px;
   color: #5F6B7C;
   font-weight: bold;
+  flex-grow: 4;
 }
 
 .gitem-content {
