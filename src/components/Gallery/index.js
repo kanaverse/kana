@@ -112,6 +112,8 @@ const Gallery = (props) => {
           <ClusterBarPlot
             data={props?.clusterData}
             clusterColors={props?.clusterColors}
+            setClusHighlight={props?.setClusHighlight}
+            clusHighlight={props?.clusHighlight}
           />
         ),
       };
@@ -232,6 +234,7 @@ const Gallery = (props) => {
               umapData={props?.umapData}
               selectedPoints={props?.selectedPoints}
               setSelectedPoints={props?.setSelectedPoints}
+              highlightPoints={props?.highlightPoints}
               data={{
                 color: colors,
                 config: {
@@ -253,8 +256,8 @@ const Gallery = (props) => {
         actions = ["highlight", "select", "download", "trash"];
       }
       props?.savedPlot.map((x, i) => {
-        tmpItems.push(`${10 + i}`);
-        tmpItemContent[`${10 + i}`] = {
+        tmpItems.push(`${100 + i}`);
+        tmpItemContent[`${100 + i}`] = {
           // id: 5 + i,
           title: get_image_title(x),
           className: "gitem",
@@ -266,37 +269,13 @@ const Gallery = (props) => {
               umapData={props?.umapData}
               selectedPoints={props?.selectedPoints}
               setSelectedPoints={props?.setSelectedPoints}
+              highlightPoints={props?.highlightPoints}
               data={x}
             />
           ),
         };
       });
     }
-
-    // tmpItems.push(`${12}`);
-    // tmpItemContent[`${12}`] = {
-    //   // id: 12,
-    //   title: "UMAP",
-    //   className: "gitem",
-    //   actions: ["select", "download", "trash"],
-    //   content: (
-    //     <UDimPlot
-    //       tsneData={props?.tsneData}
-    //       umapData={props?.umapData}
-    //       selectedPoints={props?.selectedPoints}
-    //       setSelectedPoints={props?.setSelectedPoints}
-    //       data={{
-    //         color: "#fff000",
-    //         config: {
-    //           embedding: "UMAP",
-    //           annotation: null,
-    //           highlight: null,
-    //           gene: null,
-    //         },
-    //       }}
-    //     />
-    //   ),
-    // };
 
     setItems(tmpItems.reverse());
     setItemContent(tmpItemContent);

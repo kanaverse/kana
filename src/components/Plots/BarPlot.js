@@ -72,7 +72,7 @@ const BarPlot = (props) => {
         svg.append("g")
             .call(d3.axisLeft(y));
 
-        svg.selectAll("bars")
+        let bars = svg.selectAll("bars")
             .data(data)
             .enter()
             .append("rect")
@@ -86,6 +86,22 @@ const BarPlot = (props) => {
                 }
                 return color;
             })
+
+        if (props?.setState) {
+            bars.on("click", (d, i) => {
+                if (state == i.key) {
+                    props?.setState(null);
+                }
+                props?.setState(i.key - 1);
+            })
+            .on("mouseover", function(d) {
+                d3.select(this).style("cursor", "pointer");
+              })
+              .on("mouseout", function(d) {
+                d3.select(this).style("cursor", "normal");
+              });
+        }
+
     }, [props?.data]);
 
     return (

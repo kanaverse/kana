@@ -23,8 +23,6 @@ const DimPlot = (props) => {
 
     // ref to the plot object
     const [scatterplot, setScatterplot] = useState(null);
-    // set which cluster to highlight, also for custom selections
-    const [clusHighlight, setClusHighlight] = useState(null);
     // get closestpoint on viz, to highlight the cluster
     const [clusHover, setClusHover] = useState(null);
     // show a gradient on the plot ?
@@ -63,9 +61,10 @@ const DimPlot = (props) => {
 
     const [cellColorArray, setCellColorArray] = useState(null);
     const [spec, setSpec] = useState(null);
+    const [resizeObserver, setResizeObserver] = useState(null);
 
-    let resizeObserver = null;
-    let resizeTimeout = null;
+    const [resizeTimeout, setResizeTimeout] = useState(null);
+
     const max = getMinMax(props?.clusterData.clusters)[1] + 1;
 
     // if either gene or expression changes, compute gradients and min/max
@@ -165,9 +164,13 @@ const DimPlot = (props) => {
 
                     let hdata = e.detail.data;
                     if (hdata?.distance <= 1.5) {
-                        setClusHighlight(cluster_mappings[hdata?.indices?.[0]]);
+                        if (props?.clusHighlight == cluster_mappings[hdata?.indices?.[0]]) {
+                            props?.setClusHighlight(null);
+                        } else {
+                            props?.setClusHighlight(cluster_mappings[hdata?.indices?.[0]]);
+                        }
                     } else {
-                        setClusHighlight(null);
+                        props?.setClusHighlight(null);
                     }
                 });
 
@@ -185,7 +188,7 @@ const DimPlot = (props) => {
                     if (props?.selectedPoints && props?.selectedPoints.length > 0) {
 
                         if (props?.selectedPoints.includes(i)) {
-                            plot_colors[i] = "#BD6BBD";
+                            plot_colors[i] = cluster_colors[cluster_mappings[i]];
                         } else {
                             plot_colors[i] = "#EDEFF2";
                         }
@@ -193,14 +196,14 @@ const DimPlot = (props) => {
                         continue;
                     }
 
-                    if (clusHighlight != null) {
-                        if (!String(clusHighlight).startsWith("cs")) {
-                            if (clusHighlight !== cluster_mappings[i]) {
+                    if (props?.clusHighlight != null) {
+                        if (!String(props?.clusHighlight).startsWith("cs")) {
+                            if (props?.clusHighlight !== cluster_mappings[i]) {
                                 plot_colors[i] = '#D3D3D3';
                                 continue;
                             }
                         } else {
-                            if (!props?.customSelection[clusHighlight].includes(i)) {
+                            if (!props?.customSelection[props?.clusHighlight].includes(i)) {
                                 plot_colors[i] = '#D3D3D3';
                                 continue;
                             }
@@ -227,8 +230,8 @@ const DimPlot = (props) => {
                         }
                     }
 
-                    if (clusHighlight != null && String(clusHighlight).startsWith("cs")) {
-                        let tmpclus = parseInt(clusHighlight.replace("cs", ""));
+                    if (props?.clusHighlight != null && String(props?.clusHighlight).startsWith("cs")) {
+                        let tmpclus = parseInt(props?.clusHighlight.replace("cs", ""));
                         plot_colors[i] = cluster_colors[max + tmpclus - 1];
                     } else {
                         if (showToggleFactors) {
@@ -332,12 +335,20 @@ const DimPlot = (props) => {
                     setSpec(uspec);
                 }
 
-                if (!resizeObserver) {
-                    const resizeObserver = new ResizeObserver(() => {
-                        debouncer(updatePlot(), 250);
-                    });
-                    resizeObserver.observe(containerEl);
+
+                if (resizeObserver) {
+                    resizeObserver.disconnect();
                 }
+
+                let tresizeObserver = new ResizeObserver(() => {
+                    // debouncer(updatePlot(), 250);
+                    console.log("inside observer resize ?");
+
+                    updatePlot();
+                });
+
+                tresizeObserver.observe(containerEl);
+                setResizeObserver(tresizeObserver);
 
                 if (!resizeTimeout) {
                     window.addEventListener("resize", () => {
@@ -346,8 +357,13 @@ const DimPlot = (props) => {
                             clearTimeout(resizeTimeout);
                         }
     
-                        resizeTimeout = setTimeout(() => { updatePlot()}, 500);
+                        resizeTimeout = setTimeout(() => { 
+                            console.log("inside window resize ?");
+                            updatePlot()
+                        }, 500);
                     });
+
+                    setResizeTimeout(resizeTimeout);
                 }
 
                 if (renderCount) {
@@ -359,7 +375,7 @@ const DimPlot = (props) => {
             }
         }
     }, [props?.tsneData, props?.umapData, props?.animateData, props?.defaultRedDims,
-        gradient, clusHighlight, plotColorMappings, plotGroups, plotFactors, showToggleFactors,
+        gradient, props?.clusHighlight, plotColorMappings, plotGroups, plotFactors, showToggleFactors,
     props?.selectedPoints]);
 
     useEffect(() => {
@@ -511,7 +527,7 @@ const DimPlot = (props) => {
             let {config} = props?.restoreState;
             if (config) {
                 props?.setDefaultRedDims(config?.embedding);
-                setClusHighlight(config?.highlight);
+                props?.setClusHighlight(config?.highlight);
                 props?.setGene(config?.gene);
 
                 if (config?.annotation) {
@@ -532,7 +548,7 @@ const DimPlot = (props) => {
                 // other state based changes
                 setShowToggleFactors(false);
                 setFactorsMinMax(null);
-                setClusHighlight(null);
+                props?.setClusHighlight(null);
 
                 let state = factorState[colorByAnnotation];
                 if (state == undefined || state == null) {
@@ -555,7 +571,7 @@ const DimPlot = (props) => {
                 "config": {
                     "embedding": props?.defaultRedDims,
                     "annotation": colorByAnnotation,
-                    "highlight": clusHighlight,
+                    "highlight": props?.clusHighlight,
                     "gene": props?.gene
                 }
             });
@@ -654,7 +670,7 @@ const DimPlot = (props) => {
                                         setColorByAnnotation(nval?.currentTarget?.value);
                                         setShowToggleFactors(false);
                                         setFactorsMinMax(null);
-                                        setClusHighlight(null);
+                                        props?.setClusHighlight(null);
 
                                         let state = factorState[colorByAnnotation];
                                         if (state == undefined || state == null) {
@@ -677,7 +693,7 @@ const DimPlot = (props) => {
                                             let tmpState = { ...factorState };
                                             tmpState[colorByAnnotation] = e.target.checked;
                                             setFactorState(tmpState);
-                                            setClusHighlight(null);
+                                            props?.setClusHighlight(null);
                                         }} />
                                 }
                             </div>
@@ -706,13 +722,22 @@ const DimPlot = (props) => {
                                             plotGroups && [...plotGroups].sort((a, b) => a - b).map((x, i) => {
                                                 return (
                                                     <li key={i}
-                                                        className={clusHover === plotGroups.indexOf(x) || clusHighlight === plotGroups.indexOf(x) ? 'legend-highlight' : ""}
+                                                        className={clusHover === plotGroups.indexOf(x) || props?.clusHighlight === plotGroups.indexOf(x) ? 'legend-highlight' : ""}
                                                         style={{ color: plotColorMappings[plotGroups.indexOf(x)] }}
                                                         onClick={() => {
-                                                            if (plotGroups.indexOf(x) === clusHighlight) {
-                                                                setClusHighlight(null);
+                                                            if (plotGroups.indexOf(x) === props?.clusHighlight) {
+                                                                props?.setClusHighlight(null);
+                                                                props?.setHighlightPoints(null);
                                                             } else {
-                                                                setClusHighlight(plotGroups.indexOf(x));
+                                                                let tclus = plotGroups.indexOf(x)
+                                                                props?.setClusHighlight(tclus);
+                                                                let clus_indices=[];
+                                                                for (let i=0;i<plotFactors.length;i++) {
+                                                                    if (tclus == plotFactors[i]) {
+                                                                        clus_indices.push(i);
+                                                                    }
+                                                                }
+                                                                props?.setHighlightPoints(clus_indices);
                                                             }
                                                         }}
                                                     > {x ? x : "NA"} </li>
@@ -734,7 +759,7 @@ const DimPlot = (props) => {
                                             <ul>
                                                 {Object.keys(props?.customSelection)?.slice(0, 100).map((x, i) => {
                                                     return (<li key={x}
-                                                        className={clusHighlight === x ? 'legend-highlight' : ''}
+                                                        className={props?.clusHighlight === x ? 'legend-highlight' : ''}
                                                         style={{ color: props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + 1 + i] }}
                                                     >
                                                         <div style={{
@@ -747,10 +772,12 @@ const DimPlot = (props) => {
                                                                     alignSelf: 'center'
                                                                 }}
                                                                 onClick={() => {
-                                                                    if (x === clusHighlight) {
-                                                                        setClusHighlight(null);
+                                                                    if (x === props?.clusHighlight) {
+                                                                        props?.setClusHighlight(null);
+                                                                        props?.setHighlightPoints(null);
                                                                     } else {
-                                                                        setClusHighlight(x);
+                                                                        props?.setClusHighlight(x);
+                                                                        props?.setHighlightPoints(props?.customSelection[x]);
                                                                     }
                                                                 }}>Custom Selection {x.replace("cs", "")}
                                                             </span>
@@ -771,8 +798,8 @@ const DimPlot = (props) => {
 
                                                                     props?.setDelCustomSelection(x);
 
-                                                                    if (clusHighlight === x) {
-                                                                        setClusHighlight(null);
+                                                                    if (props?.clusHighlight === x) {
+                                                                        props?.setClusHighlight(null);
                                                                     }
                                                                 }}></Icon>
                                                         </div>

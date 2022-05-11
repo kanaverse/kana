@@ -37,13 +37,25 @@ const UDimPlot = (props) => {
       if (props?.selectedPoints && props?.selectedPoints.length > 0) {
         for (let i = 0; i < rdata.x.length; i++) {
           if (props?.selectedPoints.includes(i)) {
-            color[i] = "#BD6BBD";
+            color[i] = data?.color[i];
           } else {
             // if (Array.isArray(data?.color)) {
             //   color[i] = data?.color[i];
             // } else {
             //   color[i] = data?.color;
             // }
+            color[i] = "#EDEFF2";
+          }
+        }
+      } else {
+        tmp_scatterplot.plot.clearSelection();
+      }
+
+      if (props?.highlightPoints && props?.highlightPoints.length > 0) {
+        for (let i = 0; i < rdata.x.length; i++) {
+          if (props?.highlightPoints.includes(i)) {
+            color[i] = data?.color[i];
+          } else {
             color[i] = "#EDEFF2";
           }
         }

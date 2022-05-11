@@ -82,6 +82,10 @@ const App = () => {
   const [selectedPoints, setSelectedPoints] = useState(null);
   // keeps track of what points were selected in lasso selections
   const [restoreState, setRestoreState] = useState(null);
+  // for highlight in uDimPlots
+  const [highlightPoints, setHighlightPoints] = useState(null);
+  // set which cluster to highlight, also for custom selections
+  const [clusHighlight, setClusHighlight] = useState(null);
 
   // PCA
   const [pcaVarExp, setPcaVarExp] = useState(null);
@@ -652,6 +656,9 @@ const App = () => {
                             setSelectedPoints={setSelectedPoints}
                             restoreState={restoreState}
                             setRestoreState={setRestoreState}
+                            setHighlightPoints={setHighlightPoints}
+                            clusHighlight={clusHighlight}
+                            setClusHighlight={setClusHighlight}
                           /> :
                           showGame ?
                             <div style={{
@@ -706,6 +713,9 @@ const App = () => {
                           setSelectedPoints={setSelectedPoints}
                           restoreState={restoreState}
                           setRestoreState={setRestoreState}
+                          highlightPoints={highlightPoints}
+                          clusHighlight={clusHighlight}
+                          setClusHighlight={setClusHighlight}
                         />
                       </div>
                     }
