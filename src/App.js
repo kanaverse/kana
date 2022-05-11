@@ -78,6 +78,8 @@ const App = () => {
   const [triggerAnimation, setTriggerAnimation] = useState(false);
   // keeps track of what points were selected in lasso selections
   const [selectedPoints, setSelectedPoints] = useState(null);
+  // keeps track of what points were selected in lasso selections
+  const [restoreState, setRestoreState] = useState(null);
 
   // PCA
   const [pcaVarExp, setPcaVarExp] = useState(null);
@@ -639,6 +641,8 @@ const App = () => {
                   setReqAnnotation={setReqAnnotation}
                   selectedPoints={selectedPoints}
                   setSelectedPoints={setSelectedPoints}
+                  restoreState={restoreState}
+                  setRestoreState={setRestoreState}
                 /> :
                 showGame ?
                   <div style={{
@@ -720,8 +724,11 @@ const App = () => {
               showNClusLoader={showNClusLoader}
               showCellLabelLoader={showCellLabelLoader}
               tsneData={tsneData} umapData={umapData}
+              redDims={redDims}
               selectedPoints={selectedPoints}
               setSelectedPoints={setSelectedPoints}
+              restoreState={restoreState}
+              setRestoreState={setRestoreState}
             />
           </div>
         }

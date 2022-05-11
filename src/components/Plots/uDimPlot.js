@@ -8,12 +8,7 @@ const UDimPlot = (props) => {
 
   useEffect(() => {
     const containerEl = container.current;
-    console.log("here");
-    console.log(props);
     if (containerEl && props?.tsneData && props?.umapData) {
-      console.log("inside");
-      console.log(props);
-
       let tmp_scatterplot = scatterplot;
       // only create the plot object once
       if (!tmp_scatterplot) {
@@ -22,9 +17,8 @@ const UDimPlot = (props) => {
 
         tmp_scatterplot.setInteraction("lasso");
         tmp_scatterplot.selectionCallback = function (points) {
-            console.log(points);
-            props?.setSelectedPoints(points?.selection?.indices);
-          };
+          props?.setSelectedPoints(points?.selection?.indices);
+        };
       }
 
       let rdata;
@@ -45,15 +39,16 @@ const UDimPlot = (props) => {
           if (props?.selectedPoints.includes(i)) {
             color[i] = "#BD6BBD";
           } else {
-            if (Array.isArray(data?.color)) {
-              color[i] = data?.color[i];
-            } else {
-              color[i] = data?.color;
-            }
+            // if (Array.isArray(data?.color)) {
+            //   color[i] = data?.color[i];
+            // } else {
+            //   color[i] = data?.color;
+            // }
+            color[i] = "#EDEFF2";
           }
         }
       } else {
-          tmp_scatterplot.plot.clearSelection();
+        tmp_scatterplot.plot.clearSelection();
       }
 
       if (color.length == 0) {

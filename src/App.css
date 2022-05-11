@@ -69,6 +69,7 @@
   flex-direction: row;
   flex-wrap: wrap;
   padding: 10px;
+  overflow: auto;
 }
 
 .spinner {

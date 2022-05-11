@@ -19,6 +19,7 @@ import WebGLVis from 'epiviz.gl';
 
 const DimPlot = (props) => {
     const container = useRef();
+    const selector = useRef();
 
     // ref to the plot object
     const [scatterplot, setScatterplot] = useState(null);
@@ -476,6 +477,44 @@ const DimPlot = (props) => {
         scatterplot.clearSelection();
     }
 
+    // hook to restore state
+    useEffect(() => {
+        if (props?.restoreState) {
+            let {config} = props?.restoreState;
+            if (config) {
+                props?.setDefaultRedDims(config?.embedding);
+                setClusHighlight(config?.highlight);
+                props?.setGene(config?.gene);
+
+                if (config?.annotation) {
+                    setColorByAnnotation(config?.annotation);
+                    if (config?.annotation === "clusters") {
+                        // set ref to HTMLSelect
+                        selector.current.value = "CLUSTERS";
+                    } else {
+                        selector.current.value = config?.annotation;
+                    }
+                } else {
+                    setColorByAnnotation("clusters");
+                    // set ref to HTMLSelect
+                    selector.current.value = "CLUSTERS";
+                }
+
+                selector.current.dispatchEvent(new Event('change'));
+                // other state based changes
+                setShowToggleFactors(false);
+                setFactorsMinMax(null);
+                setClusHighlight(null);
+
+                let state = factorState[colorByAnnotation];
+                if (state == undefined || state == null) {
+                    state = true;
+                }
+                setToggleFactorsGradient(state);
+            }
+        }
+    }, [props?.restoreState]);
+
     function handleSaveEmbedding() {
         const containerEl = container.current;
         if (containerEl) {
@@ -582,7 +621,7 @@ const DimPlot = (props) => {
                                 flexDirection: "row",
                                 flexWrap: "wrap"
                             }}>
-                                <HTMLSelect large={false} minimal={true} defaultValue={"CLUSTERS"}
+                                <HTMLSelect elementRef={selector} large={false} minimal={true} defaultValue={"CLUSTERS"}
                                     onChange={(nval, val) => {
                                         setColorByAnnotation(nval?.currentTarget?.value);
                                         setShowToggleFactors(false);
@@ -656,61 +695,65 @@ const DimPlot = (props) => {
                             }
                         </Callout>
                         {
-                            (!(showToggleFactors && toggleFactorsGradient)) && (Object.keys(props?.customSelection).length > 0 || (props?.selectedPoints && props?.selectedPoints.length > 0)) ?
+                            (Object.keys(props?.customSelection).length > 0 || (props?.selectedPoints && props?.selectedPoints.length > 0)) ?
                                 <Callout title="CUSTOM SELECTIONS">
-                                    <div
-                                        style={{
-                                            paddingTop: '5px'
-                                        }}>
-                                        <ul>
-                                            {Object.keys(props?.customSelection)?.slice(0, 100).map((x, i) => {
-                                                return (<li key={x}
-                                                    className={clusHighlight === x ? 'legend-highlight' : ''}
-                                                    style={{ color: props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + 1 + i] }}
-                                                >
-                                                    <div style={{
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        flexDirection: 'row'
-                                                    }}>
-                                                        <span
-                                                            style={{
-                                                                alignSelf: 'center'
-                                                            }}
-                                                            onClick={() => {
-                                                                if (x === clusHighlight) {
-                                                                    setClusHighlight(null);
-                                                                } else {
-                                                                    setClusHighlight(x);
-                                                                }
-                                                            }}>Custom Selection {x.replace("cs", "")}
-                                                        </span>
-                                                        <Icon
-                                                            size={12}
-                                                            icon="trash"
-                                                            style={{
-                                                                paddingLeft: '2px'
-                                                            }}
-                                                            onClick={() => {
-                                                                let tmpSel = { ...props?.customSelection };
-                                                                delete tmpSel[x];
-                                                                props?.setCustomSelection(tmpSel);
+                                    {
+                                        (!(showToggleFactors && toggleFactorsGradient)) && 
+                                            <div
+                                            style={{
+                                                paddingTop: '5px'
+                                            }}>
+                                            <ul>
+                                                {Object.keys(props?.customSelection)?.slice(0, 100).map((x, i) => {
+                                                    return (<li key={x}
+                                                        className={clusHighlight === x ? 'legend-highlight' : ''}
+                                                        style={{ color: props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + 1 + i] }}
+                                                    >
+                                                        <div style={{
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            flexDirection: 'row'
+                                                        }}>
+                                                            <span
+                                                                style={{
+                                                                    alignSelf: 'center'
+                                                                }}
+                                                                onClick={() => {
+                                                                    if (x === clusHighlight) {
+                                                                        setClusHighlight(null);
+                                                                    } else {
+                                                                        setClusHighlight(x);
+                                                                    }
+                                                                }}>Custom Selection {x.replace("cs", "")}
+                                                            </span>
+                                                            <Icon
+                                                                size={12}
+                                                                icon="trash"
+                                                                style={{
+                                                                    paddingLeft: '2px'
+                                                                }}
+                                                                onClick={() => {
+                                                                    let tmpSel = { ...props?.customSelection };
+                                                                    delete tmpSel[x];
+                                                                    props?.setCustomSelection(tmpSel);
 
-                                                                let tmpcolors = [...props?.clusterColors];
-                                                                tmpcolors = tmpcolors.slice(0, tmpcolors.length - 1);
-                                                                props?.setClusterColors(tmpcolors);
+                                                                    let tmpcolors = [...props?.clusterColors];
+                                                                    tmpcolors = tmpcolors.slice(0, tmpcolors.length - 1);
+                                                                    props?.setClusterColors(tmpcolors);
 
-                                                                props?.setDelCustomSelection(x);
+                                                                    props?.setDelCustomSelection(x);
 
-                                                                if (clusHighlight === x) {
-                                                                    setClusHighlight(null);
-                                                                }
-                                                            }}></Icon>
-                                                    </div>
-                                                </li>)
-                                            })}
-                                        </ul>
-                                    </div>
+                                                                    if (clusHighlight === x) {
+                                                                        setClusHighlight(null);
+                                                                    }
+                                                                }}></Icon>
+                                                        </div>
+                                                    </li>)
+                                                })}
+                                            </ul>
+                                        </div>
+                                    }
+                                    
                                     {
                                         props?.selectedPoints && props?.selectedPoints.length > 0 ?
                                             <div>

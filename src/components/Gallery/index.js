@@ -200,45 +200,105 @@ const Gallery = (props) => {
       };
     }
 
-    if (props?.savedPlot) {
-      props?.savedPlot.map((x, i) => {
+    // default plots, tSNE and UMAP
+    if (props?.redDims && props?.redDims.length > 0) {
+      let actions = ["select", "download"];
+      if (props?.selectedPoints && props?.selectedPoints.length > 0) {
+        actions = ["highlight", "select", "download"];
+      }
+
+      let colors = [];
+      props?.clusterData?.clusters?.forEach((x,i) => colors[i] = props?.clusterColors[x]);
+
+      props?.redDims.map((x, i) => {
         tmpItems.push(`${5 + i}`);
         tmpItemContent[`${5 + i}`] = {
           // id: 5 + i,
-          title: get_image_title(x),
+          title: x,
           className: "gitem",
-          actions: ["select", "download", "trash"],
-          content: <ImgPlot data={x} gene={props?.gene} />,
+          actions: actions,
+          data: {
+            color: colors,
+            config: {
+              embedding: x,
+              annotation: "clusters",
+              highlight: null,
+              gene: null,
+            },
+          },
+          content: (
+            <UDimPlot
+              tsneData={props?.tsneData}
+              umapData={props?.umapData}
+              selectedPoints={props?.selectedPoints}
+              setSelectedPoints={props?.setSelectedPoints}
+              data={{
+                color: colors,
+                config: {
+                  embedding: x,
+                  annotation: "clusters",
+                  highlight: null,
+                  gene: null,
+                },
+              }}
+            />
+          ),
         };
       });
     }
 
-    tmpItems.push(`${12}`);
-    tmpItemContent[`${12}`] = {
-      // id: 12,
-      title: "UMAP",
-      className: "gitem",
-      actions: ["select", "download", "trash"],
-      content: (
-        <UDimPlot
-          tsneData={props?.tsneData}
-          umapData={props?.umapData}
-          selectedPoints={props?.selectedPoints}
-          setSelectedPoints={props?.setSelectedPoints}
-          data={{
-            color: "#fff000",
-            config: {
-              embedding: "UMAP",
-              annotation: null,
-              highlight: null,
-              gene: null,
-            },
-          }}
-        />
-      ),
-    };
+    if (props?.savedPlot) {
+      let actions = ["select", "download", "trash"];
+      if (props?.selectedPoints && props?.selectedPoints.length > 0) {
+        actions = ["highlight", "select", "download", "trash"];
+      }
+      props?.savedPlot.map((x, i) => {
+        tmpItems.push(`${10 + i}`);
+        tmpItemContent[`${10 + i}`] = {
+          // id: 5 + i,
+          title: get_image_title(x),
+          className: "gitem",
+          actions: actions,
+          data: x,
+          content: (
+            <UDimPlot
+              tsneData={props?.tsneData}
+              umapData={props?.umapData}
+              selectedPoints={props?.selectedPoints}
+              setSelectedPoints={props?.setSelectedPoints}
+              data={x}
+            />
+          ),
+        };
+      });
+    }
 
-    setItems(tmpItems);
+    // tmpItems.push(`${12}`);
+    // tmpItemContent[`${12}`] = {
+    //   // id: 12,
+    //   title: "UMAP",
+    //   className: "gitem",
+    //   actions: ["select", "download", "trash"],
+    //   content: (
+    //     <UDimPlot
+    //       tsneData={props?.tsneData}
+    //       umapData={props?.umapData}
+    //       selectedPoints={props?.selectedPoints}
+    //       setSelectedPoints={props?.setSelectedPoints}
+    //       data={{
+    //         color: "#fff000",
+    //         config: {
+    //           embedding: "UMAP",
+    //           annotation: null,
+    //           highlight: null,
+    //           gene: null,
+    //         },
+    //       }}
+    //     />
+    //   ),
+    // };
+
+    setItems(tmpItems.reverse());
     setItemContent(tmpItemContent);
   }
 
@@ -269,7 +329,12 @@ const Gallery = (props) => {
     <DndContext modifiers={[restrictToWindowEdges]} onDragEnd={handleDragEnd}>
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
         {items.map((x) => (
-          <SortableItem key={x} id={x} {...itemContent[x]}/>
+          <SortableItem 
+            setSelectedPoints={props?.setSelectedPoints} 
+            setRestoreState={props?.setRestoreState}
+            savedPlot={props?.savedPlot}
+            setSavedPlot={props?.setSavedPlot}
+            key={x} id={x} {...itemContent[x]} />
         ))}
       </SortableContext>
     </DndContext>

@@ -3,7 +3,7 @@ import {
     Button, H4, H5, Icon, Collapse, InputGroup, Text,
     RangeSlider, Tag, HTMLSelect, Classes, Card, Elevation
 } from "@blueprintjs/core";
-import { Popover2 } from "@blueprintjs/popover2";
+import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 import { Virtuoso } from 'react-virtuoso';
 import * as d3 from 'd3';
 
@@ -555,40 +555,44 @@ const MarkerPlot = (props) => {
                                                     />
                                                 </Popover2>}
                                             <div className='row-action'>
-                                                <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
-                                                    className='row-action'
-                                                    onClick={() => {
-                                                        let tmp = [...props?.selectedClusterSummary];
-                                                        var gindex = props?.selectedClusterIndex[row.gene];
-                                                        tmp[gindex].expanded = !tmp[gindex].expanded;
-                                                        props?.setSelectedClusterSummary(tmp);
-                                                        if (!rowExpr && tmp[gindex].expanded) {
-                                                            props?.setReqGene(row.gene);
-                                                        } else {
-                                                            props?.setReqGene(null);
-                                                        }
-                                                    }}
-                                                >
-                                                </Button>
-                                                <Button small={true} fill={false}
-                                                    className='row-action'
-                                                    onClick={() => {
-                                                        if (row.gene === props?.gene) {
-                                                            props?.setGene(null);
-                                                        } else {
-                                                            props?.setGene(row.gene);
-                                                            if (!rowExpr) {
+                                                <Tooltip2 content="Compare this gene's expression across clusters">
+                                                    <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
+                                                        className='row-action'
+                                                        onClick={() => {
+                                                            let tmp = [...props?.selectedClusterSummary];
+                                                            var gindex = props?.selectedClusterIndex[row.gene];
+                                                            tmp[gindex].expanded = !tmp[gindex].expanded;
+                                                            props?.setSelectedClusterSummary(tmp);
+                                                            if (!rowExpr && tmp[gindex].expanded) {
                                                                 props?.setReqGene(row.gene);
+                                                            } else {
+                                                                props?.setReqGene(null);
                                                             }
-                                                        }
-                                                    }}
-                                                >
-                                                    <Icon icon={'tint'}
-                                                        color={row.gene === props?.gene ?
-                                                            String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
-                                                            : ''}
-                                                    ></Icon>
-                                                </Button>
+                                                        }}
+                                                    >
+                                                    </Button>
+                                                </Tooltip2>
+                                                <Tooltip2 content="Visualize this gene's expression">
+                                                    <Button small={true} fill={false}
+                                                        className='row-action'
+                                                        onClick={() => {
+                                                            if (row.gene === props?.gene) {
+                                                                props?.setGene(null);
+                                                            } else {
+                                                                props?.setGene(row.gene);
+                                                                if (!rowExpr) {
+                                                                    props?.setReqGene(row.gene);
+                                                                }
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Icon icon={'tint'}
+                                                            color={row.gene === props?.gene ?
+                                                                String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
+                                                                : ''}
+                                                        ></Icon>
+                                                    </Button>
+                                                </Tooltip2>
                                             </div>
                                         </div>
                                         <Collapse isOpen={rowexp}>

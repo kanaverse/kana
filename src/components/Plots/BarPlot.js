@@ -30,9 +30,16 @@ const BarPlot = (props) => {
         let containerEl = container.current;
         containerEl.innerHTML = "";
 
+        let baseHeight = 200;
+        // try {
+        //     baseHeight = containerEl.parentNode.parentNode.parentNode.clientHeight;
+        // } catch (error) {
+        //     console.info("cannot find parent height in barplot");
+        // }
+
         const margin = { top: 10, right: 30, bottom: 30, left: 40 },
             width = propwidth - margin.left - margin.right,
-            height = 200 - margin.top - margin.bottom;
+            height = baseHeight - margin.top - margin.bottom;
 
         if (containerEl.querySelector("svg")) {
             containerEl.querySelector("svg").innerHTML = "";
@@ -83,11 +90,11 @@ const BarPlot = (props) => {
 
     return (
         <div className="imgplot-container">
-            <Button small={true} className="imgplot-save" icon="download"
+            {/* <Button small={true} className="imgplot-save" icon="download"
                 onClick={() => {
                     saveSVG(d3.select(container.current.querySelector("svg")).node(),
                         2 * 325, 2 * 200, props?.filename);
-                }}>Download</Button>
+                }}>Download</Button> */}
             <div ref={container}></div>
         </div>
     );
