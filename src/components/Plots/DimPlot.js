@@ -62,7 +62,10 @@ const DimPlot = (props) => {
     const [plotFactors, setPlotFactors] = useState(null);
 
     const [cellColorArray, setCellColorArray] = useState(null);
+    const [spec, setSpec] = useState(null);
 
+    let resizeObserver = null;
+    let resizeTimeout = null;
     const max = getMinMax(props?.clusterData.clusters)[1] + 1;
 
     // if either gene or expression changes, compute gradients and min/max
@@ -109,7 +112,6 @@ const DimPlot = (props) => {
     }, [sliderMinMax]);
 
     useEffect(() => {
-
         const containerEl = container.current;
 
         if (containerEl) {
@@ -257,7 +259,7 @@ const DimPlot = (props) => {
                     yBound = yBound / aspRatio;
                 }
 
-                let spec = {
+                let tspec = {
                     defaultData: {
                         x: data.x,
                         y: data.y,
@@ -288,45 +290,71 @@ const DimPlot = (props) => {
                     ],
                 };
 
-                if (renderCount) {
-                    tmp_scatterplot.setSpecification(spec);
-                    setRenderCount(false);
+                setSpec(tspec);
 
-                    let resizeTimeout;
+                const debouncer = (func, wait) => {
+                    let timeout;
+                    
+                    return function dbfunc(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                    
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                };
+
+                function updatePlot() {
+                    let uspec = {...tspec};
+
+                    tmp_scatterplot.setCanvasSize(
+                        containerEl.parentNode.clientWidth,
+                        containerEl.parentNode.clientHeight
+                    );
+
+                    aspRatio = containerEl.clientWidth / containerEl.clientHeight;
+
+                    xBound = Math.max(...xDomain.map(a => Math.abs(a)));
+                    yBound = Math.max(...yDomain.map(a => Math.abs(a)));
+
+                    if (aspRatio > 1) {
+                        xBound = xBound * aspRatio;
+                    } else {
+                        yBound = yBound / aspRatio;
+                    }
+
+                    uspec["tracks"][0].x.domain = [-xBound, xBound];
+                    uspec["tracks"][0].y.domain = [-yBound, yBound];
+
+                    tmp_scatterplot.setSpecification(uspec);
+                    setSpec(uspec);
+                }
+
+                if (!resizeObserver) {
+                    const resizeObserver = new ResizeObserver(() => {
+                        debouncer(updatePlot(), 250);
+                    });
+                    resizeObserver.observe(containerEl);
+                }
+
+                if (!resizeTimeout) {
                     window.addEventListener("resize", () => {
-
                         // similar to what we do in epiviz
                         if (resizeTimeout) {
                             clearTimeout(resizeTimeout);
                         }
-
-                        resizeTimeout = setTimeout(() => {
-
-                            tmp_scatterplot.setCanvasSize(
-                                containerEl.parentNode.clientWidth,
-                                containerEl.parentNode.clientHeight
-                            );
-
-                            aspRatio = containerEl.clientWidth / containerEl.clientHeight;
-
-                            xBound = Math.max(...xDomain.map(a => Math.abs(a)));
-                            yBound = Math.max(...yDomain.map(a => Math.abs(a)));
-
-                            if (aspRatio > 1) {
-                                xBound = xBound * aspRatio;
-                            } else {
-                                yBound = yBound / aspRatio;
-                            }
-
-                            spec["tracks"][0].x.domain = [-xBound, xBound];
-                            spec["tracks"][0].y.domain = [-yBound, yBound];
-
-
-                            tmp_scatterplot.setSpecification(spec);
-                        }, 500);
+    
+                        resizeTimeout = setTimeout(() => { updatePlot()}, 500);
                     });
+                }
+
+                if (renderCount) {
+                    tmp_scatterplot.setSpecification(tspec);
+                    setRenderCount(false);
                 } else {
-                    tmp_scatterplot.updateSpecification(spec);
+                    tmp_scatterplot.updateSpecification(tspec);
                 }
             }
         }
