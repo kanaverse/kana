@@ -123,7 +123,7 @@ const DimPlot = (props) => {
                 setScatterplot(tmp_scatterplot);
 
                 tmp_scatterplot.addEventListener("onSelectionEnd", (e) => {
-                    props?.setSelectedPoints(e.detail.data?.selection?.indices);
+                    e.detail.data?.selection?.indices.length > 0 && props?.setSelectedPoints(e.detail.data?.selection?.indices);
                 });
             }
 
@@ -669,7 +669,7 @@ const DimPlot = (props) => {
                                         setFactorsMinMax(null);
                                         props?.setClusHighlight(null);
                                         props?.setHighlightPoints(null);
-                                        
+
                                         let state = factorState[props?.colorByAnnotation];
                                         if (state == undefined || state == null) {
                                             state = true;

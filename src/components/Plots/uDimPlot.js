@@ -17,7 +17,7 @@ const UDimPlot = (props) => {
 
         tmp_scatterplot.setInteraction("lasso");
         tmp_scatterplot.selectionCallback = function (points) {
-          props?.setSelectedPoints(points?.selection?.indices);
+          points?.selection?.indices.length > 0 && props?.setSelectedPoints(points?.selection?.indices);
         };
       }
 
