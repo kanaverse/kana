@@ -58,10 +58,10 @@ const DimPlot = (props) => {
 
     const [cellColorArray, setCellColorArray] = useState(null);
     const [spec, setSpec] = useState(null);
-    const [resizeObserver, setResizeObserver] = useState(null);
+    // const [resizeObserver, setResizeObserver] = useState(null);
 
     // const [resizeTimeout, setResizeTimeout] = useState(null);
-    let resizeTimeout;
+    let resizeTimeout, resizeObserver;
 
     const max = getMinMax(props?.clusterData.clusters)[1] + 1;
 
@@ -164,11 +164,23 @@ const DimPlot = (props) => {
                     if (hdata?.distance <= 1.5) {
                         if (props?.clusHighlight == cluster_mappings[hdata?.indices?.[0]]) {
                             props?.setClusHighlight(null);
+                            props?.setClusHighlightLabel(null);
+                            props?.setHighlightPoints(null);
                         } else {
                             props?.setClusHighlight(cluster_mappings[hdata?.indices?.[0]]);
+                            props?.setClusHighlightLabel(plotGroups[cluster_mappings[hdata?.indices?.[0]]]);
+                            let clus_indices=[];
+                            for (let i=0;i<plotFactors.length;i++) {
+                                if (cluster_mappings[hdata?.indices?.[0]] == plotFactors[i]) {
+                                    clus_indices.push(i);
+                                }
+                            }
+                            props?.setHighlightPoints(clus_indices);
                         }
                     } else {
                         props?.setClusHighlight(null);
+                        props?.setClusHighlightLabel(null);
+                        props?.setHighlightPoints(null);
                     }
                 });
 
@@ -319,21 +331,6 @@ const DimPlot = (props) => {
                     setSpec(uspec);
                 }
 
-
-                if (resizeObserver) {
-                    resizeObserver.disconnect();
-                }
-
-                let tresizeObserver = new ResizeObserver(() => {
-                    // debouncer(updatePlot(), 250);
-                    console.log("inside observer resize ?");
-
-                    updatePlot();
-                });
-
-                tresizeObserver.observe(containerEl);
-                setResizeObserver(tresizeObserver);
-
                 // var self = this;
                 // console.log(resizeTimeout);
                 // if ((resizeTimeout == null && renderCount) || (resizeTimeout!=null)) {
@@ -343,6 +340,23 @@ const DimPlot = (props) => {
                 if (renderCount) {
                     tmp_scatterplot.setSpecification(tspec);
                     setRenderCount(false);
+
+                    if (resizeObserver) {
+                        resizeObserver.disconnect();
+                    }
+    
+                    resizeObserver = new ResizeObserver(() => {
+                        props?.setGene(null);
+                        setShowToggleFactors(false);
+                        setFactorsMinMax(null);
+                        props?.setClusHighlight(null);
+                        props?.setHighlightPoints(null);
+                        props?.setClusHighlightLabel(null);
+                        updatePlot();
+                    });
+    
+                    resizeObserver.observe(containerEl);
+                    // setResizeObserver(tresizeObserver);
 
                     // window.addEventListener("resize", function() {
                     //     // similar to what we do in epiviz
@@ -515,6 +529,7 @@ const DimPlot = (props) => {
             if (config) {
                 props?.setDefaultRedDims(config?.embedding);
                 props?.setClusHighlight(config?.highlight);
+                // props?.setClusHighlightLabel(null);
                 props?.setGene(config?.gene);
 
                 if (config?.annotation) {
@@ -536,6 +551,7 @@ const DimPlot = (props) => {
                 setShowToggleFactors(false);
                 setFactorsMinMax(null);
                 props?.setClusHighlight(null);
+                // props?.setClusHighlightLabel(null);
 
                 let state = factorState[props?.colorByAnnotation];
                 if (state == undefined || state == null) {
@@ -659,6 +675,7 @@ const DimPlot = (props) => {
                                         setFactorsMinMax(null);
                                         props?.setClusHighlight(null);
                                         props?.setHighlightPoints(null);
+                                        props?.setClusHighlightLabel(null);
 
                                         let state = factorState[props?.colorByAnnotation];
                                         if (state == undefined || state == null) {
@@ -683,6 +700,7 @@ const DimPlot = (props) => {
                                             setFactorState(tmpState);
                                             props?.setClusHighlight(null);
                                             props?.setHighlightPoints(null);
+                                            props?.setClusHighlightLabel(null);
                                         }} />
                                 }
                             </div>
