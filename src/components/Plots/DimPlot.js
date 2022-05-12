@@ -113,21 +113,6 @@ const DimPlot = (props) => {
 
         if (containerEl) {
 
-            let tmp_scatterplot = scatterplot;
-
-            // only create the plot object once
-            if (!tmp_scatterplot) {
-                const containerEl = container.current;
-
-                tmp_scatterplot = new WebGLVis(containerEl);
-                tmp_scatterplot.addToDom();
-                setScatterplot(tmp_scatterplot);
-
-                tmp_scatterplot.addEventListener("onSelectionEnd", (e) => {
-                    e.detail.data?.selection?.indices.length > 0 && props?.setSelectedPoints(e.detail.data?.selection?.indices);
-                });
-            }
-
             let data = null;
 
             if (props?.showAnimation) {
@@ -142,47 +127,61 @@ const DimPlot = (props) => {
 
             // if dimensions are available
             if (data && plotFactors && plotColorMappings) {
+                
+                let tmp_scatterplot = scatterplot;
+                // only create the plot object once
+                if (!tmp_scatterplot) {
+                    const containerEl = container.current;
 
-                const cluster_mappings = plotFactors;
-                const cluster_colors = plotColorMappings;
+                    tmp_scatterplot = new WebGLVis(containerEl);
+                    tmp_scatterplot.addToDom();
+                    setScatterplot(tmp_scatterplot);
 
-                tmp_scatterplot.addEventListener("pointHovered", (e) => {
-                    let hdata = e.detail.data;
-                    e.preventDefault();
+                    tmp_scatterplot.addEventListener("onSelectionEnd", (e) => {
+                        e.detail.data?.selection?.indices.length > 0 && props?.setSelectedPoints(e.detail.data?.selection?.indices);
+                    });
 
-                    if (hdata?.distance <= 1.5) {
-                        setClusHover(cluster_mappings[hdata?.indices?.[0]]);
-                    } else {
-                        setClusHover(null);
-                    }
-                });
+                    tmp_scatterplot.addEventListener("pointHovered", (e) => {
+                        let hdata = e.detail.data;
+                        e.preventDefault();
 
-                tmp_scatterplot.addEventListener("pointClicked", (e) => {
-                    e.preventDefault();
+                        if (hdata?.distance <= 1.5) {
+                            setClusHover(cluster_mappings[hdata?.indices?.[0]]);
+                        } else {
+                            setClusHover(null);
+                        }
+                    });
 
-                    let hdata = e.detail.data;
-                    if (hdata?.distance <= 1.5) {
-                        if (props?.clusHighlight == cluster_mappings[hdata?.indices?.[0]]) {
+                    tmp_scatterplot.addEventListener("pointClicked", (e) => {
+                        e.preventDefault();
+
+                        let hdata = e.detail.data;
+                        if (hdata?.distance <= 1.5) {
+                            if (props?.clusHighlight == cluster_mappings[hdata?.indices?.[0]]) {
+                                props?.setClusHighlight(null);
+                                props?.setClusHighlightLabel(null);
+                                props?.setHighlightPoints(null);
+                            } else {
+                                props?.setClusHighlight(cluster_mappings[hdata?.indices?.[0]]);
+                                props?.setClusHighlightLabel(plotGroups[cluster_mappings[hdata?.indices?.[0]]]);
+                                let clus_indices=[];
+                                for (let i=0;i<plotFactors.length;i++) {
+                                    if (cluster_mappings[hdata?.indices?.[0]] == plotFactors[i]) {
+                                        clus_indices.push(i);
+                                    }
+                                }
+                                props?.setHighlightPoints(clus_indices);
+                            }
+                        } else {
                             props?.setClusHighlight(null);
                             props?.setClusHighlightLabel(null);
                             props?.setHighlightPoints(null);
-                        } else {
-                            props?.setClusHighlight(cluster_mappings[hdata?.indices?.[0]]);
-                            props?.setClusHighlightLabel(plotGroups[cluster_mappings[hdata?.indices?.[0]]]);
-                            let clus_indices=[];
-                            for (let i=0;i<plotFactors.length;i++) {
-                                if (cluster_mappings[hdata?.indices?.[0]] == plotFactors[i]) {
-                                    clus_indices.push(i);
-                                }
-                            }
-                            props?.setHighlightPoints(clus_indices);
                         }
-                    } else {
-                        props?.setClusHighlight(null);
-                        props?.setClusHighlightLabel(null);
-                        props?.setHighlightPoints(null);
-                    }
-                });
+                    });
+                }
+
+                const cluster_mappings = plotFactors;
+                const cluster_colors = plotColorMappings;
 
                 // coloring cells on the plot
                 // by default chooses the cluster assigned color for the plot
