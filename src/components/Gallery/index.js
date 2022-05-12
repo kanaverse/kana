@@ -38,7 +38,7 @@ const Gallery = (props) => {
     let set = false;
 
     if (data?.config?.annotation) {
-      text += `⊃ ${data.config?.annotation} `;
+      text += `⊃ ${data.config?.annotation.toLowerCase()} `;
 
       if (data?.config?.highlight) {
         if (String(data?.config?.highlight).startsWith("cs")) {
@@ -59,8 +59,8 @@ const Gallery = (props) => {
     if (props?.clusHighlight != null) {
       if (
         !(
-          data.config?.highlight == props?.clusHighlight &&
-          data.config?.annotation == props?.colorByAnnotation
+          ((data.config?.highlight != null && props?.clusHighlight != null) && data.config?.highlight == props?.clusHighlight) &&
+          ((data.config?.annotation != null && props?.colorByAnnotation != null) && data.config?.annotation == props?.colorByAnnotation)
         )
       ) {
         if (set) {
@@ -70,7 +70,7 @@ const Gallery = (props) => {
         }
 
         if (props?.colorByAnnotation) {
-          text += `${props?.colorByAnnotation} `;
+          text += `${props?.colorByAnnotation.toLowerCase()} `;
         }
 
         if (String(props?.clusHighlight).startsWith("cs")) {
