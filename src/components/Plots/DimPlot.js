@@ -127,6 +127,9 @@ const DimPlot = (props) => {
 
             // if dimensions are available
             if (data && plotFactors && plotColorMappings) {
+
+                const cluster_mappings = plotFactors;
+                const cluster_colors = plotColorMappings;
                 
                 let tmp_scatterplot = scatterplot;
                 // only create the plot object once
@@ -136,26 +139,24 @@ const DimPlot = (props) => {
                     tmp_scatterplot = new WebGLVis(containerEl);
                     tmp_scatterplot.addToDom();
                     setScatterplot(tmp_scatterplot);
+                }
 
-                    tmp_scatterplot.addEventListener("onSelectionEnd", (e) => {
-                        e.detail.data?.selection?.indices.length > 0 && props?.setSelectedPoints(e.detail.data?.selection?.indices);
-                    });
-
-                    tmp_scatterplot.addEventListener("pointHovered", (e) => {
-                        let hdata = e.detail.data;
-                        e.preventDefault();
-
+                tmp_scatterplot.dataWorker.onmessage = (message) => {
+                    if (message.data.type === "getClosestPoint") {
+                      if (message.data.closestPoint === undefined) {
+                        return;
+                      }
+                      let hdata = message.data;
                         if (hdata?.distance <= 1.5) {
                             setClusHover(cluster_mappings[hdata?.indices?.[0]]);
                         } else {
                             setClusHover(null);
                         }
-                    });
-
-                    tmp_scatterplot.addEventListener("pointClicked", (e) => {
-                        e.preventDefault();
-
-                        let hdata = e.detail.data;
+                    } else if (message.data.type === "getClickPoint") {
+                      if (message.data.closestPoint === undefined) {
+                        return;
+                      }
+                      let hdata = message.data;
                         if (hdata?.distance <= 1.5) {
                             if (props?.clusHighlight == cluster_mappings[hdata?.indices?.[0]]) {
                                 props?.setClusHighlight(null);
@@ -177,11 +178,14 @@ const DimPlot = (props) => {
                             props?.setClusHighlightLabel(null);
                             props?.setHighlightPoints(null);
                         }
-                    });
+                    } else if (
+                      message.data.type === "selectBox" ||
+                      message.data.type === "selectLasso"
+                    ) {
+                        message.data.selection?.indices.length > 0 && props?.setSelectedPoints(message.data.selection?.indices);
+                        tmp_scatterplot.dataWorker.dataWorkerStream.push(message);
+                    }
                 }
-
-                const cluster_mappings = plotFactors;
-                const cluster_colors = plotColorMappings;
 
                 // coloring cells on the plot
                 // by default chooses the cluster assigned color for the plot
@@ -330,31 +334,24 @@ const DimPlot = (props) => {
                     setSpec(uspec);
                 }
 
-                // var self = this;
-                // console.log(resizeTimeout);
-                // if ((resizeTimeout == null && renderCount) || (resizeTimeout!=null)) {
-                //     console.log("##############");
-                // }
+                if (window.scatterplotresizeObserver) {
+                    window.scatterplotresizeObserver.disconnect();
+                }
 
+                window.scatterplotresizeObserver = new ResizeObserver(() => {
+                    // props?.setGene(null);
+                    // setShowToggleFactors(false);
+                    // setFactorsMinMax(null);
+                    // props?.setClusHighlight(null);
+                    // props?.setHighlightPoints(null);
+                    // props?.setClusHighlightLabel(null);
+                    updatePlot();
+                });
+
+                window.scatterplotresizeObserver.observe(containerEl);
                 if (renderCount) {
                     tmp_scatterplot.setSpecification(tspec);
                     setRenderCount(false);
-
-                    if (resizeObserver) {
-                        resizeObserver.disconnect();
-                    }
-    
-                    resizeObserver = new ResizeObserver(() => {
-                        props?.setGene(null);
-                        setShowToggleFactors(false);
-                        setFactorsMinMax(null);
-                        props?.setClusHighlight(null);
-                        props?.setHighlightPoints(null);
-                        props?.setClusHighlightLabel(null);
-                        updatePlot();
-                    });
-    
-                    resizeObserver.observe(containerEl);
                     // setResizeObserver(tresizeObserver);
 
                     // window.addEventListener("resize", function() {
@@ -370,7 +367,7 @@ const DimPlot = (props) => {
                     //     // updatePlot.bind(self)();
                     // }.bind(self));
                 } else {
-                    tmp_scatterplot.updateSpecification(tspec);
+                    tmp_scatterplot.setSpecification(tspec);
                 }
             }
         }
