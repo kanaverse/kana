@@ -42,7 +42,10 @@ const Gallery = (props) => {
 
       if (data?.config?.highlight) {
         if (String(data?.config?.highlight).startsWith("cs")) {
-          text += `(selection ${data?.config?.highlight}) `;
+          text += `(custom selection ${data?.config?.highlight.replace(
+            "cs",
+            ""
+          )}) `;
         } else {
           text += `(cluster ${parseInt(data?.config?.highlight) + 1}) `;
         }
@@ -53,27 +56,36 @@ const Gallery = (props) => {
       set = true;
     }
 
-    if (props?.clusHighlight) {
+    if (props?.clusHighlight != null) {
+      if (
+        !(
+          data.config?.highlight == props?.clusHighlight &&
+          data.config?.annotation == props?.colorByAnnotation
+        )
+      ) {
+        if (set) {
+          text += "∩ ";
+        } else {
+          text += "⊃ ";
+        }
 
-      if (set) {
-        text += "∩ "
-      } else {
-        text += "⊃ "
-      }
+        if (props?.colorByAnnotation) {
+          text += `${props?.colorByAnnotation} `;
+        }
 
-      if (props?.colorByAnnotation) {
-        text += `${props?.colorByAnnotation} `;
-      }
-
-      if (String(props?.clusHighlight).startsWith("cs")) {
-        text += `(selection ${props?.clusHighlight}) `;
-      } else {
-        text += `(cluster ${parseInt(props?.clusHighlight) + 1}) `;
+        if (String(props?.clusHighlight).startsWith("cs")) {
+          text += `(custom selection ${props?.clusHighlight.replace(
+            "cs",
+            ""
+          )}) `;
+        } else {
+          text += `(cluster ${parseInt(props?.clusHighlight) + 1}) `;
+        }
       }
     }
 
-    if (!props?.clusHighlight && props?.selectedPoints) {
-      text += "⊃ (Unsaved)"
+    if (props?.clusHighlight == null && props?.selectedPoints) {
+      text += "⊃ (unsaved selection)";
     }
 
     return text;
@@ -84,8 +96,9 @@ const Gallery = (props) => {
   }, [props]);
 
   function get_children() {
-    let tmpItems = [];
-    let tmpItemContent = {};
+    let tmpItems = [...items];
+    tmpItems.reverse();
+    let tmpItemContent = { ...itemContent };
 
     if (props?.qcData && isObject(props?.qcData?.data)) {
       Object.keys(props?.qcData?.data).map((x) => {
@@ -95,7 +108,9 @@ const Gallery = (props) => {
           thresholds: props?.qcData?.thresholds[x],
         };
 
-        tmpItems.push("1");
+        if (!tmpItems.includes("1")) {
+          tmpItems.push("1");
+        }
         tmpItemContent["1"] = {
           // id: 1,
           title: `QC for ${x}`,
@@ -109,8 +124,9 @@ const Gallery = (props) => {
     }
 
     if (props?.pcaVarExp) {
-      tmpItems.push("2");
-
+      if (!tmpItems.includes("2")) {
+        tmpItems.push("2");
+      }
       tmpItemContent["2"] = {
         // id: 2,
         title: "PCA: % variance explained",
@@ -128,7 +144,9 @@ const Gallery = (props) => {
     }
 
     if (props?.clusterData && props?.clusterColors) {
-      tmpItems.push("3");
+      if (!tmpItems.includes("3")) {
+        tmpItems.push("3");
+      }
       tmpItemContent["3"] = {
         // id: 3,
         title: "Cluster: Num. of cells per cluster",
@@ -151,7 +169,9 @@ const Gallery = (props) => {
       props?.cellLabelData &&
       Object.keys(props?.cellLabelData?.per_reference).length > 0
     ) {
-      tmpItems.push("4");
+      if (!tmpItems.includes("4")) {
+        tmpItems.push("4");
+      }
       tmpItemContent["4"] = {
         // id: 4,
         title: (
@@ -238,20 +258,24 @@ const Gallery = (props) => {
       }
 
       let colors = [];
-      props?.clusterData?.clusters?.forEach((x,i) => colors[i] = props?.clusterColors[x]);
+      props?.clusterData?.clusters?.forEach(
+        (x, i) => (colors[i] = props?.clusterColors[x])
+      );
 
       props?.redDims.map((x, i) => {
-        tmpItems.push(`${5 + i}`);
-        tmpItemContent[`${5 + i}`] = {
+        if (!tmpItems.includes(`${55 + i}`)) {
+          tmpItems.push(`${55 + i}`);
+        }
+        tmpItemContent[`${55 + i}`] = {
           // id: 5 + i,
           title: get_image_title({
             color: colors,
             config: {
               embedding: x,
-              annotation: "CLUSTERS",
+              annotation: "clusters",
               highlight: null,
               gene: null,
-            }
+            },
           }),
           className: "gitem",
           actions: actions,
@@ -293,7 +317,9 @@ const Gallery = (props) => {
         actions = ["highlight", "select", "download", "trash"];
       }
       props?.savedPlot.map((x, i) => {
-        tmpItems.push(`${100 + i}`);
+        if (!tmpItems.includes(`${100 + i}`)) {
+          tmpItems.push(`${100 + i}`);
+        }
         tmpItemContent[`${100 + i}`] = {
           // id: 5 + i,
           title: get_image_title(x),
@@ -346,12 +372,19 @@ const Gallery = (props) => {
     <DndContext modifiers={[restrictToWindowEdges]} onDragEnd={handleDragEnd}>
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
         {items.map((x) => (
-          <SortableItem 
-            setSelectedPoints={props?.setSelectedPoints} 
+          <SortableItem
+            setSelectedPoints={props?.setSelectedPoints}
             setRestoreState={props?.setRestoreState}
             savedPlot={props?.savedPlot}
             setSavedPlot={props?.setSavedPlot}
-            key={x} id={x} {...itemContent[x]} />
+            items={items}
+            setItems={setItems}
+            itemContent={itemContent}
+            setItemContent={setItemContent}
+            key={x}
+            id={x}
+            {...itemContent[x]}
+          />
         ))}
       </SortableContext>
     </DndContext>

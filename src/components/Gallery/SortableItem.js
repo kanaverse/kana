@@ -82,8 +82,12 @@ export function SortableItem(props) {
         break;
       case "trash":
         let plots = [...props?.savedPlot];
-        plots.splice(parseInt(props?.id) - 10, 1);
+        plots.splice(parseInt(props?.id) - 100, 1);
         props?.setSavedPlot(plots);
+        // also remove items from list
+        let titems = [...props?.items];
+        titems.splice(titems.indexOf(props?.id), 1);
+        props?.setItems(titems);
         break;
     }
   }
