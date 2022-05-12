@@ -60,7 +60,8 @@ const DimPlot = (props) => {
     const [spec, setSpec] = useState(null);
     const [resizeObserver, setResizeObserver] = useState(null);
 
-    const [resizeTimeout, setResizeTimeout] = useState(null);
+    // const [resizeTimeout, setResizeTimeout] = useState(null);
+    let resizeTimeout;
 
     const max = getMinMax(props?.clusterData.clusters)[1] + 1;
 
@@ -292,20 +293,6 @@ const DimPlot = (props) => {
 
                 setSpec(tspec);
 
-                const debouncer = (func, wait) => {
-                    let timeout;
-                    
-                    return function dbfunc(...args) {
-                        const later = () => {
-                            clearTimeout(timeout);
-                            func(...args);
-                        };
-                    
-                        clearTimeout(timeout);
-                        timeout = setTimeout(later, wait);
-                    };
-                };
-
                 function updatePlot() {
                     let uspec = {...tspec};
 
@@ -347,25 +334,28 @@ const DimPlot = (props) => {
                 tresizeObserver.observe(containerEl);
                 setResizeObserver(tresizeObserver);
 
-                if (!resizeTimeout) {
-                    window.addEventListener("resize", () => {
-                        // similar to what we do in epiviz
-                        if (resizeTimeout) {
-                            clearTimeout(resizeTimeout);
-                        }
-    
-                        resizeTimeout = setTimeout(() => { 
-                            console.log("inside window resize ?");
-                            updatePlot()
-                        }, 500);
-                    });
-
-                    setResizeTimeout(resizeTimeout);
-                }
+                // var self = this;
+                // console.log(resizeTimeout);
+                // if ((resizeTimeout == null && renderCount) || (resizeTimeout!=null)) {
+                //     console.log("##############");
+                // }
 
                 if (renderCount) {
                     tmp_scatterplot.setSpecification(tspec);
                     setRenderCount(false);
+
+                    // window.addEventListener("resize", function() {
+                    //     // similar to what we do in epiviz
+                    //     // if (resizeTimeout) {
+                    //     //     clearTimeout(resizeTimeout);
+                    //     // }
+    
+                    //     // resizeTimeout = setTimeout(function(){ 
+                    //     //     console.log("inside window resize ?");
+                    //     //     updatePlot()
+                    //     // }.bind(self), 500);
+                    //     // updatePlot.bind(self)();
+                    // }.bind(self));
                 } else {
                     tmp_scatterplot.updateSpecification(tspec);
                 }
@@ -568,7 +558,7 @@ const DimPlot = (props) => {
                 "config": {
                     "embedding": props?.defaultRedDims,
                     "annotation": props?.colorByAnnotation,
-                    "highlight": props?.clusHighlight,
+                    "highlight": plotGroups[props?.clusHighlight],
                     "gene": genesInfo[geneColSel][props?.gene]
                 }
             });
@@ -727,8 +717,9 @@ const DimPlot = (props) => {
                                                             if (plotGroups.indexOf(x) === props?.clusHighlight) {
                                                                 props?.setClusHighlight(null);
                                                                 props?.setHighlightPoints(null);
+                                                                props?.setClusHighlightLabel(null);
                                                             } else {
-                                                                let tclus = plotGroups.indexOf(x)
+                                                                let tclus = plotGroups.indexOf(x);
                                                                 props?.setClusHighlight(tclus);
                                                                 let clus_indices=[];
                                                                 for (let i=0;i<plotFactors.length;i++) {
@@ -737,6 +728,7 @@ const DimPlot = (props) => {
                                                                     }
                                                                 }
                                                                 props?.setHighlightPoints(clus_indices);
+                                                                props?.setClusHighlightLabel(x);
                                                             }
                                                         }}
                                                     > {x ? x : "NA"} </li>
@@ -774,9 +766,11 @@ const DimPlot = (props) => {
                                                                     if (x === props?.clusHighlight) {
                                                                         props?.setClusHighlight(null);
                                                                         props?.setHighlightPoints(null);
+                                                                        props?.setClusHighlightLabel(null);
                                                                     } else {
                                                                         props?.setClusHighlight(x);
                                                                         props?.setHighlightPoints(props?.customSelection[x]);
+                                                                        props?.setClusHighlightLabel(x);
                                                                     }
                                                                 }}>Custom Selection {x.replace("cs", "")}
                                                             </span>
@@ -799,6 +793,7 @@ const DimPlot = (props) => {
 
                                                                     if (props?.clusHighlight === x) {
                                                                         props?.setClusHighlight(null);
+                                                                        props?.setClusHighlightLabel(null);
                                                                     }
                                                                 }}></Icon>
                                                         </div>

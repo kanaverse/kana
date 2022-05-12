@@ -86,6 +86,8 @@ const App = () => {
   const [highlightPoints, setHighlightPoints] = useState(null);
   // set which cluster to highlight, also for custom selections
   const [clusHighlight, setClusHighlight] = useState(null);
+  // set which clusterlabel is highlighted
+  const [clusHighlightLabel, setClusHighlightLabel] = useState(null);
   // selected colorBy
   const [colorByAnnotation, setColorByAnnotation] = useState("clusters");
 
@@ -661,6 +663,8 @@ const App = () => {
                             setHighlightPoints={setHighlightPoints}
                             clusHighlight={clusHighlight}
                             setClusHighlight={setClusHighlight}
+                            clusHighlightLabel={clusHighlightLabel}
+                            setClusHighlightLabel={setClusHighlightLabel}
                             colorByAnnotation={colorByAnnotation}
                             setColorByAnnotation={setColorByAnnotation}
                           /> :
@@ -719,6 +723,7 @@ const App = () => {
                           setRestoreState={setRestoreState}
                           highlightPoints={highlightPoints}
                           clusHighlight={clusHighlight}
+                          clusHighlightLabel={clusHighlightLabel}
                           setClusHighlight={setClusHighlight}
                           colorByAnnotation={colorByAnnotation}
                         />

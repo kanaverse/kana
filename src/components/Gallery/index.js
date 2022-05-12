@@ -47,19 +47,17 @@ const Gallery = (props) => {
             ""
           )}) `;
         } else {
-          text += `(cluster ${parseInt(data?.config?.highlight) + 1}) `;
+          text += `(${data?.config?.highlight.replace("Cluster ", "")}) `;
         }
-      } else {
-        // text += " (ALL) "
       }
 
       set = true;
     }
 
-    if (props?.clusHighlight != null) {
+    if (props?.clusHighlightLabel != null) {
       if (
         !(
-          ((data.config?.highlight != null && props?.clusHighlight != null) && data.config?.highlight == props?.clusHighlight) &&
+          ((data.config?.highlight != null && props?.clusHighlightLabel != null) && data.config?.highlight == props?.clusHighlightLabel) &&
           ((data.config?.annotation != null && props?.colorByAnnotation != null) && data.config?.annotation == props?.colorByAnnotation)
         )
       ) {
@@ -73,14 +71,7 @@ const Gallery = (props) => {
           text += `${props?.colorByAnnotation.toLowerCase()} `;
         }
 
-        if (String(props?.clusHighlight).startsWith("cs")) {
-          text += `(custom selection ${props?.clusHighlight.replace(
-            "cs",
-            ""
-          )}) `;
-        } else {
-          text += `(cluster ${parseInt(props?.clusHighlight) + 1}) `;
-        }
+        text += `(${props?.clusHighlightLabel})`;
       }
     }
 
