@@ -86,6 +86,8 @@ const App = () => {
   const [highlightPoints, setHighlightPoints] = useState(null);
   // set which cluster to highlight, also for custom selections
   const [clusHighlight, setClusHighlight] = useState(null);
+  // selected colorBy
+  const [colorByAnnotation, setColorByAnnotation] = useState("clusters");
 
   // PCA
   const [pcaVarExp, setPcaVarExp] = useState(null);
@@ -659,6 +661,8 @@ const App = () => {
                             setHighlightPoints={setHighlightPoints}
                             clusHighlight={clusHighlight}
                             setClusHighlight={setClusHighlight}
+                            colorByAnnotation={colorByAnnotation}
+                            setColorByAnnotation={setColorByAnnotation}
                           /> :
                           showGame ?
                             <div style={{
@@ -716,6 +720,7 @@ const App = () => {
                           highlightPoints={highlightPoints}
                           clusHighlight={clusHighlight}
                           setClusHighlight={setClusHighlight}
+                          colorByAnnotation={colorByAnnotation}
                         />
                       </div>
                     }

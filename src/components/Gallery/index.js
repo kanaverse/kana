@@ -11,7 +11,6 @@ import QCPlotMgr from "../Plots/QCPlotMgr";
 import { isObject } from "../../context/utils.js";
 
 import "./Gallery.css";
-import ImgPlot from "../Plots/ImgPlot";
 import UDimPlot from "../Plots/uDimPlot";
 
 import { DndContext } from "@dnd-kit/core";
@@ -36,6 +35,8 @@ const Gallery = (props) => {
       text += `⊃ ${genesInfo[geneColSel][props?.gene]} `;
     }
 
+    let set = false;
+
     if (data?.config?.annotation) {
       text += `⊃ ${data.config?.annotation} `;
 
@@ -45,7 +46,34 @@ const Gallery = (props) => {
         } else {
           text += `(cluster ${parseInt(data?.config?.highlight) + 1}) `;
         }
+      } else {
+        // text += " (ALL) "
       }
+
+      set = true;
+    }
+
+    if (props?.clusHighlight) {
+
+      if (set) {
+        text += "∩ "
+      } else {
+        text += "⊃ "
+      }
+
+      if (props?.colorByAnnotation) {
+        text += `${props?.colorByAnnotation} `;
+      }
+
+      if (String(props?.clusHighlight).startsWith("cs")) {
+        text += `(selection ${props?.clusHighlight}) `;
+      } else {
+        text += `(cluster ${parseInt(props?.clusHighlight) + 1}) `;
+      }
+    }
+
+    if (!props?.clusHighlight && props?.selectedPoints) {
+      text += "⊃ (Unsaved)"
     }
 
     return text;
@@ -216,7 +244,15 @@ const Gallery = (props) => {
         tmpItems.push(`${5 + i}`);
         tmpItemContent[`${5 + i}`] = {
           // id: 5 + i,
-          title: x,
+          title: get_image_title({
+            color: colors,
+            config: {
+              embedding: x,
+              annotation: "CLUSTERS",
+              highlight: null,
+              gene: null,
+            }
+          }),
           className: "gitem",
           actions: actions,
           data: {
@@ -235,6 +271,7 @@ const Gallery = (props) => {
               selectedPoints={props?.selectedPoints}
               setSelectedPoints={props?.setSelectedPoints}
               highlightPoints={props?.highlightPoints}
+              colorByAnnotation={props?.colorByAnnotation}
               data={{
                 color: colors,
                 config: {
@@ -270,6 +307,7 @@ const Gallery = (props) => {
               selectedPoints={props?.selectedPoints}
               setSelectedPoints={props?.setSelectedPoints}
               highlightPoints={props?.highlightPoints}
+              colorByAnnotation={props?.colorByAnnotation}
               data={x}
             />
           ),

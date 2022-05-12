@@ -41,9 +41,6 @@ const DimPlot = (props) => {
     // set mode for plot
     const [plotMode, setPlotMode] = useState('PAN');
 
-    // selected colorBy
-    const [colorByAnnotation, setColorByAnnotation] = useState("clusters");
-
     // choose between categorical vs gradient factors on numerical arrays
     const [toggleFactorsGradient, setToggleFactorsGradient] = useState(true);
     // show the toggle
@@ -379,7 +376,7 @@ const DimPlot = (props) => {
     props?.selectedPoints]);
 
     useEffect(() => {
-        if (colorByAnnotation.toLowerCase() == "clusters") {
+        if (props?.colorByAnnotation.toLowerCase() == "clusters") {
 
             setPlotColorMappings(props?.clusterColors);
             let clus_names = [];
@@ -389,15 +386,15 @@ const DimPlot = (props) => {
             setPlotGroups(clus_names);
             setPlotFactors(props?.clusterData?.clusters);
         } else {
-            if (!(colorByAnnotation in annotationObj)) {
-                props?.setReqAnnotation(colorByAnnotation);
+            if (!(props?.colorByAnnotation in annotationObj)) {
+                props?.setReqAnnotation(props?.colorByAnnotation);
             } else {
-                let tmp = annotationObj[colorByAnnotation];
+                let tmp = annotationObj[props?.colorByAnnotation];
                 let cluster_colors;
 
                 if (tmp.type === "array") {
 
-                    let state = factorState[colorByAnnotation];
+                    let state = factorState[props?.colorByAnnotation];
                     if (state == undefined || state == null) {
                         state = true;
                     }
@@ -485,7 +482,7 @@ const DimPlot = (props) => {
                 }
             }
         }
-    }, [colorByAnnotation, annotationObj, props?.clusterData, props?.clusterColors,
+    }, [props?.colorByAnnotation, annotationObj, props?.clusterData, props?.clusterColors,
         showToggleFactors, toggleFactorsGradient]);
 
     const setInteraction = (x) => {
@@ -531,7 +528,7 @@ const DimPlot = (props) => {
                 props?.setGene(config?.gene);
 
                 if (config?.annotation) {
-                    setColorByAnnotation(config?.annotation);
+                    props?.setColorByAnnotation(config?.annotation);
                     if (config?.annotation === "clusters") {
                         // set ref to HTMLSelect
                         selector.current.value = "CLUSTERS";
@@ -539,7 +536,7 @@ const DimPlot = (props) => {
                         selector.current.value = config?.annotation;
                     }
                 } else {
-                    setColorByAnnotation("clusters");
+                    props?.setColorByAnnotation("clusters");
                     // set ref to HTMLSelect
                     selector.current.value = "CLUSTERS";
                 }
@@ -550,7 +547,7 @@ const DimPlot = (props) => {
                 setFactorsMinMax(null);
                 props?.setClusHighlight(null);
 
-                let state = factorState[colorByAnnotation];
+                let state = factorState[props?.colorByAnnotation];
                 if (state == undefined || state == null) {
                     state = true;
                 }
@@ -570,7 +567,7 @@ const DimPlot = (props) => {
                 "color": cellColorArray,
                 "config": {
                     "embedding": props?.defaultRedDims,
-                    "annotation": colorByAnnotation,
+                    "annotation": props?.colorByAnnotation,
                     "highlight": props?.clusHighlight,
                     "gene": genesInfo[geneColSel][props?.gene]
                 }
@@ -667,12 +664,12 @@ const DimPlot = (props) => {
                             }}>
                                 <HTMLSelect elementRef={selector} large={false} minimal={true} defaultValue={"CLUSTERS"}
                                     onChange={(nval, val) => {
-                                        setColorByAnnotation(nval?.currentTarget?.value);
+                                        props?.setColorByAnnotation(nval?.currentTarget?.value);
                                         setShowToggleFactors(false);
                                         setFactorsMinMax(null);
                                         props?.setClusHighlight(null);
 
-                                        let state = factorState[colorByAnnotation];
+                                        let state = factorState[props?.colorByAnnotation];
                                         if (state == undefined || state == null) {
                                             state = true;
                                         }
@@ -691,7 +688,7 @@ const DimPlot = (props) => {
                                         onChange={(e) => {
                                             setToggleFactorsGradient(e.target.checked);
                                             let tmpState = { ...factorState };
-                                            tmpState[colorByAnnotation] = e.target.checked;
+                                            tmpState[props?.colorByAnnotation] = e.target.checked;
                                             setFactorState(tmpState);
                                             props?.setClusHighlight(null);
                                         }} />
