@@ -71,7 +71,7 @@ const Gallery = (props) => {
           text += `${props?.colorByAnnotation.toLowerCase()} `;
         }
 
-        text += `(${props?.clusHighlightLabel})`;
+        text += `(${props?.clusHighlightLabel.replace("Cluster ", "")})`;
       }
     }
 
