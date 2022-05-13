@@ -38,7 +38,9 @@ const ClusterBarPlot = (props) => {
         props?.clusterColors && chartData &&
         <BarPlot
             filename={datasetName.split(" ").join("_") + "_clusters.png"}
-            data={chartData} color={props?.clusterColors} />
+            data={chartData} color={props?.clusterColors} 
+            state={props?.clusHighlight}
+            setState={props?.setClusHighlight}/>
     );
 };
 

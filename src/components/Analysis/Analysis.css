@@ -1,7 +1,7 @@
 .inputs-container {
     display: grid;
     /* grid-template-columns: auto minmax(325px, 30%); */
-    grid-template-columns: auto 325px;
+    grid-template-columns: calc(97% - 325px) 325px;
     /* grid-template-rows: auto auto auto auto; */
     grid-auto-flow: row;
     gap: 10px;

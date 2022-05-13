@@ -15,6 +15,8 @@ import Pong from './components/Spinners/Pong';
 import Spinner2 from './components/Spinners/Spinner2';
 import { getMinMax } from './components/Plots/utils';
 
+import Split from 'react-split-grid'
+
 import Logs from './components/Logs';
 
 import { palette } from './components/Plots/utils';
@@ -76,6 +78,18 @@ const App = () => {
   const [showAnimation, setShowAnimation] = useState(false);
   // if a user manually triggers an animation (using the play button)
   const [triggerAnimation, setTriggerAnimation] = useState(false);
+  // keeps track of what points were selected in lasso selections
+  const [selectedPoints, setSelectedPoints] = useState(null);
+  // keeps track of what points were selected in lasso selections
+  const [restoreState, setRestoreState] = useState(null);
+  // for highlight in uDimPlots
+  const [highlightPoints, setHighlightPoints] = useState(null);
+  // set which cluster to highlight, also for custom selections
+  const [clusHighlight, setClusHighlight] = useState(null);
+  // set which clusterlabel is highlighted
+  const [clusHighlightLabel, setClusHighlightLabel] = useState(null);
+  // selected colorBy
+  const [colorByAnnotation, setColorByAnnotation] = useState("clusters");
 
   // PCA
   const [pcaVarExp, setPcaVarExp] = useState(null);
@@ -337,6 +351,24 @@ const App = () => {
         }
       }
     }
+
+    setGene(null);
+    setClusHighlight(null);
+    setHighlightPoints(null);
+    setClusHighlightLabel(null);
+    setSavedPlot([]);
+
+    setTimeout(() => {
+      let tmp = [];
+      savedPlot && savedPlot.forEach(x => {
+        if (x.config.annotation != undefined && x.config.annotation.toLowerCase() != "clusters" && x.config.highlight == undefined) {
+          tmp.push(x);
+        }
+      });
+      
+      setSavedPlot(tmp);
+
+    }, 1000);
   }, [inputFiles, params, wasmInitialized]);
 
 
@@ -606,67 +638,118 @@ const App = () => {
         loadingStatus={inputFiles?.files ? !showQCLoader && !showPCALoader && !showNClusLoader && !showCellLabelLoader && !showMarkerLoader && !showDimPlotLoader : true}
       />
       <div className="App-content">
-        {
-          inputFiles?.files && <div className={showDimPlotLoader ? "plot effect-opacitygrayscale" : "plot"}>
-            {
-              defaultRedDims && clusterData ?
-                <DimPlot
-                  className={"effect-opacitygrayscale"}
-                  tsneData={tsneData} umapData={umapData}
-                  animateData={animateData}
-                  redDims={redDims}
-                  defaultRedDims={defaultRedDims}
-                  setDefaultRedDims={setDefaultRedDims}
-                  showAnimation={showAnimation}
-                  setShowAnimation={setShowAnimation}
-                  setTriggerAnimation={setTriggerAnimation}
-                  selectedClusterSummary={selectedClusterSummary}
-                  setSelectedClusterSummary={setSelectedClusterSummary}
-                  selectedClusterIndex={selectedClusterIndex}
-                  selectedCluster={selectedCluster}
-                  savedPlot={savedPlot}
-                  setSavedPlot={setSavedPlot}
-                  clusterData={clusterData}
-                  customSelection={customSelection}
-                  setCustomSelection={setCustomSelection}
-                  setGene={setGene}
-                  gene={gene}
-                  clusterColors={clusterColors}
-                  setClusterColors={setClusterColors}
-                  setDelCustomSelection={setDelCustomSelection}
-                  setReqAnnotation={setReqAnnotation}
-                /> :
-                showGame ?
-                  <div style={{
-                    height: '100%',
-                    width: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingTop: '50px'
-                  }}>
-                    <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
-                    <Button onClick={() => { setShowGame(false) }}>I'm good, go back</Button>
-                    <Pong />
-                  </div>
-                  :
-                  <div style={{
-                    height: '100%',
-                    width: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingTop: '50px'
-                  }}>
-                    <Spinner2 />
-                    <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
-                    <Button onClick={() => { setShowGame(true) }}>Play Pong</Button>
-                  </div>
-            }
-          </div>
-        }
+        <Split
+            minSize={200}
+            render={({
+                getGridProps,
+                getGutterProps,
+            }) => (
+                <div className="app-content-left grid" {...getGridProps()}>
+                  {
+                    inputFiles?.files && <div className={showDimPlotLoader ? "plot effect-opacitygrayscale" : "plot"}>
+                      {
+                        defaultRedDims && clusterData ?
+                          <DimPlot
+                            className={"effect-opacitygrayscale"}
+                            tsneData={tsneData} umapData={umapData}
+                            animateData={animateData}
+                            redDims={redDims}
+                            defaultRedDims={defaultRedDims}
+                            setDefaultRedDims={setDefaultRedDims}
+                            showAnimation={showAnimation}
+                            setShowAnimation={setShowAnimation}
+                            setTriggerAnimation={setTriggerAnimation}
+                            selectedClusterSummary={selectedClusterSummary}
+                            setSelectedClusterSummary={setSelectedClusterSummary}
+                            selectedClusterIndex={selectedClusterIndex}
+                            selectedCluster={selectedCluster}
+                            savedPlot={savedPlot}
+                            setSavedPlot={setSavedPlot}
+                            clusterData={clusterData}
+                            customSelection={customSelection}
+                            setCustomSelection={setCustomSelection}
+                            setGene={setGene}
+                            gene={gene}
+                            clusterColors={clusterColors}
+                            setClusterColors={setClusterColors}
+                            setDelCustomSelection={setDelCustomSelection}
+                            setReqAnnotation={setReqAnnotation}
+                            selectedPoints={selectedPoints}
+                            setSelectedPoints={setSelectedPoints}
+                            restoreState={restoreState}
+                            setRestoreState={setRestoreState}
+                            setHighlightPoints={setHighlightPoints}
+                            clusHighlight={clusHighlight}
+                            setClusHighlight={setClusHighlight}
+                            clusHighlightLabel={clusHighlightLabel}
+                            setClusHighlightLabel={setClusHighlightLabel}
+                            colorByAnnotation={colorByAnnotation}
+                            setColorByAnnotation={setColorByAnnotation}
+                          /> :
+                          showGame ?
+                            <div style={{
+                              height: '100%',
+                              width: '100%',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              paddingTop: '50px'
+                            }}>
+                              <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+                              <Button onClick={() => { setShowGame(false) }}>I'm good, go back</Button>
+                              <Pong />
+                            </div>
+                            :
+                            <div style={{
+                              height: '100%',
+                              width: '100%',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              paddingTop: '50px'
+                            }}>
+                              <Spinner2 />
+                              <Label>Get some coffee or play pong while you wait for the analysis to finish..</Label>
+                              <Button onClick={() => { setShowGame(true) }}>Play Pong</Button>
+                            </div>
+                      }
+                    </div>
+                  }
+                    <div className="gutter-row gutter-row-1" {...getGutterProps('row', 1)} />
+                    {
+                      inputFiles?.files && <div className="analysis">
+                        <Gallery
+                          qcData={qcData}
+                          pcaVarExp={pcaVarExp}
+                          savedPlot={savedPlot}
+                          setSavedPlot={setSavedPlot}
+                          clusterData={clusterData}
+                          clusterColors={clusterColors}
+                          cellLabelData={cellLabelData}
+                          gene={gene}
+                          showQCLoader={showQCLoader}
+                          showPCALoader={showPCALoader}
+                          showNClusLoader={showNClusLoader}
+                          showCellLabelLoader={showCellLabelLoader}
+                          tsneData={tsneData} umapData={umapData}
+                          redDims={redDims}
+                          selectedPoints={selectedPoints}
+                          setSelectedPoints={setSelectedPoints}
+                          restoreState={restoreState}
+                          setRestoreState={setRestoreState}
+                          highlightPoints={highlightPoints}
+                          clusHighlight={clusHighlight}
+                          clusHighlightLabel={clusHighlightLabel}
+                          setClusHighlight={setClusHighlight}
+                          colorByAnnotation={colorByAnnotation}
+                        />
+                      </div>
+                    }
+                </div>
+            )}
+        />
         {
           inputFiles?.files && <div className={showMarkerLoader ? "marker effect-opacitygrayscale" : "marker"}>
             {
@@ -698,24 +781,6 @@ const App = () => {
                   <Label>Generating nearest neighbor graph to compute clusters....</Label>
                 </div>
             }
-          </div>
-        }
-        {
-          inputFiles?.files && <div className="analysis">
-            <Gallery
-              qcData={qcData}
-              pcaVarExp={pcaVarExp}
-              savedPlot={savedPlot}
-              setSavedPlot={setSavedPlot}
-              clusterData={clusterData}
-              clusterColors={clusterColors}
-              cellLabelData={cellLabelData}
-              gene={gene}
-              showQCLoader={showQCLoader}
-              showPCALoader={showPCALoader}
-              showNClusLoader={showNClusLoader}
-              showCellLabelLoader={showCellLabelLoader}
-            />
           </div>
         }
       </div>

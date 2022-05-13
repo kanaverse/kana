@@ -19,11 +19,10 @@ import WebGLVis from 'epiviz.gl';
 
 const DimPlot = (props) => {
     const container = useRef();
+    const selector = useRef();
 
     // ref to the plot object
     const [scatterplot, setScatterplot] = useState(null);
-    // set which cluster to highlight, also for custom selections
-    const [clusHighlight, setClusHighlight] = useState(null);
     // get closestpoint on viz, to highlight the cluster
     const [clusHover, setClusHover] = useState(null);
     // show a gradient on the plot ?
@@ -39,13 +38,8 @@ const DimPlot = (props) => {
 
     const { genesInfo, geneColSel, annotationCols, annotationObj } = useContext(AppContext);
 
-    // keeps track of what points were selected in lasso selections
-    const [selectedPoints, setSelectedPoints] = useState(null);
     // set mode for plot
     const [plotMode, setPlotMode] = useState('PAN');
-
-    // selected colorBy
-    const [colorByAnotation, setColorByAnnotation] = useState("clusters");
 
     // choose between categorical vs gradient factors on numerical arrays
     const [toggleFactorsGradient, setToggleFactorsGradient] = useState(true);
@@ -61,6 +55,13 @@ const DimPlot = (props) => {
     const [plotColorMappings, setPlotColorMappings] = useState(null);
     const [plotGroups, setPlotGroups] = useState(null);
     const [plotFactors, setPlotFactors] = useState(null);
+
+    const [cellColorArray, setCellColorArray] = useState(null);
+    const [spec, setSpec] = useState(null);
+    // const [resizeObserver, setResizeObserver] = useState(null);
+
+    // const [resizeTimeout, setResizeTimeout] = useState(null);
+    let resizeTimeout, resizeObserver;
 
     const max = getMinMax(props?.clusterData.clusters)[1] + 1;
 
@@ -108,25 +109,9 @@ const DimPlot = (props) => {
     }, [sliderMinMax]);
 
     useEffect(() => {
-
         const containerEl = container.current;
 
         if (containerEl) {
-
-            let tmp_scatterplot = scatterplot;
-
-            // only create the plot object once
-            if (!tmp_scatterplot) {
-                const containerEl = container.current;
-
-                tmp_scatterplot = new WebGLVis(containerEl);
-                tmp_scatterplot.addToDom();
-                setScatterplot(tmp_scatterplot);
-
-                tmp_scatterplot.addEventListener("onSelectionEnd", (e) => {
-                    setSelectedPoints(e.detail.data?.selection?.indices);
-                });
-            }
 
             let data = null;
 
@@ -145,28 +130,62 @@ const DimPlot = (props) => {
 
                 const cluster_mappings = plotFactors;
                 const cluster_colors = plotColorMappings;
+                
+                let tmp_scatterplot = scatterplot;
+                // only create the plot object once
+                if (!tmp_scatterplot) {
+                    const containerEl = container.current;
 
-                tmp_scatterplot.addEventListener("pointHovered", (e) => {
-                    let hdata = e.detail.data;
-                    e.preventDefault();
+                    tmp_scatterplot = new WebGLVis(containerEl);
+                    tmp_scatterplot.addToDom();
+                    setScatterplot(tmp_scatterplot);
+                }
 
-                    if (hdata?.distance <= 1.5) {
-                        setClusHover(cluster_mappings[hdata?.indices?.[0]]);
-                    } else {
-                        setClusHover(null);
+                tmp_scatterplot.dataWorker.onmessage = (message) => {
+                    if (message.data.type === "getClosestPoint") {
+                      if (message.data.closestPoint === undefined) {
+                        return;
+                      }
+                      let hdata = message.data;
+                        if (hdata?.distance <= 1.5) {
+                            setClusHover(cluster_mappings[hdata?.indices?.[0]]);
+                        } else {
+                            setClusHover(null);
+                        }
+                    } else if (message.data.type === "getClickPoint") {
+                      if (message.data.closestPoint === undefined) {
+                        return;
+                      }
+                      let hdata = message.data;
+                        if (hdata?.distance <= 1.5) {
+                            if (props?.clusHighlight == cluster_mappings[hdata?.indices?.[0]]) {
+                                props?.setClusHighlight(null);
+                                props?.setClusHighlightLabel(null);
+                                props?.setHighlightPoints(null);
+                            } else {
+                                props?.setClusHighlight(cluster_mappings[hdata?.indices?.[0]]);
+                                props?.setClusHighlightLabel(plotGroups[cluster_mappings[hdata?.indices?.[0]]]);
+                                let clus_indices=[];
+                                for (let i=0;i<plotFactors.length;i++) {
+                                    if (cluster_mappings[hdata?.indices?.[0]] == plotFactors[i]) {
+                                        clus_indices.push(i);
+                                    }
+                                }
+                                props?.setHighlightPoints(clus_indices);
+                            }
+                        } else {
+                            props?.setClusHighlight(null);
+                            props?.setClusHighlightLabel(null);
+                            props?.setHighlightPoints(null);
+                        }
+                    } else if (
+                      message.data.type === "selectBox" ||
+                      message.data.type === "selectLasso"
+                    ) {
+                        message.data.selection?.indices.length > 0 && props?.setSelectedPoints(message.data.selection?.indices);
+                        tmp_scatterplot.dataWorker.dataWorkerStream.push(message);
                     }
-                });
-
-                tmp_scatterplot.addEventListener("pointClicked", (e) => {
-                    e.preventDefault();
-
-                    let hdata = e.detail.data;
-                    if (hdata?.distance <= 1.5) {
-                        setClusHighlight(cluster_mappings[hdata?.indices?.[0]]);
-                    } else {
-                        setClusHighlight(null);
-                    }
-                });
+                }
 
                 // coloring cells on the plot
                 // by default chooses the cluster assigned color for the plot
@@ -179,19 +198,25 @@ const DimPlot = (props) => {
                 // by expression, commmented out
                 let plot_colors = [];
                 for (let i = 0; i < data.x.length; i++) {
-                    if (selectedPoints && selectedPoints.has(i)) {
-                        plot_colors[i] = "#30404D";
+                    if (props?.selectedPoints && props?.selectedPoints.length > 0) {
+
+                        if (props?.selectedPoints.includes(i)) {
+                            plot_colors[i] = cluster_colors[cluster_mappings[i]];
+                        } else {
+                            plot_colors[i] = "#EDEFF2";
+                        }
+
                         continue;
                     }
 
-                    if (clusHighlight != null) {
-                        if (!String(clusHighlight).startsWith("cs")) {
-                            if (clusHighlight !== cluster_mappings[i]) {
+                    if (props?.clusHighlight != null) {
+                        if (!String(props?.clusHighlight).startsWith("cs")) {
+                            if (props?.clusHighlight !== cluster_mappings[i]) {
                                 plot_colors[i] = '#D3D3D3';
                                 continue;
                             }
                         } else {
-                            if (!props?.customSelection[clusHighlight].includes(i)) {
+                            if (!props?.customSelection[props?.clusHighlight].includes(i)) {
                                 plot_colors[i] = '#D3D3D3';
                                 continue;
                             }
@@ -218,8 +243,8 @@ const DimPlot = (props) => {
                         }
                     }
 
-                    if (clusHighlight != null && String(clusHighlight).startsWith("cs")) {
-                        let tmpclus = parseInt(clusHighlight.replace("cs", ""));
+                    if (props?.clusHighlight != null && String(props?.clusHighlight).startsWith("cs")) {
+                        let tmpclus = parseInt(props?.clusHighlight.replace("cs", ""));
                         plot_colors[i] = cluster_colors[max + tmpclus - 1];
                     } else {
                         if (showToggleFactors) {
@@ -231,6 +256,8 @@ const DimPlot = (props) => {
                         plot_colors[i] = cluster_colors[cluster_mappings[i]];
                     }
                 }
+
+                setCellColorArray(plot_colors);
 
                 let xMinMax = getMinMax(data.x);
                 let yMinMax = getMinMax(data.y);
@@ -248,7 +275,7 @@ const DimPlot = (props) => {
                     yBound = yBound / aspRatio;
                 }
 
-                let spec = {
+                let tspec = {
                     defaultData: {
                         x: data.x,
                         y: data.y,
@@ -279,53 +306,77 @@ const DimPlot = (props) => {
                     ],
                 };
 
+                setSpec(tspec);
+
+                function updatePlot() {
+                    let uspec = {...tspec};
+
+                    tmp_scatterplot.setCanvasSize(
+                        containerEl.parentNode.clientWidth,
+                        containerEl.parentNode.clientHeight
+                    );
+
+                    aspRatio = containerEl.clientWidth / containerEl.clientHeight;
+
+                    xBound = Math.max(...xDomain.map(a => Math.abs(a)));
+                    yBound = Math.max(...yDomain.map(a => Math.abs(a)));
+
+                    if (aspRatio > 1) {
+                        xBound = xBound * aspRatio;
+                    } else {
+                        yBound = yBound / aspRatio;
+                    }
+
+                    uspec["tracks"][0].x.domain = [-xBound, xBound];
+                    uspec["tracks"][0].y.domain = [-yBound, yBound];
+
+                    tmp_scatterplot.setSpecification(uspec);
+                    setSpec(uspec);
+                }
+
+                if (window.scatterplotresizeObserver) {
+                    window.scatterplotresizeObserver.disconnect();
+                }
+
+                window.scatterplotresizeObserver = new ResizeObserver(() => {
+                    // props?.setGene(null);
+                    // setShowToggleFactors(false);
+                    // setFactorsMinMax(null);
+                    // props?.setClusHighlight(null);
+                    // props?.setHighlightPoints(null);
+                    // props?.setClusHighlightLabel(null);
+                    updatePlot();
+                });
+
+                window.scatterplotresizeObserver.observe(containerEl);
                 if (renderCount) {
-                    tmp_scatterplot.setSpecification(spec);
+                    tmp_scatterplot.setSpecification(tspec);
                     setRenderCount(false);
+                    // setResizeObserver(tresizeObserver);
 
-                    let resizeTimeout;
-                    window.addEventListener("resize", () => {
-
-                        // similar to what we do in epiviz
-                        if (resizeTimeout) {
-                            clearTimeout(resizeTimeout);
-                        }
-
-                        resizeTimeout = setTimeout(() => {
-
-                            tmp_scatterplot.setCanvasSize(
-                                containerEl.parentNode.clientWidth,
-                                containerEl.parentNode.clientHeight
-                            );
-
-                            aspRatio = containerEl.clientWidth / containerEl.clientHeight;
-
-                            xBound = Math.max(...xDomain.map(a => Math.abs(a)));
-                            yBound = Math.max(...yDomain.map(a => Math.abs(a)));
-
-                            if (aspRatio > 1) {
-                                xBound = xBound * aspRatio;
-                            } else {
-                                yBound = yBound / aspRatio;
-                            }
-
-                            spec["tracks"][0].x.domain = [-xBound, xBound];
-                            spec["tracks"][0].y.domain = [-yBound, yBound];
-
-
-                            tmp_scatterplot.setSpecification(spec);
-                        }, 500);
-                    });
+                    // window.addEventListener("resize", function() {
+                    //     // similar to what we do in epiviz
+                    //     // if (resizeTimeout) {
+                    //     //     clearTimeout(resizeTimeout);
+                    //     // }
+    
+                    //     // resizeTimeout = setTimeout(function(){ 
+                    //     //     console.log("inside window resize ?");
+                    //     //     updatePlot()
+                    //     // }.bind(self), 500);
+                    //     // updatePlot.bind(self)();
+                    // }.bind(self));
                 } else {
-                    tmp_scatterplot.updateSpecification(spec);
+                    tmp_scatterplot.setSpecification(tspec);
                 }
             }
         }
     }, [props?.tsneData, props?.umapData, props?.animateData, props?.defaultRedDims,
-        gradient, clusHighlight, plotColorMappings, plotGroups, plotFactors, showToggleFactors]);
+        gradient, props?.clusHighlight, plotColorMappings, plotGroups, plotFactors, showToggleFactors,
+    props?.selectedPoints]);
 
     useEffect(() => {
-        if (colorByAnotation.toLowerCase() == "clusters") {
+        if (props?.colorByAnnotation.toLowerCase() == "clusters") {
 
             setPlotColorMappings(props?.clusterColors);
             let clus_names = [];
@@ -335,15 +386,15 @@ const DimPlot = (props) => {
             setPlotGroups(clus_names);
             setPlotFactors(props?.clusterData?.clusters);
         } else {
-            if (!(colorByAnotation in annotationObj)) {
-                props?.setReqAnnotation(colorByAnotation);
+            if (!(props?.colorByAnnotation in annotationObj)) {
+                props?.setReqAnnotation(props?.colorByAnnotation);
             } else {
-                let tmp = annotationObj[colorByAnotation];
+                let tmp = annotationObj[props?.colorByAnnotation];
                 let cluster_colors;
 
                 if (tmp.type === "array") {
 
-                    let state = factorState[colorByAnotation];
+                    let state = factorState[props?.colorByAnnotation];
                     if (state == undefined || state == null) {
                         state = true;
                     }
@@ -431,7 +482,7 @@ const DimPlot = (props) => {
                 }
             }
         }
-    }, [colorByAnotation, annotationObj, props?.clusterData, props?.clusterColors,
+    }, [props?.colorByAnnotation, annotationObj, props?.clusterData, props?.clusterColors,
         showToggleFactors, toggleFactorsGradient]);
 
     const setInteraction = (x) => {
@@ -445,7 +496,7 @@ const DimPlot = (props) => {
     }
 
     const clearPoints = () => {
-        setSelectedPoints(null);
+        props?.setSelectedPoints(null);
         scatterplot.clearSelection();
     }
 
@@ -460,33 +511,89 @@ const DimPlot = (props) => {
 
         let cid = Object.keys(props?.customSelection).length;
         let tmpSelection = { ...props?.customSelection };
-        tmpSelection[`cs${cid + 1}`] = selectedPoints;
+        tmpSelection[`cs${cid + 1}`] = props?.selectedPoints;
         props?.setCustomSelection(tmpSelection);
 
-        setSelectedPoints(null);
+        props?.setSelectedPoints(null);
         scatterplot.clearSelection();
     }
+
+    // hook to restore state
+    useEffect(() => {
+        if (props?.restoreState) {
+            let {config} = props?.restoreState;
+            if (config) {
+                props?.setDefaultRedDims(config?.embedding);
+                props?.setClusHighlight(config?.highlight);
+                // props?.setClusHighlightLabel(null);
+                props?.setGene(config?.gene);
+
+                if (config?.annotation) {
+                    props?.setColorByAnnotation(config?.annotation);
+                    if (config?.annotation === "clusters") {
+                        // set ref to HTMLSelect
+                        selector.current.value = "CLUSTERS";
+                    } else {
+                        selector.current.value = config?.annotation;
+                    }
+                } else {
+                    props?.setColorByAnnotation("clusters");
+                    // set ref to HTMLSelect
+                    selector.current.value = "CLUSTERS";
+                }
+
+                selector.current.dispatchEvent(new Event('change'));
+                // other state based changes
+                setShowToggleFactors(false);
+                setFactorsMinMax(null);
+                props?.setClusHighlight(null);
+                // props?.setClusHighlightLabel(null);
+
+                let state = factorState[props?.colorByAnnotation];
+                if (state == undefined || state == null) {
+                    state = true;
+                }
+                setToggleFactorsGradient(state);
+            }
+        }
+    }, [props?.restoreState]);
 
     function handleSaveEmbedding() {
         const containerEl = container.current;
         if (containerEl) {
-            const iData = scatterplot.canvas.toDataURL();
+            // const iData = scatterplot.canvas.toDataURL();
 
             let tmp = [...props?.savedPlot];
 
             tmp.push({
-                "image": iData,
+                "color": cellColorArray,
                 "config": {
-                    "cluster": props?.selectedCluster,
-                    "gene": props?.gene,
-                    "highlight": clusHighlight,
-                    "embedding": props?.defaultRedDims
+                    "embedding": JSON.parse(JSON.stringify(props?.defaultRedDims)),
+                    "annotation": JSON.parse(JSON.stringify(props?.colorByAnnotation)),
+                    "highlight": plotGroups[props?.clusHighlight] ? JSON.parse(JSON.stringify(plotGroups[props?.clusHighlight])): plotGroups[props?.clusHighlight],
+                    "gene": props?.gene ? JSON.parse(JSON.stringify(genesInfo[geneColSel][props?.gene])): props?.gene
                 }
             });
 
             props?.setSavedPlot(tmp);
         }
     }
+
+    useEffect(() => {
+        if (props?.clusHighlight) {
+            if (plotFactors) {
+                let clus_indices=[];
+                for (let i=0;i<plotFactors.length;i++) {
+                    if (props?.clusHighlight == plotFactors[i]) {
+                        clus_indices.push(i);
+                    }
+                }
+                props?.setHighlightPoints(clus_indices);
+            }
+        } else {
+            props?.setHighlightPoints(null);
+        }
+    }, [props?.clusHighlight]);
 
     return (
         <div className="scatter-plot">
@@ -573,14 +680,16 @@ const DimPlot = (props) => {
                                 flexDirection: "row",
                                 flexWrap: "wrap"
                             }}>
-                                <HTMLSelect large={false} minimal={true} defaultValue={"CLUSTERS"}
+                                <HTMLSelect elementRef={selector} large={false} minimal={true} defaultValue={"CLUSTERS"}
                                     onChange={(nval, val) => {
-                                        setColorByAnnotation(nval?.currentTarget?.value);
+                                        props?.setColorByAnnotation(nval?.currentTarget?.value);
                                         setShowToggleFactors(false);
                                         setFactorsMinMax(null);
-                                        setClusHighlight(null);
+                                        props?.setClusHighlight(null);
+                                        props?.setHighlightPoints(null);
+                                        props?.setClusHighlightLabel(null);
 
-                                        let state = factorState[colorByAnotation];
+                                        let state = factorState[props?.colorByAnnotation];
                                         if (state == undefined || state == null) {
                                             state = true;
                                         }
@@ -599,9 +708,11 @@ const DimPlot = (props) => {
                                         onChange={(e) => {
                                             setToggleFactorsGradient(e.target.checked);
                                             let tmpState = { ...factorState };
-                                            tmpState[colorByAnotation] = e.target.checked;
+                                            tmpState[props?.colorByAnnotation] = e.target.checked;
                                             setFactorState(tmpState);
-                                            setClusHighlight(null);
+                                            props?.setClusHighlight(null);
+                                            props?.setHighlightPoints(null);
+                                            props?.setClusHighlightLabel(null);
                                         }} />
                                 }
                             </div>
@@ -630,13 +741,24 @@ const DimPlot = (props) => {
                                             plotGroups && [...plotGroups].sort((a, b) => a - b).map((x, i) => {
                                                 return (
                                                     <li key={i}
-                                                        className={clusHover === plotGroups.indexOf(x) || clusHighlight === plotGroups.indexOf(x) ? 'legend-highlight' : ""}
+                                                        className={clusHover === plotGroups.indexOf(x) || props?.clusHighlight === plotGroups.indexOf(x) ? 'legend-highlight' : ""}
                                                         style={{ color: plotColorMappings[plotGroups.indexOf(x)] }}
                                                         onClick={() => {
-                                                            if (plotGroups.indexOf(x) === clusHighlight) {
-                                                                setClusHighlight(null);
+                                                            if (plotGroups.indexOf(x) === props?.clusHighlight) {
+                                                                props?.setClusHighlight(null);
+                                                                props?.setHighlightPoints(null);
+                                                                props?.setClusHighlightLabel(null);
                                                             } else {
-                                                                setClusHighlight(plotGroups.indexOf(x));
+                                                                let tclus = plotGroups.indexOf(x);
+                                                                props?.setClusHighlight(tclus);
+                                                                let clus_indices=[];
+                                                                for (let i=0;i<plotFactors.length;i++) {
+                                                                    if (tclus == plotFactors[i]) {
+                                                                        clus_indices.push(i);
+                                                                    }
+                                                                }
+                                                                props?.setHighlightPoints(clus_indices);
+                                                                props?.setClusHighlightLabel(x);
                                                             }
                                                         }}
                                                     > {x ? x : "NA"} </li>
@@ -647,67 +769,76 @@ const DimPlot = (props) => {
                             }
                         </Callout>
                         {
-                            (Object.keys(props?.customSelection).length > 0 || (selectedPoints && selectedPoints.length > 0)) ?
+                            (Object.keys(props?.customSelection).length > 0 || (props?.selectedPoints && props?.selectedPoints.length > 0)) ?
                                 <Callout title="CUSTOM SELECTIONS">
-                                    <div
-                                        style={{
-                                            paddingTop: '5px'
-                                        }}>
-                                        <ul>
-                                            {Object.keys(props?.customSelection)?.slice(0, 100).map((x, i) => {
-                                                return (<li key={x}
-                                                    className={clusHighlight === x ? 'legend-highlight' : ''}
-                                                    style={{ color: props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + 1 + i] }}
-                                                >
-                                                    <div style={{
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        flexDirection: 'row'
-                                                    }}>
-                                                        <span
-                                                            style={{
-                                                                alignSelf: 'center'
-                                                            }}
-                                                            onClick={() => {
-                                                                if (x === clusHighlight) {
-                                                                    setClusHighlight(null);
-                                                                } else {
-                                                                    setClusHighlight(x);
-                                                                }
-                                                            }}>Custom Selection {x.replace("cs", "")}
-                                                        </span>
-                                                        <Icon
-                                                            size={12}
-                                                            icon="trash"
-                                                            style={{
-                                                                paddingLeft: '2px'
-                                                            }}
-                                                            onClick={() => {
-                                                                let tmpSel = { ...props?.customSelection };
-                                                                delete tmpSel[x];
-                                                                props?.setCustomSelection(tmpSel);
-
-                                                                let tmpcolors = [...props?.clusterColors];
-                                                                tmpcolors = tmpcolors.slice(0, tmpcolors.length - 1);
-                                                                props?.setClusterColors(tmpcolors);
-
-                                                                props?.setDelCustomSelection(x);
-
-                                                                if (clusHighlight === x) {
-                                                                    setClusHighlight(null);
-                                                                }
-                                                            }}></Icon>
-                                                    </div>
-                                                </li>)
-                                            })}
-                                        </ul>
-                                    </div>
                                     {
-                                        selectedPoints && selectedPoints.length > 0 ?
+                                        (!(showToggleFactors && toggleFactorsGradient)) && 
+                                            <div
+                                            style={{
+                                                paddingTop: '5px'
+                                            }}>
+                                            <ul>
+                                                {Object.keys(props?.customSelection)?.slice(0, 100).map((x, i) => {
+                                                    return (<li key={x}
+                                                        className={props?.clusHighlight === x ? 'legend-highlight' : ''}
+                                                        style={{ color: props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + 1 + i] }}
+                                                    >
+                                                        <div style={{
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            flexDirection: 'row'
+                                                        }}>
+                                                            <span
+                                                                style={{
+                                                                    alignSelf: 'center'
+                                                                }}
+                                                                onClick={() => {
+                                                                    if (x === props?.clusHighlight) {
+                                                                        props?.setClusHighlight(null);
+                                                                        props?.setHighlightPoints(null);
+                                                                        props?.setClusHighlightLabel(null);
+                                                                    } else {
+                                                                        props?.setClusHighlight(x);
+                                                                        props?.setHighlightPoints(props?.customSelection[x]);
+                                                                        props?.setClusHighlightLabel(x);
+                                                                    }
+                                                                }}>Custom Selection {x.replace("cs", "")}
+                                                            </span>
+                                                            <Icon
+                                                                size={12}
+                                                                icon="trash"
+                                                                style={{
+                                                                    paddingLeft: '2px'
+                                                                }}
+                                                                onClick={() => {
+                                                                    let tmpSel = { ...props?.customSelection };
+                                                                    delete tmpSel[x];
+                                                                    props?.setCustomSelection(tmpSel);
+
+                                                                    let tmpcolors = [...props?.clusterColors];
+                                                                    tmpcolors = tmpcolors.slice(0, tmpcolors.length - 1);
+                                                                    props?.setClusterColors(tmpcolors);
+
+                                                                    props?.setDelCustomSelection(x);
+
+                                                                    if (props?.clusHighlight === x) {
+                                                                        props?.setClusHighlight(null);
+                                                                        props?.setClusHighlightLabel(null);
+                                                                    }
+                                                                }}></Icon>
+                                                        </div>
+                                                    </li>)
+                                                })}
+                                            </ul>
+                                        </div>
+                                    }
+                                    
+                                    {
+                                        props?.selectedPoints && props?.selectedPoints.length > 0 ?
                                             <div>
                                                 <Divider />
                                                 <div className='selection-container'>
-                                                    <span>{selectedPoints.length} cells selected</span>
+                                                    <span>{props?.selectedPoints.length} cells selected</span>
                                                     <div className='selection-button-container'>
                                                         <Button small={true} intent='primary'
                                                             onClick={savePoints}>Save</Button>
