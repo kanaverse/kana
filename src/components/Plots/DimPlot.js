@@ -579,6 +579,22 @@ const DimPlot = (props) => {
         }
     }
 
+    useEffect(() => {
+        if (props?.clusHighlight) {
+            if (plotFactors) {
+                let clus_indices=[];
+                for (let i=0;i<plotFactors.length;i++) {
+                    if (props?.clusHighlight == plotFactors[i]) {
+                        clus_indices.push(i);
+                    }
+                }
+                props?.setHighlightPoints(clus_indices);
+            }
+        } else {
+            props?.setHighlightPoints(null);
+        }
+    }, [props?.clusHighlight]);
+
     return (
         <div className="scatter-plot">
             <ButtonGroup style={{ minWidth: 75, minHeight: 150 }}
