@@ -24,6 +24,8 @@ export function SortableItem(props) {
     select: "Restore this state",
     highlight: "Clear selection of cells",
     trash: "Remove plot",
+    import: "Export CSV",
+    blank: "nothing yet"
   };
 
   // TODO: Template for each item in the Gallery
@@ -71,7 +73,7 @@ export function SortableItem(props) {
         snode.forEach((sn) => {
           if (
             sn.attributes["data-icon"] == undefined &&
-            !["highlight", "select", "download", "trash"].includes(
+            !["highlight", "select", "download", "trash", "import"].includes(
               sn.attributes["data-icon"]
             )
           ) {
@@ -88,6 +90,9 @@ export function SortableItem(props) {
         let titems = [...props?.items];
         titems.splice(titems.indexOf(props?.id), 1);
         props?.setItems(titems);
+        break;
+      case "import":
+        props?.setSelectedPoints(null);
         break;
     }
   }

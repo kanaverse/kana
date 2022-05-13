@@ -32,7 +32,7 @@ const Gallery = (props) => {
   function get_image_title(data) {
     let text = ` ${data?.config?.embedding} `;
     if (data?.config?.gene) {
-      text += `⊃ ${genesInfo[geneColSel][props?.gene]} `;
+      text += `⊃ ${data?.config?.gene} `;
     }
 
     let set = false;
@@ -236,7 +236,7 @@ const Gallery = (props) => {
         className: props?.showCellLabelLoader
           ? "gitem effect-opacitygrayscale"
           : "gitem",
-        actions: ["download"],
+        actions: ["blank"],
         content: <CellLabelTable data={props?.cellLabelData} />,
       };
     }
