@@ -1,4 +1,4 @@
-# Single cell RNA-seq analysis in the browser
+# Kana: Single cell RNA-seq analysis in the browser
 
 ## Overview
 
@@ -32,7 +32,7 @@ Briefly, this involves:
 
 - Removal of low-quality cells 
 - Normalization and log-transformation
-- Modelling of the mean-variance trend across genes
+- Modeling of the mean-variance trend across genes
 - A principal components analysis on the highly variable genes
 - Clustering with graph-based methods
 - The usual dimensionality reductions (t-SNE/UMAP)
@@ -40,10 +40,13 @@ Briefly, this involves:
 - Make custom cell selections and detect markers for this selection
 - Cell type annotation for each cluster across user selected reference datasets
 - Perform Integration or Batch correction using MNN correction. You can provide a single dataset containing multiple batches and specify the `batch` column in the cell annotations, or load multiple datasets where each dataset is considered a batch
+- ADT aware for Cite-seq data
 
 The interface provides a depiction of the dimensionality reduction of choice,
 a ranking of marker genes for the cluster of interest,
 and diagnostic plots from the individual analysis steps.
+
+**for release notes and changelog, [read here](./CHANGELOG.md)**
 
 ![Features](assets/pbmc_68k.png)
 
