@@ -571,7 +571,7 @@ const DimPlot = (props) => {
                     "embedding": JSON.parse(JSON.stringify(props?.defaultRedDims)),
                     "annotation": JSON.parse(JSON.stringify(props?.colorByAnnotation)),
                     "highlight": plotGroups[props?.clusHighlight] ? JSON.parse(JSON.stringify(plotGroups[props?.clusHighlight])): plotGroups[props?.clusHighlight],
-                    "gene": JSON.parse(JSON.stringify(genesInfo[geneColSel][props?.gene]))
+                    "gene": props?.gene ? JSON.parse(JSON.stringify(genesInfo[geneColSel][props?.gene])): props?.gene
                 }
             });
 

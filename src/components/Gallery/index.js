@@ -307,6 +307,11 @@ const Gallery = (props) => {
       if (props?.selectedPoints && props?.selectedPoints.length > 0) {
         actions = ["highlight", "select", "download", "trash"];
       }
+      
+      if (props?.savedPlot.length  == 0) {
+        tmpItems = tmpItems.filter(x => parseInt(x) < 100);
+      }
+
       props?.savedPlot.map((x, i) => {
         if (!tmpItems.includes(`${100 + i}`)) {
           tmpItems.push(`${100 + i}`);

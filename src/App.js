@@ -351,6 +351,24 @@ const App = () => {
         }
       }
     }
+
+    setGene(null);
+    setClusHighlight(null);
+    setHighlightPoints(null);
+    setClusHighlightLabel(null);
+    setSavedPlot([]);
+
+    setTimeout(() => {
+      let tmp = [];
+      savedPlot && savedPlot.forEach(x => {
+        if (x.config.annotation != undefined && x.config.annotation.toLowerCase() != "clusters" && x.config.highlight == undefined) {
+          tmp.push(x);
+        }
+      });
+      
+      setSavedPlot(tmp);
+
+    }, 1000);
   }, [inputFiles, params, wasmInitialized]);
 
 
