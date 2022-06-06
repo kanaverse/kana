@@ -55,6 +55,19 @@ const AppContextProvider = ({ children }) => {
       // "annotateCells-species": "human",
       "annotateCells-human_references": [],
       "annotateCells-mouse_references": [],
+    },
+    adt_qualitycontrol: {
+      igg_prefix: "IgG",
+      nmads: 3,
+      min_detected_drop: 0.1
+    },
+    adt_pca: {
+      num_pcs: 20,
+      block_method: "none"
+    },
+    adt_normalization: {
+      num_pcs: 25,
+      num_clusters: 20
     }
   });
 

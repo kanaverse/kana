@@ -133,6 +133,9 @@ const App = () => {
   // request annotation column
   const [reqAnnotation, setReqAnnotation] = useState(null);
 
+  // modality
+  const [modality, setModality] = useState(null);
+
   // props for dialogs
   const loadingProps = {
     autoFocus: true,
@@ -395,6 +398,8 @@ const App = () => {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
+    console.log(payload);
+
     if (payload) {
       if (payload.type.toLowerCase().endsWith("start")) {
         add_to_logs("start", payload.type.toLowerCase().replace("_start", ""), "started");
@@ -606,6 +611,8 @@ const App = () => {
       setShowCellLabelLoader(false);
     } else if (payload.type === "PREFLIGHT_INPUT_DATA") {
       const { resp } = payload;
+      let pmods = Object.keys(resp.details.features);
+      setModality(pmods);
       setPreInputFilesStatus(resp.details);
     } else if (payload.type === "custom_selections_DATA") {
     } else if (payload.type === "tsne_CACHE" || payload.type === "umap_CACHE") {
@@ -767,6 +774,7 @@ const App = () => {
                   gene={gene}
                   clusterColors={clusterColors}
                   setReqGene={setReqGene}
+                  modality={modality}
                 />
                 :
                 <div style={{

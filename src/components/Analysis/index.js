@@ -1009,6 +1009,139 @@ const AnalysisDialog = ({
         )
     }
 
+    const get_input_adt = () => {
+        return (
+            <div className="col">
+                <div>
+                    <H5><Tag round={true}></Tag>
+                        <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                            onMouseEnter={() => setShowStepHelper(8)}>
+                            ADT Sepcific Parameters
+                        </span>
+                    </H5>
+                    <div>
+                        <H5><Tag round={true}>8</Tag>
+                            <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                onMouseEnter={() => setShowStepHelper(8)}>
+                                ADT - Quality Control
+                            </span>
+                        </H5>
+                        <div className="row">
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(8)}>
+                                        Number of MADs
+                                    </span>
+                                </Text>
+                                <NumericInput
+                                    placeholder="3" value={tmpInputParams["adt_qualitycontrol"]["nmads"]}
+                                    onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "nmads": nval } }) }} />
+                            </Label>
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(8)}>
+                                        Minimum Detected Drop
+                                    </span>
+                                </Text>
+                                <NumericInput
+                                placeholder="0.1"
+                                stepSize={0.01}
+                                minorStepSize={0.01}
+                                value={tmpInputParams["adt_qualitycontrol"]["min_detected_drop"]}
+                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "min_detected_drop": val } }) }} />
+                            </Label>
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(2)}>
+                                        Prefix for isotype controls.
+                                    </span>
+                                </Text>
+                                <InputGroup
+                                    leftIcon="filter"
+                                    onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "igg_prefix": nval?.target?.value } }) }}
+                                    placeholder="IgG"
+                                    value={tmpInputParams["adt_qualitycontrol"]["igg_prefix"]}
+                                />
+                            </Label>
+                        </div>
+                    </div>
+                    <div>
+                        <H5><Tag round={true}>9</Tag>
+                            <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                onMouseEnter={() => setShowStepHelper(8)}>
+                                ADT - Normalization
+                            </span>
+                        </H5>
+                        <div className="row">
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(8)}>
+                                        Number of PC's
+                                    </span>
+                                </Text>
+                                <NumericInput
+                                    placeholder="25" value={tmpInputParams["adt_normalization"]["num_pcs"]}
+                                    onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_normalization": { ...tmpInputParams["adt_normalization"], "num_pcs": nval } }) }} />
+                            </Label>
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(8)}>
+                                        Number of Clusters
+                                    </span>
+                                </Text>
+                                <NumericInput
+                                    placeholder="20" value={tmpInputParams["adt_normalization"]["num_clusters"]}
+                                    onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_normalization": { ...tmpInputParams["adt_normalization"], "num_clusters": nval } }) }} />
+                            </Label>
+                        </div>
+                    </div>
+                    <div>
+                        <H5><Tag round={true}>10</Tag>
+                            <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                onMouseEnter={() => setShowStepHelper(8)}>
+                                ADT - PCA
+                            </span>
+                        </H5>
+                        <div className="row">
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(8)}>
+                                        Number of PC's
+                                    </span>
+                                </Text>
+                                <NumericInput
+                                    placeholder="25" value={tmpInputParams["adt_pca"]["num_pcs"]}
+                                    onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_pca": { ...tmpInputParams["adt_pca"], "num_pcs": nval } }) }} />
+                            </Label>
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(4)}>
+                                        Blocking method for multiple samples
+                                    </span>
+                                </Text>
+                                <HTMLSelect
+                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "adt_pca": { ...tmpInputParams["adt_pca"], "block_method": e.target.value } }) }}
+                                    defaultValue={tmpInputParams["adt_pca"]["block_method"]}
+                                >
+                                    <option value="none">None</option>
+                                    <option value="block">block</option>
+                                    <option value="weight">weighted</option>
+                                </HTMLSelect>
+                            </Label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     function get_table_colname(idx) {
         let cname;
         switch (idx) {
@@ -1197,10 +1330,27 @@ const AnalysisDialog = ({
                                         }
 
                                         {
+                                            preInputFilesStatus && preInputFilesStatus?.features &&
+                                            <div>
+                                                (clean this up later) Dataset contains:
+                                                {Object.keys(preInputFilesStatus?.features).map((x,i) => {
+                                                    return (
+                                                        <p>
+                                                        Modality {x}, 
+                                                        Common Genes: {preInputFilesStatus?.features[x].common}
+                                                        </p>
+                                                        )
+                                                    }
+                                                )}
+                                            </div>
+                                            
+                                        }
+
+                                        {
                                             showSection == "input" &&
                                             tmpInputFiles.length > 0 &&
                                             <div style={{
-                                                height: ((tmpInputFiles.length + 1) * 30) + "px"
+                                                height: ((tmpInputFiles.length + 1) * 40) + "px"
                                             }}>
                                                 <h4>Selected datasets:</h4>
                                                 {
@@ -1277,6 +1427,9 @@ const AnalysisDialog = ({
                                         {showSection == "params" && get_input_tsne()}
                                         {showSection == "params" && get_input_umap()}
                                         {showSection == "params" && get_input_label_cells()}
+                                        {showSection == "params" && 
+                                            Object.keys(preInputFilesStatus?.features).indexOf("ADT") == -1
+                                            && get_input_adt()}
                                     </div>
 
                                     <div className="row-input-tooltips">
