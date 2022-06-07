@@ -631,7 +631,7 @@ const AnalysisDialog = ({
                                 placeholder="25" value={tmpInputParams["pca"]["pca-npc"]}
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-npc": nval } }) }} />
                         </Label>
-                        {
+                        {/* {
                             (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none")
                                 || (loadParams && loadParamsFor === loadImportFormat)) && <Label className="row-input">
                                 <Text className="text-100">
@@ -649,7 +649,7 @@ const AnalysisDialog = ({
                                     <option value="mnn">MNN correction</option>
                                 </HTMLSelect>
                             </Label>
-                        }
+                        } */}
                     </div>
                 </div>
             </div>
@@ -1009,6 +1009,62 @@ const AnalysisDialog = ({
         )
     }
 
+    const get_input_batch_correction = () => {
+        return (
+            <div className="col">
+                <div>
+                    <H5><Tag round={true}>8</Tag>
+                        <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                            onMouseEnter={() => setShowStepHelper(7)}>
+                            Batch Correction
+                        </span>
+                    </H5>
+
+
+                    <div className="row">
+                    <Label className="row-input">
+                            <Text className="text-100">
+                                <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                    onMouseEnter={() => setShowStepHelper(7)}>
+                                    Method
+                                </span>
+                            </Text>
+                            <HTMLSelect
+                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "batch_correction": { ...tmpInputParams["batch_correction"], "method": e.target.value } }) }}
+                                defaultValue={tmpInputParams["batch_correction"]["method"]}
+                            >
+                                <option value="mnn">MNN Correction</option>
+                                <option value="none">No Correction</option>
+                            </HTMLSelect>
+                        </Label>
+                        <Label className="row-input">
+                            <Text className="text-100">
+                                <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                    onMouseEnter={() => setShowStepHelper(7)}>
+                                    Number of neighbors
+                                </span>
+                            </Text>
+                            <NumericInput
+                                placeholder="15" value={tmpInputParams["batch_correction"]["num_neighbors"]}
+                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "batch_correction": { ...tmpInputParams["batch_correction"], "num_neighbors": nval } }) }} />
+                        </Label>
+                        <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(4)}>
+                                        use ANN ?
+                                    </span>
+                                </Text>
+                                <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["batch_correction"]["approximate"]}
+                                    innerLabelChecked="yes" innerLabel="no"
+                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "batch_correction": { ...tmpInputParams["batch_correction"], "approximate": e.target.checked } }) }} />
+                            </Label>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     const get_input_adt = () => {
         return (
             <div className="col">
@@ -1134,6 +1190,49 @@ const AnalysisDialog = ({
                                     <option value="block">block</option>
                                     <option value="weight">weighted</option>
                                 </HTMLSelect>
+                            </Label>
+                        </div>
+                    </div>
+                    <div>
+                        <H5><Tag round={true}>11</Tag>
+                            <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                onMouseEnter={() => setShowStepHelper(8)}>
+                                Combined Embedding
+                            </span>
+                        </H5>
+                        <div className="row">
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(8)}>
+                                        Weights
+                                    </span>
+                                </Text>
+                                RNA: <NumericInput
+                                    placeholder="1" value={tmpInputParams["combined_embeddings"]["weights"]["RNA"]}
+                                    onValueChange={(nval, val) => { 
+                                        let gip = {...tmpInputParams};
+                                        gip["combined_embeddings"]["weights"]["RNA"] = nval;
+                                        setTmpInputParams(gip);
+                                    }} />
+                                ADT: <NumericInput
+                                    placeholder="1" value={tmpInputParams["combined_embeddings"]["weights"]["ADT"]}
+                                    onValueChange={(nval, val) => { 
+                                        let gip = {...tmpInputParams};
+                                        gip["combined_embeddings"]["weights"]["ADT"] = nval;
+                                        setTmpInputParams(gip);
+                                    }} />
+                            </Label>
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(4)}>
+                                        use ANN ?
+                                    </span>
+                                </Text>
+                                <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["combined_embeddings"]["approximate"]}
+                                    innerLabelChecked="yes" innerLabel="no"
+                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "combined_embeddings": { ...tmpInputParams["combined_embeddings"], "approximate": e.target.checked } }) }} />
                             </Label>
                         </div>
                     </div>
@@ -1343,7 +1442,6 @@ const AnalysisDialog = ({
                                                     }
                                                 )}
                                             </div>
-                                            
                                         }
 
                                         {
@@ -1427,6 +1525,10 @@ const AnalysisDialog = ({
                                         {showSection == "params" && get_input_tsne()}
                                         {showSection == "params" && get_input_umap()}
                                         {showSection == "params" && get_input_label_cells()}
+                                        {
+                                            showSection == "params" && (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none")
+                                                || (loadParams && loadParamsFor === loadImportFormat)) && get_input_batch_correction()
+                                        }
                                         {showSection == "params" && 
                                             Object.keys(preInputFilesStatus?.features).indexOf("ADT") == -1
                                             && get_input_adt()}

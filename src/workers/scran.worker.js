@@ -80,7 +80,7 @@ function runAllSteps(inputs, params) {
         pca: {
             num_hvgs: params.pca["pca-hvg"],
             num_pcs: params.pca["pca-npc"],
-            block_method: params.pca["pca-correction"]
+            block_method: params.batch_correction["method"]
         },
         neighbor_index: {
             approximate: params.cluster["clus-approx"]
@@ -112,7 +112,12 @@ function runAllSteps(inputs, params) {
             human_references: params.annotateCells["annotateCells-human_references"],
             mouse_references: params.annotateCells["annotateCells-mouse_references"]
         },
-        custom_markers: {}
+        custom_markers: {},
+        adt_normalization: params.adt_normalization,
+        adt_pca: params.adt_pca,
+        adt_quality_control: params.adt_qualitycontrol,
+        combine_embeddings: params.combined_embeddings,
+        batch_correction: params.batch_correction,
     };
 
     return bakana.runAnalysis(superstate, inputs.files, formatted, { startFun: postAttempt, finishFun: postSuccess });
@@ -240,6 +245,8 @@ function postError(type, err, fatal) {
 var loaded;
 onmessage = function (msg) {
     const { type, payload } = msg.data;
+
+    console.log("WORKER RCV", type, payload);
     let fatal = false;
     if (type == "INIT") {
         fatal = true;
@@ -458,7 +465,8 @@ onmessage = function (msg) {
         loaded.then(x => {
             let cluster = payload.cluster;
             let rank_type = payload.rank_type;
-            var resp = superstate.marker_detection.fetchGroupResults(cluster, rank_type);
+            let feat_type = payload.feat_type;
+            var resp = superstate.marker_detection.fetchGroupResults(cluster, rank_type, feat_type);
 
             var transferrable = [];
             extractBuffers(resp, transferrable);

@@ -49,6 +49,8 @@ const App = () => {
   const [initDims, setInitDims] = useState(null);
   const [qcDims, setQcDims] = useState(null);
 
+  const [inputData, setInputData] = useState(null);
+
   // loaders for UI components
   const [showDimPlotLoader, setShowDimPlotLoader] = useState(true);
   const [showMarkerLoader, setShowMarkerLoader] = useState(true);
@@ -135,6 +137,7 @@ const App = () => {
 
   // modality
   const [modality, setModality] = useState(null);
+  const [selectedModality, setSelectedModality] = useState(null);
 
   // props for dialogs
   const loadingProps = {
@@ -183,13 +186,14 @@ const App = () => {
   // request worker for new markers 
   // if either the cluster or the ranking changes
   useEffect(() => {
-
-    if (selectedCluster !== null) {
+    console.log(selectedModality, selectedCluster, clusterRank);
+    if (selectedCluster !== null && selectedModality) {
       let type = String(selectedCluster).startsWith("cs") ?
         "getMarkersForSelection" : "getMarkersForCluster";
       scranWorker.postMessage({
         "type": type,
         "payload": {
+          "feat_type": selectedModality,
           "cluster": selectedCluster,
           "rank_type": clusterRank,
         }
@@ -197,7 +201,7 @@ const App = () => {
 
       add_to_logs("info", `--- ${type} sent ---`);
     }
-  }, [selectedCluster, clusterRank]);
+  }, [selectedCluster, clusterRank, selectedModality]);
 
   // compute markers in the worker 
   // when a new custom selection of cells is made through the UI
@@ -393,6 +397,14 @@ const App = () => {
     }
   }, [preInputFiles, wasmInitialized]);
 
+  useEffect(() => {
+    if (selectedModality) {
+      console.log(inputData.genes);
+      setGenesInfo(inputData.genes[selectedModality]);
+      setGeneColSel(Object.keys(inputData.genes[selectedModality])[0]);
+    }
+  }, [selectedModality])
+
   // callback for all responses from workers
   // all interactions are logged and shown on the UI
   scranWorker.onmessage = (msg) => {
@@ -434,9 +446,10 @@ const App = () => {
       }
       setIndexedDBState(false);
     } else if (payload.type === "inputs_DATA") {
-      setInitDims(`${payload.resp.dimensions.num_genes} genes, ${payload.resp.dimensions.num_cells} cells`);
-      setGenesInfo(payload.resp.genes);
-      setGeneColSel(Object.keys(payload.resp.genes)[0]);
+      setInitDims(`${payload.resp.num_genes} genes, ${payload.resp.num_cells} cells`);
+      setInputData(payload.resp);
+      // setGenesInfo(payload.resp.genes);
+      // setGeneColSel(Object.keys(payload.resp.genes)[0]);
 
       if (payload.resp?.annotations) {
         setAnnotationCols(Object.values(payload.resp.annotations));
@@ -458,8 +471,9 @@ const App = () => {
 
       resp["ranges"] = ranges;
       setQcData(resp);
-      setQcDims(`${resp.retained}`);
       setShowQCLoader(false);
+    } else if (payload.type === "cell_filtering_DATA") {
+      setQcDims(`${payload.resp.retained}`);
     } else if (payload.type === "feature_selection_DATA") {
       const { resp } = payload;
       setFSelectionData(resp);
@@ -504,6 +518,8 @@ const App = () => {
     } else if (payload.type === "marker_detection_DATA") {
       if (!selectedCluster) {
         // show markers for the first cluster
+        console.log(modality);
+        setSelectedModality(modality[0]);
         setSelectedCluster(0);
       }
     } else if (payload.type === "tsne_DATA") {
@@ -775,6 +791,8 @@ const App = () => {
                   clusterColors={clusterColors}
                   setReqGene={setReqGene}
                   modality={modality}
+                  selectedModality={selectedModality}
+                  setSelectedModality={setSelectedModality}
                 />
                 :
                 <div style={{

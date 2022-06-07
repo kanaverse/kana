@@ -68,6 +68,15 @@ const AppContextProvider = ({ children }) => {
     adt_normalization: {
       num_pcs: 25,
       num_clusters: 20
+    },
+    combined_embeddings: {
+      weights: {},
+      approximate: true
+    },
+    batch_correction: {
+      method: "mnn",
+      num_neighbors: 15,
+      approximate: true
     }
   });
 

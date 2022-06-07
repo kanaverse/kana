@@ -206,6 +206,20 @@ const MarkerPlot = (props) => {
                 }}>Marker Genes</H4>
             </Popover2>
             {
+                props?.modality ?
+                    <HTMLSelect
+                        onChange={(x) => {
+                            props?.setSelectedModality(x);
+                        }}>
+                        {
+                            props?.modality.map((x, i) => (
+                                <option key={x}>{x}</option>
+                            ))
+                        }
+                    </HTMLSelect>
+                    : ""
+            }
+            {
                 clusSel ?
                     <HTMLSelect
                         onChange={(x) => {
@@ -229,7 +243,7 @@ const MarkerPlot = (props) => {
                     : ""
             }
             {
-                props?.selectedClusterSummary ?
+                props?.selectedClusterSummary && genesInfo && geneColSel?
                     <div className='marker-table'>
                         <div className='marker-header'>
                             <InputGroup
@@ -310,6 +324,7 @@ const MarkerPlot = (props) => {
                                 Header: () => {
                                     return (<div className='row-container row-header'>
                                         <span>
+                                            {geneColSel}
                                             <HTMLSelect large={false} minimal={true} defaultValue={geneColSel}
                                                 onChange={(nval, val) => setGeneColSel(nval?.currentTarget?.value)}>
                                                 {

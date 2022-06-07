@@ -75,6 +75,13 @@ const UDimPlot = (props) => {
     }
   }, [props]);
 
+  useEffect(() => {
+    return () => {
+      scatterplot?.plot.dataWorker.terminate();
+      scatterplot?.plot.webglWorker.terminate();
+    };
+  }, [scatterplot]);
+
   return (
     <div className="udimplot-container">
       <div className="dim-plot">
