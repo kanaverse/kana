@@ -209,7 +209,7 @@ const MarkerPlot = (props) => {
                 props?.modality ?
                     <HTMLSelect
                         onChange={(x) => {
-                            props?.setSelectedModality(x);
+                            props?.setSelectedModality(x.currentTarget?.value);
                         }}>
                         {
                             props?.modality.map((x, i) => (

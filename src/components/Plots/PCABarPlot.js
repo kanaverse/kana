@@ -3,7 +3,7 @@ import React from 'react';
 
 const PCABarPlot = (props) => {
 
-    let data = props?.pca?.var_exp;
+    let data = props?.pca;
 
     if (!data) return "";
 

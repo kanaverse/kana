@@ -81,6 +81,12 @@ const AnalysisDialog = ({
             }
         }
 
+        if (Object.keys(preInputFilesStatus?.features).length > 1 && Object.keys(tmpInputParams["combined_embeddings"]["weights"]).length == 0) {
+            Object.keys(preInputFilesStatus?.features).forEach(x => {
+                tmpInputParams["combined_embeddings"]["weights"][x] = 1;
+            })
+        }
+
         let mapFiles = {};
         for (const f of tmpInputFiles) {
             mapFiles[f.name] = f
@@ -1530,7 +1536,7 @@ const AnalysisDialog = ({
                                                 || (loadParams && loadParamsFor === loadImportFormat)) && get_input_batch_correction()
                                         }
                                         {showSection == "params" && 
-                                            Object.keys(preInputFilesStatus?.features).indexOf("ADT") == -1
+                                            Object.keys(preInputFilesStatus?.features).length > 1
                                             && get_input_adt()}
                                     </div>
 

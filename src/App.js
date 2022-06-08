@@ -94,7 +94,7 @@ const App = () => {
   const [colorByAnnotation, setColorByAnnotation] = useState("clusters");
 
   // PCA
-  const [pcaVarExp, setPcaVarExp] = useState(null);
+  const [pcaVarExp, setPcaVarExp] = useState({});
 
   // Cluster Data
   // which cluster is selected
@@ -446,10 +446,8 @@ const App = () => {
       }
       setIndexedDBState(false);
     } else if (payload.type === "inputs_DATA") {
-      setInitDims(`${payload.resp.num_genes} genes, ${payload.resp.num_cells} cells`);
+      setInitDims(`${JSON.stringify(payload.resp.num_genes)} genes, ${payload.resp.num_cells} cells`);
       setInputData(payload.resp);
-      // setGenesInfo(payload.resp.genes);
-      // setGeneColSel(Object.keys(payload.resp.genes)[0]);
 
       if (payload.resp?.annotations) {
         setAnnotationCols(Object.values(payload.resp.annotations));
@@ -472,6 +470,30 @@ const App = () => {
       resp["ranges"] = ranges;
       setQcData(resp);
       setShowQCLoader(false);
+    } else if (payload.type === "adt_quality_control_DATA") {
+      const { resp } = payload;
+
+      var ranges = {}, data = resp["data"], all = {};
+
+      for (const [group, gvals] of Object.entries(data)) {
+        for (const [key, val] of Object.entries(gvals)) {
+          if (!all[key]) all[key] = [Infinity, -Infinity];
+          let [min, max] = getMinMax(val);
+          if (min < all[key][0]) all[key][0] = min;
+          if (max > all[key][1]) all[key][1] = max;
+        }
+        ranges[group] = all;
+      }
+
+      resp["ranges"] = ranges;
+
+      let prevQC = {...qcData};
+      prevQC["data"]["adt_default"] = resp["data"]["default"];
+      prevQC["thresholds"]["adt_default"] = resp["thresholds"]["default"];
+      prevQC["ranges"]["adt_default"] = ranges["default"];
+
+      setQcData(prevQC);
+      setShowQCLoader(false);
     } else if (payload.type === "cell_filtering_DATA") {
       setQcDims(`${payload.resp.retained}`);
     } else if (payload.type === "feature_selection_DATA") {
@@ -479,7 +501,11 @@ const App = () => {
       setFSelectionData(resp);
     } else if (payload.type === "pca_DATA") {
       const { resp } = payload;
-      setPcaVarExp(resp);
+      setPcaVarExp({RNA: resp["var_exp"]});
+      setShowPCALoader(false);
+    } else if (payload.type === "adt_pca_DATA") {
+      const { resp } = payload;
+      setPcaVarExp({...pcaVarExp, ADT: resp["var_exp"]});
       setShowPCALoader(false);
     } else if (payload.type === "choose_clustering_DATA") {
       const { resp } = payload;
@@ -627,8 +653,10 @@ const App = () => {
       setShowCellLabelLoader(false);
     } else if (payload.type === "PREFLIGHT_INPUT_DATA") {
       const { resp } = payload;
-      let pmods = Object.keys(resp.details.features);
-      setModality(pmods);
+      if (resp.details.features) {
+        let pmods = Object.keys(resp.details.features);
+        setModality(pmods);
+      }
       setPreInputFilesStatus(resp.details);
     } else if (payload.type === "custom_selections_DATA") {
     } else if (payload.type === "tsne_CACHE" || payload.type === "umap_CACHE") {
