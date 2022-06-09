@@ -554,22 +554,46 @@ onmessage = function (msg) {
     } else if (type == "getAnnotation") {
         loaded.then(x => {
             let annot = payload.annotation;
-            var vec;
+            let vec, result;
 
             // Filter to match QC unless requested otherwise.
             if (payload.unfiltered !== false) {
-                vec = superstate.quality_control.fetchFilteredAnnotations(annot);
+                vec = superstate.cell_filtering.fetchFilteredAnnotations(annot);
             } else {
                 vec = superstate.inputs.fetchAnnotations(annot);
             }
 
+            if (ArrayBuffer.isView(vec)) {
+                result = {
+                    "type": "array",
+                    "values": vec.slice()
+                };
+            } else {
+                let uniq_vals = [];
+                let uniq_map = {};
+                let indices = new Int32Array(vec.length);
+                vec.map((x, i) => {
+                    if (!(x in uniq_map)) {
+                        uniq_map[x] = uniq_vals.length;
+                        uniq_vals.push(x);
+                    }
+                    indices[i] = uniq_map[x];
+                });
+        
+                result = {
+                    "type": "factor",
+                    "index": indices,
+                    "levels": uniq_vals
+                };
+            }
+
             let extracted = [];
-            extractBuffers(vec, extracted);
+            extractBuffers(result, extracted);
             postMessage({
                 type: "setAnnotation",
                 resp: {
                     annotation: annot,
-                    values: vec
+                    values: result
                 },
                 msg: "Success: GET_ANNOTATION done"
             }, extracted);
