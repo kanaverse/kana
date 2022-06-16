@@ -516,6 +516,107 @@ const AnalysisDialog = ({
                         </p>
                     </Callout>
                 }
+                {showStepHelper === 9 &&
+                    <Callout intent="primary">
+                        <p>
+                            Remove low-quality cells based on the ADT counts.
+                            This uses the number of detected features and, if available, the total count for isotype (IgG) controls.
+                            Cells with few detected features or high isotype counts are filtered out;
+                            this is combined with the RNA-based filters to ensure that cells are only retained if they are informative in both modalities.
+                            We again use an outlier-based approach to define the filter threshold for each metric.
+                        </p>
+                        <p>
+                            <strong>Number of MADs</strong>:
+                            Number of median absolute deviations (MADs) from the median,
+                            used to define a filter threshold in the appropriate direction for each QC metric.
+                            Increasing this value will reduce the stringency of the filtering.
+                        </p>
+                        <p>
+                            <strong>Isotype prefix</strong>:
+                            Prefix to use to identify features in the dataset that are isotype controls.
+                            This is not case-sensitive.
+                        </p>
+                    </Callout>
+                }
+                {showStepHelper === 10 &&
+                    <Callout intent="primary">
+                        <p>
+                            Log-normalize the ADT count data.
+                            This involves some more work than the RNA counterpart as the composition biases can be much stronger in ADT data.
+                            We use a simple approach where we cluster cells based on their ADT counts,
+                            normalize for composition biases between clusters using an median-based method, 
+                            normalize for library size differences between cells within clusters,
+                            and then combine both to obtain per-cell factors.
+                        </p>
+                        <p>
+                            <strong>Number of clusters</strong>:
+                            Number of clusters to use in the initial k-means clustering.
+                            This clustering will not be used in any downstream steps; it is only used here to separate major subpopulations with strong DE.
+                            Any rough clustering is fine and it should not be necessary to spend much time fine-tuning this parameter. 
+                            Overclustering is acceptable - and possibly even desirable - provided that each cluster still contains enough cells for stable median calculations.
+                        </p>
+                        <p>
+                            <strong>Number of PCs</strong>:
+                            Number of principal components to use for the clustering.
+                            We perform a PCA to compress the data for faster clustering - this has no bearing on later choices of the number of PCs.
+                            Again, as long as a reasonable clustering is obtained, it should not be necessary to spend much time fine-tuning this parameter. 
+                            In fact, if the requested number of PCs is greater than the number of ADTs, this parameter will have no effect.
+                        </p>
+                    </Callout>
+                }
+                {showStepHelper === 11 &&
+                    <Callout intent="primary">
+                        <p>
+                            Perform a principal components analysis (PCA) on the log-normalized ADT matrix.
+                            As for RNA, the PCA is used for compression and denoising prior to downstream steps like clustering and visualization.
+                            However, unlike RNA, no feature selection is performed here as there are relatively few ADTs in the first place.
+                        </p>
+                        <p>
+                            <strong>Number of PCs</strong>:
+                            Number of principal components with the highest variance to retain in downstream analyses. 
+                            Larger values will capture more biological signal at the cost of increasing noise and computational work.
+                            If more PCs are requested than ADTs are available, the latter is used instead.
+                        </p>
+                    </Callout>
+                }
+                {showStepHelper === 12 &&
+                    <Callout intent="primary">
+                        <p>
+                            Combine PC embeddings from multiple modalities.
+                            This yields a single matrix that can be used in downstream analyses like clustering,
+                            allowing us to incorporate information from multiple modalities.
+                            By default, each modality is given equal weight in the combined matrix.
+                        </p>
+                        <p>
+                            <strong>Modality weights</strong>:
+                            Weight for each modality.
+                            A larger value indicates that the corresponding modality will contribute more to the population heterogeneity in the combined embedding.
+                            A value of zero indicates that the corresponding modality should be ignored in downstream analysis.
+                        </p>
+                    </Callout>
+                }
+                {showStepHelper === 13 &&
+                    <Callout intent="primary">
+                        <p>
+                            Remove batch effects between cells from different samples.
+                            This places all cells in a common coordinate space for consistent clustering and visualization.
+                            Otherwise, the interpretation of downstream analysis results may be complicated by large sample-sample differences,
+                            obscuring the heterogeneity within samples that is usually of interest.
+                        </p>
+                        <p>
+                            <strong>Correction method</strong>:
+                            Which correction method to use - no correction, linear regression or mutual nearest neighbor (MNN) correction.
+                            MNN correction is the default and handles situations with differences in cell type composition across samples.
+                            Linear regression is simpler but assumes that all samples have the same proportions of cell types, with a consistent batch effect in each cell type.
+                            Users may also choose not to correct if, e.g., the sample-sample differences are interesting.
+                        </p>
+                        <p>
+                            <strong>Number of neighbors</strong>:
+                            Number of neighbors to use to identify MNN pairs.
+                            Using larger values will yield a more stable correction but also increases the risk of incorrectly merging unrelated populations across samples.
+                        </p>
+                    </Callout>
+                }
             </>
         )
     }
