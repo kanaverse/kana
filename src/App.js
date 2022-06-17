@@ -186,7 +186,6 @@ const App = () => {
   // request worker for new markers 
   // if either the cluster or the ranking changes
   useEffect(() => {
-    console.log(selectedModality, selectedCluster, clusterRank);
     if (selectedCluster !== null && selectedModality) {
       let type = String(selectedCluster).startsWith("cs") ?
         "getMarkersForSelection" : "getMarkersForCluster";
@@ -399,7 +398,6 @@ const App = () => {
 
   useEffect(() => {
     if (selectedModality) {
-      console.log(inputData.genes);
       setGenesInfo(inputData.genes[selectedModality]);
       setGeneColSel(Object.keys(inputData.genes[selectedModality])[0]);
     }
@@ -409,8 +407,6 @@ const App = () => {
   // all interactions are logged and shown on the UI
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
-
-    console.log(payload);
 
     if (payload) {
       if (payload.type.toLowerCase().endsWith("start")) {
@@ -477,28 +473,31 @@ const App = () => {
     } else if (payload.type === "adt_quality_control_DATA") {
       const { resp } = payload;
 
-      var ranges = {}, data = resp["data"], all = {};
+      if (resp) {
+        var ranges = {}, data = resp["data"], all = {};
 
-      for (const [group, gvals] of Object.entries(data)) {
-        for (const [key, val] of Object.entries(gvals)) {
-          if (!all[key]) all[key] = [Infinity, -Infinity];
-          let [min, max] = getMinMax(val);
-          if (min < all[key][0]) all[key][0] = min;
-          if (max > all[key][1]) all[key][1] = max;
+        for (const [group, gvals] of Object.entries(data)) {
+          for (const [key, val] of Object.entries(gvals)) {
+            if (!all[key]) all[key] = [Infinity, -Infinity];
+            let [min, max] = getMinMax(val);
+            if (min < all[key][0]) all[key][0] = min;
+            if (max > all[key][1]) all[key][1] = max;
+          }
+          ranges[group] = all;
         }
-        ranges[group] = all;
+  
+        resp["ranges"] = ranges;
+  
+        let prevQC = {...qcData};
+        for (const key in data) {
+          prevQC["data"][`adt_${key}`] = data[key];
+          prevQC["thresholds"][`adt_${key}`] = resp["thresholds"][key];
+          prevQC["ranges"][`adt_${key}`] = ranges[key];
+        }
+  
+        setQcData(prevQC);
       }
 
-      resp["ranges"] = ranges;
-
-      let prevQC = {...qcData};
-      for (const key in data) {
-        prevQC["data"][`adt_${key}`] = data[key];
-        prevQC["thresholds"][`adt_${key}`] = resp["thresholds"][key];
-        prevQC["ranges"][`adt_${key}`] = ranges[key];
-      }
-
-      setQcData(prevQC);
       setShowQCLoader(false);
     } else if (payload.type === "cell_filtering_DATA") {
       setQcDims(`${payload.resp.retained}`);
@@ -550,7 +549,6 @@ const App = () => {
     } else if (payload.type === "marker_detection_DATA") {
       if (!selectedCluster) {
         // show markers for the first cluster
-        console.log(modality);
         setSelectedModality(modality[0]);
         setSelectedCluster(0);
       }

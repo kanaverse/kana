@@ -1538,7 +1538,11 @@ const AnalysisDialog = ({
                                         }
 
                                         {
-                                            showSection == "input" && preInputFilesStatus && preInputFilesStatus?.features &&
+                                            showSection == "input" &&
+                                            tmpInputFiles &&
+                                            tmpInputFiles.length > 0 && 
+                                            preInputFilesStatus && 
+                                            preInputFilesStatus?.features &&
                                             <div>
                                                 <Label> Dataset contains:</Label>
                                                 <ul>
@@ -1559,9 +1563,11 @@ const AnalysisDialog = ({
 
                                         {
                                             showSection == "input" &&
+                                            tmpInputFiles &&
                                             tmpInputFiles.length > 0 &&
+                                            preInputFilesStatus && 
                                             <div style={{
-                                                height: ((tmpInputFiles.length + 1) * 40) + "px"
+                                                "height": ((tmpInputFiles.length + 1) * 40) + "px"
                                             }}>
                                                 <h4>Selected datasets:</h4>
                                                 {
@@ -1642,9 +1648,9 @@ const AnalysisDialog = ({
                                             showSection == "params" && (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none")
                                                 || (loadParams && loadParamsFor === loadImportFormat)) && get_input_batch_correction()
                                         }
-                                        {showSection == "params" && 
+                                        {/* {showSection == "params" && 
                                             Object.keys(preInputFilesStatus?.features).length > 1
-                                            && get_input_adt()}
+                                            && get_input_adt()} */}
                                     </div>
 
                                     <div className="row-input-tooltips">
@@ -1854,6 +1860,18 @@ const AnalysisDialog = ({
                                             && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             get_input_label_cells()
                                             : ""
+                                        }
+
+                                        {
+                                            showSection == "params" && loadParams && loadParamsFor === loadImportFormat 
+                                             && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                            get_input_batch_correction() : ""
+                                        }
+
+                                        {
+                                            showSection == "params" && loadParams && loadParamsFor === loadImportFormat 
+                                             && tmpInputFiles?.file === inputFiles?.files?.file ? 
+                                            get_input_adt(): ""
                                         }
                                     </div>
                                     <div className='row-input-tooltips'>

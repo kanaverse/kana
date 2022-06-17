@@ -219,7 +219,12 @@ async function unserializeAllSteps(contents) {
                 "annotateCells-human_references": params.cell_labelling.human_references,
                 "annotateCells-mouse_references": params.cell_labelling.mouse_references
             },
-            custom_selections: params.custom_selections
+            custom_selections: params.custom_selections,
+            adt_qualitycontrol: params.adt_quality_control,
+            adt_pca:params.adt_pca,
+            adt_normalization: params.adt_normalization,
+            combined_embeddings: params.combine_embeddings,
+            batch_correction: params.batch_correction
         }
     } finally {
         bakana.removeHDF5File(h5path);
@@ -246,7 +251,6 @@ var loaded;
 onmessage = function (msg) {
     const { type, payload } = msg.data;
 
-    console.log("WORKER RCV", type, payload);
     let fatal = false;
     if (type == "INIT") {
         fatal = true;

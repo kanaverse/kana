@@ -324,7 +324,6 @@ const MarkerPlot = (props) => {
                                 Header: () => {
                                     return (<div className='row-container row-header'>
                                         <span>
-                                            {geneColSel}
                                             <HTMLSelect large={false} minimal={true} defaultValue={geneColSel}
                                                 onChange={(nval, val) => setGeneColSel(nval?.currentTarget?.value)}>
                                                 {

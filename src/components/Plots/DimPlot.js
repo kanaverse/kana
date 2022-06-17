@@ -264,7 +264,7 @@ const DimPlot = (props) => {
                 let xDomain = [(xMinMax[0] - (Math.abs(0.25 * xMinMax[0]))), (xMinMax[1] + (Math.abs(0.25 * xMinMax[1])))];
                 let yDomain = [(yMinMax[0] - (Math.abs(0.25 * yMinMax[0]))), (yMinMax[1] + (Math.abs(0.25 * yMinMax[1])))];
 
-                let aspRatio = containerEl.clientWidth / containerEl.clientHeight;
+                let aspRatio = containerEl.clientWidth / containerEl.clientHeight | 1;
 
                 let xBound = Math.max(...xDomain.map(a => Math.abs(a)));
                 let yBound = Math.max(...yDomain.map(a => Math.abs(a)));
@@ -316,7 +316,7 @@ const DimPlot = (props) => {
                         containerEl.parentNode.clientHeight
                     );
 
-                    aspRatio = containerEl.clientWidth / containerEl.clientHeight;
+                    aspRatio = containerEl.clientWidth / containerEl.clientHeight | 1;
 
                     xBound = Math.max(...xDomain.map(a => Math.abs(a)));
                     yBound = Math.max(...yDomain.map(a => Math.abs(a)));
