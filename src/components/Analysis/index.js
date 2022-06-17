@@ -1176,24 +1176,24 @@ const AnalysisDialog = ({
         return (
             <div className="col">
                 <div>
-                    <H5><Tag round={true}></Tag>
-                        <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                            onMouseEnter={() => setShowStepHelper(8)}>
+                    <H5>
+                        <span className={showStepHelper == 20 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                            onMouseEnter={() => setShowStepHelper(20)}>
                             ADT Sepcific Parameters
                         </span>
                     </H5>
                     <div>
-                        <H5><Tag round={true}>8</Tag>
-                            <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                onMouseEnter={() => setShowStepHelper(8)}>
+                        <H5><Tag round={true}>9</Tag>
+                            <span className={showStepHelper == 9 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                onMouseEnter={() => setShowStepHelper(9)}>
                                 ADT - Quality Control
                             </span>
                         </H5>
                         <div className="row">
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(8)}>
+                                    <span className={showStepHelper == 9 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(9)}>
                                         Number of MADs
                                     </span>
                                 </Text>
@@ -1203,8 +1203,8 @@ const AnalysisDialog = ({
                             </Label>
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(8)}>
+                                    <span className={showStepHelper == 9 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(9)}>
                                         Minimum Detected Drop
                                     </span>
                                 </Text>
@@ -1217,8 +1217,8 @@ const AnalysisDialog = ({
                             </Label>
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(2)}>
+                                    <span className={showStepHelper == 9 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(9)}>
                                         Prefix for isotype controls.
                                     </span>
                                 </Text>
@@ -1232,17 +1232,17 @@ const AnalysisDialog = ({
                         </div>
                     </div>
                     <div>
-                        <H5><Tag round={true}>9</Tag>
-                            <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                onMouseEnter={() => setShowStepHelper(8)}>
+                        <H5><Tag round={true}>10</Tag>
+                            <span className={showStepHelper == 10 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                onMouseEnter={() => setShowStepHelper(10)}>
                                 ADT - Normalization
                             </span>
                         </H5>
                         <div className="row">
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(8)}>
+                                    <span className={showStepHelper == 10 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(10)}>
                                         Number of PC's
                                     </span>
                                 </Text>
@@ -1252,8 +1252,8 @@ const AnalysisDialog = ({
                             </Label>
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(8)}>
+                                    <span className={showStepHelper == 10 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(10)}>
                                         Number of Clusters
                                     </span>
                                 </Text>
@@ -1264,17 +1264,17 @@ const AnalysisDialog = ({
                         </div>
                     </div>
                     <div>
-                        <H5><Tag round={true}>10</Tag>
-                            <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                onMouseEnter={() => setShowStepHelper(8)}>
+                        <H5><Tag round={true}>11</Tag>
+                            <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                onMouseEnter={() => setShowStepHelper(11)}>
                                 ADT - PCA
                             </span>
                         </H5>
                         <div className="row">
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(8)}>
+                                    <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(11)}>
                                         Number of PC's
                                     </span>
                                 </Text>
@@ -1284,8 +1284,8 @@ const AnalysisDialog = ({
                             </Label>
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(4)}>
+                                    <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(11)}>
                                         Blocking method for multiple samples
                                     </span>
                                 </Text>
@@ -1301,17 +1301,17 @@ const AnalysisDialog = ({
                         </div>
                     </div>
                     <div>
-                        <H5><Tag round={true}>11</Tag>
-                            <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                onMouseEnter={() => setShowStepHelper(8)}>
+                        <H5><Tag round={true}>12</Tag>
+                            <span className={showStepHelper == 12 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                onMouseEnter={() => setShowStepHelper(12)}>
                                 Combined Embedding
                             </span>
                         </H5>
                         <div className="row">
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(8)}>
+                                    <span className={showStepHelper == 12 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(12)}>
                                         Weights
                                     </span>
                                 </Text>
@@ -1332,8 +1332,8 @@ const AnalysisDialog = ({
                             </Label>
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(4)}>
+                                    <span className={showStepHelper == 12 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(12)}>
                                         use ANN ?
                                     </span>
                                 </Text>
@@ -1536,18 +1536,22 @@ const AnalysisDialog = ({
                                         }
 
                                         {
-                                            preInputFilesStatus && preInputFilesStatus?.features &&
+                                            showSection == "input" && preInputFilesStatus && preInputFilesStatus?.features &&
                                             <div>
-                                                (clean this up later) Dataset contains:
-                                                {Object.keys(preInputFilesStatus?.features).map((x,i) => {
+                                                <Label> Dataset contains:</Label>
+                                                <ul>
+                                                    {Object.keys(preInputFilesStatus?.features).map((x,i) => {
                                                     return (
-                                                        <p>
-                                                        Modality {x}, 
-                                                        Common Genes: {preInputFilesStatus?.features[x].common}
-                                                        </p>
+                                                        <li key={i}>
+                                                            <p>
+                                                                <strong>Modality</strong> {x}, &nbsp; 
+                                                                <strong>Genes</strong>: {preInputFilesStatus?.features[x].common}
+                                                            </p>
+                                                        </li>
                                                         )
                                                     }
                                                 )}
+                                                </ul>
                                             </div>
                                         }
 
