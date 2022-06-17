@@ -488,9 +488,11 @@ const App = () => {
       resp["ranges"] = ranges;
 
       let prevQC = {...qcData};
-      prevQC["data"]["adt_default"] = resp["data"]["default"];
-      prevQC["thresholds"]["adt_default"] = resp["thresholds"]["default"];
-      prevQC["ranges"]["adt_default"] = ranges["default"];
+      for (const key of data) {
+        prevQC["data"][`adt_${key}`] = data[key];
+        prevQC["thresholds"][`adt_${key}`] = resp["thresholds"][key];
+        prevQC["ranges"][`adt_${key}`] = ranges[key];
+      }
 
       setQcData(prevQC);
       setShowQCLoader(false);
