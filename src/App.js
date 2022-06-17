@@ -452,6 +452,10 @@ const App = () => {
       if (payload.resp?.annotations) {
         setAnnotationCols(Object.values(payload.resp.annotations));
       }
+
+      let pmods = Object.keys(payload.resp.genes);
+      setModality(pmods);
+
     } else if (payload.type === "quality_control_DATA") {
       const { resp } = payload;
 
