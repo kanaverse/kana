@@ -81,10 +81,12 @@ const AnalysisDialog = ({
             }
         }
 
-        if (Object.keys(preInputFilesStatus?.features).length > 1 && Object.keys(tmpInputParams["combined_embeddings"]["weights"]).length == 0) {
-            Object.keys(preInputFilesStatus?.features).forEach(x => {
-                tmpInputParams["combined_embeddings"]["weights"][x] = 1;
-            })
+        if(tabSelected === "new") {
+            if (Object.keys(preInputFilesStatus?.features).length > 1 && Object.keys(tmpInputParams["combined_embeddings"]["weights"]).length == 0) {
+                Object.keys(preInputFilesStatus?.features).forEach(x => {
+                    tmpInputParams["combined_embeddings"]["weights"][x] = 1;
+                })
+            }
         }
 
         let mapFiles = {};

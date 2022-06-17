@@ -488,7 +488,7 @@ const App = () => {
       resp["ranges"] = ranges;
 
       let prevQC = {...qcData};
-      for (const key of data) {
+      for (const key in data) {
         prevQC["data"][`adt_${key}`] = data[key];
         prevQC["thresholds"][`adt_${key}`] = resp["thresholds"][key];
         prevQC["ranges"][`adt_${key}`] = ranges[key];
