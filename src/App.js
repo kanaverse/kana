@@ -442,7 +442,16 @@ const App = () => {
       }
       setIndexedDBState(false);
     } else if (payload.type === "inputs_DATA") {
-      setInitDims(`${JSON.stringify(payload.resp.num_genes)} genes, ${payload.resp.num_cells} cells`);
+      var info = [];
+      if ("RNA" in payload.resp.num_genes) {
+        info.push(`${payload.resp.num_genes.RNA} genes`);
+      }
+      if ("ADT" in payload.resp.num_genes) {
+        info.push(`${payload.resp.num_genes.ADT} ADTs`);
+      }
+      info.push(`${payload.resp.num_cells} cells`);
+
+      setInitDims(info.join(", "));
       setInputData(payload.resp);
 
       if (payload.resp?.annotations) {
