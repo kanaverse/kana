@@ -491,8 +491,10 @@ onmessage = function (msg) {
             var vec;
             if (payload.feat_type == "RNA") {
                 vec = superstate.normalization.fetchExpression(row_idx);
-            } else {
+            } else if (payload.feat_type == "ADT") {
                 vec = superstate.adt_normalization.fetchExpression(row_idx);
+            } else {
+                throw new Error("unknown feature type '" + payload.feat_type + "'");
             }
 
             postMessage({
