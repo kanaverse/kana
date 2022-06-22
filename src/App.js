@@ -186,13 +186,14 @@ const App = () => {
   // request worker for new markers 
   // if either the cluster or the ranking changes
   useEffect(() => {
-    if (selectedCluster !== null && selectedModality) {
+    if (selectedCluster !== null && selectedModality != null) {
+
       let type = String(selectedCluster).startsWith("cs") ?
         "getMarkersForSelection" : "getMarkersForCluster";
       scranWorker.postMessage({
         "type": type,
         "payload": {
-          "feat_type": selectedModality,
+          "modality": selectedModality,
           "cluster": selectedCluster,
           "rank_type": clusterRank,
         }
@@ -239,17 +240,18 @@ const App = () => {
   // get expression for a gene from worker
   useEffect(() => {
 
-    if (reqGene) {
+    if (reqGene != null && selectedModality != null) {
       scranWorker.postMessage({
         "type": "getGeneExpression",
         "payload": {
-          "gene": reqGene
+          "gene": reqGene,
+          "modality": selectedModality
         }
       });
 
       add_to_logs("info", `--- Request gene expression for gene:${reqGene} sent ---`);
     }
-  }, [reqGene]);
+  }, [reqGene, selectedModality]);
 
   useEffect(() => {
 

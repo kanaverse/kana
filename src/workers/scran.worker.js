@@ -469,8 +469,8 @@ onmessage = function (msg) {
         loaded.then(x => {
             let cluster = payload.cluster;
             let rank_type = payload.rank_type;
-            let feat_type = payload.feat_type;
-            var resp = superstate.marker_detection.fetchGroupResults(cluster, rank_type, feat_type);
+            let modality = payload.modality;
+            var resp = superstate.marker_detection.fetchGroupResults(cluster, rank_type, modality);
 
             var transferrable = [];
             extractBuffers(resp, transferrable);
@@ -487,14 +487,15 @@ onmessage = function (msg) {
     } else if (type == "getGeneExpression") {
         loaded.then(x => {
             let row_idx = payload.gene;
+            let modality = payload.modality.toLowerCase()
 
             var vec;
-            if (payload.feat_type == "RNA") {
+            if (modality === "rna") {
                 vec = superstate.normalization.fetchExpression(row_idx);
-            } else if (payload.feat_type == "ADT") {
+            } else if (modality === "adt") {
                 vec = superstate.adt_normalization.fetchExpression(row_idx);
             } else {
-                throw new Error("unknown feature type '" + payload.feat_type + "'");
+                throw new Error("unknown feature type '" + modality + "'");
             }
 
             postMessage({
