@@ -487,7 +487,14 @@ onmessage = function (msg) {
     } else if (type == "getGeneExpression") {
         loaded.then(x => {
             let row_idx = payload.gene;
-            var vec = superstate.normalization.fetchExpression(row_idx);
+
+            var vec;
+            if (payload.feat_type == "RNA") {
+                vec = superstate.normalization.fetchExpression(row_idx);
+            } else {
+                vec = superstate.adt_normalization.fetchExpression(row_idx);
+            }
+
             postMessage({
                 type: "setGeneExpression",
                 resp: {
