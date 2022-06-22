@@ -103,8 +103,9 @@ const ViolinPlotBasic = (props) => {
                 .y((d) => { return (y(d.x0)) })
                 .curve(transform === "log" ? d3.curveBasis : d3.curveCatmullRom)
             );
-
-        svg
+            
+        if (threshold) {
+            svg
             .selectAll("threshold")
             .data([threshold])
             .enter()
@@ -127,6 +128,8 @@ const ViolinPlotBasic = (props) => {
                 lines.attr("stroke", "Orange");
                 lines.attr("stroke-width", "5");
             });
+        }
+
     }, [props]);
 
     return (

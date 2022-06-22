@@ -500,7 +500,11 @@ const App = () => {
         let prevQC = {...qcData};
         for (const key in data) {
           prevQC["data"][`adt_${key}`] = data[key];
-          prevQC["thresholds"][`adt_${key}`] = resp["thresholds"][key];
+          let tval = resp["thresholds"][key];
+          if (key === "sums") {
+            tval = null;
+          }
+          prevQC["thresholds"][`adt_${key}`] = tval;
           prevQC["ranges"][`adt_${key}`] = ranges[key];
         }
   
