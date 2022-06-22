@@ -102,9 +102,21 @@ const Gallery = (props) => {
         if (!tmpItems.includes(`${1 + qci}`)) {
           tmpItems.push(`${1 + qci}`);
         }
+
+        let title = `QC for batch: ${x}`;
+        if (x === "default") {
+          title = "QC metrics (RNA)";
+        } else if (x === "adt_default") {
+          title = "QC metrics (ADT)";
+        } else if (x.startsWith("adt") && x !== "adt_default") {
+          title = `QC for batch:${x.replace("adt_", "")} (ADT) `
+        } else {
+          title = `QC for batch:${x} (RNA) `
+        }
+
         tmpItemContent[`${1 + qci}`] = {
           // id: 1,
-          title: `QC for batch:${x}`,
+          title: title,
           className: props?.showQCLoader
             ? "gitem effect-opacitygrayscale"
             : "gitem",
