@@ -135,7 +135,6 @@ const AnalysisDialog = ({
     }
 
     function handleNewImportTab(currTab, prevTab) {
-
         setTmpInputParams(params);
         setNewImportFormat(currTab);
     }
@@ -1876,12 +1875,13 @@ const AnalysisDialog = ({
                                     </div>
                                     <div className='row-input-tooltips'>
                                         {
-                                            (!tmpInputValid || !stmpInputValid) &&
+                                            tmpInputFiles.length > 0 && (!tmpInputValid) &&
                                             <Callout intent="danger"
                                                 title="Incorrect file format"
                                                 style={{
                                                     marginBottom: '10px'
                                                 }}>
+                                                    File must end with  <strong><code>*.kana</code></strong>
                                             </Callout>
                                         }
                                         <Callout intent="primary">
