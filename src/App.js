@@ -156,7 +156,7 @@ const App = () => {
     setGeneColSel, setLoadParams,
     setInitLoadState, inputFiles, annotationCols, setAnnotationCols,
     annotationObj, setAnnotationObj, preInputFiles,
-    setPreInputFilesStatus } = useContext(AppContext);
+    setPreInputFilesStatus, geneColSel } = useContext(AppContext);
 
   // initializes various things on the worker side
   useEffect(() => {
@@ -401,7 +401,9 @@ const App = () => {
   useEffect(() => {
     if (selectedModality) {
       setGenesInfo(inputData.genes[selectedModality]);
-      setGeneColSel(Object.keys(inputData.genes[selectedModality])[0]);
+      if (geneColSel == null) {
+        setGeneColSel(Object.keys(inputData.genes[selectedModality])[0]);
+      }
     }
   }, [selectedModality])
 
