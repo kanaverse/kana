@@ -573,8 +573,11 @@ const App = () => {
       const { resp } = payload;
       setTsneData(resp);
 
-      let tmp = [...redDims];
-      tmp.push("TSNE");
+      if (redDims.indexOf("TSNE") == -1) {
+        let tmp = [...redDims];
+        tmp.push("TSNE");
+        setRedDims(tmp);
+      }
       // once t-SNE is available, set this as the default display
       if (!defaultRedDims) {
         setDefaultRedDims("TSNE");
@@ -593,9 +596,11 @@ const App = () => {
       setUmapData(resp);
 
       // enable UMAP selection
-      let tmp = [...redDims];
-      tmp.push("UMAP");
-      setRedDims(tmp);
+      if (redDims.indexOf("UMAP") == -1) {
+        let tmp = [...redDims];
+        tmp.push("UMAP");
+        setRedDims(tmp);
+      }
 
       setShowGame(false);
       setShowAnimation(false);
