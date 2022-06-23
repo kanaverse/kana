@@ -44,7 +44,7 @@ const ImgPlot = (props) => {
 
             let text = ` ${data?.config?.embedding} `
             if (data?.config?.gene) {
-                text += `⊃ ${genesInfo[geneColSel][props?.gene]} `
+                text += `⊃ ${genesInfo[geneColSel[props?.selectedModality]][props?.gene]} `
             }
 
             if (data?.config?.annotation) {

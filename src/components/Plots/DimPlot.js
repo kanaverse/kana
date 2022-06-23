@@ -87,7 +87,7 @@ const DimPlot = (props) => {
                 setExprMinMax([0, val]);
             } else {
                 setShowGradient(false);
-                AppToaster.show({ icon: "warning-sign", intent: "warning", message: `${genesInfo[geneColSel][props?.gene]} is not expressed in any cell (mean = 0)` })
+                AppToaster.show({ icon: "warning-sign", intent: "warning", message: `${genesInfo[geneColSel[props?.selectedModality]][props?.gene]} is not expressed in any cell (mean = 0)` })
             }
             setGradient(tmpgradient);
         }
@@ -571,7 +571,7 @@ const DimPlot = (props) => {
                     "embedding": JSON.parse(JSON.stringify(props?.defaultRedDims)),
                     "annotation": JSON.parse(JSON.stringify(props?.colorByAnnotation)),
                     "highlight": plotGroups[props?.clusHighlight] ? JSON.parse(JSON.stringify(plotGroups[props?.clusHighlight])): plotGroups[props?.clusHighlight],
-                    "gene": props?.gene ? JSON.parse(JSON.stringify(genesInfo[geneColSel][props?.gene])): props?.gene
+                    "gene": props?.gene ? JSON.parse(JSON.stringify(genesInfo[geneColSel[props?.selectedModality]][props?.gene])): props?.gene
                 }
             });
 
@@ -858,12 +858,16 @@ const DimPlot = (props) => {
                 }
                 {showGradient ?
                     <div className='right-sidebar-slider'>
+                        {props?.selectedModality}
+                        {geneColSel[props?.selectedModality]}
+                        {props?.gene}
+                        {genesInfo[geneColSel[props?.selectedModality]][props?.gene]}
                         <Callout>
                             <span>Gradient for <Tag
                                 minimal={true}
                                 intent='primary' onRemove={() => {
                                     props?.setGene(null);
-                                }}>{genesInfo[geneColSel][props?.gene]}</Tag>&nbsp;
+                                }}>{genesInfo[geneColSel[props?.selectedModality]][props?.gene]}</Tag>&nbsp;
                                 <Tooltip2 content="Use the slider to adjust the color gradient of the plot. Useful when data is skewed
                                 by either a few lowly or highly expressed cells" openOnTargetFocus={false}>
                                     <Icon icon="help"></Icon>

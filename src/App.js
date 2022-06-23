@@ -401,11 +401,11 @@ const App = () => {
   useEffect(() => {
     if (selectedModality) {
       setGenesInfo(inputData.genes[selectedModality]);
-      if (geneColSel == null) {
+      if (geneColSel[selectedModality] == null) {
         setGeneColSel(Object.keys(inputData.genes[selectedModality])[0]);
       }
     }
-  }, [selectedModality])
+  }, [selectedModality]);
 
   // callback for all responses from workers
   // all interactions are logged and shown on the UI
@@ -582,7 +582,7 @@ const App = () => {
       if (!defaultRedDims) {
         setDefaultRedDims("TSNE");
       }
-      
+
       // also don't show the pong game anymore
       setShowGame(false);
       setShowAnimation(false);
@@ -761,6 +761,7 @@ const App = () => {
                             setClusHighlightLabel={setClusHighlightLabel}
                             colorByAnnotation={colorByAnnotation}
                             setColorByAnnotation={setColorByAnnotation}
+                            selectedModality={selectedModality}
                           /> :
                           showGame ?
                             <div style={{

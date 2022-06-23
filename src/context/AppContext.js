@@ -102,7 +102,7 @@ const AppContextProvider = ({ children }) => {
   // Gene details 
   const [genesInfo, setGenesInfo] = useState(null);
   // default column to show in markers table
-  const [geneColSel, setGeneColSel] = useState("id");
+  const [geneColSel, setGeneColSel] = useState({"RNA": "id", "ADT": "id"});
 
   // all cell annotations available
   const [annotationCols, setAnnotationCols] = useState([]);
