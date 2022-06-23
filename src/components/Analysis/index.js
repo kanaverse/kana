@@ -148,6 +148,17 @@ const AnalysisDialog = ({
     }
 
     useEffect(() => {
+        if (preInputFilesStatus && Object.keys(preInputFilesStatus?.features).length > 1) {
+
+            var tmp = {...tmpInputParams};
+            tmp["pca"]["pca-correction"] = "mnn";
+            tmp["adt_pca"]["block_method"] = "weight";
+            setTmpInputParams(tmp);
+
+        }
+    }, [preInputFilesStatus]);
+
+    useEffect(() => {
         props?.openInput && setIsOpen(true);
     }, [props?.openInput]);
 
@@ -244,11 +255,18 @@ const AnalysisDialog = ({
                 }
             }
 
-            if (!loadParams && (tmpInputFiles[0]?.batch !== undefined && tmpInputFiles[0]?.batch !== "none") || (tmpInputFiles.length > 1)) {
-                setTmpInputParams({
-                    ...tmpInputParams,
-                    "pca": { ...tmpInputParams["pca"], "pca-correction": "mnn" }
-                })
+            if (!loadParams && (tmpInputFiles[0]?.batch !== undefined) || (tmpInputFiles.length > 1)) {
+                if (tmpInputFiles[0]?.batch === "none") {
+                    var tmp = {...tmpInputParams};
+                    tmp["pca"]["pca-correction"] = "none";
+                    tmp["adt_pca"]["block_method"] = "none";
+                    setTmpInputParams(tmp);
+                } else {
+                    var tmp = {...tmpInputParams};
+                    tmp["pca"]["pca-correction"] = "mnn";
+                    tmp["adt_pca"]["block_method"] = "weight";
+                    setTmpInputParams(tmp);
+                }
             }
         }
     }, [tmpInputFiles]);
@@ -739,8 +757,8 @@ const AnalysisDialog = ({
                                 placeholder="25" value={tmpInputParams["pca"]["pca-npc"]}
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-npc": nval } }) }} />
                         </Label>
-                        {/* {
-                            (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none")
+                        {
+                            Object.keys(preInputFilesStatus?.features).length > 1 && (tmpInputFiles.length > 0
                                 || (loadParams && loadParamsFor === loadImportFormat)) && <Label className="row-input">
                                 <Text className="text-100">
                                     <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
@@ -749,7 +767,19 @@ const AnalysisDialog = ({
                                     </span>
                                 </Text>
                                 <HTMLSelect
-                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-correction": e.target.value } }) }}
+                                    onChange={(e) => { 
+                                        var tmp = {...tmpInputParams};
+                                        tmp["pca"]["pca-correction"] = e.target.value;
+                                        if (e.target.value === "mnn") {
+                                            tmp["adt_pca"]["block_method"] = "weight";
+                                        } else if (e.target.value === "regress") {
+                                            tmp["adt_pca"]["block_method"] = "regress";
+                                        } else {
+                                            tmp["adt_pca"]["block_method"] = "none";
+                                        }
+                                        
+                                        setTmpInputParams(tmp);
+                                    }}
                                     defaultValue={tmpInputParams["pca"]["pca-correction"]}
                                 >
                                     <option value="none">No Correction</option>
@@ -757,7 +787,7 @@ const AnalysisDialog = ({
                                     <option value="mnn">MNN correction</option>
                                 </HTMLSelect>
                             </Label>
-                        } */}
+                        }
                     </div>
                 </div>
             </div>
@@ -1295,8 +1325,8 @@ const AnalysisDialog = ({
                                     defaultValue={tmpInputParams["adt_pca"]["block_method"]}
                                 >
                                     <option value="none">None</option>
-                                    <option value="block">block</option>
-                                    <option value="weight">weighted</option>
+                                    <option value="regress">regress</option>
+                                    <option value="weight">weight</option>
                                 </HTMLSelect>
                             </Label>
                         </div>
