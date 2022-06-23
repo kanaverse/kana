@@ -582,8 +582,7 @@ const App = () => {
       if (!defaultRedDims) {
         setDefaultRedDims("TSNE");
       }
-
-      setRedDims(tmp);
+      
       // also don't show the pong game anymore
       setShowGame(false);
       setShowAnimation(false);
