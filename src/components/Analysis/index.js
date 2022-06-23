@@ -1648,9 +1648,9 @@ const AnalysisDialog = ({
                                             showSection == "params" && (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none")
                                                 || (loadParams && loadParamsFor === loadImportFormat)) && get_input_batch_correction()
                                         }
-                                        {/* {showSection == "params" && 
+                                        {showSection == "params" && 
                                             Object.keys(preInputFilesStatus?.features).length > 1
-                                            && get_input_adt()} */}
+                                            && get_input_adt()}
                                     </div>
 
                                     <div className="row-input-tooltips">
