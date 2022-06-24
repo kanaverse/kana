@@ -114,12 +114,20 @@ function runAllSteps(inputs, params) {
         adt_normalization: params.adt_normalization,
         adt_pca: params.adt_pca,
         adt_quality_control: params.adt_qualitycontrol,
-        combine_embeddings: params.combined_embeddings,
+        combine_embeddings: params.combine_embeddings,
         batch_correction: params.batch_correction,
     };
 
     bakana.configureBatchCorrection(formatted, params.batch_correction["method"]);
     bakana.configureApproximateNeighbors(formatted, params.ann["approximate"]);
+
+    // Simplify the combine_embeddings if we see it is all equal.
+    if (formatted.combine_embeddings.weights !== null) {
+        let uniq_weights = new Set(Object.values(formatted.combine_embeddings.weights));
+        if (uniq_weights.size <= 1) {
+            formatted.combine_embeddings.weights = null;
+        }
+    }
 
     console.log("formatted", formatted);
 
@@ -225,7 +233,7 @@ async function unserializeAllSteps(contents) {
             adt_qualitycontrol: params.adt_quality_control,
             adt_pca:params.adt_pca,
             adt_normalization: params.adt_normalization,
-            combined_embeddings: params.combine_embeddings,
+            combine_embeddings: params.combine_embeddings,
             batch_correction: params.batch_correction
         }
     } finally {

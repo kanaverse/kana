@@ -81,10 +81,10 @@ const AnalysisDialog = ({
             }
         }
 
-        if(tabSelected === "new") {
-            if (Object.keys(preInputFilesStatus?.features).length > 1 && Object.keys(tmpInputParams["combined_embeddings"]["weights"]).length == 0) {
+        if (tabSelected === "new") {
+            if (Object.keys(preInputFilesStatus?.features).length > 1 && Object.keys(tmpInputParams["combine_embeddings"]["weights"]).length == 0) {
                 Object.keys(preInputFilesStatus?.features).forEach(x => {
-                    tmpInputParams["combined_embeddings"]["weights"][x] = 1;
+                    tmpInputParams["combine_embeddings"]["weights"][x] = 1;
                 })
             }
         }
@@ -1292,17 +1292,17 @@ const AnalysisDialog = ({
                                     </span>
                                 </Text>
                                 RNA: <NumericInput
-                                    placeholder="1" value={tmpInputParams["combined_embeddings"]["weights"]["RNA"]}
+                                    placeholder="1" value={tmpInputParams["combine_embeddings"]["weights"]["RNA"]}
                                     onValueChange={(nval, val) => { 
                                         let gip = {...tmpInputParams};
-                                        gip["combined_embeddings"]["weights"]["RNA"] = nval;
+                                        gip["combine_embeddings"]["weights"]["RNA"] = nval;
                                         setTmpInputParams(gip);
                                     }} />
                                 ADT: <NumericInput
-                                    placeholder="1" value={tmpInputParams["combined_embeddings"]["weights"]["ADT"]}
+                                    placeholder="1" value={tmpInputParams["combine_embeddings"]["weights"]["ADT"]}
                                     onValueChange={(nval, val) => { 
                                         let gip = {...tmpInputParams};
-                                        gip["combined_embeddings"]["weights"]["ADT"] = nval;
+                                        gip["combine_embeddings"]["weights"]["ADT"] = nval;
                                         setTmpInputParams(gip);
                                     }} />
                             </Label>
