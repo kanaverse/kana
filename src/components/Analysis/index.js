@@ -81,14 +81,6 @@ const AnalysisDialog = ({
             }
         }
 
-        if (tabSelected === "new") {
-            if (Object.keys(preInputFilesStatus?.features).length > 1 && Object.keys(tmpInputParams["combine_embeddings"]["weights"]).length == 0) {
-                Object.keys(preInputFilesStatus?.features).forEach(x => {
-                    tmpInputParams["combine_embeddings"]["weights"][x] = 1;
-                })
-            }
-        }
-
         let mapFiles = {};
         for (const f of tmpInputFiles) {
             mapFiles[f.name] = f
