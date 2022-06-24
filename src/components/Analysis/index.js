@@ -3,7 +3,8 @@ import {
     Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
     RadioGroup, Radio, Icon, Position,
     InputGroup, Checkbox,
-    Drawer
+    Drawer,
+    Divider
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import { Column, Table2, EditableCell2, Cell } from "@blueprintjs/table";
@@ -626,7 +627,7 @@ const AnalysisDialog = ({
         return (
             <div className="col">
                 <div>
-                    <H5><Tag round={true}>2</Tag>
+                    <H5 className="section-title">
                         <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(2)}>
                             Quality control
@@ -679,7 +680,7 @@ const AnalysisDialog = ({
         return (
             <div className="col">
                 <div>
-                    <H5><Tag round={true}>3</Tag>
+                    <H5 className="section-title">
                         <span className={showStepHelper == 3 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(3)}>
                             Feature Selection
@@ -710,7 +711,7 @@ const AnalysisDialog = ({
         return (
             <div className="col">
                 <div>
-                    <H5><Tag round={true}>4</Tag>
+                    <H5 className="section-title">
                         <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(4)}>
                             Principal components analysis
@@ -749,7 +750,7 @@ const AnalysisDialog = ({
         return (
             <div className="col">
                 <div>
-                    <H5><Tag round={true}>5</Tag>
+                    <H5 className="section-title">
                         <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(5)}>
                             Clustering
@@ -836,7 +837,7 @@ const AnalysisDialog = ({
         return (
             <div className="col">
                 <div>
-                    <H5><Tag round={true}>6</Tag>
+                    <H5 className="section-title">
                         <span className={showStepHelper == 6 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(6)}>
                             t-SNE
@@ -875,7 +876,7 @@ const AnalysisDialog = ({
         return (
             <div className="col">
                 <div>
-                    <H5><Tag round={true}>7</Tag>
+                    <H5 className="section-title">
                         <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(7)}>
                             UMAP
@@ -928,7 +929,7 @@ const AnalysisDialog = ({
         return (
             <div className="col">
                 <div>
-                    <H5><Tag round={true}>8</Tag>
+                    <H5 className="section-title">
                         <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(8)}>
                             Cell type annotation
@@ -1018,7 +1019,7 @@ const AnalysisDialog = ({
                     paddingBottom: '15px'
                 }}>
                 <div>
-                    <H5><Tag round={true}>1</Tag>
+                    <H5 className="section-title">
                         <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(1)}>
                             Load input files
@@ -1091,7 +1092,7 @@ const AnalysisDialog = ({
         return (
             <div className="col">
                 <div>
-                    <H5><Tag round={true}>9</Tag>
+                    <H5 className="section-title">
                         <span className={showStepHelper == 9 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(9)}>
                             Neighbor search
@@ -1120,13 +1121,12 @@ const AnalysisDialog = ({
         return (
             <div className="col">
                 <div>
-                    <H5><Tag round={true}>10</Tag>
+                    <H5 className="section-title">
                         <span className={showStepHelper == 10 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(10)}>
                             Batch Correction
                         </span>
                     </H5>
-
 
                     <div className="row">
                     <Label className="row-input">
@@ -1162,12 +1162,12 @@ const AnalysisDialog = ({
         )
     }
 
-    const get_input_adt = () => {
+    const get_input_adt_qc = () => {
         return (
             <div className="col">
                 <div>
                     <div>
-                        <H5><Tag round={true}>11</Tag>
+                        <H5 className="section-title">
                             <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                 onMouseEnter={() => setShowStepHelper(11)}>
                                 Quality Control (ADT)
@@ -1215,8 +1215,17 @@ const AnalysisDialog = ({
                             </Label>
                         </div>
                     </div>
+                </div>
+            </div>
+        )
+    }
+
+    const get_input_adt_normalization = () => {
+        return (
+            <div className="col">
+                <div>
                     <div>
-                        <H5><Tag round={true}>12</Tag>
+                        <H5 className="section-title">
                             <span className={showStepHelper == 12 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                 onMouseEnter={() => setShowStepHelper(12)}>
                                 Normalization (ADT)
@@ -1247,8 +1256,17 @@ const AnalysisDialog = ({
                             </Label>
                         </div>
                     </div>
+                </div>
+            </div>
+        )
+    }
+
+    const get_input_adt_pca = () => {
+        return (
+            <div className="col">
+                <div>
                     <div>
-                        <H5><Tag round={true}>13</Tag>
+                        <H5 className="section-title">
                             <span className={showStepHelper == 13 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                 onMouseEnter={() => setShowStepHelper(13)}>
                                 PCA (ADT)
@@ -1268,8 +1286,17 @@ const AnalysisDialog = ({
                             </Label>
                         </div>
                     </div>
+                </div>
+            </div>
+        )
+    }
+
+    const get_input_adt_combine = () => {
+        return (
+            <div className="col">
+                <div>
                     <div>
-                        <H5><Tag round={true}>14</Tag>
+                        <H5 className="section-title">
                             <span className={showStepHelper == 14 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                 onMouseEnter={() => setShowStepHelper(14)}>
                                 Combined Embedding
@@ -1446,7 +1473,7 @@ const AnalysisDialog = ({
                                     <Button intent="warning"
                                         icon="merge-links"
                                         onClick={(() => setShowSection("params"))}
-                                        disabled={showSection === "params"}>Show Parameters</Button>
+                                        disabled={showSection === "params" || tmpInputFiles.length == 0}>Show Parameters</Button>
                                 </div>
                                 <div className="inputs-container">
                                     {tabSelected === "new" && 
@@ -1594,20 +1621,37 @@ const AnalysisDialog = ({
                                             }
     
                                             {showSection == "params" && get_input_qc()}
+                                            {showSection == "params" && 
+                                                Object.keys(preInputFilesStatus?.features).length > 1
+                                                && get_input_adt_qc()}
+                                            {showSection == "params" &&  <Divider />}
+                                            {showSection == "params" && 
+                                                Object.keys(preInputFilesStatus?.features).length > 1
+                                                && get_input_adt_normalization()}
+                                                {showSection == "params" && <Divider />}
                                             {showSection == "params" && get_input_fsel()}
+                                            {showSection == "params" && <Divider />}
                                             {showSection == "params" && get_input_pca()}
+                                            {showSection == "params" && 
+                                                Object.keys(preInputFilesStatus?.features).length > 1
+                                                && get_input_adt_pca()}
+                                                {showSection == "params" && <Divider />}
+                                            {showSection == "params" && 
+                                                Object.keys(preInputFilesStatus?.features).length > 1
+                                                && get_input_adt_combine()}
+                                                {showSection == "params" &&  <Divider />}
                                             {showSection == "params" && get_input_clus()}
+                                            {showSection == "params" &&  <Divider />}
                                             {showSection == "params" && get_input_tsne()}
                                             {showSection == "params" && get_input_umap()}
+                                            {showSection == "params" && <Divider />}
                                             {showSection == "params" && get_input_label_cells()}
+                                            {showSection == "params" && <Divider />}
                                             {showSection == "params" && get_input_ann()}
                                             {
                                                 showSection == "params" && (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && (tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none") || (preInputFilesStatus && Object.keys(preInputFilesStatus?.features).length > 1))
                                                     || (loadParams && loadParamsFor === loadImportFormat)) && get_input_batch_correction()
                                             }
-                                            {showSection == "params" && 
-                                                Object.keys(preInputFilesStatus?.features).length > 1
-                                                && get_input_adt()}
                                         </div>
                                     }
 
@@ -1695,7 +1739,7 @@ const AnalysisDialog = ({
                                                 >
                                                     <Tab id="kana" title="Load from file" panel={
                                                         <div>
-                                                            <H5><Tag round={true}>1</Tag>
+                                                            <H5 className="section-title">
                                                                 <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}>
                                                                     Load analysis from file
                                                                 </span>
@@ -1719,7 +1763,7 @@ const AnalysisDialog = ({
                                                     } />
                                                     {<Tab id="kanadb" title="Load from browser" panel={
                                                         <div>
-                                                            <H5><Tag round={true}>1</Tag>
+                                                            <H5 className="section-title">
                                                                 <span className={showStepHelper == 1 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}>
                                                                     Load analysis from browser cache
                                                                 </span>
@@ -1781,6 +1825,18 @@ const AnalysisDialog = ({
                                         }
 
                                         {
+                                            showSection == "params" && loadParams && loadParamsFor === loadImportFormat 
+                                             && tmpInputFiles?.file === inputFiles?.files?.file ? 
+                                            get_input_adt_qc(): ""
+                                        }
+
+                                        {
+                                            showSection == "params" && loadParams && loadParamsFor === loadImportFormat 
+                                             && tmpInputFiles?.file === inputFiles?.files?.file ? 
+                                            get_input_adt_normalization(): ""
+                                        }
+
+                                        {
                                             showSection === "params" && loadParams && loadParamsFor === loadImportFormat
                                                 && tmpInputFiles?.file === inputFiles?.files?.file ?
                                                 get_input_fsel()
@@ -1792,6 +1848,18 @@ const AnalysisDialog = ({
                                                 && tmpInputFiles?.file === inputFiles?.files?.file ?
                                                 get_input_pca()
                                                 : ""
+                                        }
+
+                                        {
+                                            showSection == "params" && loadParams && loadParamsFor === loadImportFormat 
+                                             && tmpInputFiles?.file === inputFiles?.files?.file ? 
+                                            get_input_adt_pca(): ""
+                                        }
+
+                                        {
+                                            showSection == "params" && loadParams && loadParamsFor === loadImportFormat 
+                                             && tmpInputFiles?.file === inputFiles?.files?.file ? 
+                                            get_input_adt_combine(): ""
                                         }
 
                                         {
@@ -1831,12 +1899,6 @@ const AnalysisDialog = ({
                                             showSection == "params" && loadParams && loadParamsFor === loadImportFormat 
                                              && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             get_input_batch_correction() : ""
-                                        }
-
-                                        {
-                                            showSection == "params" && loadParams && loadParamsFor === loadImportFormat 
-                                             && tmpInputFiles?.file === inputFiles?.files?.file ? 
-                                            get_input_adt(): ""
                                         }
                                     </div>
                                     <div className='row-input-tooltips'>

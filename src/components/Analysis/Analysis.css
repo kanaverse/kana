@@ -31,6 +31,10 @@
     align-items: stretch;
 }
 
+.section-title {
+    color: #C87619
+}
+
 .row-input {
     margin: 5px;
 }
