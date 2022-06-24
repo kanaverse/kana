@@ -630,7 +630,7 @@ const AnalysisDialog = ({
                     <H5 className="section-title">
                         <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(2)}>
-                            Quality control
+                            Quality control (RNA)
                         </span>
                     </H5>
                     <div className="row">
@@ -683,7 +683,7 @@ const AnalysisDialog = ({
                     <H5 className="section-title">
                         <span className={showStepHelper == 3 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(3)}>
-                            Feature Selection
+                            Feature selection (RNA)
                         </span>
                     </H5>
                     <div className="row">
@@ -714,7 +714,7 @@ const AnalysisDialog = ({
                     <H5 className="section-title">
                         <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(4)}>
-                            Principal components analysis
+                            Principal components analysis (RNA)
                         </span>
                     </H5>
                     <div className="row">
@@ -1170,7 +1170,7 @@ const AnalysisDialog = ({
                         <H5 className="section-title">
                             <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                 onMouseEnter={() => setShowStepHelper(11)}>
-                                Quality Control (ADT)
+                                Quality control (ADT)
                             </span>
                         </H5>
                         <div className="row">
@@ -1269,7 +1269,7 @@ const AnalysisDialog = ({
                         <H5 className="section-title">
                             <span className={showStepHelper == 13 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                 onMouseEnter={() => setShowStepHelper(13)}>
-                                PCA (ADT)
+                                Principal components analysis (ADT)
                             </span>
                         </H5>
                         <div className="row">
@@ -1640,6 +1640,11 @@ const AnalysisDialog = ({
                                                 Object.keys(preInputFilesStatus?.features).length > 1
                                                 && get_input_adt_combine()}
                                                 {showSection == "params" &&  <Divider />}
+                                            {
+                                                showSection == "params" && (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && (tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none") || (preInputFilesStatus && Object.keys(preInputFilesStatus?.features).length > 1))
+                                                    || (loadParams && loadParamsFor === loadImportFormat)) && get_input_batch_correction()
+                                            }
+                                            {showSection == "params" &&  <Divider />}
                                             {showSection == "params" && get_input_clus()}
                                             {showSection == "params" &&  <Divider />}
                                             {showSection == "params" && get_input_tsne()}
@@ -1648,10 +1653,6 @@ const AnalysisDialog = ({
                                             {showSection == "params" && get_input_label_cells()}
                                             {showSection == "params" && <Divider />}
                                             {showSection == "params" && get_input_ann()}
-                                            {
-                                                showSection == "params" && (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && (tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none") || (preInputFilesStatus && Object.keys(preInputFilesStatus?.features).length > 1))
-                                                    || (loadParams && loadParamsFor === loadImportFormat)) && get_input_batch_correction()
-                                            }
                                         </div>
                                     }
 
