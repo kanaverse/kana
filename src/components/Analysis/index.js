@@ -45,11 +45,12 @@ const AnalysisDialog = ({
         mtx: "Choose Matrix Market file",
         genes: "Choose feature/gene file",
         annotations: "Choose barcode/annotation file",
+        file: "Choose file...",
     });
 
     let [stmpInputFiles, ssetTmpInputFiles] = useState({
         "name": "dataset-1",
-        "format": tabSelected === "new" ? newImportFormat : loadImportFormat
+        "format": tabSelected === "new" ? newImportFormat : loadImportFormat,
     });
 
 
@@ -162,80 +163,98 @@ const AnalysisDialog = ({
 
     useEffect(() => {
         if (tmpInputFiles) {
-            if (tabSelected === "new") {
-                let all_valid = true;
-                // tmpInputFiles.forEach((x, ix) =>
-                for (let ix = 0; ix < tmpInputFiles.length; ix++) {
-                    let x = tmpInputFiles[ix];
-                    if (
-                        (x?.mtx && !(inputText[ix]?.mtx.toLowerCase().endsWith("mtx") ||
-                            inputText[ix]?.mtx.toLowerCase().endsWith("mtx.gz")
-                        )) ||
-                        (x?.genes && !(inputText[ix]?.genes.toLowerCase().endsWith("tsv") ||
-                            inputText[ix]?.genes.toLowerCase().endsWith("tsv.gz")
-                        )) ||
-                        (x?.annotations && !(inputText[ix]?.annotations.toLowerCase().endsWith("tsv") ||
-                            inputText[ix]?.annotations.toLowerCase().endsWith("tsv.gz")
-                        ))
-                    ) {
-                        all_valid = false;
-                    }
 
-                    if (
-                        x?.h5 && !(
-                            inputText[ix]?.h5.toLowerCase().endsWith("hdf5") ||
-                            inputText[ix]?.h5.toLowerCase().endsWith("h5") ||
-                            inputText[ix]?.h5.toLowerCase().endsWith("h5ad")
-                        )
-                    ) {
-                        all_valid = false;
-                    }
-
-                    if (x.format === "MatrixMarket") {
-                        if (!x.mtx) all_valid = false;
-                    } else {
-                        if (!x.h5) all_valid = false;
-                    }
-                };
-
-                let tnames = tmpInputFiles.map(x => x.name);
-                if ([...new Set(tnames)].length != tmpInputFiles.length) {
-                    all_valid = false;
-                }
-
-                setTmpInputValid(all_valid);
-
-                if (all_valid && tmpInputFiles.length > 0) {
-                    let mapFiles = {};
-                    for (const f of tmpInputFiles) {
-                        mapFiles[f.name] = f
-                    }
-
-                    setPreInputFiles({
-                        "files": mapFiles,
-                    });
-                }
-
-            } else if (tabSelected === "load") {
-
-                if (inputText?.[0]?.file == null) {
-                    setTmpInputValid(true);
-                } else {
-                    if (!tmpInputFiles?.[0]?.file) {
-                        setTmpInputValid(false);
-                    } else {
-                        if (loadImportFormat === "kana" &&
-                            inputText?.[0]?.file != null && !(inputText?.[0]?.file.toLowerCase().endsWith("kana")
+            if(tmpInputFiles.length == 0) {
+                setTmpInputValid(false);
+            } else {
+                if (tabSelected === "new") {
+                    let all_valid = true;
+    
+                    // tmpInputFiles.forEach((x, ix) =>
+                    for (let ix = 0; ix < tmpInputFiles.length; ix++) {
+                        let x = tmpInputFiles[ix];
+    
+                        if (
+                            (x?.mtx && !(inputText[ix]?.mtx.toLowerCase().endsWith("mtx") ||
+                                inputText[ix]?.mtx.toLowerCase().endsWith("mtx.gz")
+                            )) ||
+                            (x?.genes && !(inputText[ix]?.genes.toLowerCase().endsWith("tsv") ||
+                                inputText[ix]?.genes.toLowerCase().endsWith("tsv.gz")
+                            )) ||
+                            (x?.annotations && !(inputText[ix]?.annotations.toLowerCase().endsWith("tsv") ||
+                                inputText[ix]?.annotations.toLowerCase().endsWith("tsv.gz")
+                            ))
+                        ) {
+                            all_valid = false;
+                        }
+    
+                        if (
+                            x?.h5 && !(
+                                inputText[ix]?.h5.toLowerCase().endsWith("hdf5") ||
+                                inputText[ix]?.h5.toLowerCase().endsWith("h5") ||
+                                inputText[ix]?.h5.toLowerCase().endsWith("h5ad")
                             )
                         ) {
-                            setTmpInputValid(false);
-                        } else if (loadImportFormat === "kanadb" && tmpInputFiles?.[0]?.file === null) {
+                            all_valid = false;
+                        }
+    
+                        if (x.format === "MatrixMarket") {
+                            if (!x.mtx) all_valid = false;
+                        } else {
+                            if (!x.h5) all_valid = false;
+                        }
+                    };
+    
+                    let tnames = tmpInputFiles.map(x => x.name);
+                    if ([...new Set(tnames)].length != tmpInputFiles.length) {
+                        all_valid = false;
+                    }
+    
+                    setTmpInputValid(all_valid);
+    
+                    if (all_valid && tmpInputFiles.length > 0) {
+                        let mapFiles = {};
+                        for (const f of tmpInputFiles) {
+                            mapFiles[f.name] = f
+                        }
+    
+                        setPreInputFiles({
+                            "files": mapFiles,
+                        });
+                    }
+    
+                } else if (tabSelected === "load") {
+    
+                    if (inputText?.[0]?.file == null) {
+                        setTmpInputValid(true);
+                    } else {
+                        if (!tmpInputFiles?.[0]?.file) {
                             setTmpInputValid(false);
                         } else {
-                            setTmpInputValid(true);
+                            if (loadImportFormat === "kana" &&
+                                inputText?.[0]?.file != null && !(inputText?.[0]?.file.toLowerCase().endsWith("kana")
+                                )
+                            ) {
+                                setTmpInputValid(false);
+                            } else if (loadImportFormat === "kanadb" && tmpInputFiles?.[0]?.file === null) {
+                                setTmpInputValid(false);
+                            } else {
+                                setTmpInputValid(true);
+                            }
                         }
                     }
                 }
+            }
+
+            if(tmpInputFiles.length > 1 || 
+                (tmpInputFiles.length == 1 && (tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none"))
+            ) {
+                setTmpInputParams({ ...tmpInputParams,
+                    "batch_correction": { 
+                        ...tmpInputParams["batch_correction"], 
+                        "method": "mnn" 
+                    } 
+                });
             }
         }
     }, [tmpInputFiles]);
@@ -260,7 +279,7 @@ const AnalysisDialog = ({
                         all_valid = false;
                     }
 
-                    if (!x.mtx) all_valid = false;
+                    if (!x.mtx && (sinputText?.mtx !== "Choose Matrix Market file")) all_valid = false;
                 } else if (x.format === "10X") {
 
                     if (x?.h5 && !(
@@ -271,7 +290,7 @@ const AnalysisDialog = ({
                         all_valid = false;
                     }
 
-                    if (!x.h5) all_valid = false;
+                    if (!x.h5 && (sinputText?.file !== "Choose file...")) all_valid = false;
 
                 } else if (
                     x.format === "H5AD") {
@@ -282,7 +301,7 @@ const AnalysisDialog = ({
                         all_valid = false;
                     }
 
-                    if (!x.h5) all_valid = false;
+                    if (!x.h5 && (sinputText?.file !== "Choose file...")) all_valid = false;
                 }
 
                 // setTmpInputValid(all_valid);
@@ -1506,6 +1525,7 @@ const AnalysisDialog = ({
                                                                 mtx: "Choose Matrix Market file",
                                                                 genes: "Choose feature/gene file",
                                                                 annotations: "Choose barcode/annotation file",
+                                                                file: "Choose file..."
                                                             });
     
                                                             ssetTmpInputFiles({
@@ -1659,7 +1679,7 @@ const AnalysisDialog = ({
 
                                     <div className="row-input-tooltips">
                                         {
-                                            tmpInputFiles.length > 1 && (!tmpInputValid || !stmpInputValid) &&
+                                            (!stmpInputValid) &&
                                             <Callout intent="danger"
                                                 title="Incorrect file format"
                                                 style={{
