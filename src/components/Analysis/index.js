@@ -511,6 +511,42 @@ const AnalysisDialog = ({
                         </p>
                     </Callout>
                 }
+                {showStepHelper === 9 &&
+                    <Callout intent="primary">
+                        <p>
+                            Build the index for the nearest neighbor search.
+                            This is used for a variety of steps including the graph-based clustering, t-SNE and UMAP.
+                        </p>
+                        <p>
+                            <strong>Approximate</strong>:
+                            Use an approximate neighbor search algorithm - in this case, the <a href="https://github.com/spotify/Annoy">Annoy</a> method.
+                            This sacrifices some search accuracy for speed, which is usually acceptable for single-cell applications.
+                            Otherwise, an exact algorithm is used. 
+                        </p>
+                    </Callout>
+                }
+                {showStepHelper === 10 &&
+                    <Callout intent="primary">
+                        <p>
+                            Remove batch effects between cells from different samples.
+                            This places all cells in a common coordinate space for consistent clustering and visualization.
+                            Otherwise, the interpretation of downstream analysis results may be complicated by large sample-sample differences,
+                            obscuring the heterogeneity within samples that is usually of interest.
+                        </p>
+                        <p>
+                            <strong>Correction method</strong>:
+                            Which correction method to use - no correction, linear regression or mutual nearest neighbor (MNN) correction.
+                            MNN correction is the default and handles situations with differences in cell type composition across samples.
+                            Linear regression is simpler but assumes that all samples have the same proportions of cell types, with a consistent batch effect in each cell type.
+                            Users may also choose not to correct if, e.g., the sample-sample differences are interesting.
+                        </p>
+                        <p>
+                            <strong>Number of neighbors</strong>:
+                            Number of neighbors to use to identify MNN pairs.
+                            Using larger values will yield a more stable correction but also increases the risk of incorrectly merging unrelated populations across samples.
+                        </p>
+                    </Callout>
+                }
                 {showStepHelper === 11 &&
                     <Callout intent="primary">
                         <p>
@@ -587,28 +623,6 @@ const AnalysisDialog = ({
                             Weight for each modality.
                             A larger value indicates that the corresponding modality will contribute more to the population heterogeneity in the combined embedding.
                             A value of zero indicates that the corresponding modality should be ignored in downstream analysis.
-                        </p>
-                    </Callout>
-                }
-                {showStepHelper === 10 &&
-                    <Callout intent="primary">
-                        <p>
-                            Remove batch effects between cells from different samples.
-                            This places all cells in a common coordinate space for consistent clustering and visualization.
-                            Otherwise, the interpretation of downstream analysis results may be complicated by large sample-sample differences,
-                            obscuring the heterogeneity within samples that is usually of interest.
-                        </p>
-                        <p>
-                            <strong>Correction method</strong>:
-                            Which correction method to use - no correction, linear regression or mutual nearest neighbor (MNN) correction.
-                            MNN correction is the default and handles situations with differences in cell type composition across samples.
-                            Linear regression is simpler but assumes that all samples have the same proportions of cell types, with a consistent batch effect in each cell type.
-                            Users may also choose not to correct if, e.g., the sample-sample differences are interesting.
-                        </p>
-                        <p>
-                            <strong>Number of neighbors</strong>:
-                            Number of neighbors to use to identify MNN pairs.
-                            Using larger values will yield a more stable correction but also increases the risk of incorrectly merging unrelated populations across samples.
                         </p>
                     </Callout>
                 }
@@ -925,7 +939,7 @@ const AnalysisDialog = ({
                     <H5><Tag round={true}>8</Tag>
                         <span className={showStepHelper == 8 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(8)}>
-                            Annotate cells
+                            Cell type annotation
                         </span>
                     </H5>
                     <div className="row">
@@ -1088,7 +1102,7 @@ const AnalysisDialog = ({
                     <H5><Tag round={true}>9</Tag>
                         <span className={showStepHelper == 9 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                             onMouseEnter={() => setShowStepHelper(9)}>
-                            Approximate Nearest Neighbor ?
+                            Neighbor search
                         </span>
                     </H5>
 
@@ -1097,7 +1111,7 @@ const AnalysisDialog = ({
                             <Text className="text-100">
                                 <span className={showStepHelper == 9 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(9)}>
-                                    use ANN ?
+                                    Approximate
                                 </span>
                             </Text>
                             <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["ann"]["approximate"]}
@@ -1160,17 +1174,11 @@ const AnalysisDialog = ({
         return (
             <div className="col">
                 <div>
-                    <H5>
-                        <span className={showStepHelper == 20 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                            onMouseEnter={() => setShowStepHelper(20)}>
-                            ADT Sepcific Parameters
-                        </span>
-                    </H5>
                     <div>
                         <H5><Tag round={true}>11</Tag>
                             <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                 onMouseEnter={() => setShowStepHelper(11)}>
-                                ADT - Quality Control
+                                Quality Control (ADT)
                             </span>
                         </H5>
                         <div className="row">
@@ -1219,7 +1227,7 @@ const AnalysisDialog = ({
                         <H5><Tag round={true}>12</Tag>
                             <span className={showStepHelper == 12 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                 onMouseEnter={() => setShowStepHelper(12)}>
-                                ADT - Normalization
+                                Normalization (ADT)
                             </span>
                         </H5>
                         <div className="row">
@@ -1251,7 +1259,7 @@ const AnalysisDialog = ({
                         <H5><Tag round={true}>13</Tag>
                             <span className={showStepHelper == 13 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                 onMouseEnter={() => setShowStepHelper(13)}>
-                                ADT - PCA
+                                PCA (ADT)
                             </span>
                         </H5>
                         <div className="row">
