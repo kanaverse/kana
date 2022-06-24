@@ -654,6 +654,10 @@ const App = () => {
       resp["ann"]["approximate"] = resp["batch_correction"]["approximate"];
       setLoadParams(resp);
 
+      if (!resp?.combine_embeddings?.weights) {
+        resp["combine_embeddings"]["weights"] = {};
+      }
+
       if (resp?.custom_selections?.selections) {
         let cluster_count = clusterColors.length + Object.keys(resp?.custom_selections?.selections).length;
         let cluster_colors = null;
