@@ -113,7 +113,7 @@ const MarkerPlot = (props) => {
 
         if (!searchInput || searchInput === "") return sortedRows;
 
-        sortedRows = sortedRows.filter((x) => genesInfo[geneColSel][x.gene].toLowerCase().indexOf(searchInput.toLowerCase()) !== -1);
+        sortedRows = sortedRows.filter((x) => genesInfo[geneColSel[props?.selectedModality]][x.gene].toLowerCase().indexOf(searchInput.toLowerCase()) !== -1);
         return sortedRows;
     }, [prosRecords, searchInput, markerFilter]);
 
@@ -206,6 +206,21 @@ const MarkerPlot = (props) => {
                 }}>Marker Genes</H4>
             </Popover2>
             {
+                props?.modality ?
+                    <HTMLSelect
+                        onChange={(x) => {
+                            props?.setSelectedModality(x.currentTarget?.value);
+                            setMarkerFilter({});
+                        }}>
+                        {
+                            props?.modality.map((x, i) => (
+                                <option key={x}>{x}</option>
+                            ))
+                        }
+                    </HTMLSelect>
+                    : ""
+            }
+            {
                 clusSel ?
                     <HTMLSelect
                         onChange={(x) => {
@@ -229,7 +244,7 @@ const MarkerPlot = (props) => {
                     : ""
             }
             {
-                props?.selectedClusterSummary ?
+                props?.selectedClusterSummary && genesInfo && geneColSel[props?.selectedModality]?
                     <div className='marker-table'>
                         <div className='marker-header'>
                             <InputGroup
@@ -310,8 +325,12 @@ const MarkerPlot = (props) => {
                                 Header: () => {
                                     return (<div className='row-container row-header'>
                                         <span>
-                                            <HTMLSelect large={false} minimal={true} defaultValue={geneColSel}
-                                                onChange={(nval, val) => setGeneColSel(nval?.currentTarget?.value)}>
+                                            <HTMLSelect large={false} minimal={true} defaultValue={geneColSel[props?.selectedModality]}
+                                                onChange={(nval, val) =>{
+                                                    let tmp = {...geneColSel};
+                                                    tmp[props?.selectedModality] = nval?.currentTarget?.value;
+                                                    setGeneColSel(tmp);
+                                                }}>
                                                 {
                                                     Object.keys(genesInfo).map((x, i) => (
                                                         <option key={i}>{x}</option>
@@ -415,7 +434,7 @@ const MarkerPlot = (props) => {
                                                     String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
                                                     : 'black'
                                             }}
-                                                className={row.gene === props?.gene ? 'marker-gene-title-selected' : 'marker-gene-title'}>{genesInfo[geneColSel][row.gene]}</span>
+                                                className={row.gene === props?.gene ? 'marker-gene-title-selected' : 'marker-gene-title'}>{genesInfo[geneColSel[props?.selectedModality]][row.gene]}</span>
                                             {
                                                 <Popover2
                                                     popoverClassName={Classes.POPOVER_CONTENT_SIZING}
@@ -433,7 +452,7 @@ const MarkerPlot = (props) => {
                                                             <table>
                                                                 <tr>
                                                                     <td></td>
-                                                                    <th scope="col">{genesInfo[geneColSel][row.gene]}</th>
+                                                                    <th scope="col">{genesInfo[geneColSel[props?.selectedModality]][row.gene]}</th>
                                                                     <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
@@ -479,7 +498,7 @@ const MarkerPlot = (props) => {
                                                             <table>
                                                                 <tr>
                                                                     <td></td>
-                                                                    <th scope="col">{genesInfo[geneColSel][row.gene]}</th>
+                                                                    <th scope="col">{genesInfo[geneColSel[props?.selectedModality]][row.gene]}</th>
                                                                     <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>
@@ -524,7 +543,7 @@ const MarkerPlot = (props) => {
                                                             <table>
                                                                 <tr>
                                                                     <td></td>
-                                                                    <th scope="col">{genesInfo[geneColSel][row.gene]}</th>
+                                                                    <th scope="col">{genesInfo[geneColSel[props?.selectedModality]][row.gene]}</th>
                                                                     <th scope="col">This cluster</th>
                                                                 </tr>
                                                                 <tr>

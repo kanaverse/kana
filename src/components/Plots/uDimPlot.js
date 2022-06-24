@@ -67,13 +67,24 @@ const UDimPlot = (props) => {
         color = data?.color;
       }
 
-      tmp_scatterplot.setState({
-        color: color,
-      });
+      if (color.length != rdata.x.length) {
+        console.error("colors don't match x and y coordinates, for ", props?.data?.config?.embedding);
+      } else {
+        tmp_scatterplot.setState({
+          color: color,
+        });
+      }
 
       tmp_scatterplot.render();
     }
   }, [props]);
+
+  useEffect(() => {
+    return () => {
+      scatterplot?.plot.dataWorker.terminate();
+      scatterplot?.plot.webglWorker.terminate();
+    };
+  }, [scatterplot]);
 
   return (
     <div className="udimplot-container">

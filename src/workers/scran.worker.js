@@ -80,10 +80,8 @@ function runAllSteps(inputs, params) {
         pca: {
             num_hvgs: params.pca["pca-hvg"],
             num_pcs: params.pca["pca-npc"],
-            block_method: params.pca["pca-correction"]
         },
         neighbor_index: {
-            approximate: params.cluster["clus-approx"]
         },
         choose_clustering: {
             method: params.cluster["clus-method"]
@@ -112,8 +110,26 @@ function runAllSteps(inputs, params) {
             human_references: params.annotateCells["annotateCells-human_references"],
             mouse_references: params.annotateCells["annotateCells-mouse_references"]
         },
-        custom_markers: {}
+        custom_markers: {},
+        adt_normalization: params.adt_normalization,
+        adt_pca: params.adt_pca,
+        adt_quality_control: params.adt_qualitycontrol,
+        combine_embeddings: params.combine_embeddings,
+        batch_correction: params.batch_correction,
     };
+
+    bakana.configureBatchCorrection(formatted, params.batch_correction["method"]);
+    bakana.configureApproximateNeighbors(formatted, params.ann["approximate"]);
+
+    // Simplify the combine_embeddings if we see it is all equal.
+    if (formatted.combine_embeddings.weights !== null) {
+        let uniq_weights = new Set(Object.values(formatted.combine_embeddings.weights));
+        if (uniq_weights.size <= 1) {
+            formatted.combine_embeddings.weights = null;
+        }
+    }
+
+    console.log("formatted", formatted);
 
     return bakana.runAnalysis(superstate, inputs.files, formatted, { startFun: postAttempt, finishFun: postSuccess });
 }
@@ -192,7 +208,6 @@ async function unserializeAllSteps(contents) {
                 "pca-correction": params.pca.block_method
             },
             cluster: {
-                "clus-approx": params.neighbor_index.approximate,
                 "kmeans-k": params.kmeans_cluster.k,
                 "clus-k": params.snn_graph_cluster.k,
                 "clus-scheme": params.snn_graph_cluster.scheme,
@@ -214,7 +229,12 @@ async function unserializeAllSteps(contents) {
                 "annotateCells-human_references": params.cell_labelling.human_references,
                 "annotateCells-mouse_references": params.cell_labelling.mouse_references
             },
-            custom_selections: params.custom_selections
+            custom_selections: params.custom_selections,
+            adt_qualitycontrol: params.adt_quality_control,
+            adt_pca:params.adt_pca,
+            adt_normalization: params.adt_normalization,
+            combine_embeddings: params.combine_embeddings,
+            batch_correction: params.batch_correction
         }
     } finally {
         bakana.removeHDF5File(h5path);
@@ -240,6 +260,7 @@ function postError(type, err, fatal) {
 var loaded;
 onmessage = function (msg) {
     const { type, payload } = msg.data;
+
     let fatal = false;
     if (type == "INIT") {
         fatal = true;
@@ -458,7 +479,8 @@ onmessage = function (msg) {
         loaded.then(x => {
             let cluster = payload.cluster;
             let rank_type = payload.rank_type;
-            var resp = superstate.marker_detection.fetchGroupResults(cluster, rank_type);
+            let modality = payload.modality;
+            var resp = superstate.marker_detection.fetchGroupResults(cluster, rank_type, modality);
 
             var transferrable = [];
             extractBuffers(resp, transferrable);
@@ -475,7 +497,17 @@ onmessage = function (msg) {
     } else if (type == "getGeneExpression") {
         loaded.then(x => {
             let row_idx = payload.gene;
-            var vec = superstate.normalization.fetchExpression(row_idx);
+            let modality = payload.modality.toLowerCase()
+
+            var vec;
+            if (modality === "rna") {
+                vec = superstate.normalization.fetchExpression(row_idx);
+            } else if (modality === "adt") {
+                vec = superstate.adt_normalization.fetchExpression(row_idx);
+            } else {
+                throw new Error("unknown feature type '" + modality + "'");
+            }
+
             postMessage({
                 type: "setGeneExpression",
                 resp: {
@@ -504,7 +536,7 @@ onmessage = function (msg) {
     } else if (type == "getMarkersForSelection") {
         loaded.then(x => {
             let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
-            var resp = superstate.custom_selections.fetchResults(payload.cluster, rank_type);
+            var resp = superstate.custom_selections.fetchResults(payload.cluster, rank_type, payload.modality);
             var transferrable = [];
             extractBuffers(resp, transferrable);
             postMessage({
@@ -546,22 +578,46 @@ onmessage = function (msg) {
     } else if (type == "getAnnotation") {
         loaded.then(x => {
             let annot = payload.annotation;
-            var vec;
+            let vec, result;
 
             // Filter to match QC unless requested otherwise.
             if (payload.unfiltered !== false) {
-                vec = superstate.quality_control.fetchFilteredAnnotations(annot);
+                vec = superstate.cell_filtering.fetchFilteredAnnotations(annot);
             } else {
                 vec = superstate.inputs.fetchAnnotations(annot);
             }
 
+            if (ArrayBuffer.isView(vec)) {
+                result = {
+                    "type": "array",
+                    "values": vec.slice()
+                };
+            } else {
+                let uniq_vals = [];
+                let uniq_map = {};
+                let indices = new Int32Array(vec.length);
+                vec.map((x, i) => {
+                    if (!(x in uniq_map)) {
+                        uniq_map[x] = uniq_vals.length;
+                        uniq_vals.push(x);
+                    }
+                    indices[i] = uniq_map[x];
+                });
+        
+                result = {
+                    "type": "factor",
+                    "index": indices,
+                    "levels": uniq_vals
+                };
+            }
+
             let extracted = [];
-            extractBuffers(vec, extracted);
+            extractBuffers(result, extracted);
             postMessage({
                 type: "setAnnotation",
                 resp: {
                     annotation: annot,
-                    values: vec
+                    values: result
                 },
                 msg: "Success: GET_ANNOTATION done"
             }, extracted);

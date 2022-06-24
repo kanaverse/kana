@@ -16,21 +16,23 @@ const QCPlotMgr = (props) => {
     return (
         qcData && <div className="qc-plots">
             {
-                ["sums", "detected", "proportion"].map(x => {
-                    const props2 = {
-                        "threshold": qcData?.["thresholds"]?.[x],
-                        "range": qcData?.["ranges"]?.[x],
-                        "label": x,
-                        "transform": x === "proportion" ? ".2" : ".2s",
-                        "showLabel": x,
-                        "dataTransform": x === "proportion" ? null : "log",
-                        "rdata": qcData?.["data"]?.[x]
+                ["sums", "detected", "proportion", "igg_total"].map(x => {
+                    if (qcData?.["data"]?.[x]) {
+                        const props2 = {
+                            "threshold": qcData?.["thresholds"]?.[x],
+                            "range": qcData?.["ranges"]?.[x],
+                            "label": x,
+                            "transform": x === "proportion" ? ".2" : ".2s",
+                            "showLabel": x,
+                            "dataTransform": x === "proportion" ? null : "log",
+                            "rdata": qcData?.["data"]?.[x]
+                        }
+                        return (
+                            <div key={x}>
+                                <ViolinPlotBasic
+                                    filename={props?.title + "_" + x + ".png"} {...props2} />
+                            </div>)
                     }
-                    return (
-                        <div key={x}>
-                            <ViolinPlotBasic
-                                filename={props?.title + "_" + x + ".png"} {...props2} />
-                        </div>)
                 })
             }
         </div>

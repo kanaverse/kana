@@ -92,19 +92,31 @@ const Gallery = (props) => {
     let tmpItemContent = { ...itemContent };
 
     if (props?.qcData && isObject(props?.qcData?.data)) {
-      Object.keys(props?.qcData?.data).map((x) => {
+      Object.keys(props?.qcData?.data).map((x, qci) => {
         let tqc = {
           data: props?.qcData?.data[x],
           ranges: props?.qcData?.ranges[x],
           thresholds: props?.qcData?.thresholds[x],
         };
 
-        if (!tmpItems.includes("1")) {
-          tmpItems.push("1");
+        if (!tmpItems.includes(`${1 + qci}`)) {
+          tmpItems.push(`${1 + qci}`);
         }
-        tmpItemContent["1"] = {
+
+        let title = `QC for batch: ${x}`;
+        if (x === "default") {
+          title = "QC metrics (RNA)";
+        } else if (x === "adt_default") {
+          title = "QC metrics (ADT)";
+        } else if (x.startsWith("adt") && x !== "adt_default") {
+          title = `QC for batch:${x.replace("adt_", "")} (ADT) `
+        } else {
+          title = `QC for batch:${x} (RNA) `
+        }
+
+        tmpItemContent[`${1 + qci}`] = {
           // id: 1,
-          title: `QC for ${x}`,
+          title: title,
           className: props?.showQCLoader
             ? "gitem effect-opacitygrayscale"
             : "gitem",
@@ -114,31 +126,33 @@ const Gallery = (props) => {
       });
     }
 
-    if (props?.pcaVarExp) {
-      if (!tmpItems.includes("2")) {
-        tmpItems.push("2");
-      }
-      tmpItemContent["2"] = {
-        // id: 2,
-        title: "PCA: % variance explained",
-        className: props?.showPCALoader
-          ? "gitem effect-opacitygrayscale"
-          : "gitem",
-        actions: ["download"],
-        content: (
-          <PCABarPlot
-            title={datasetName.split(" ").join("_")}
-            pca={props?.pcaVarExp}
-          />
-        ),
-      };
+    if (Object.keys(props?.pcaVarExp).length > 0) {
+      Object.keys(props?.pcaVarExp).map((x,i) => {
+        if (!tmpItems.includes(`${20 + i}`)) {
+          tmpItems.push(`${20 + i}`);
+        }
+        tmpItemContent[`${20 + i}`] = {
+          // id: 2,
+          title: `PCA (${x}): % variance explained`,
+          className: props?.showPCALoader
+            ? "gitem effect-opacitygrayscale"
+            : "gitem",
+          actions: ["download"],
+          content: (
+            <PCABarPlot
+              title={datasetName.split(" ").join("_")}
+              pca={props?.pcaVarExp[x]}
+            />
+          ),
+        };
+      });
     }
 
     if (props?.clusterData && props?.clusterColors) {
-      if (!tmpItems.includes("3")) {
-        tmpItems.push("3");
+      if (!tmpItems.includes("30")) {
+        tmpItems.push("30");
       }
-      tmpItemContent["3"] = {
+      tmpItemContent["30"] = {
         // id: 3,
         title: "Cluster: Num. of cells per cluster",
         className: props?.showNClusLoader
@@ -160,10 +174,10 @@ const Gallery = (props) => {
       props?.cellLabelData &&
       Object.keys(props?.cellLabelData?.per_reference).length > 0
     ) {
-      if (!tmpItems.includes("4")) {
-        tmpItems.push("4");
+      if (!tmpItems.includes("40")) {
+        tmpItems.push("40");
       }
-      tmpItemContent["4"] = {
+      tmpItemContent["40"] = {
         // id: 4,
         title: (
           <>

@@ -49,6 +49,8 @@ const App = () => {
   const [initDims, setInitDims] = useState(null);
   const [qcDims, setQcDims] = useState(null);
 
+  const [inputData, setInputData] = useState(null);
+
   // loaders for UI components
   const [showDimPlotLoader, setShowDimPlotLoader] = useState(true);
   const [showMarkerLoader, setShowMarkerLoader] = useState(true);
@@ -92,7 +94,7 @@ const App = () => {
   const [colorByAnnotation, setColorByAnnotation] = useState("clusters");
 
   // PCA
-  const [pcaVarExp, setPcaVarExp] = useState(null);
+  const [pcaVarExp, setPcaVarExp] = useState({});
 
   // Cluster Data
   // which cluster is selected
@@ -133,6 +135,10 @@ const App = () => {
   // request annotation column
   const [reqAnnotation, setReqAnnotation] = useState(null);
 
+  // modality
+  const [modality, setModality] = useState(null);
+  const [selectedModality, setSelectedModality] = useState(null);
+
   // props for dialogs
   const loadingProps = {
     autoFocus: true,
@@ -150,7 +156,7 @@ const App = () => {
     setGeneColSel, setLoadParams,
     setInitLoadState, inputFiles, annotationCols, setAnnotationCols,
     annotationObj, setAnnotationObj, preInputFiles,
-    setPreInputFilesStatus } = useContext(AppContext);
+    setPreInputFilesStatus, geneColSel } = useContext(AppContext);
 
   // initializes various things on the worker side
   useEffect(() => {
@@ -180,13 +186,14 @@ const App = () => {
   // request worker for new markers 
   // if either the cluster or the ranking changes
   useEffect(() => {
+    if (selectedCluster !== null && selectedModality != null) {
 
-    if (selectedCluster !== null) {
       let type = String(selectedCluster).startsWith("cs") ?
         "getMarkersForSelection" : "getMarkersForCluster";
       scranWorker.postMessage({
         "type": type,
         "payload": {
+          "modality": selectedModality,
           "cluster": selectedCluster,
           "rank_type": clusterRank,
         }
@@ -194,7 +201,7 @@ const App = () => {
 
       add_to_logs("info", `--- ${type} sent ---`);
     }
-  }, [selectedCluster, clusterRank]);
+  }, [selectedCluster, clusterRank, selectedModality]);
 
   // compute markers in the worker 
   // when a new custom selection of cells is made through the UI
@@ -233,17 +240,18 @@ const App = () => {
   // get expression for a gene from worker
   useEffect(() => {
 
-    if (reqGene) {
+    if (reqGene != null && selectedModality != null) {
       scranWorker.postMessage({
         "type": "getGeneExpression",
         "payload": {
-          "gene": reqGene
+          "gene": reqGene,
+          "modality": selectedModality
         }
       });
 
       add_to_logs("info", `--- Request gene expression for gene:${reqGene} sent ---`);
     }
-  }, [reqGene]);
+  }, [reqGene, selectedModality]);
 
   useEffect(() => {
 
@@ -390,6 +398,17 @@ const App = () => {
     }
   }, [preInputFiles, wasmInitialized]);
 
+  useEffect(() => {
+    if (selectedModality) {
+      setGenesInfo(inputData.genes[selectedModality]);
+      if (geneColSel[selectedModality] == null) {
+        let tmp = geneColSel;
+        tmp[selectedModality] = Object.keys(inputData.genes[selectedModality])[0]
+        setGeneColSel(tmp);
+      }
+    }
+  }, [selectedModality]);
+
   // callback for all responses from workers
   // all interactions are logged and shown on the UI
   scranWorker.onmessage = (msg) => {
@@ -429,13 +448,25 @@ const App = () => {
       }
       setIndexedDBState(false);
     } else if (payload.type === "inputs_DATA") {
-      setInitDims(`${payload.resp.dimensions.num_genes} genes, ${payload.resp.dimensions.num_cells} cells`);
-      setGenesInfo(payload.resp.genes);
-      setGeneColSel(Object.keys(payload.resp.genes)[0]);
+      var info = [];
+      if ("RNA" in payload.resp.num_genes) {
+        info.push(`${payload.resp.num_genes.RNA} genes`);
+      }
+      if ("ADT" in payload.resp.num_genes) {
+        info.push(`${payload.resp.num_genes.ADT} ADTs`);
+      }
+      info.push(`${payload.resp.num_cells} cells`);
+
+      setInitDims(info.join(", "));
+      setInputData(payload.resp);
 
       if (payload.resp?.annotations) {
         setAnnotationCols(Object.values(payload.resp.annotations));
       }
+
+        let pmods = Object.keys(payload.resp.genes);
+        setModality(pmods);
+
     } else if (payload.type === "quality_control_DATA") {
       const { resp } = payload;
 
@@ -453,14 +484,52 @@ const App = () => {
 
       resp["ranges"] = ranges;
       setQcData(resp);
-      setQcDims(`${resp.retained}`);
       setShowQCLoader(false);
+    } else if (payload.type === "adt_quality_control_DATA") {
+      const { resp } = payload;
+
+      if (resp) {
+        var ranges = {}, data = resp["data"], all = {};
+
+        for (const [group, gvals] of Object.entries(data)) {
+          for (const [key, val] of Object.entries(gvals)) {
+            if (!all[key]) all[key] = [Infinity, -Infinity];
+            let [min, max] = getMinMax(val);
+            if (min < all[key][0]) all[key][0] = min;
+            if (max > all[key][1]) all[key][1] = max;
+          }
+          ranges[group] = all;
+        }
+  
+        resp["ranges"] = ranges;
+  
+        let prevQC = {...qcData};
+        for (const key in data) {
+          prevQC["data"][`adt_${key}`] = data[key];
+          let tval = resp["thresholds"][key];
+          if (key === "sums") {
+            tval = null;
+          }
+          prevQC["thresholds"][`adt_${key}`] = tval;
+          prevQC["ranges"][`adt_${key}`] = ranges[key];
+        }
+  
+        setQcData(prevQC);
+      }
+
+      setShowQCLoader(false);
+    } else if (payload.type === "cell_filtering_DATA") {
+      setQcDims(`${payload.resp.retained}`);
     } else if (payload.type === "feature_selection_DATA") {
       const { resp } = payload;
       setFSelectionData(resp);
     } else if (payload.type === "pca_DATA") {
       const { resp } = payload;
-      setPcaVarExp(resp);
+      setPcaVarExp({RNA: resp["var_exp"]});
+      setShowPCALoader(false);
+    } else if (payload.type === "adt_pca_DATA") {
+      const { resp } = payload;
+      setPcaVarExp({...pcaVarExp, ADT: resp["var_exp"]});
       setShowPCALoader(false);
     } else if (payload.type === "choose_clustering_DATA") {
       const { resp } = payload;
@@ -499,20 +568,25 @@ const App = () => {
     } else if (payload.type === "marker_detection_DATA") {
       if (!selectedCluster) {
         // show markers for the first cluster
+        if (selectedModality == null) {
+          setSelectedModality(modality[0]);
+        }
         setSelectedCluster(0);
       }
     } else if (payload.type === "tsne_DATA") {
       const { resp } = payload;
       setTsneData(resp);
 
-      let tmp = [...redDims];
-      tmp.push("TSNE");
+      if (redDims.indexOf("TSNE") == -1) {
+        let tmp = [...redDims];
+        tmp.push("TSNE");
+        setRedDims(tmp);
+      }
       // once t-SNE is available, set this as the default display
       if (!defaultRedDims) {
         setDefaultRedDims("TSNE");
       }
 
-      setRedDims(tmp);
       // also don't show the pong game anymore
       setShowGame(false);
       setShowAnimation(false);
@@ -525,9 +599,11 @@ const App = () => {
       setUmapData(resp);
 
       // enable UMAP selection
-      let tmp = [...redDims];
-      tmp.push("UMAP");
-      setRedDims(tmp);
+      if (redDims.indexOf("UMAP") == -1) {
+        let tmp = [...redDims];
+        tmp.push("UMAP");
+        setRedDims(tmp);
+      }
 
       setShowGame(false);
       setShowAnimation(false);
@@ -575,7 +651,14 @@ const App = () => {
       setIndexedDBState(false);
     } else if (payload.type === "loadedParameters") {
       const { resp } = payload;
+
+      resp["ann"] = {};
+      resp["ann"]["approximate"] = resp["batch_correction"]["approximate"];
       setLoadParams(resp);
+
+      if (!resp?.combine_embeddings?.weights) {
+        resp["combine_embeddings"]["weights"] = {};
+      }
 
       if (resp?.custom_selections?.selections) {
         let cluster_count = clusterColors.length + Object.keys(resp?.custom_selections?.selections).length;
@@ -606,6 +689,10 @@ const App = () => {
       setShowCellLabelLoader(false);
     } else if (payload.type === "PREFLIGHT_INPUT_DATA") {
       const { resp } = payload;
+      if (resp.details.features) {
+        let pmods = Object.keys(resp.details.features);
+        setModality(pmods);
+      }
       setPreInputFilesStatus(resp.details);
     } else if (payload.type === "custom_selections_DATA") {
     } else if (payload.type === "tsne_CACHE" || payload.type === "umap_CACHE") {
@@ -685,6 +772,7 @@ const App = () => {
                             setClusHighlightLabel={setClusHighlightLabel}
                             colorByAnnotation={colorByAnnotation}
                             setColorByAnnotation={setColorByAnnotation}
+                            selectedModality={selectedModality}
                           /> :
                           showGame ?
                             <div style={{
@@ -767,6 +855,9 @@ const App = () => {
                   gene={gene}
                   clusterColors={clusterColors}
                   setReqGene={setReqGene}
+                  modality={modality}
+                  selectedModality={selectedModality}
+                  setSelectedModality={setSelectedModality}
                 />
                 :
                 <div style={{

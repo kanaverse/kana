@@ -28,14 +28,12 @@ const AppContextProvider = ({ children }) => {
     pca: {
       "pca-npc": 25,
       "pca-hvg": 2500,
-      "pca-correction": "none",
     },
     cluster: {
       "clus-k": 10,
       "kmeans-k": 10,
       "clus-res": 0.5,
       "clus-scheme": "rank",
-      "clus-approx": true,
       "clus-method": "snn_graph",
     },
     tsne: {
@@ -52,9 +50,30 @@ const AppContextProvider = ({ children }) => {
     markerGene: {},
     annotateCells: {
       "annotateCells": false,
-      // "annotateCells-species": "human",
       "annotateCells-human_references": [],
       "annotateCells-mouse_references": [],
+    },
+    adt_qualitycontrol: {
+      igg_prefix: "IgG",
+      nmads: 3,
+      min_detected_drop: 0.1
+    },
+    adt_pca: {
+      num_pcs: 20,
+    },
+    adt_normalization: {
+      num_pcs: 25,
+      num_clusters: 20
+    },
+    combine_embeddings: {
+      weights: {}
+    },
+    batch_correction: {
+      method: "none",
+      num_neighbors: 15,
+    },
+    ann: {
+      approximate: true
     }
   });
 
@@ -80,7 +99,7 @@ const AppContextProvider = ({ children }) => {
   // Gene details 
   const [genesInfo, setGenesInfo] = useState(null);
   // default column to show in markers table
-  const [geneColSel, setGeneColSel] = useState("id");
+  const [geneColSel, setGeneColSel] = useState({"RNA": null, "ADT": null});
 
   // all cell annotations available
   const [annotationCols, setAnnotationCols] = useState([]);
