@@ -148,23 +148,13 @@ const AnalysisDialog = ({
     }
 
     useEffect(() => {
-        if (preInputFilesStatus && Object.keys(preInputFilesStatus?.features).length > 1) {
-
-            var tmp = {...tmpInputParams};
-            tmp["pca"]["pca-correction"] = "mnn";
-            tmp["adt_pca"]["block_method"] = "weight";
-            setTmpInputParams(tmp);
-
-        }
-    }, [preInputFilesStatus]);
-
-    useEffect(() => {
         props?.openInput && setIsOpen(true);
     }, [props?.openInput]);
 
     useEffect(() => {
         if (loadParams && tabSelected === "load") {
             setTmpInputParams(loadParams);
+            console.log(loadParams);
         }
     }, [loadParams]);
 
@@ -252,20 +242,6 @@ const AnalysisDialog = ({
                             setTmpInputValid(true);
                         }
                     }
-                }
-            }
-
-            if (!loadParams && (tmpInputFiles[0]?.batch !== undefined) || (tmpInputFiles.length > 1)) {
-                if (tmpInputFiles[0]?.batch === "none") {
-                    var tmp = {...tmpInputParams};
-                    tmp["pca"]["pca-correction"] = "none";
-                    tmp["adt_pca"]["block_method"] = "none";
-                    setTmpInputParams(tmp);
-                } else {
-                    var tmp = {...tmpInputParams};
-                    tmp["pca"]["pca-correction"] = "mnn";
-                    tmp["adt_pca"]["block_method"] = "weight";
-                    setTmpInputParams(tmp);
                 }
             }
         }
@@ -535,7 +511,7 @@ const AnalysisDialog = ({
                         </p>
                     </Callout>
                 }
-                {showStepHelper === 9 &&
+                {showStepHelper === 11 &&
                     <Callout intent="primary">
                         <p>
                             Remove low-quality cells based on the ADT counts.
@@ -557,7 +533,7 @@ const AnalysisDialog = ({
                         </p>
                     </Callout>
                 }
-                {showStepHelper === 10 &&
+                {showStepHelper === 12 &&
                     <Callout intent="primary">
                         <p>
                             Log-normalize the ADT count data.
@@ -583,7 +559,7 @@ const AnalysisDialog = ({
                         </p>
                     </Callout>
                 }
-                {showStepHelper === 11 &&
+                {showStepHelper === 13 &&
                     <Callout intent="primary">
                         <p>
                             Perform a principal components analysis (PCA) on the log-normalized ADT matrix.
@@ -598,7 +574,7 @@ const AnalysisDialog = ({
                         </p>
                     </Callout>
                 }
-                {showStepHelper === 12 &&
+                {showStepHelper === 14 &&
                     <Callout intent="primary">
                         <p>
                             Combine PC embeddings from multiple modalities.
@@ -614,7 +590,7 @@ const AnalysisDialog = ({
                         </p>
                     </Callout>
                 }
-                {showStepHelper === 13 &&
+                {showStepHelper === 10 &&
                     <Callout intent="primary">
                         <p>
                             Remove batch effects between cells from different samples.
@@ -757,37 +733,6 @@ const AnalysisDialog = ({
                                 placeholder="25" value={tmpInputParams["pca"]["pca-npc"]}
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "pca": { ...tmpInputParams["pca"], "pca-npc": nval } }) }} />
                         </Label>
-                        {
-                            Object.keys(preInputFilesStatus?.features).length > 1 && (tmpInputFiles.length > 0
-                                || (loadParams && loadParamsFor === loadImportFormat)) && <Label className="row-input">
-                                <Text className="text-100">
-                                    <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(4)}>
-                                        Method
-                                    </span>
-                                </Text>
-                                <HTMLSelect
-                                    onChange={(e) => { 
-                                        var tmp = {...tmpInputParams};
-                                        tmp["pca"]["pca-correction"] = e.target.value;
-                                        if (e.target.value === "mnn") {
-                                            tmp["adt_pca"]["block_method"] = "weight";
-                                        } else if (e.target.value === "regress") {
-                                            tmp["adt_pca"]["block_method"] = "regress";
-                                        } else {
-                                            tmp["adt_pca"]["block_method"] = "none";
-                                        }
-                                        
-                                        setTmpInputParams(tmp);
-                                    }}
-                                    defaultValue={tmpInputParams["pca"]["pca-correction"]}
-                                >
-                                    <option value="none">No Correction</option>
-                                    <option value="regress">Linear Regression</option>
-                                    <option value="mnn">MNN correction</option>
-                                </HTMLSelect>
-                            </Label>
-                        }
                     </div>
                 </div>
             </div>
@@ -844,17 +789,6 @@ const AnalysisDialog = ({
                                 <NumericInput
                                     placeholder="10" value={tmpInputParams["cluster"]["clus-k"]}
                                     onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-k": nval } }) }} />
-                            </Label>
-                            <Label className="row-input">
-                                <Text className="text-100">
-                                    <span className={showStepHelper == 5 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(5)}>
-                                        Use ANN
-                                    </span>
-                                </Text>
-                                <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["cluster"]["clus-approx"]}
-                                    innerLabelChecked="yes" innerLabel="no"
-                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "cluster": { ...tmpInputParams["cluster"], "clus-approx": e.target.checked } }) }} />
                             </Label>
                             <Label className="row-input">
                                 <Text className="text-100">
@@ -1147,13 +1081,42 @@ const AnalysisDialog = ({
         )
     }
 
+    const get_input_ann = () => {
+        return (
+            <div className="col">
+                <div>
+                    <H5><Tag round={true}>9</Tag>
+                        <span className={showStepHelper == 9 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                            onMouseEnter={() => setShowStepHelper(9)}>
+                            Approximate Nearest Neighbor ?
+                        </span>
+                    </H5>
+
+                    <div className="row">
+                        <Label className="row-input">
+                            <Text className="text-100">
+                                <span className={showStepHelper == 9 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                    onMouseEnter={() => setShowStepHelper(9)}>
+                                    use ANN ?
+                                </span>
+                            </Text>
+                            <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["ann"]["approximate"]}
+                                innerLabelChecked="yes" innerLabel="no"
+                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "ann": { ...tmpInputParams["ann"], "approximate": e.target.checked } }) }} />
+                        </Label>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     const get_input_batch_correction = () => {
         return (
             <div className="col">
                 <div>
-                    <H5><Tag round={true}>8</Tag>
-                        <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                            onMouseEnter={() => setShowStepHelper(7)}>
+                    <H5><Tag round={true}>10</Tag>
+                        <span className={showStepHelper == 10 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                            onMouseEnter={() => setShowStepHelper(10)}>
                             Batch Correction
                         </span>
                     </H5>
@@ -1162,8 +1125,8 @@ const AnalysisDialog = ({
                     <div className="row">
                     <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(7)}>
+                                <span className={showStepHelper == 10 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                    onMouseEnter={() => setShowStepHelper(10)}>
                                     Method
                                 </span>
                             </Text>
@@ -1172,13 +1135,14 @@ const AnalysisDialog = ({
                                 defaultValue={tmpInputParams["batch_correction"]["method"]}
                             >
                                 <option value="mnn">MNN Correction</option>
+                                <option value="regress">Regression</option>
                                 <option value="none">No Correction</option>
                             </HTMLSelect>
                         </Label>
                         <Label className="row-input">
                             <Text className="text-100">
-                                <span className={showStepHelper == 7 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(7)}>
+                                <span className={showStepHelper == 10 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                    onMouseEnter={() => setShowStepHelper(10)}>
                                     Number of neighbors
                                 </span>
                             </Text>
@@ -1186,17 +1150,6 @@ const AnalysisDialog = ({
                                 placeholder="15" value={tmpInputParams["batch_correction"]["num_neighbors"]}
                                 onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "batch_correction": { ...tmpInputParams["batch_correction"], "num_neighbors": nval } }) }} />
                         </Label>
-                        <Label className="row-input">
-                                <Text className="text-100">
-                                    <span className={showStepHelper == 4 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(4)}>
-                                        use ANN ?
-                                    </span>
-                                </Text>
-                                <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["batch_correction"]["approximate"]}
-                                    innerLabelChecked="yes" innerLabel="no"
-                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "batch_correction": { ...tmpInputParams["batch_correction"], "approximate": e.target.checked } }) }} />
-                            </Label>
                     </div>
                 </div>
             </div>
@@ -1214,17 +1167,17 @@ const AnalysisDialog = ({
                         </span>
                     </H5>
                     <div>
-                        <H5><Tag round={true}>9</Tag>
-                            <span className={showStepHelper == 9 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                onMouseEnter={() => setShowStepHelper(9)}>
+                        <H5><Tag round={true}>11</Tag>
+                            <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                onMouseEnter={() => setShowStepHelper(11)}>
                                 ADT - Quality Control
                             </span>
                         </H5>
                         <div className="row">
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 9 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(9)}>
+                                    <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(11)}>
                                         Number of MADs
                                     </span>
                                 </Text>
@@ -1234,8 +1187,8 @@ const AnalysisDialog = ({
                             </Label>
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 9 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(9)}>
+                                    <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(11)}>
                                         Minimum Detected Drop
                                     </span>
                                 </Text>
@@ -1248,8 +1201,8 @@ const AnalysisDialog = ({
                             </Label>
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 9 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(9)}>
+                                    <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(11)}>
                                         Prefix for isotype controls.
                                     </span>
                                 </Text>
@@ -1263,17 +1216,17 @@ const AnalysisDialog = ({
                         </div>
                     </div>
                     <div>
-                        <H5><Tag round={true}>10</Tag>
-                            <span className={showStepHelper == 10 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                onMouseEnter={() => setShowStepHelper(10)}>
+                        <H5><Tag round={true}>12</Tag>
+                            <span className={showStepHelper == 12 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                onMouseEnter={() => setShowStepHelper(12)}>
                                 ADT - Normalization
                             </span>
                         </H5>
                         <div className="row">
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 10 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(10)}>
+                                    <span className={showStepHelper == 12 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(12)}>
                                         Number of PC's
                                     </span>
                                 </Text>
@@ -1283,8 +1236,8 @@ const AnalysisDialog = ({
                             </Label>
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 10 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(10)}>
+                                    <span className={showStepHelper == 12 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(12)}>
                                         Number of Clusters
                                     </span>
                                 </Text>
@@ -1295,17 +1248,17 @@ const AnalysisDialog = ({
                         </div>
                     </div>
                     <div>
-                        <H5><Tag round={true}>11</Tag>
-                            <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                onMouseEnter={() => setShowStepHelper(11)}>
+                        <H5><Tag round={true}>13</Tag>
+                            <span className={showStepHelper == 13 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                onMouseEnter={() => setShowStepHelper(13)}>
                                 ADT - PCA
                             </span>
                         </H5>
                         <div className="row">
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(11)}>
+                                    <span className={showStepHelper == 13 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(13)}>
                                         Number of PC's
                                     </span>
                                 </Text>
@@ -1313,36 +1266,20 @@ const AnalysisDialog = ({
                                     placeholder="25" value={tmpInputParams["adt_pca"]["num_pcs"]}
                                     onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_pca": { ...tmpInputParams["adt_pca"], "num_pcs": nval } }) }} />
                             </Label>
-                            <Label className="row-input">
-                                <Text className="text-100">
-                                    <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(11)}>
-                                        Blocking method for multiple samples
-                                    </span>
-                                </Text>
-                                <HTMLSelect
-                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "adt_pca": { ...tmpInputParams["adt_pca"], "block_method": e.target.value } }) }}
-                                    defaultValue={tmpInputParams["adt_pca"]["block_method"]}
-                                >
-                                    <option value="none">None</option>
-                                    <option value="regress">regress</option>
-                                    <option value="weight">weight</option>
-                                </HTMLSelect>
-                            </Label>
                         </div>
                     </div>
                     <div>
-                        <H5><Tag round={true}>12</Tag>
-                            <span className={showStepHelper == 12 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                onMouseEnter={() => setShowStepHelper(12)}>
+                        <H5><Tag round={true}>14</Tag>
+                            <span className={showStepHelper == 14 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                onMouseEnter={() => setShowStepHelper(14)}>
                                 Combined Embedding
                             </span>
                         </H5>
                         <div className="row">
                             <Label className="row-input">
                                 <Text className="text-100">
-                                    <span className={showStepHelper == 12 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(12)}>
+                                    <span className={showStepHelper == 14 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(14)}>
                                         Weights
                                     </span>
                                 </Text>
@@ -1360,17 +1297,6 @@ const AnalysisDialog = ({
                                         gip["combined_embeddings"]["weights"]["ADT"] = nval;
                                         setTmpInputParams(gip);
                                     }} />
-                            </Label>
-                            <Label className="row-input">
-                                <Text className="text-100">
-                                    <span className={showStepHelper == 12 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(12)}>
-                                        use ANN ?
-                                    </span>
-                                </Text>
-                                <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["combined_embeddings"]["approximate"]}
-                                    innerLabelChecked="yes" innerLabel="no"
-                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "combined_embeddings": { ...tmpInputParams["combined_embeddings"], "approximate": e.target.checked } }) }} />
                             </Label>
                         </div>
                     </div>
@@ -1523,100 +1449,88 @@ const AnalysisDialog = ({
                                         disabled={showSection === "params"}>Show Parameters</Button>
                                 </div>
                                 <div className="inputs-container">
-                                    <div className='row-input'>
-                                        {showSection == "input" ?
-                                            // tmpInputFiles.map((x, ix) => get_new_input_files(ix, x))
-                                            // get_new_input_files(tmpInputFiles.length - 1,
-                                            //     tmpInputFiles[tmpInputFiles.length - 1])
-                                            get_inputs_import()
-                                            : ""}
-
-                                        {
-                                            showSection == "input" &&
-                                            <div style={{
-                                                display: "flex",
-                                                justifyContent: "center",
-                                                alignItems: "center"
-                                            }}>
-                                                <Button intent="warning"
-                                                    icon="add"
-                                                    disabled={!stmpInputValid}
-                                                    style={{
-                                                        margin: "3px"
-                                                    }}
-                                                    onClick={(() => {
-                                                        setTmpInputFiles([...tmpInputFiles, stmpInputFiles]);
-                                                        setInputText([...inputText, sinputText]);
-
-                                                        ssetInputText({
-                                                            mtx: "Choose Matrix Market file",
-                                                            genes: "Choose feature/gene file",
-                                                            annotations: "Choose barcode/annotation file",
-                                                        });
-
-                                                        ssetTmpInputFiles({
-                                                            "name": `dataset-${tmpInputFiles.length + 2}`,
-                                                            "format": newImportFormat
-                                                        });
-
-                                                        setTmpInputValid(false);
-                                                        setPreInputFilesStatus(null);
-                                                    })}
-                                                >Add</Button>
-                                            </div>
-                                        }
-
-                                        {
-                                            showSection == "input" &&
-                                            tmpInputFiles &&
-                                            tmpInputFiles.length > 0 && 
-                                            preInputFilesStatus && 
-                                            preInputFilesStatus?.features &&
-                                            <div>
-                                                <Label> Dataset contains:</Label>
-                                                <ul>
-                                                    {Object.keys(preInputFilesStatus?.features).map((x,i) => {
-                                                    return (
-                                                        <li key={i}>
-                                                            <p>
-                                                                <strong>Modality</strong> {x}, &nbsp; 
-                                                                <strong>Genes</strong>: {preInputFilesStatus?.features[x].common}
-                                                            </p>
-                                                        </li>
-                                                        )
-                                                    }
-                                                )}
-                                                </ul>
-                                            </div>
-                                        }
-
-                                        {
-                                            showSection == "input" &&
-                                            tmpInputFiles &&
-                                            tmpInputFiles.length > 0 &&
-                                            preInputFilesStatus && 
-                                            <div style={{
-                                                "height": ((tmpInputFiles.length + 1) * 40) + "px"
-                                            }}>
-                                                <h4>Selected datasets:</h4>
-                                                {
-                                                    preInputFilesStatus && tmpInputFiles.length == 1 ?
-                                                        <>
-                                                            {
-                                                                preInputFilesStatus.annotations && Object.keys(preInputFilesStatus.annotations).length == 1 ?
-                                                                    <Table2
-                                                                        numRows={tmpInputFiles.length}
-                                                                        rowHeights={tmpInputFiles.map(() => 25)}
-                                                                        selectionModes={"NONE"}
-                                                                    >
-                                                                        <Column key="name" intent="primary" name="name" cellRenderer={table_render_cell} />
-                                                                        <Column key="files" name="files" cellRenderer={table_render_cell} />
-                                                                        <Column key="format" name="format" cellRenderer={table_render_cell} />
-                                                                        <Column key="action" name="action" cellRenderer={table_render_cell} />
-                                                                        <Column key="batch" name="batch" cellRenderer={table_render_cell} />
-                                                                    </Table2>
-                                                                    :
-                                                                    <>
+                                    {tabSelected === "new" && 
+                                        <div className='row-input'>
+                                            {showSection == "input" ?
+                                                // tmpInputFiles.map((x, ix) => get_new_input_files(ix, x))
+                                                // get_new_input_files(tmpInputFiles.length - 1,
+                                                //     tmpInputFiles[tmpInputFiles.length - 1])
+                                                get_inputs_import()
+                                                : ""}
+    
+                                            {
+                                                showSection == "input" &&
+                                                <div style={{
+                                                    display: "flex",
+                                                    justifyContent: "center",
+                                                    alignItems: "center"
+                                                }}>
+                                                    <Button intent="warning"
+                                                        icon="add"
+                                                        disabled={!stmpInputValid}
+                                                        style={{
+                                                            margin: "3px"
+                                                        }}
+                                                        onClick={(() => {
+                                                            setTmpInputFiles([...tmpInputFiles, stmpInputFiles]);
+                                                            setInputText([...inputText, sinputText]);
+    
+                                                            ssetInputText({
+                                                                mtx: "Choose Matrix Market file",
+                                                                genes: "Choose feature/gene file",
+                                                                annotations: "Choose barcode/annotation file",
+                                                            });
+    
+                                                            ssetTmpInputFiles({
+                                                                "name": `dataset-${tmpInputFiles.length + 2}`,
+                                                                "format": newImportFormat
+                                                            });
+    
+                                                            setTmpInputValid(false);
+                                                            setPreInputFilesStatus(null);
+                                                        })}
+                                                    >Add</Button>
+                                                </div>
+                                            }
+    
+                                            {
+                                                showSection == "input" &&
+                                                tmpInputFiles &&
+                                                tmpInputFiles.length > 0 && 
+                                                preInputFilesStatus && 
+                                                preInputFilesStatus?.features &&
+                                                <div>
+                                                    <Label> Dataset contains:</Label>
+                                                    <ul>
+                                                        {Object.keys(preInputFilesStatus?.features).map((x,i) => {
+                                                        return (
+                                                            <li key={i}>
+                                                                <p>
+                                                                    <strong>Modality</strong> {x}, &nbsp; 
+                                                                    <strong>Genes</strong>: {preInputFilesStatus?.features[x].common}
+                                                                </p>
+                                                            </li>
+                                                            )
+                                                        }
+                                                    )}
+                                                    </ul>
+                                                </div>
+                                            }
+    
+                                            {
+                                                showSection == "input" &&
+                                                tmpInputFiles &&
+                                                tmpInputFiles.length > 0 &&
+                                                preInputFilesStatus && 
+                                                <div style={{
+                                                    "height": ((tmpInputFiles.length + 1) * 40) + "px"
+                                                }}>
+                                                    <h4>Selected datasets:</h4>
+                                                    {
+                                                        preInputFilesStatus && tmpInputFiles.length == 1 ?
+                                                            <>
+                                                                {
+                                                                    preInputFilesStatus.annotations && Object.keys(preInputFilesStatus.annotations).length == 1 ?
                                                                         <Table2
                                                                             numRows={tmpInputFiles.length}
                                                                             rowHeights={tmpInputFiles.map(() => 25)}
@@ -1626,61 +1540,77 @@ const AnalysisDialog = ({
                                                                             <Column key="files" name="files" cellRenderer={table_render_cell} />
                                                                             <Column key="format" name="format" cellRenderer={table_render_cell} />
                                                                             <Column key="action" name="action" cellRenderer={table_render_cell} />
+                                                                            <Column key="batch" name="batch" cellRenderer={table_render_cell} />
                                                                         </Table2>
-                                                                        <p style={{
-                                                                            paddingTop: "5px"
-                                                                        }}>
-                                                                            <strong>No annotations were found in this dataset</strong>
+                                                                        :
+                                                                        <>
+                                                                            <Table2
+                                                                                numRows={tmpInputFiles.length}
+                                                                                rowHeights={tmpInputFiles.map(() => 25)}
+                                                                                selectionModes={"NONE"}
+                                                                            >
+                                                                                <Column key="name" intent="primary" name="name" cellRenderer={table_render_cell} />
+                                                                                <Column key="files" name="files" cellRenderer={table_render_cell} />
+                                                                                <Column key="format" name="format" cellRenderer={table_render_cell} />
+                                                                                <Column key="action" name="action" cellRenderer={table_render_cell} />
+                                                                            </Table2>
+                                                                            <p style={{
+                                                                                paddingTop: "5px"
+                                                                            }}>
+                                                                                <strong>No annotations were found in this dataset</strong>
+    
+                                                                            </p>
+                                                                        </>
+                                                                }
+                                                            </>
+                                                            :
+                                                            <>
+                                                                <div>
+                                                                    <Table2
+                                                                        numRows={tmpInputFiles.length}
+                                                                        rowHeights={tmpInputFiles.map(() => 25)}
+                                                                        selectionModes={"NONE"}
+                                                                    >
+                                                                        <Column key="name" name="name" cellRenderer={table_render_cell} />
+                                                                        <Column key="files" name="files" cellRenderer={table_render_cell} />
+                                                                        <Column key="format" name="format" cellRenderer={table_render_cell} />
+                                                                        <Column key="action" name="action" cellRenderer={table_render_cell} />
+                                                                        <Column key="annotation" name="annotation fields" cellRenderer={table_render_cell} />
+                                                                    </Table2>
+                                                                </div>
+                                                                <p style={{
+                                                                    paddingTop: "5px"
+                                                                }}>
+                                                                    {preInputFilesStatus && preInputFilesStatus.common_genes && <span> These datasets contain
+                                                                        <strong>{preInputFilesStatus.common_genes == 0 ? " no " : " " + preInputFilesStatus.common_genes + " "}</strong>
+                                                                        common genes.</span>}
+                                                                    <br />
+                                                                    <strong>Note: when multiple files are imported, each dataset is considered a batch.</strong>
+    
+                                                                </p>
+                                                            </>
+                                                    }
+                                                </div>
+                                            }
+    
+                                            {showSection == "params" && get_input_qc()}
+                                            {showSection == "params" && get_input_fsel()}
+                                            {showSection == "params" && get_input_pca()}
+                                            {showSection == "params" && get_input_clus()}
+                                            {showSection == "params" && get_input_tsne()}
+                                            {showSection == "params" && get_input_umap()}
+                                            {showSection == "params" && get_input_label_cells()}
+                                            {showSection == "params" && get_input_ann()}
+                                            {
+                                                showSection == "params" && (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && (tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none") || (preInputFilesStatus && Object.keys(preInputFilesStatus?.features).length > 1))
+                                                    || (loadParams && loadParamsFor === loadImportFormat)) && get_input_batch_correction()
+                                            }
+                                            {showSection == "params" && 
+                                                Object.keys(preInputFilesStatus?.features).length > 1
+                                                && get_input_adt()}
+                                        </div>
+                                    }
 
-                                                                        </p>
-                                                                    </>
-                                                            }
-                                                        </>
-                                                        :
-                                                        <>
-                                                            <div>
-                                                                <Table2
-                                                                    numRows={tmpInputFiles.length}
-                                                                    rowHeights={tmpInputFiles.map(() => 25)}
-                                                                    selectionModes={"NONE"}
-                                                                >
-                                                                    <Column key="name" name="name" cellRenderer={table_render_cell} />
-                                                                    <Column key="files" name="files" cellRenderer={table_render_cell} />
-                                                                    <Column key="format" name="format" cellRenderer={table_render_cell} />
-                                                                    <Column key="action" name="action" cellRenderer={table_render_cell} />
-                                                                    <Column key="annotation" name="annotation fields" cellRenderer={table_render_cell} />
-                                                                </Table2>
-                                                            </div>
-                                                            <p style={{
-                                                                paddingTop: "5px"
-                                                            }}>
-                                                                {preInputFilesStatus && preInputFilesStatus.common_genes && <span> These datasets contain
-                                                                    <strong>{preInputFilesStatus.common_genes == 0 ? " no " : " " + preInputFilesStatus.common_genes + " "}</strong>
-                                                                    common genes.</span>}
-                                                                <br />
-                                                                <strong>Note: when multiple files are imported, each dataset is considered a batch.</strong>
-
-                                                            </p>
-                                                        </>
-                                                }
-                                            </div>
-                                        }
-
-                                        {showSection == "params" && get_input_qc()}
-                                        {showSection == "params" && get_input_fsel()}
-                                        {showSection == "params" && get_input_pca()}
-                                        {showSection == "params" && get_input_clus()}
-                                        {showSection == "params" && get_input_tsne()}
-                                        {showSection == "params" && get_input_umap()}
-                                        {showSection == "params" && get_input_label_cells()}
-                                        {
-                                            showSection == "params" && (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none")
-                                                || (loadParams && loadParamsFor === loadImportFormat)) && get_input_batch_correction()
-                                        }
-                                        {showSection == "params" && 
-                                            Object.keys(preInputFilesStatus?.features).length > 1
-                                            && get_input_adt()}
-                                    </div>
 
                                     <div className="row-input-tooltips">
                                         {
@@ -1888,6 +1818,12 @@ const AnalysisDialog = ({
                                         {showSection === "params" && loadParams && loadParamsFor === loadImportFormat
                                             && tmpInputFiles?.file === inputFiles?.files?.file ?
                                             get_input_label_cells()
+                                            : ""
+                                        }
+
+                                        {showSection === "params" && loadParams && loadParamsFor === loadImportFormat
+                                            && tmpInputFiles?.file === inputFiles?.files?.file ?
+                                            get_input_ann()
                                             : ""
                                         }
 

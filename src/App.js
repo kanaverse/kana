@@ -402,7 +402,9 @@ const App = () => {
     if (selectedModality) {
       setGenesInfo(inputData.genes[selectedModality]);
       if (geneColSel[selectedModality] == null) {
-        setGeneColSel(Object.keys(inputData.genes[selectedModality])[0]);
+        let tmp = geneColSel;
+        tmp[selectedModality] = Object.keys(inputData.genes[selectedModality])[0]
+        setGeneColSel(tmp);
       }
     }
   }, [selectedModality]);
@@ -647,6 +649,9 @@ const App = () => {
       setIndexedDBState(false);
     } else if (payload.type === "loadedParameters") {
       const { resp } = payload;
+
+      resp["ann"] = {};
+      resp["ann"]["approximate"] = resp["batch_correction"]["approximate"];
       setLoadParams(resp);
 
       if (resp?.custom_selections?.selections) {

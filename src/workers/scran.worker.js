@@ -80,10 +80,8 @@ function runAllSteps(inputs, params) {
         pca: {
             num_hvgs: params.pca["pca-hvg"],
             num_pcs: params.pca["pca-npc"],
-            block_method: params.batch_correction["method"]
         },
         neighbor_index: {
-            approximate: params.cluster["clus-approx"]
         },
         choose_clustering: {
             method: params.cluster["clus-method"]
@@ -119,6 +117,11 @@ function runAllSteps(inputs, params) {
         combine_embeddings: params.combined_embeddings,
         batch_correction: params.batch_correction,
     };
+
+    bakana.configureBatchCorrection(formatted, params.batch_correction["method"]);
+    bakana.configureApproximateNeighbors(formatted, params.ann["approximate"]);
+
+    console.log("formatted", formatted);
 
     return bakana.runAnalysis(superstate, inputs.files, formatted, { startFun: postAttempt, finishFun: postSuccess });
 }
@@ -197,7 +200,6 @@ async function unserializeAllSteps(contents) {
                 "pca-correction": params.pca.block_method
             },
             cluster: {
-                "clus-approx": params.neighbor_index.approximate,
                 "kmeans-k": params.kmeans_cluster.k,
                 "clus-k": params.snn_graph_cluster.k,
                 "clus-scheme": params.snn_graph_cluster.scheme,
