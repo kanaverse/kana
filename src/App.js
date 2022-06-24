@@ -464,8 +464,8 @@ const App = () => {
         setAnnotationCols(Object.values(payload.resp.annotations));
       }
 
-      let pmods = Object.keys(payload.resp.genes);
-      setModality(pmods);
+        let pmods = Object.keys(payload.resp.genes);
+        setModality(pmods);
 
     } else if (payload.type === "quality_control_DATA") {
       const { resp } = payload;
@@ -568,7 +568,9 @@ const App = () => {
     } else if (payload.type === "marker_detection_DATA") {
       if (!selectedCluster) {
         // show markers for the first cluster
-        setSelectedModality(modality[0]);
+        if (selectedModality == null) {
+          setSelectedModality(modality[0]);
+        }
         setSelectedCluster(0);
       }
     } else if (payload.type === "tsne_DATA") {
