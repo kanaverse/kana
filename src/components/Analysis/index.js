@@ -1159,9 +1159,9 @@ const AnalysisDialog = ({
                                 onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "batch_correction": { ...tmpInputParams["batch_correction"], "method": e.target.value } }) }}
                                 defaultValue={tmpInputParams["batch_correction"]["method"]}
                             >
-                                <option value="mnn">MNN Correction</option>
-                                <option value="regress">Regression</option>
-                                <option value="none">No Correction</option>
+                                <option value="mnn">MNN correction</option>
+                                <option value="regress">Linear regression</option>
+                                <option value="none">No correction</option>
                             </HTMLSelect>
                         </Label>
                         <Label className="row-input">
@@ -1646,25 +1646,41 @@ const AnalysisDialog = ({
                                                 && get_input_adt_qc()}
                                             {showSection == "params" &&  <Divider />}
                                             {showSection == "params" && 
-                                                Object.keys(preInputFilesStatus?.features).length > 1
-                                                && get_input_adt_normalization()}
-                                                {showSection == "params" && <Divider />}
+                                                Object.keys(preInputFilesStatus?.features).length > 1 && 
+                                                <>
+                                                { get_input_adt_normalization() }
+                                                <Divider/>
+                                                </>
+                                            }
                                             {showSection == "params" && get_input_fsel()}
                                             {showSection == "params" && <Divider />}
                                             {showSection == "params" && get_input_pca()}
                                             {showSection == "params" && 
                                                 Object.keys(preInputFilesStatus?.features).length > 1
                                                 && get_input_adt_pca()}
-                                                {showSection == "params" && <Divider />}
+                                            {showSection == "params" && <Divider />}
                                             {showSection == "params" && 
-                                                Object.keys(preInputFilesStatus?.features).length > 1
-                                                && get_input_adt_combine()}
-                                                {showSection == "params" &&  <Divider />}
-                                            {
-                                                showSection == "params" && (tmpInputFiles.length > 1 || (tmpInputFiles.length == 1 && (tmpInputFiles[0]?.batch && tmpInputFiles[0]?.batch.toLowerCase() != "none") || (preInputFilesStatus && Object.keys(preInputFilesStatus?.features).length > 1))
-                                                    || (loadParams && loadParamsFor === loadImportFormat)) && get_input_batch_correction()
+                                                Object.keys(preInputFilesStatus?.features).length > 1 && 
+                                                <>
+                                                { get_input_adt_combine() }
+                                                <Divider/>
+                                                </>
                                             }
-                                            {showSection == "params" &&  <Divider />}
+                                            {showSection == "params" && 
+                                                (tmpInputFiles.length > 1 || 
+                                                    (tmpInputFiles.length == 1 && 
+                                                        (tmpInputFiles[0]?.batch && 
+                                                            tmpInputFiles[0]?.batch.toLowerCase() != "none") || 
+                                                        (preInputFilesStatus && 
+                                                            Object.keys(preInputFilesStatus?.features).length > 1)
+                                                    ) || 
+                                                    (loadParams && loadParamsFor === loadImportFormat)
+                                                ) && 
+                                                <>
+                                                { get_input_batch_correction() }
+                                                <Divider/>
+                                                </>
+                                            }
                                             {showSection == "params" && get_input_clus()}
                                             {showSection == "params" &&  <Divider />}
                                             {showSection == "params" && get_input_tsne()}
