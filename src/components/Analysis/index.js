@@ -1670,9 +1670,7 @@ const AnalysisDialog = ({
                                                 (tmpInputFiles.length > 1 || 
                                                     (tmpInputFiles.length == 1 && 
                                                         (tmpInputFiles[0]?.batch && 
-                                                            tmpInputFiles[0]?.batch.toLowerCase() != "none") || 
-                                                        (preInputFilesStatus && 
-                                                            Object.keys(preInputFilesStatus?.features).length > 1)
+                                                            tmpInputFiles[0]?.batch.toLowerCase() != "none")
                                                     ) || 
                                                     (loadParams && loadParamsFor === loadImportFormat)
                                                 ) && 
