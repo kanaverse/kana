@@ -2,6 +2,7 @@ import * as bakana from "bakana";
 import * as kana_db from "./KanaDBHandler.js";
 import * as downloads from "./DownloadsDBHandler.js";
 import * as hashwasm from "hash-wasm";
+import * as translate from "./translate.js";
 
 /***************************************/
 
@@ -63,71 +64,7 @@ bakana.setVisualizationAnimate((type, x, y, iter) => {
 });
 
 function runAllSteps(inputs, params) {
-    // Assembling the giant parameter list.
-    let formatted = {
-        inputs: {
-            sample_factor: inputs.batch
-        },
-        quality_control: {
-            use_mito_default: params.qc["qc-usemitodefault"],
-            mito_prefix: params.qc["qc-mito"],
-            nmads: params.qc["qc-nmads"]
-        },
-        normalization: {},
-        feature_selection: {
-            span: params.fSelection["fsel-span"]
-        },
-        pca: {
-            num_hvgs: params.pca["pca-hvg"],
-            num_pcs: params.pca["pca-npc"],
-        },
-        neighbor_index: {
-        },
-        choose_clustering: {
-            method: params.cluster["clus-method"]
-        },
-        tsne: {
-            perplexity: params.tsne["tsne-perp"],
-            iterations: params.tsne["tsne-iter"],
-            animate: params.tsne["animate"]
-        },
-        umap: {
-            num_neighbors: params.umap["umap-nn"],
-            num_epochs: params.umap["umap-epochs"],
-            min_dist: params.umap["umap-min_dist"],
-            animate: params.umap["animate"]
-        },
-        kmeans_cluster: {
-            k: params.cluster["kmeans-k"]
-        },
-        snn_graph_cluster: {
-            k: params.cluster["clus-k"],
-            scheme: params.cluster["clus-scheme"],
-            resolution: params.cluster["clus-res"]
-        },
-        markers: {},
-        cell_labelling: {
-            human_references: params.annotateCells["annotateCells-human_references"],
-            mouse_references: params.annotateCells["annotateCells-mouse_references"]
-        },
-        custom_markers: {},
-        adt_normalization: params.adt_normalization,
-        adt_pca: params.adt_pca,
-        adt_quality_control: params.adt_qualitycontrol,
-        combine_embeddings: params.combine_embeddings,
-        batch_correction: params.batch_correction,
-    };
-
-    bakana.configureBatchCorrection(formatted, params.batch_correction["method"]);
-    bakana.configureApproximateNeighbors(formatted, params.ann["approximate"]);
-
-    // Simplify the combine_embeddings if we see it is all equal.
-    if (formatted.combine_embeddings.weights !== null) {
-        let uniq_weights = new Set(Object.values(formatted.combine_embeddings.weights));
-        if (uniq_weights.size <= 1) {
-            formatted.combine_embeddings.weights = null;
-        }
-    }
+    let formatted = translate.fromUI(inputs, params);
 
     console.log("formatted", formatted);
 
@@ -179,7 +116,7 @@ bakana.setResolveLink(kana_db.loadFile);
 async function unserializeAllSteps(contents) {
     const h5path = "serialized_out.h5";
 
-    let output = {};
+    let output;
     try {
         let loader = await bakana.parseKanaFile(contents, h5path);
         let response = await bakana.loadAnalysis(h5path, loader, { finishFun: postSuccess });
@@ -189,53 +126,7 @@ async function unserializeAllSteps(contents) {
         }
         superstate = response.state;
 
-        let params = response.parameters;
-        output = {
-            inputs: {
-                "batch": params.inputs.sample_factor
-            },
-            qc: {
-                "qc-usemitodefault": params.quality_control.use_mito_default,
-                "qc-mito": params.quality_control.mito_prefix,
-                "qc-nmads": params.quality_control.nmads
-            },
-            fSelection: {
-                "fsel-span": params.feature_selection.span
-            },
-            pca: {
-                "pca-hvg": params.pca.num_hvgs,
-                "pca-npc": params.pca.num_pcs,
-                "pca-correction": params.pca.block_method
-            },
-            cluster: {
-                "kmeans-k": params.kmeans_cluster.k,
-                "clus-k": params.snn_graph_cluster.k,
-                "clus-scheme": params.snn_graph_cluster.scheme,
-                "clus-res": params.snn_graph_cluster.resolution,
-                "clus-method": params.choose_clustering.method
-            },
-            tsne: {
-                "tsne-perp": params.tsne.perplexity,
-                "tsne-iter": params.tsne.iterations,
-                "animate": params.tsne.animate
-            },
-            umap: {
-                "umap-epochs": params.umap.num_epochs,
-                "umap-nn": params.umap.num_neighbors,
-                "umap-min_dist": params.umap.min_dist,
-                "animate": params.umap.animate
-            },
-            annotateCells: {
-                "annotateCells-human_references": params.cell_labelling.human_references,
-                "annotateCells-mouse_references": params.cell_labelling.mouse_references
-            },
-            custom_selections: params.custom_selections,
-            adt_qualitycontrol: params.adt_quality_control,
-            adt_pca:params.adt_pca,
-            adt_normalization: params.adt_normalization,
-            combine_embeddings: params.combine_embeddings,
-            batch_correction: params.batch_correction
-        }
+        output = translate.toUI(response.parameters);
     } finally {
         bakana.removeHDF5File(h5path);
     }
@@ -254,8 +145,6 @@ function postError(type, err, fatal) {
 }
 
 /***************************************/
-
-
 
 var loaded;
 onmessage = function (msg) {
