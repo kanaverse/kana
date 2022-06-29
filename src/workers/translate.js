@@ -1,3 +1,10 @@
+/*****************************************************
+ * This file is intended to be vendored into kanapi,
+ * so you shouldn't add too many dependencies here. 
+ * The canonical version of the file is expected to 
+ * live at src/workers/translate.js in the kana repo.
+ *****************************************************/
+
 import * as bakana from "bakana";
 
 const mappings = {
