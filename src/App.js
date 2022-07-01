@@ -651,14 +651,7 @@ const App = () => {
       setIndexedDBState(false);
     } else if (payload.type === "loadedParameters") {
       const { resp } = payload;
-
-      resp["ann"] = {};
-      resp["ann"]["approximate"] = resp["batch_correction"]["approximate"];
       setLoadParams(resp);
-
-      if (!resp?.combine_embeddings?.weights) {
-        resp["combine_embeddings"]["weights"] = {};
-      }
 
       if (resp?.custom_selections?.selections) {
         let cluster_count = clusterColors.length + Object.keys(resp?.custom_selections?.selections).length;

@@ -147,11 +147,10 @@ export function toUI(params) {
     reversed.batch_correction.method = bakana.guessBatchCorrectionConfig(params);
     reversed.ann = { approximate: bakana.guessApproximateNeighborsConfig(params) };
 
-    if (params.combine_embeddings.weights === null) {
-        // Converting it into a dictionary for easier consumption by the UI.
-        params.combine_embeddings.weights = {};
+    // Converting it into a dictionary for easier consumption by the UI.
+    if (reversed.combine_embeddings.weights === null) {
+        reversed.combine_embeddings.weights = {};
     }
 
-    console.log(reversed);
     return reversed;
 }
