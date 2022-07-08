@@ -375,6 +375,12 @@ const AnalysisDialog = ({
                             Prefix to use to identify the mitochondrial genes from the feature annotation.
                             Only used if we choose to not use the default mitochondrial list.
                         </p>
+                        <p>
+                            <strong>Skip</strong>:
+                            Skip all quality control on the RNA count matrix.
+                            This is occasionally desirable if the input data has already been subjected to QC (e.g., as part of a published paper),
+                            in which case no further filtering should be applied.
+                        </p>
                     </Callout>
                 }
                 {showStepHelper === 3 &&
@@ -579,6 +585,12 @@ const AnalysisDialog = ({
                             Prefix to use to identify features in the dataset that are isotype controls.
                             This is not case-sensitive.
                         </p>
+                        <p>
+                            <strong>Skip</strong>:
+                            Skip all quality control on the ADT count matrix.
+                            This is occasionally desirable if the input data has already been subjected to QC (e.g., as part of a published paper),
+                            in which case no further filtering should be applied.
+                        </p>
                     </Callout>
                 }
                 {showStepHelper === 12 &&
@@ -657,38 +669,51 @@ const AnalysisDialog = ({
                             <Text className="text-100">
                                 <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(2)}>
-                                    Number of MADs
+                                    Skip
                                 </span>
                             </Text>
-                            <NumericInput
-                                placeholder="3" value={tmpInputParams["qc"]["qc-nmads"]}
-                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-nmads": nval } }) }} />
-                        </Label>
-                        <Label className="row-input">
-                            <Text className="text-100">
-                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(2)}>
-                                    Use default mitochondrial list ?
-                                </span>
-                            </Text>
-                            <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-usemitodefault"]}
+                            <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["skip"]}
                                 innerLabelChecked="yes" innerLabel="no"
-                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-usemitodefault": e.target.checked } }) }} />
+                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "skip": e.target.checked } }) }} />
                         </Label>
-                        {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
-                            <Text className="text-100">
-                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(2)}>
-                                    Mitochondrial gene prefix
-                                </span>
-                            </Text>
-                            <InputGroup
-                                leftIcon="filter"
-                                onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-mito": nval?.target?.value } }) }}
-                                placeholder="mt-"
-                                value={tmpInputParams["qc"]["qc-mito"]}
-                            />
-                        </Label>}
+                        { tmpInputParams?.qc?.skip !== true && <>
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(2)}>
+                                        Number of MADs
+                                    </span>
+                                </Text>
+                                <NumericInput
+                                    placeholder="3" value={tmpInputParams["qc"]["qc-nmads"]}
+                                    onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-nmads": nval } }) }} />
+                            </Label>
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(2)}>
+                                        Use default mitochondrial list ?
+                                    </span>
+                                </Text>
+                                <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-usemitodefault"]}
+                                    innerLabelChecked="yes" innerLabel="no"
+                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-usemitodefault": e.target.checked } }) }} />
+                            </Label>
+                            {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(2)}>
+                                        Mitochondrial gene prefix
+                                    </span>
+                                </Text>
+                                <InputGroup
+                                    leftIcon="filter"
+                                    onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-mito": nval?.target?.value } }) }}
+                                    placeholder="mt-"
+                                    value={tmpInputParams["qc"]["qc-mito"]}
+                                />
+                            </Label>}
+                        </>}
                     </div>
                 </div>
             </div>
@@ -1197,41 +1222,54 @@ const AnalysisDialog = ({
                                 <Text className="text-100">
                                     <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                         onMouseEnter={() => setShowStepHelper(11)}>
-                                        Number of MADs
+                                        Skip
                                     </span>
                                 </Text>
-                                <NumericInput
-                                    placeholder="3" value={tmpInputParams["adt_qualitycontrol"]["nmads"]}
-                                    onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "nmads": nval } }) }} />
+                                <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["adt_qualitycontrol"]["skip"]}
+                                    innerLabelChecked="yes" innerLabel="no"
+                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "skip": e.target.checked } }) }} />
                             </Label>
-                            <Label className="row-input">
-                                <Text className="text-100">
-                                    <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(11)}>
-                                        Minimum Detected Drop
-                                    </span>
-                                </Text>
-                                <NumericInput
-                                placeholder="0.1"
-                                stepSize={0.01}
-                                minorStepSize={0.01}
-                                value={tmpInputParams["adt_qualitycontrol"]["min_detected_drop"]}
-                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "min_detected_drop": val } }) }} />
-                            </Label>
-                            <Label className="row-input">
-                                <Text className="text-100">
-                                    <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(11)}>
-                                        Prefix for isotype controls.
-                                    </span>
-                                </Text>
-                                <InputGroup
-                                    leftIcon="filter"
-                                    onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "igg_prefix": nval?.target?.value } }) }}
-                                    placeholder="IgG"
-                                    value={tmpInputParams["adt_qualitycontrol"]["igg_prefix"]}
-                                />
-                            </Label>
+                            { tmpInputParams?.adt_qualitycontrol?.skip !== true && <>
+                                <Label className="row-input">
+                                    <Text className="text-100">
+                                        <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                            onMouseEnter={() => setShowStepHelper(11)}>
+                                            Number of MADs
+                                        </span>
+                                    </Text>
+                                    <NumericInput
+                                        placeholder="3" value={tmpInputParams["adt_qualitycontrol"]["nmads"]}
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "nmads": nval } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">
+                                        <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                            onMouseEnter={() => setShowStepHelper(11)}>
+                                            Minimum Detected Drop
+                                        </span>
+                                    </Text>
+                                    <NumericInput
+                                    placeholder="0.1"
+                                    stepSize={0.01}
+                                    minorStepSize={0.01}
+                                    value={tmpInputParams["adt_qualitycontrol"]["min_detected_drop"]}
+                                    onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "min_detected_drop": val } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">
+                                        <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                            onMouseEnter={() => setShowStepHelper(11)}>
+                                            Prefix for isotype controls.
+                                        </span>
+                                    </Text>
+                                    <InputGroup
+                                        leftIcon="filter"
+                                        onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "igg_prefix": nval?.target?.value } }) }}
+                                        placeholder="IgG"
+                                        value={tmpInputParams["adt_qualitycontrol"]["igg_prefix"]}
+                                    />
+                                </Label>
+                            </>}
                         </div>
                     </div>
                 </div>
