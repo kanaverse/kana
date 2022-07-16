@@ -1486,8 +1486,9 @@ const AnalysisDialog = ({
                             >
                                 <option value="none">None</option>
                                 {
+                                    // AL: why are these checks even necessary? You've got them in the ifs() above.
                                     preInputFilesStatus && preInputFilesStatus?.annotations?.[row["name"]] ?
-                                        preInputFilesStatus.annotations[row["name"]].map((x, i) => <option key={i} value={x}>{x}</option>) : "-"
+                                        Object.keys(preInputFilesStatus.annotations[row["name"]]).map((x, i) => <option key={i} value={x}>{x}</option>) : "-"
                                 }
                             </HTMLSelect>
                         </Cell>

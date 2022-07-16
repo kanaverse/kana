@@ -511,7 +511,7 @@ const DimPlot = (props) => {
 
         let cid = Object.keys(props?.customSelection).length;
         let tmpSelection = { ...props?.customSelection };
-        tmpSelection[`cs${cid + 1}`] = props?.selectedPoints;
+        tmpSelection[`cs${cid + 1}`] = props?.selectedPoints?.sort(); // AL: is this safe to do? Or should we copy first?
         props?.setCustomSelection(tmpSelection);
 
         props?.setSelectedPoints(null);

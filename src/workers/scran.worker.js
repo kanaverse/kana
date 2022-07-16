@@ -124,9 +124,9 @@ async function unserializeAllSteps(contents) {
         if (superstate !== null) {
             await bakana.freeAnalysis(superstate);
         }
-        superstate = response.state;
+        superstate = response;
 
-        output = translate.toUI(response.parameters);
+        output = translate.toUI(bakana.retrieveParameters(response));
     } finally {
         bakana.removeHDF5File(h5path);
     }
