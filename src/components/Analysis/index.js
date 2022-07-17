@@ -106,10 +106,12 @@ const AnalysisDialog = ({
                 if (first.subset == undefined || first.subset.field == "none") {
                     newInputFiles.subset = null;
                 } else {
-                    newInputFiles.subset = {
-                        field: first.subset.field,
-                        values: Array.from(first.subset.values)
-                    };
+                    newInputFiles.subset = { field: first.subset.field };
+                    if ("values" in first.subset) {
+                        newInputFiles.subset.values = Array.from(first.subset.values);
+                    } else {
+                        newInputFiles.subset.ranges = [[first.subset.chosen_min, first.subset.chosen_max]];
+                    }
                 }
             }
         }
@@ -1605,27 +1607,46 @@ const AnalysisDialog = ({
                                                                 tmp[0]["subset"] = { field: e.target.value };
 
                                                                 let available = new Set;
+                                                                let lower = Number.POSITIVE_INFINITY, upper = Number.NEGATIVE_INFINITY;
                                                                 let truncated = false;
+                                                                let any_categorical = false;
+
                                                                 for (const v of Object.values(preInputFilesStatus.annotations)) {
-                                                                    if (v !== null && e.target.value in v) {
-                                                                        let current = v[e.target.value];
+                                                                    if (v == null || !(e.target.value in v)) {
+                                                                        continue;
+                                                                    }
+
+                                                                    let current = v[e.target.value];
+                                                                    if (current.type == "categorical") { 
+                                                                        any_categorical = true;
                                                                         current.values.forEach(x => available.add(x));
                                                                         truncated = truncated || current.truncated;
+                                                                    } else {
+                                                                        console.log(current);
+                                                                        lower = Math.min(lower, current.min);
+                                                                        upper = Math.max(upper, current.max);
                                                                     }
                                                                 }
 
-                                                                let options = Array.from(available).sort();
-                                                                if (options.length >= 70) {
-                                                                    // yes, these numbers are meant to be different.
-                                                                    // it's like speeding; you have to be way over the 
-                                                                    // limit before the truncation kicks in.
-                                                                    options = options.slice(0, 50); 
-                                                                    truncated = true;
+                                                                if (any_categorical) {
+                                                                    let options = Array.from(available).sort();
+                                                                    if (options.length >= 70) {
+                                                                        // yes, these numbers are meant to be different.
+                                                                        // it's like speeding; you have to be way over the 
+                                                                        // limit before the truncation kicks in.
+                                                                        options = options.slice(0, 50); 
+                                                                        truncated = true;
+                                                                    }
+                                                                    tmp[0]["subset"].options = options;
+                                                                    tmp[0]["subset"].values = new Set;
+                                                                    tmp[0]["subset"].truncated = truncated;
+                                                                } else {
+                                                                    tmp[0]["subset"].min = lower;
+                                                                    tmp[0]["subset"].max = upper;
+                                                                    tmp[0]["subset"].chosen_min = lower;
+                                                                    tmp[0]["subset"].chosen_max = upper;
+                                                                    console.log(tmp[0].subset);
                                                                 }
-                                                                tmp[0]["subset"].options = options;
-
-                                                                tmp[0]["subset"].values = new Set;
-                                                                tmp[0]["subset"].truncated = truncated;
                                                             }
 
                                                             setTmpInputFiles(tmp);
@@ -1638,11 +1659,7 @@ const AnalysisDialog = ({
                                                                 let collected = new Set;
                                                                 for (const v of Object.values(preInputFilesStatus.annotations)) {
                                                                     if (v !== null) {
-                                                                        for (const [k, v2] of Object.entries(v)) {
-                                                                            if (v2.type == "categorical") {
-                                                                                collected.add(k);
-                                                                            }
-                                                                        }
+                                                                        Object.keys(v).forEach(k => collected.add(k));
                                                                     }
                                                                 }
                                                                 return Array.from(collected).sort().map((x, i) => <option key={i} value={x}>{x}</option>)
@@ -1656,26 +1673,66 @@ const AnalysisDialog = ({
                                                         tmpInputFiles[0].subset.field != "none" &&
                                                         <>
                                                             {
-                                                                tmpInputFiles[0].subset.options.map(x => 
-                                                                    <Checkbox 
-                                                                        checked={tmpInputFiles[0].subset.values.has(x)} 
-                                                                        label={x}
-                                                                        inline={true}
-                                                                        onChange={e => {
-                                                                            let tmp = [...tmpInputFiles];
-                                                                            if (e.target.checked) {
-                                                                                tmp[0]["subset"].values.add(x);
-                                                                            } else {
-                                                                                tmp[0]["subset"].values.delete(x);
+                                                                (() => {
+                                                                    if ("options" in tmpInputFiles[0].subset) {
+                                                                        return <>
+                                                                            {
+                                                                                tmpInputFiles[0].subset.options.map(x => 
+                                                                                    <Checkbox 
+                                                                                        checked={tmpInputFiles[0].subset.values.has(x)} 
+                                                                                        label={x}
+                                                                                        inline={true}
+                                                                                        onChange={e => {
+                                                                                            let tmp = [...tmpInputFiles];
+                                                                                            if (e.target.checked) {
+                                                                                                tmp[0]["subset"].values.add(x);
+                                                                                            } else {
+                                                                                                tmp[0]["subset"].values.delete(x);
+                                                                                            }
+                                                                                            setTmpInputFiles(tmp);
+                                                                                        }}
+                                                                                    />
+                                                                                )
                                                                             }
-                                                                            console.log(tmp[0].subset.values);
-                                                                            setTmpInputFiles(tmp);
-                                                                        }}
-                                                                    />
-                                                                )
-                                                            }
-                                                            {
-                                                                tmpInputFiles[0].subset.truncated && "... and more"
+                                                                            {
+                                                                                tmpInputFiles[0].subset.truncated && "... and more"
+                                                                            }
+                                                                        </>
+                                                                    } else {
+                                                                        return <>
+                                                                            <table>
+                                                                                <tr>
+                                                                                    <td>From</td>
+                                                                                    <td> 
+                                                                                        <NumericInput 
+                                                                                            min={isFinite(tmpInputFiles[0].subset.min) ? tmpInputFiles[0].subset.min : undefined}
+                                                                                            max={isFinite(tmpInputFiles[0].subset.max) ? tmpInputFiles[0].subset.max: undefined}
+                                                                                            value={isFinite(tmpInputFiles[0].subset.chosen_min) ? tmpInputFiles[0].subset.chosen_min : undefined}
+                                                                                            onValueChange={e => {
+                                                                                                let tmp = [...tmpInputFiles];
+                                                                                                tmp[0].subset.chosen_min = e;
+                                                                                                setTmpInputFiles(tmp);
+                                                                                            }}
+                                                                                        />
+                                                                                    </td>
+                                                                                    <td>to</td>
+                                                                                    <td>
+                                                                                        <NumericInput 
+                                                                                            min={isFinite(tmpInputFiles[0].subset.min) ? tmpInputFiles[0].subset.min : undefined}
+                                                                                            max={isFinite(tmpInputFiles[0].subset.max) ? tmpInputFiles[0].subset.max: undefined}
+                                                                                            value={isFinite(tmpInputFiles[0].subset.chosen_max) ? tmpInputFiles[0].subset.chosen_max : undefined}
+                                                                                            onValueChange={e => {
+                                                                                                let tmp = [...tmpInputFiles];
+                                                                                                tmp[0].subset.chosen_max = e;
+                                                                                                setTmpInputFiles(tmp);
+                                                                                            }}
+                                                                                        />
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </table>
+                                                                        </>
+                                                                    }
+                                                                })()
                                                             }
                                                         </>
                                                     }
