@@ -1678,7 +1678,8 @@ const AnalysisDialog = ({
                                                                         return <>
                                                                             {
                                                                                 tmpInputFiles[0].subset.options.map(x => 
-                                                                                    <Checkbox 
+                                                                                    <Checkbox
+                                                                                        key={"subset-" + x}
                                                                                         checked={tmpInputFiles[0].subset.values.has(x)} 
                                                                                         label={x}
                                                                                         inline={true}
@@ -1700,9 +1701,9 @@ const AnalysisDialog = ({
                                                                         </>
                                                                     } else {
                                                                         return <>
-                                                                            <table>
+                                                                            <table style={{display:"inline-table", verticalAlign: "top"}}>
                                                                                 <tr>
-                                                                                    <td>From</td>
+                                                                                    <td>from</td>
                                                                                     <td> 
                                                                                         <NumericInput 
                                                                                             min={isFinite(tmpInputFiles[0].subset.min) ? tmpInputFiles[0].subset.min : undefined}
