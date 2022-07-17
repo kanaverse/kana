@@ -1598,17 +1598,35 @@ const AnalysisDialog = ({
                                                         minimal={true}
                                                         onChange={(e) => {
                                                             let tmp = [...tmpInputFiles];
-                                                            tmp[0]["subset"] = { field: e.target.value };
 
-                                                            let available = new Set;
-                                                            for (const v of Object.values(preInputFilesStatus.annotations)) {
-                                                                if (v !== null && e.target.value in v) {
-                                                                    let current = v[e.target.value];
-                                                                    current.values.forEach(x => available.add(x));
+                                                            if (e.target.value == "none") {
+                                                                delete tmp[0]["subset"];
+                                                            } else {
+                                                                tmp[0]["subset"] = { field: e.target.value };
+
+                                                                let available = new Set;
+                                                                let truncated = false;
+                                                                for (const v of Object.values(preInputFilesStatus.annotations)) {
+                                                                    if (v !== null && e.target.value in v) {
+                                                                        let current = v[e.target.value];
+                                                                        current.values.forEach(x => available.add(x));
+                                                                        truncated = truncated || current.truncated;
+                                                                    }
                                                                 }
+
+                                                                let options = Array.from(available).sort();
+                                                                if (options.length >= 70) {
+                                                                    // yes, these numbers are meant to be different.
+                                                                    // it's like speeding; you have to be way over the 
+                                                                    // limit before the truncation kicks in.
+                                                                    options = options.slice(0, 50); 
+                                                                    truncated = true;
+                                                                }
+                                                                tmp[0]["subset"].options = options;
+
+                                                                tmp[0]["subset"].values = new Set;
+                                                                tmp[0]["subset"].truncated = truncated;
                                                             }
-                                                            tmp[0]["subset"].values = available;
-                                                            tmp[0]["subset"].options = Array.from(available).sort();
 
                                                             setTmpInputFiles(tmp);
                                                         }}
@@ -1637,7 +1655,6 @@ const AnalysisDialog = ({
                                                         tmpInputFiles[0].subset &&
                                                         tmpInputFiles[0].subset.field != "none" &&
                                                         <>
-                                                            <br/>
                                                             {
                                                                 tmpInputFiles[0].subset.options.map(x => 
                                                                     <Checkbox 
@@ -1656,6 +1673,9 @@ const AnalysisDialog = ({
                                                                         }}
                                                                     />
                                                                 )
+                                                            }
+                                                            {
+                                                                tmpInputFiles[0].subset.truncated && "... and more"
                                                             }
                                                         </>
                                                     }
