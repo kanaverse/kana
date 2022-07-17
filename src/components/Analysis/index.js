@@ -88,12 +88,33 @@ const AnalysisDialog = ({
             mapFiles[f.name] = f
         }
 
-        setInputFiles({
-            "files": mapFiles,
-            "batch": tabSelected === "new" ? Object.keys(mapFiles).length == 1 ?
-                mapFiles[Object.keys(mapFiles)[0]]?.batch == undefined || mapFiles[Object.keys(mapFiles)[0]]?.batch == "none"
-                    ? null : mapFiles[Object.keys(mapFiles)[0]]?.batch : null : null,
-        });
+        let newInputFiles = { files: mapFiles };
+        if (tabSelected === "new") {
+            let mapkeys = Object.keys(mapFiles);
+
+            if (mapkeys.length == 1) {
+                let first = mapFiles[mapkeys[0]];
+                if (first.batch == undefined || first.batch == "none") {
+                    newInputFiles.batch = null;
+                } else {
+                    newInputFiles.batch = first.batch;
+                }
+            }
+
+            if (mapkeys.length == 1) {
+                let first = mapFiles[mapkeys[0]];
+                if (first.subset == undefined || first.subset.field == "none") {
+                    newInputFiles.subset = null;
+                } else {
+                    newInputFiles.subset = {
+                        field: first.subset.field,
+                        values: Array.from(first.subset.values)
+                    };
+                }
+            }
+        }
+
+        setInputFiles(newInputFiles);
 
         setLoadParamsFor(tabSelected === "new" ?
             newImportFormat : loadImportFormat);
@@ -1564,6 +1585,82 @@ const AnalysisDialog = ({
                                                     </ul>
                                                 </div>
                                             }
+                                            {
+                                                showSection == "input" && 
+                                                tmpInputFiles &&
+                                                tmpInputFiles.length > 0 &&
+                                                preInputFilesStatus && 
+                                                preInputFilesStatus.annotations &&
+                                                Object.values(preInputFilesStatus.annotations).some(x => x !== null) &&
+                                                <div>
+                                                    <h4>Subset by:</h4>
+                                                    <HTMLSelect
+                                                        minimal={true}
+                                                        onChange={(e) => {
+                                                            let tmp = [...tmpInputFiles];
+                                                            tmp[0]["subset"] = { field: e.target.value };
+
+                                                            let available = new Set;
+                                                            for (const v of Object.values(preInputFilesStatus.annotations)) {
+                                                                if (v !== null && e.target.value in v) {
+                                                                    let current = v[e.target.value];
+                                                                    current.values.forEach(x => available.add(x));
+                                                                }
+                                                            }
+                                                            tmp[0]["subset"].values = available;
+                                                            tmp[0]["subset"].options = Array.from(available).sort();
+
+                                                            setTmpInputFiles(tmp);
+                                                        }}
+                                                        defaultValue={tmpInputFiles[0].subset ? tmpInputFiles[0].subset : "none"}
+                                                    >
+                                                        <option value="none">None</option>
+                                                        {
+                                                            (() => {
+                                                                let collected = new Set;
+                                                                for (const v of Object.values(preInputFilesStatus.annotations)) {
+                                                                    if (v !== null) {
+                                                                        for (const [k, v2] of Object.entries(v)) {
+                                                                            if (v2.type == "categorical") {
+                                                                                collected.add(k);
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                                return Array.from(collected).sort().map((x, i) => <option key={i} value={x}>{x}</option>)
+                                                            })()
+                                                        }
+                                                    </HTMLSelect>
+                                                    {
+                                                        tmpInputFiles &&
+                                                        tmpInputFiles.length && 
+                                                        tmpInputFiles[0].subset &&
+                                                        tmpInputFiles[0].subset.field != "none" &&
+                                                        <>
+                                                            <br/>
+                                                            {
+                                                                tmpInputFiles[0].subset.options.map(x => 
+                                                                    <Checkbox 
+                                                                        checked={tmpInputFiles[0].subset.values.has(x)} 
+                                                                        label={x}
+                                                                        inline={true}
+                                                                        onChange={e => {
+                                                                            let tmp = [...tmpInputFiles];
+                                                                            if (e.target.checked) {
+                                                                                tmp[0]["subset"].values.add(x);
+                                                                            } else {
+                                                                                tmp[0]["subset"].values.delete(x);
+                                                                            }
+                                                                            console.log(tmp[0].subset.values);
+                                                                            setTmpInputFiles(tmp);
+                                                                        }}
+                                                                    />
+                                                                )
+                                                            }
+                                                        </>
+                                                    }
+                                                </div>
+                                            }
     
                                             {
                                                 showSection == "input" &&
@@ -1640,7 +1737,7 @@ const AnalysisDialog = ({
                                                     }
                                                 </div>
                                             }
-    
+
                                             {showSection == "params" && get_input_qc()}
                                             {showSection == "params" && 
                                                 Object.keys(preInputFilesStatus?.features).length > 1

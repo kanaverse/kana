@@ -87,6 +87,7 @@ export function fromUI(inputs, params) {
     };
 
     safeReplace("inputs", "sample_factor", inputs.batch);
+    safeReplace("inputs", "subset", inputs.subset);
 
     for (const [step, spars] of Object.entries(mappings)) {
         for (const [par, target] of Object.entries(spars)) {
