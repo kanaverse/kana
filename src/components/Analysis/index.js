@@ -1084,13 +1084,28 @@ const AnalysisDialog = ({
                             <div className="row"
                             >
                                 <Label className="row-input">
-                                    <FileInput text={sinputText.mtx} onInputChange={(msg) => { ssetInputText({ ...sinputText, "mtx": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "mtx": msg.target.files[0] }) }} />
+                                    <FileInput text={sinputText.mtx} onInputChange={(msg) => { 
+                                        if (msg.target.files) {
+                                            ssetInputText({ ...sinputText, "mtx": msg.target.files[0].name }); 
+                                            ssetTmpInputFiles({ ...stmpInputFiles, "mtx": msg.target.files[0] }) 
+                                        }
+                                    }} />
                                 </Label>
                                 <Label className="row-input">
-                                    <FileInput text={sinputText.genes} onInputChange={(msg) => { ssetInputText({ ...sinputText, "genes": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "genes": msg.target.files[0] }) }} />
+                                    <FileInput text={sinputText.genes} onInputChange={(msg) => { 
+                                        if (msg.target.files) {
+                                            ssetInputText({ ...sinputText, "genes": msg.target.files[0].name }); 
+                                            ssetTmpInputFiles({ ...stmpInputFiles, "genes": msg.target.files[0] }) 
+                                        }
+                                    }} />
                                 </Label>
                                 <Label className="row-input">
-                                    <FileInput text={sinputText.annotations} onInputChange={(msg) => { ssetInputText({ ...sinputText, "annotations": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "annotations": msg.target.files[0] }) }} />
+                                    <FileInput text={sinputText.annotations} onInputChange={(msg) => { 
+                                        if (msg.target.files) {
+                                            ssetInputText({ ...sinputText, "annotations": msg.target.files[0].name }); 
+                                            ssetTmpInputFiles({ ...stmpInputFiles, "annotations": msg.target.files[0] }) 
+                                        }
+                                    }} />
                                 </Label>
                             </div>
                         } />
@@ -1103,8 +1118,10 @@ const AnalysisDialog = ({
                                     }}
                                         text={sinputText.h5}
                                         onInputChange={(msg) => {
-                                            ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
-                                            ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
+                                            if (msg.target.files) {
+                                                ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
+                                                ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
+                                            }
                                         }} />
                                 </Label>
                             </div>
@@ -1118,8 +1135,10 @@ const AnalysisDialog = ({
                                     }}
                                         text={sinputText.h5}
                                         onInputChange={(msg) => {
-                                            ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
-                                            ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
+                                            if (msg.target.files) {
+                                                ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
+                                                ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
+                                            }
                                         }} />
                                 </Label>
                             </div>

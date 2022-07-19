@@ -425,14 +425,16 @@ const App = () => {
         add_to_logs("complete", payload.type.toLowerCase().replace("_cache", ""), "finished (from cache)");
       } else if (payload.type.toLowerCase().endsWith("data")) {
         add_to_logs("complete", payload.type.toLowerCase().replace("_data", ""), "finished");
-      } else if (payload.type.toLowerCase().endsWith("error")) {
-        const { resp } = payload;
+      }
+
+      const { resp } = payload;
+      if (payload.type.toLowerCase().endsWith("error") || resp?.status === "ERROR") {
         add_to_logs("error", `${resp.reason}`, "");
 
         setScranError({
           type: payload.type,
           msg: resp.reason,
-          fatal: resp.fatal
+          fatal: resp?.fatal === undefined ? true: resp.fatal
         });
 
         return;
