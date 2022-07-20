@@ -651,10 +651,10 @@ const App = () => {
       setIndexedDBState(false);
     } else if (payload.type === "loadedParameters") {
       const { resp } = payload;
-      setLoadParams(resp);
+      setLoadParams(resp.parameters);
 
-      if (resp?.custom_selections?.selections) {
-        let cluster_count = clusterColors.length + Object.keys(resp?.custom_selections?.selections).length;
+      if (resp.other.custom_selections) {
+        let cluster_count = clusterColors.length + Object.keys(resp.other.custom_selections).length;
         let cluster_colors = null;
         if (cluster_count > Object.keys(palette).length) {
           cluster_colors = randomColor({ luminosity: 'dark', count: cluster_count + 1 });
@@ -663,7 +663,7 @@ const App = () => {
         }
         setClusterColors(cluster_colors);
 
-        setCustomSelection(resp?.custom_selections?.selections);
+        setCustomSelection(resp.other.custom_selections);
       }
 
       setTimeout(() => {
