@@ -102,7 +102,7 @@ const AnalysisDialog = ({
             }
 
             if (mapkeys.length == 1) {
-                let first = mapFiles[mapkeys[0]];
+                let first = tmpInputParams;
                 if (first.subset == undefined || first.subset.field == "none") {
                     newInputFiles.subset = null;
                 } else {
@@ -171,7 +171,6 @@ const AnalysisDialog = ({
     useEffect(() => {
         if (loadParams && tabSelected === "load") {
             setTmpInputParams(loadParams);
-            console.log(loadParams);
         }
     }, [loadParams]);
 
@@ -1485,6 +1484,10 @@ const AnalysisDialog = ({
                                     let tmp = [...tmpInputFiles];
                                     tmp[0]["batch"] = e.target.value;
                                     setTmpInputFiles(tmp);
+
+                                    let gip = {...tmpInputParams};
+                                    gip["batch_correction"]["batch"] = e.target.value;
+                                    setTmpInputParams(gip);
                                 }}
                                 defaultValue={tmpInputFiles[0].batch ? tmpInputFiles[0].batch : "none"}
                             >
@@ -1613,17 +1616,17 @@ const AnalysisDialog = ({
                                                 preInputFilesStatus && 
                                                 preInputFilesStatus.annotations &&
                                                 Object.values(preInputFilesStatus.annotations).some(x => x !== null) &&
-                                                <div>
-                                                    <h4>Subset by:</h4>
+                                                <Callout title="Optionally perform analysis on a subset of cells">
+                                                    <p>Use this section to subset cells by annotation.</p>
                                                     <HTMLSelect
                                                         minimal={true}
                                                         onChange={(e) => {
-                                                            let tmp = [...tmpInputFiles];
+                                                            let gip = {...tmpInputParams};
 
                                                             if (e.target.value == "none") {
-                                                                delete tmp[0]["subset"];
+                                                                gip["subset"] = null;
                                                             } else {
-                                                                tmp[0]["subset"] = { field: e.target.value };
+                                                                gip["subset"] = {field: e.target.value};
 
                                                                 let available = new Set;
                                                                 let lower = Number.POSITIVE_INFINITY, upper = Number.NEGATIVE_INFINITY;
@@ -1641,7 +1644,6 @@ const AnalysisDialog = ({
                                                                         current.values.forEach(x => available.add(x));
                                                                         truncated = truncated || current.truncated;
                                                                     } else {
-                                                                        console.log(current);
                                                                         lower = Math.min(lower, current.min);
                                                                         upper = Math.max(upper, current.max);
                                                                     }
@@ -1656,21 +1658,20 @@ const AnalysisDialog = ({
                                                                         options = options.slice(0, 50); 
                                                                         truncated = true;
                                                                     }
-                                                                    tmp[0]["subset"].options = options;
-                                                                    tmp[0]["subset"].values = new Set;
-                                                                    tmp[0]["subset"].truncated = truncated;
+                                                                    gip["subset"]["options"] = options;
+                                                                    gip["subset"]["values"] = new Set();
+                                                                    gip["subset"]["truncated"] = truncated;
                                                                 } else {
-                                                                    tmp[0]["subset"].min = lower;
-                                                                    tmp[0]["subset"].max = upper;
-                                                                    tmp[0]["subset"].chosen_min = lower;
-                                                                    tmp[0]["subset"].chosen_max = upper;
-                                                                    console.log(tmp[0].subset);
+                                                                    gip["subset"]["min"] = lower;
+                                                                    gip["subset"]["max"] = upper;
+                                                                    gip["subset"]["chosen_min"] = lower ;
+                                                                    gip["subset"]["chosen_max"] = upper;
                                                                 }
                                                             }
 
-                                                            setTmpInputFiles(tmp);
+                                                            setTmpInputParams(gip);
                                                         }}
-                                                        defaultValue={tmpInputFiles[0].subset ? tmpInputFiles[0].subset : "none"}
+                                                        defaultValue={tmpInputParams?.subset?.field ? tmpInputParams.subset.field : "none"}
                                                     >
                                                         <option value="none">None</option>
                                                         {
@@ -1687,35 +1688,38 @@ const AnalysisDialog = ({
                                                     </HTMLSelect>
                                                     {
                                                         tmpInputFiles &&
-                                                        tmpInputFiles.length && 
-                                                        tmpInputFiles[0].subset &&
-                                                        tmpInputFiles[0].subset.field != "none" &&
+                                                        tmpInputFiles.length > 0  && 
+                                                        tmpInputParams.subset &&
+                                                        tmpInputParams.subset?.field != "none" &&
                                                         <>
                                                             {
                                                                 (() => {
-                                                                    if ("options" in tmpInputFiles[0].subset) {
+                                                                    if ("options" in tmpInputParams.subset) {
                                                                         return <>
                                                                             {
-                                                                                tmpInputFiles[0].subset.options.map(x => 
+                                                                                tmpInputParams.subset.options.map(x => 
                                                                                     <Checkbox
                                                                                         key={"subset-" + x}
-                                                                                        checked={tmpInputFiles[0].subset.values.has(x)} 
+                                                                                        checked={tmpInputParams.subset.values.has(x)} 
                                                                                         label={x}
                                                                                         inline={true}
                                                                                         onChange={e => {
-                                                                                            let tmp = [...tmpInputFiles];
+                                                                                            let gip = {...tmpInputParams};
+
                                                                                             if (e.target.checked) {
-                                                                                                tmp[0]["subset"].values.add(x);
+                                                                                                gip["subset"]["values"].add(x);
                                                                                             } else {
-                                                                                                tmp[0]["subset"].values.delete(x);
+                                                                                                gip["subset"]["values"].delete(x);
                                                                                             }
+
                                                                                             setTmpInputFiles(tmp);
+                                                                                            setTmpInputParams(gip);
                                                                                         }}
                                                                                     />
                                                                                 )
                                                                             }
                                                                             {
-                                                                                tmpInputFiles[0].subset.truncated && "... and more"
+                                                                                tmpInputParams.subset.truncated && "... and more"
                                                                             }
                                                                         </>
                                                                     } else {
@@ -1725,26 +1729,26 @@ const AnalysisDialog = ({
                                                                                     <td>from</td>
                                                                                     <td> 
                                                                                         <NumericInput 
-                                                                                            min={isFinite(tmpInputFiles[0].subset.min) ? tmpInputFiles[0].subset.min : undefined}
-                                                                                            max={isFinite(tmpInputFiles[0].subset.max) ? tmpInputFiles[0].subset.max: undefined}
-                                                                                            value={isFinite(tmpInputFiles[0].subset.chosen_min) ? tmpInputFiles[0].subset.chosen_min : undefined}
+                                                                                            min={isFinite(tmpInputParams.subset.min) ? tmpInputParams.subset.min : undefined}
+                                                                                            max={isFinite(tmpInputParams.subset.max) ? tmpInputParams.subset.max: undefined}
+                                                                                            value={isFinite(tmpInputParams.subset.chosen_min) ? tmpInputParams.subset.chosen_min : undefined}
                                                                                             onValueChange={e => {
-                                                                                                let tmp = [...tmpInputFiles];
-                                                                                                tmp[0].subset.chosen_min = e;
-                                                                                                setTmpInputFiles(tmp);
+                                                                                                let gip = {...tmpInputParams};
+                                                                                                gip["subset"]["chosen_min"] = e;
+                                                                                                setTmpInputParams(gip);
                                                                                             }}
                                                                                         />
                                                                                     </td>
                                                                                     <td>to</td>
                                                                                     <td>
                                                                                         <NumericInput 
-                                                                                            min={isFinite(tmpInputFiles[0].subset.min) ? tmpInputFiles[0].subset.min : undefined}
-                                                                                            max={isFinite(tmpInputFiles[0].subset.max) ? tmpInputFiles[0].subset.max: undefined}
-                                                                                            value={isFinite(tmpInputFiles[0].subset.chosen_max) ? tmpInputFiles[0].subset.chosen_max : undefined}
+                                                                                            min={isFinite(tmpInputParams.subset.min) ? tmpInputParams.subset.min : undefined}
+                                                                                            max={isFinite(tmpInputParams.subset.max) ? tmpInputParams.subset.max: undefined}
+                                                                                            value={isFinite(tmpInputParams.subset.chosen_max) ? tmpInputParams.subset.chosen_max : undefined}
                                                                                             onValueChange={e => {
-                                                                                                let tmp = [...tmpInputFiles];
-                                                                                                tmp[0].subset.chosen_max = e;
-                                                                                                setTmpInputFiles(tmp);
+                                                                                                let gip = {...tmpInputParams};
+                                                                                                gip["subset"]["chosen_max"] = e;
+                                                                                                setTmpInputParams(gip);
                                                                                             }}
                                                                                         />
                                                                                     </td>
@@ -1756,7 +1760,7 @@ const AnalysisDialog = ({
                                                             }
                                                         </>
                                                     }
-                                                </div>
+                                                </Callout>
                                             }
     
                                             {
