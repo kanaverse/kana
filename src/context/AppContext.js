@@ -71,10 +71,12 @@ const AppContextProvider = ({ children }) => {
     batch_correction: {
       method: "none",
       num_neighbors: 15,
+      batch: null
     },
     ann: {
       approximate: true
-    }
+    },
+    subset : null
   });
 
   // which tab is selected ? defaults to new
