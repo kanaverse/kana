@@ -1712,7 +1712,6 @@ const AnalysisDialog = ({
                                                                                                 gip["subset"]["values"].delete(x);
                                                                                             }
 
-                                                                                            setTmpInputFiles(tmp);
                                                                                             setTmpInputParams(gip);
                                                                                         }}
                                                                                     />
