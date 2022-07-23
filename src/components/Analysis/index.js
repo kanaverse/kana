@@ -1631,7 +1631,7 @@ const AnalysisDialog = ({
                                                 preInputFilesStatus && 
                                                 preInputFilesStatus?.features &&
                                                 <div>
-                                                    <Label> Dataset contains:</Label>
+                                                    <H4> Dataset contains:</H4>
                                                     <ul>
                                                         {Object.keys(preInputFilesStatus?.features).map((x,i) => {
                                                         return (
@@ -1647,6 +1647,81 @@ const AnalysisDialog = ({
                                                     </ul>
                                                 </div>
                                             }
+    
+                                            {
+                                                showSection == "input" &&
+                                                tmpInputFiles &&
+                                                tmpInputFiles.length > 0 &&
+                                                preInputFilesStatus && 
+                                                <div>
+                                                    <H4>Selected datasets:</H4>
+                                                    {
+                                                        preInputFilesStatus && tmpInputFiles.length == 1 ?
+                                                            <>
+                                                                {
+                                                                    preInputFilesStatus.annotations && Object.keys(preInputFilesStatus.annotations).length == 1 ?
+                                                                        <Table2
+                                                                            numRows={tmpInputFiles.length}
+                                                                            rowHeights={tmpInputFiles.map(() => 25)}
+                                                                            selectionModes={"NONE"}
+                                                                        >
+                                                                            <Column key="name" intent="primary" name="name" cellRenderer={table_render_cell} />
+                                                                            <Column key="files" name="files" cellRenderer={table_render_cell} />
+                                                                            <Column key="format" name="format" cellRenderer={table_render_cell} />
+                                                                            <Column key="action" name="action" cellRenderer={table_render_cell} />
+                                                                            <Column key="batch" name="batch" cellRenderer={table_render_cell} />
+                                                                        </Table2>
+                                                                        :
+                                                                        <>
+                                                                            <Table2
+                                                                                numRows={tmpInputFiles.length}
+                                                                                rowHeights={tmpInputFiles.map(() => 25)}
+                                                                                selectionModes={"NONE"}
+                                                                            >
+                                                                                <Column key="name" intent="primary" name="name" cellRenderer={table_render_cell} />
+                                                                                <Column key="files" name="files" cellRenderer={table_render_cell} />
+                                                                                <Column key="format" name="format" cellRenderer={table_render_cell} />
+                                                                                <Column key="action" name="action" cellRenderer={table_render_cell} />
+                                                                            </Table2>
+                                                                            <p style={{
+                                                                                paddingTop: "5px"
+                                                                            }}>
+                                                                                <strong>No annotations were found in this dataset</strong>
+    
+                                                                            </p>
+                                                                        </>
+                                                                }
+                                                            </>
+                                                            :
+                                                            <div>
+                                                                <div>
+                                                                    <Table2
+                                                                        numRows={tmpInputFiles.length}
+                                                                        rowHeights={tmpInputFiles.map(() => 25)}
+                                                                        selectionModes={"NONE"}
+                                                                    >
+                                                                        <Column key="name" name="name" cellRenderer={table_render_cell} />
+                                                                        <Column key="files" name="files" cellRenderer={table_render_cell} />
+                                                                        <Column key="format" name="format" cellRenderer={table_render_cell} />
+                                                                        <Column key="action" name="action" cellRenderer={table_render_cell} />
+                                                                        <Column key="annotation" name="annotation fields" cellRenderer={table_render_cell} />
+                                                                    </Table2>
+                                                                </div>
+                                                                <p style={{
+                                                                    paddingTop: "5px"
+                                                                }}>
+                                                                    {preInputFilesStatus && preInputFilesStatus.common_genes && <span> These datasets contain
+                                                                        <strong>{preInputFilesStatus.common_genes == 0 ? " no " : " " + preInputFilesStatus.common_genes + " "}</strong>
+                                                                        common genes.</span>}
+                                                                    <br />
+                                                                    <strong>Note: when multiple files are imported, each dataset is considered a batch.</strong>
+    
+                                                                </p>
+                                                            </div>
+                                                    }
+                                                </div>
+                                            }
+
                                             {
                                                 showSection == "input" && 
                                                 tmpInputFiles &&
@@ -1654,7 +1729,7 @@ const AnalysisDialog = ({
                                                 preInputFilesStatus && 
                                                 preInputFilesStatus.annotations &&
                                                 Object.values(preInputFilesStatus.annotations).some(x => x !== null) &&
-                                                <div>
+                                                <div style={{marginTop: "15px"}}>
                                                     <H5 className="section-title">
                                                         <span className={showStepHelper == "subset" ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                                             onMouseEnter={() => setShowStepHelper("subset")}>
@@ -1799,82 +1874,6 @@ const AnalysisDialog = ({
                                                                 })()
                                                             }
                                                         </>
-                                                    }
-                                                </div>
-                                            }
-    
-                                            {
-                                                showSection == "input" &&
-                                                tmpInputFiles &&
-                                                tmpInputFiles.length > 0 &&
-                                                preInputFilesStatus && 
-                                                <div style={{
-                                                    "height": ((tmpInputFiles.length + 1) * 40) + "px"
-                                                }}>
-                                                    <h4>Selected datasets:</h4>
-                                                    {
-                                                        preInputFilesStatus && tmpInputFiles.length == 1 ?
-                                                            <>
-                                                                {
-                                                                    preInputFilesStatus.annotations && Object.keys(preInputFilesStatus.annotations).length == 1 ?
-                                                                        <Table2
-                                                                            numRows={tmpInputFiles.length}
-                                                                            rowHeights={tmpInputFiles.map(() => 25)}
-                                                                            selectionModes={"NONE"}
-                                                                        >
-                                                                            <Column key="name" intent="primary" name="name" cellRenderer={table_render_cell} />
-                                                                            <Column key="files" name="files" cellRenderer={table_render_cell} />
-                                                                            <Column key="format" name="format" cellRenderer={table_render_cell} />
-                                                                            <Column key="action" name="action" cellRenderer={table_render_cell} />
-                                                                            <Column key="batch" name="batch" cellRenderer={table_render_cell} />
-                                                                        </Table2>
-                                                                        :
-                                                                        <>
-                                                                            <Table2
-                                                                                numRows={tmpInputFiles.length}
-                                                                                rowHeights={tmpInputFiles.map(() => 25)}
-                                                                                selectionModes={"NONE"}
-                                                                            >
-                                                                                <Column key="name" intent="primary" name="name" cellRenderer={table_render_cell} />
-                                                                                <Column key="files" name="files" cellRenderer={table_render_cell} />
-                                                                                <Column key="format" name="format" cellRenderer={table_render_cell} />
-                                                                                <Column key="action" name="action" cellRenderer={table_render_cell} />
-                                                                            </Table2>
-                                                                            <p style={{
-                                                                                paddingTop: "5px"
-                                                                            }}>
-                                                                                <strong>No annotations were found in this dataset</strong>
-    
-                                                                            </p>
-                                                                        </>
-                                                                }
-                                                            </>
-                                                            :
-                                                            <>
-                                                                <div>
-                                                                    <Table2
-                                                                        numRows={tmpInputFiles.length}
-                                                                        rowHeights={tmpInputFiles.map(() => 25)}
-                                                                        selectionModes={"NONE"}
-                                                                    >
-                                                                        <Column key="name" name="name" cellRenderer={table_render_cell} />
-                                                                        <Column key="files" name="files" cellRenderer={table_render_cell} />
-                                                                        <Column key="format" name="format" cellRenderer={table_render_cell} />
-                                                                        <Column key="action" name="action" cellRenderer={table_render_cell} />
-                                                                        <Column key="annotation" name="annotation fields" cellRenderer={table_render_cell} />
-                                                                    </Table2>
-                                                                </div>
-                                                                <p style={{
-                                                                    paddingTop: "5px"
-                                                                }}>
-                                                                    {preInputFilesStatus && preInputFilesStatus.common_genes && <span> These datasets contain
-                                                                        <strong>{preInputFilesStatus.common_genes == 0 ? " no " : " " + preInputFilesStatus.common_genes + " "}</strong>
-                                                                        common genes.</span>}
-                                                                    <br />
-                                                                    <strong>Note: when multiple files are imported, each dataset is considered a batch.</strong>
-    
-                                                                </p>
-                                                            </>
                                                     }
                                                 </div>
                                             }
