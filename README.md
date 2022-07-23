@@ -1,5 +1,7 @@
 # Kana: Single cell RNA-seq analysis in the browser
 
+*Kana* comes from the [Telugu](https://en.wikipedia.org/wiki/Telugu_language) word [kaṇaṁ (కణం)](https://www.shabdkosh.com/dictionary/english-telugu/%E0%B0%95%E0%B0%A3%E0%B0%82/%E0%B0%95%E0%B0%A3%E0%B0%82-meaning-in-telugu), which means ...  drumroll... ***cell***
+
 ## Overview
 
 **kana** is a web application for single-cell RNA-seq data analysis that works directly in the browser.
@@ -40,7 +42,8 @@ Briefly, this involves:
 - Make custom cell selections and detect markers for this selection
 - Cell type annotation for each cluster across user selected reference datasets
 - Perform Integration or Batch correction using MNN correction. You can provide a single dataset containing multiple batches and specify the `batch` column in the cell annotations, or load multiple datasets where each dataset is considered a batch
-- ADT aware for Cite-seq data
+- Support Multi-modal analysis for Cite-seq data
+- Perform analysis on subsets (filter based on cell annotation)
 
 The interface provides a depiction of the dimensionality reduction of choice,
 a ranking of marker genes for the cluster of interest,
@@ -90,7 +93,7 @@ We also create separate Web Workers for the t-SNE and UMAP steps so that they ca
 
 ![Worker Model](assets/scran.js.app.workers.png)
 
-The Wasm code itself is compiled with PThreads support to enable parallelization of some analysis steps.
+The WASM code itself is compiled with PThreads support to enable parallelization of some analysis steps.
 This involves the use of a [`SharedArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer) to efficiently share memory across Web Workers,
 which in turn requires cross origin isolation of the site.
 We achieve this by using a service worker to cache the resources and load the blobs with the relevant headers - hence the need for HTTPS.

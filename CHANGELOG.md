@@ -1,5 +1,18 @@
 # Changelog
 
+## V2.2.0
+- Perform analysis on a subset of cells
+
+![Subset cells](assets/subset.png)
+
+## V2.0.0
+- Support for a multi-modal analysis of ADT + RNA
+- Added new parameter elements for ADT, integrated analysis
+- Support multiple modalities in the marker selection
+- Support multiple modalities in diagnostic plots
+
+![Multimodal analysis](assets/v2_adt.gif)
+
 ## V1.2.0
 
 - Visually compare embeddings across annotations
