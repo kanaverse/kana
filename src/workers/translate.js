@@ -11,12 +11,14 @@ const mappings = {
     quality_control: {
         use_mito_default: [ "qc", "qc-usemitodefault" ],
         mito_prefix: [ "qc", "qc-mito" ],
-        nmads: [ "qc", "qc-nmads" ]
+        nmads: [ "qc", "qc-nmads" ],
+        skip: [ "qc", "skip" ]
     },
     adt_quality_control: {
         nmads: [ "adt_qualitycontrol", "nmads" ],
         min_detected_drop: [ "adt_qualitycontrol", "min_detected_drop" ],
-        igg_prefix: [ "adt_qualitycontrol", "igg_prefix" ]
+        igg_prefix: [ "adt_qualitycontrol", "igg_prefix" ],
+        skip: [ "adt_qualitycontrol", "skip" ]
     },
     adt_normalization: {
         num_pcs: [ "adt_normalization", "num_pcs" ],

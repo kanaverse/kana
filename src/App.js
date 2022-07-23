@@ -472,21 +472,26 @@ const App = () => {
     } else if (payload.type === "quality_control_DATA") {
       const { resp } = payload;
 
-      var ranges = {}, data = resp["data"], all = {};
+      if (!resp) {
+        setQcData(null);
+        setShowQCLoader(false);
+      } else {
+        var ranges = {}, data = resp["data"], all = {};
 
-      for (const [group, gvals] of Object.entries(data)) {
-        for (const [key, val] of Object.entries(gvals)) {
-          if (!all[key]) all[key] = [Infinity, -Infinity];
-          let [min, max] = getMinMax(val);
-          if (min < all[key][0]) all[key][0] = min;
-          if (max > all[key][1]) all[key][1] = max;
+        for (const [group, gvals] of Object.entries(data)) {
+          for (const [key, val] of Object.entries(gvals)) {
+            if (!all[key]) all[key] = [Infinity, -Infinity];
+            let [min, max] = getMinMax(val);
+            if (min < all[key][0]) all[key][0] = min;
+            if (max > all[key][1]) all[key][1] = max;
+          }
+          ranges[group] = all;
         }
-        ranges[group] = all;
+  
+        resp["ranges"] = ranges;
+        setQcData(resp);
+        setShowQCLoader(false);
       }
-
-      resp["ranges"] = ranges;
-      setQcData(resp);
-      setShowQCLoader(false);
     } else if (payload.type === "adt_quality_control_DATA") {
       const { resp } = payload;
 
