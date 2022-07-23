@@ -1654,8 +1654,13 @@ const AnalysisDialog = ({
                                                 preInputFilesStatus && 
                                                 preInputFilesStatus.annotations &&
                                                 Object.values(preInputFilesStatus.annotations).some(x => x !== null) &&
-                                                <Callout title="Optionally perform analysis on a subset of cells">
-                                                    <p>Use this section to subset cells by annotation.</p>
+                                                <div>
+                                                    <H5 className="section-title">
+                                                        <span className={showStepHelper == "subset" ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                                            onMouseEnter={() => setShowStepHelper("subset")}>
+                                                            Subset cells by annotation
+                                                        </span>
+                                                    </H5>
                                                     <HTMLSelect
                                                         minimal={true}
                                                         onChange={(e) => {
@@ -1797,7 +1802,7 @@ const AnalysisDialog = ({
                                                             }
                                                         </>
                                                     }
-                                                </Callout>
+                                                </div>
                                             }
     
                                             {
@@ -1970,6 +1975,13 @@ const AnalysisDialog = ({
 
                                                 <p><strong>Batch correction:</strong> you can now import more than one file to integrate and analyze datasets.
                                                     If you only import a single dataset, specify the annotation column that contains the batch information.</p>
+                                            </Callout>
+                                        }
+                                        {showStepHelper === "subset" &&
+                                            <Callout intent="primary" title="Optionally perform analysis on a subset of cells">
+                                                <p>Use this option to select an annotation (categorical or numerical), filter cells and perform a 
+                                                    full analysis on a subset of cells in the dataset
+                                                </p>
                                             </Callout>
                                         }
                                         {get_common_tooltips()}
