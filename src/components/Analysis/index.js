@@ -1978,9 +1978,17 @@ const AnalysisDialog = ({
                                             </Callout>
                                         }
                                         {showStepHelper === "subset" &&
-                                            <Callout intent="primary" title="Optionally perform analysis on a subset of cells">
-                                                <p>Use this option to select an annotation (categorical or numerical), filter cells and perform a 
-                                                    full analysis on a subset of cells in the dataset
+                                            <Callout intent="primary">
+                                                <p>We can (optionally) restrict the analysis to a pre-defined subset of cells.</p>
+                                                <p>
+                                                    We peek at the per-cell annotation available from the dataset, if any exists.
+                                                    For an annotation field of interest, we can select groups of interest (for categorical fields) or a range of values (for continuous fields).
+                                                    This defines a subset of cells that is passed onto the downstream analysis.
+                                                </p>
+                                                <p>
+                                                    For categorical fields, only the first 50 levels are shown, otherwise we'd run out of space.
+                                                    For continuous fields, the defaults are set to the minimum and maximum values across all cells -
+                                                    empty fields correspond to negative and positive infinity, respectively.
                                                 </p>
                                             </Callout>
                                         }
