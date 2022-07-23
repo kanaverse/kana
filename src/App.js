@@ -209,7 +209,7 @@ const App = () => {
 
     if (customSelection !== null && Object.keys(customSelection).length > 0) {
       let csLen = `cs${Object.keys(customSelection).length}`;
-      var cs = customSelection[csLen];
+      var cs = customSelection[csLen].sort((a, b) => { return a-b });
       scranWorker.postMessage({
         "type": "computeCustomMarkers",
         "payload": {
