@@ -88,12 +88,35 @@ const AnalysisDialog = ({
             mapFiles[f.name] = f
         }
 
-        setInputFiles({
-            "files": mapFiles,
-            "batch": tabSelected === "new" ? Object.keys(mapFiles).length == 1 ?
-                mapFiles[Object.keys(mapFiles)[0]]?.batch == undefined || mapFiles[Object.keys(mapFiles)[0]]?.batch == "none"
-                    ? null : mapFiles[Object.keys(mapFiles)[0]]?.batch : null : null,
-        });
+        let newInputFiles = { files: mapFiles };
+        if (tabSelected === "new") {
+            let mapkeys = Object.keys(mapFiles);
+
+            if (mapkeys.length == 1) {
+                let first = mapFiles[mapkeys[0]];
+                if (first.batch == undefined || first.batch == "none") {
+                    newInputFiles.batch = null;
+                } else {
+                    newInputFiles.batch = first.batch;
+                }
+            }
+
+            if (mapkeys.length == 1) {
+                let first = tmpInputParams;
+                if (first.subset == undefined || first.subset.field == "none") {
+                    newInputFiles.subset = null;
+                } else {
+                    newInputFiles.subset = { field: first.subset.field };
+                    if ("values" in first.subset) {
+                        newInputFiles.subset.values = Array.from(first.subset.values);
+                    } else {
+                        newInputFiles.subset.ranges = [[first.subset.chosen_min, first.subset.chosen_max]];
+                    }
+                }
+            }
+        }
+
+        setInputFiles(newInputFiles);
 
         setLoadParamsFor(tabSelected === "new" ?
             newImportFormat : loadImportFormat);
@@ -148,7 +171,6 @@ const AnalysisDialog = ({
     useEffect(() => {
         if (loadParams && tabSelected === "load") {
             setTmpInputParams(loadParams);
-            console.log(loadParams);
         }
     }, [loadParams]);
 
@@ -1086,13 +1108,28 @@ const AnalysisDialog = ({
                             <div className="row"
                             >
                                 <Label className="row-input">
-                                    <FileInput text={sinputText.mtx} onInputChange={(msg) => { ssetInputText({ ...sinputText, "mtx": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "mtx": msg.target.files[0] }) }} />
+                                    <FileInput text={sinputText.mtx} onInputChange={(msg) => { 
+                                        if (msg.target.files) {
+                                            ssetInputText({ ...sinputText, "mtx": msg.target.files[0].name }); 
+                                            ssetTmpInputFiles({ ...stmpInputFiles, "mtx": msg.target.files[0] }) 
+                                        }
+                                    }} />
                                 </Label>
                                 <Label className="row-input">
-                                    <FileInput text={sinputText.genes} onInputChange={(msg) => { ssetInputText({ ...sinputText, "genes": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "genes": msg.target.files[0] }) }} />
+                                    <FileInput text={sinputText.genes} onInputChange={(msg) => { 
+                                        if (msg.target.files) {
+                                            ssetInputText({ ...sinputText, "genes": msg.target.files[0].name }); 
+                                            ssetTmpInputFiles({ ...stmpInputFiles, "genes": msg.target.files[0] }) 
+                                        }
+                                    }} />
                                 </Label>
                                 <Label className="row-input">
-                                    <FileInput text={sinputText.annotations} onInputChange={(msg) => { ssetInputText({ ...sinputText, "annotations": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "annotations": msg.target.files[0] }) }} />
+                                    <FileInput text={sinputText.annotations} onInputChange={(msg) => { 
+                                        if (msg.target.files) {
+                                            ssetInputText({ ...sinputText, "annotations": msg.target.files[0].name }); 
+                                            ssetTmpInputFiles({ ...stmpInputFiles, "annotations": msg.target.files[0] }) 
+                                        }
+                                    }} />
                                 </Label>
                             </div>
                         } />
@@ -1105,8 +1142,10 @@ const AnalysisDialog = ({
                                     }}
                                         text={sinputText.h5}
                                         onInputChange={(msg) => {
-                                            ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
-                                            ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
+                                            if (msg.target.files) {
+                                                ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
+                                                ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
+                                            }
                                         }} />
                                 </Label>
                             </div>
@@ -1120,8 +1159,10 @@ const AnalysisDialog = ({
                                     }}
                                         text={sinputText.h5}
                                         onInputChange={(msg) => {
-                                            ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
-                                            ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
+                                            if (msg.target.files) {
+                                                ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
+                                                ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
+                                            }
                                         }} />
                                 </Label>
                             </div>
@@ -1481,6 +1522,10 @@ const AnalysisDialog = ({
                                     let tmp = [...tmpInputFiles];
                                     tmp[0]["batch"] = e.target.value;
                                     setTmpInputFiles(tmp);
+
+                                    let gip = {...tmpInputParams};
+                                    gip["batch_correction"]["batch"] = e.target.value;
+                                    setTmpInputParams(gip);
                                 }}
                                 defaultValue={tmpInputFiles[0].batch ? tmpInputFiles[0].batch : "none"}
                             >
@@ -1602,6 +1647,158 @@ const AnalysisDialog = ({
                                                     </ul>
                                                 </div>
                                             }
+                                            {
+                                                showSection == "input" && 
+                                                tmpInputFiles &&
+                                                tmpInputFiles.length > 0 &&
+                                                preInputFilesStatus && 
+                                                preInputFilesStatus.annotations &&
+                                                Object.values(preInputFilesStatus.annotations).some(x => x !== null) &&
+                                                <Callout title="Optionally perform analysis on a subset of cells">
+                                                    <p>Use this section to subset cells by annotation.</p>
+                                                    <HTMLSelect
+                                                        minimal={true}
+                                                        onChange={(e) => {
+                                                            let gip = {...tmpInputParams};
+
+                                                            if (e.target.value == "none") {
+                                                                gip["subset"] = null;
+                                                            } else {
+                                                                gip["subset"] = {field: e.target.value};
+
+                                                                let available = new Set;
+                                                                let lower = Number.POSITIVE_INFINITY, upper = Number.NEGATIVE_INFINITY;
+                                                                let truncated = false;
+                                                                let any_categorical = false;
+
+                                                                for (const v of Object.values(preInputFilesStatus.annotations)) {
+                                                                    if (v == null || !(e.target.value in v)) {
+                                                                        continue;
+                                                                    }
+
+                                                                    let current = v[e.target.value];
+                                                                    if (current.type == "categorical") { 
+                                                                        any_categorical = true;
+                                                                        current.values.forEach(x => available.add(x));
+                                                                        truncated = truncated || current.truncated;
+                                                                    } else {
+                                                                        lower = Math.min(lower, current.min);
+                                                                        upper = Math.max(upper, current.max);
+                                                                    }
+                                                                }
+
+                                                                if (any_categorical) {
+                                                                    let options = Array.from(available).sort();
+                                                                    if (options.length >= 70) {
+                                                                        // yes, these numbers are meant to be different.
+                                                                        // it's like speeding; you have to be way over the 
+                                                                        // limit before the truncation kicks in.
+                                                                        options = options.slice(0, 50); 
+                                                                        truncated = true;
+                                                                    }
+                                                                    gip["subset"]["options"] = options;
+                                                                    gip["subset"]["values"] = new Set();
+                                                                    gip["subset"]["truncated"] = truncated;
+                                                                } else {
+                                                                    gip["subset"]["min"] = lower;
+                                                                    gip["subset"]["max"] = upper;
+                                                                    gip["subset"]["chosen_min"] = lower ;
+                                                                    gip["subset"]["chosen_max"] = upper;
+                                                                }
+                                                            }
+
+                                                            setTmpInputParams(gip);
+                                                        }}
+                                                        defaultValue={tmpInputParams?.subset?.field ? tmpInputParams.subset.field : "none"}
+                                                    >
+                                                        <option value="none">None</option>
+                                                        {
+                                                            (() => {
+                                                                let collected = new Set;
+                                                                for (const v of Object.values(preInputFilesStatus.annotations)) {
+                                                                    if (v !== null) {
+                                                                        Object.keys(v).forEach(k => collected.add(k));
+                                                                    }
+                                                                }
+                                                                return Array.from(collected).sort().map((x, i) => <option key={i} value={x}>{x}</option>)
+                                                            })()
+                                                        }
+                                                    </HTMLSelect>
+                                                    {
+                                                        tmpInputFiles &&
+                                                        tmpInputFiles.length > 0  && 
+                                                        tmpInputParams.subset &&
+                                                        tmpInputParams.subset?.field != "none" &&
+                                                        <>
+                                                            {
+                                                                (() => {
+                                                                    if ("options" in tmpInputParams.subset) {
+                                                                        return <>
+                                                                            {
+                                                                                tmpInputParams.subset.options.map(x => 
+                                                                                    <Checkbox
+                                                                                        key={"subset-" + x}
+                                                                                        checked={tmpInputParams.subset.values.has(x)} 
+                                                                                        label={x}
+                                                                                        inline={true}
+                                                                                        onChange={e => {
+                                                                                            let gip = {...tmpInputParams};
+
+                                                                                            if (e.target.checked) {
+                                                                                                gip["subset"]["values"].add(x);
+                                                                                            } else {
+                                                                                                gip["subset"]["values"].delete(x);
+                                                                                            }
+
+                                                                                            setTmpInputParams(gip);
+                                                                                        }}
+                                                                                    />
+                                                                                )
+                                                                            }
+                                                                            {
+                                                                                tmpInputParams.subset.truncated && "... and more"
+                                                                            }
+                                                                        </>
+                                                                    } else {
+                                                                        return <>
+                                                                            <table style={{display:"inline-table", verticalAlign: "top"}}>
+                                                                                <tr>
+                                                                                    <td>from</td>
+                                                                                    <td> 
+                                                                                        <NumericInput 
+                                                                                            min={isFinite(tmpInputParams.subset.min) ? tmpInputParams.subset.min : undefined}
+                                                                                            max={isFinite(tmpInputParams.subset.max) ? tmpInputParams.subset.max: undefined}
+                                                                                            value={isFinite(tmpInputParams.subset.chosen_min) ? tmpInputParams.subset.chosen_min : undefined}
+                                                                                            onValueChange={e => {
+                                                                                                let gip = {...tmpInputParams};
+                                                                                                gip["subset"]["chosen_min"] = e;
+                                                                                                setTmpInputParams(gip);
+                                                                                            }}
+                                                                                        />
+                                                                                    </td>
+                                                                                    <td>to</td>
+                                                                                    <td>
+                                                                                        <NumericInput 
+                                                                                            min={isFinite(tmpInputParams.subset.min) ? tmpInputParams.subset.min : undefined}
+                                                                                            max={isFinite(tmpInputParams.subset.max) ? tmpInputParams.subset.max: undefined}
+                                                                                            value={isFinite(tmpInputParams.subset.chosen_max) ? tmpInputParams.subset.chosen_max : undefined}
+                                                                                            onValueChange={e => {
+                                                                                                let gip = {...tmpInputParams};
+                                                                                                gip["subset"]["chosen_max"] = e;
+                                                                                                setTmpInputParams(gip);
+                                                                                            }}
+                                                                                        />
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </table>
+                                                                        </>
+                                                                    }
+                                                                })()
+                                                            }
+                                                        </>
+                                                    }
+                                                </Callout>
+                                            }
     
                                             {
                                                 showSection == "input" &&
@@ -1678,7 +1875,7 @@ const AnalysisDialog = ({
                                                     }
                                                 </div>
                                             }
-    
+
                                             {showSection == "params" && get_input_qc()}
                                             {showSection == "params" && 
                                                 Object.keys(preInputFilesStatus?.features).length > 1

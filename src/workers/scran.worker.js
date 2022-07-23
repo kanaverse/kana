@@ -119,14 +119,21 @@ async function unserializeAllSteps(contents) {
     let output;
     try {
         let loader = await bakana.parseKanaFile(contents, h5path);
-        let response = await bakana.loadAnalysis(h5path, loader, { finishFun: postSuccess });
+        let loaded_state = await bakana.loadAnalysis(h5path, loader, { finishFun: postSuccess });
 
         if (superstate !== null) {
             await bakana.freeAnalysis(superstate);
         }
-        superstate = response;
+        superstate = loaded_state;
 
-        output = translate.toUI(bakana.retrieveParameters(response));
+        output = {
+            "parameters": translate.toUI(bakana.retrieveParameters(superstate)),
+            "other": {
+                "custom_selections": superstate.custom_selections.fetchSelections()
+            }
+        };
+        console.log(output.other.custom_selections);
+
     } finally {
         bakana.removeHDF5File(h5path);
     }
@@ -248,10 +255,14 @@ onmessage = function (msg) {
                     const reader = new FileReaderSync();
                     let res = reader.readAsArrayBuffer(f);
                     let params = await unserializeAllSteps(res);
+
+                    var transferrable = [];
+                    extractBuffers(params.other, transferrable);
                     postMessage({
                         type: "loadedParameters",
                         resp: params
-                    });
+                    }, transferrable);
+
                 }).catch(err => {
                     console.error(err);
                     postError(type, err, fatal)
@@ -266,11 +277,14 @@ onmessage = function (msg) {
                             msg: `Fail: cannot load analysis ID '${id}'`
                         });
                     } else {
-                        let response = await unserializeAllSteps(res);
+                        let params = await unserializeAllSteps(res);
+
+                        var transferrable = [];
+                        extractBuffers(params.other, transferrable);
                         postMessage({
                             type: "loadedParameters",
-                            resp: response
-                        });
+                            resp: params 
+                        }, transferrable);
                     }
                 }).catch(err => {
                     console.error(err);

@@ -858,10 +858,6 @@ const DimPlot = (props) => {
                 }
                 {showGradient ?
                     <div className='right-sidebar-slider'>
-                        {props?.selectedModality}
-                        {geneColSel[props?.selectedModality]}
-                        {props?.gene}
-                        {genesInfo[geneColSel[props?.selectedModality]][props?.gene]}
                         <Callout>
                             <span>Gradient for <Tag
                                 minimal={true}
