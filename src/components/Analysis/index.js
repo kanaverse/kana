@@ -1736,74 +1736,77 @@ const AnalysisDialog = ({
                                                             Subset cells by annotation
                                                         </span>
                                                     </H5>
-                                                    <HTMLSelect
-                                                        minimal={true}
-                                                        onChange={(e) => {
-                                                            let gip = {...tmpInputParams};
+                                                    <div className="subset-section-top">
+                                                        <Label>Choose an annotation: </Label>
+                                                        <HTMLSelect
+                                                            minimal={true}
+                                                            onChange={(e) => {
+                                                                let gip = {...tmpInputParams};
 
-                                                            if (e.target.value == "none") {
-                                                                gip["subset"] = null;
-                                                            } else {
-                                                                gip["subset"] = {field: e.target.value};
-
-                                                                let available = new Set;
-                                                                let lower = Number.POSITIVE_INFINITY, upper = Number.NEGATIVE_INFINITY;
-                                                                let truncated = false;
-                                                                let any_categorical = false;
-
-                                                                for (const v of Object.values(preInputFilesStatus.annotations)) {
-                                                                    if (v == null || !(e.target.value in v)) {
-                                                                        continue;
-                                                                    }
-
-                                                                    let current = v[e.target.value];
-                                                                    if (current.type == "categorical") { 
-                                                                        any_categorical = true;
-                                                                        current.values.forEach(x => available.add(x));
-                                                                        truncated = truncated || current.truncated;
-                                                                    } else {
-                                                                        lower = Math.min(lower, current.min);
-                                                                        upper = Math.max(upper, current.max);
-                                                                    }
-                                                                }
-
-                                                                if (any_categorical) {
-                                                                    let options = Array.from(available).sort();
-                                                                    if (options.length >= 70) {
-                                                                        // yes, these numbers are meant to be different.
-                                                                        // it's like speeding; you have to be way over the 
-                                                                        // limit before the truncation kicks in.
-                                                                        options = options.slice(0, 50); 
-                                                                        truncated = true;
-                                                                    }
-                                                                    gip["subset"]["options"] = options;
-                                                                    gip["subset"]["values"] = new Set();
-                                                                    gip["subset"]["truncated"] = truncated;
+                                                                if (e.target.value == "none") {
+                                                                    gip["subset"] = null;
                                                                 } else {
-                                                                    gip["subset"]["min"] = lower;
-                                                                    gip["subset"]["max"] = upper;
-                                                                    gip["subset"]["chosen_min"] = lower ;
-                                                                    gip["subset"]["chosen_max"] = upper;
-                                                                }
-                                                            }
+                                                                    gip["subset"] = {field: e.target.value};
 
-                                                            setTmpInputParams(gip);
-                                                        }}
-                                                        defaultValue={tmpInputParams?.subset?.field ? tmpInputParams.subset.field : "none"}
-                                                    >
-                                                        <option value="none">None</option>
-                                                        {
-                                                            (() => {
-                                                                let collected = new Set;
-                                                                for (const v of Object.values(preInputFilesStatus.annotations)) {
-                                                                    if (v !== null) {
-                                                                        Object.keys(v).forEach(k => collected.add(k));
+                                                                    let available = new Set;
+                                                                    let lower = Number.POSITIVE_INFINITY, upper = Number.NEGATIVE_INFINITY;
+                                                                    let truncated = false;
+                                                                    let any_categorical = false;
+
+                                                                    for (const v of Object.values(preInputFilesStatus.annotations)) {
+                                                                        if (v == null || !(e.target.value in v)) {
+                                                                            continue;
+                                                                        }
+
+                                                                        let current = v[e.target.value];
+                                                                        if (current.type == "categorical") { 
+                                                                            any_categorical = true;
+                                                                            current.values.forEach(x => available.add(x));
+                                                                            truncated = truncated || current.truncated;
+                                                                        } else {
+                                                                            lower = Math.min(lower, current.min);
+                                                                            upper = Math.max(upper, current.max);
+                                                                        }
+                                                                    }
+
+                                                                    if (any_categorical) {
+                                                                        let options = Array.from(available).sort();
+                                                                        if (options.length >= 70) {
+                                                                            // yes, these numbers are meant to be different.
+                                                                            // it's like speeding; you have to be way over the 
+                                                                            // limit before the truncation kicks in.
+                                                                            options = options.slice(0, 50); 
+                                                                            truncated = true;
+                                                                        }
+                                                                        gip["subset"]["options"] = options;
+                                                                        gip["subset"]["values"] = new Set();
+                                                                        gip["subset"]["truncated"] = truncated;
+                                                                    } else {
+                                                                        gip["subset"]["min"] = lower;
+                                                                        gip["subset"]["max"] = upper;
+                                                                        gip["subset"]["chosen_min"] = lower ;
+                                                                        gip["subset"]["chosen_max"] = upper;
                                                                     }
                                                                 }
-                                                                return Array.from(collected).sort().map((x, i) => <option key={i} value={x}>{x}</option>)
-                                                            })()
-                                                        }
-                                                    </HTMLSelect>
+
+                                                                setTmpInputParams(gip);
+                                                            }}
+                                                            defaultValue={tmpInputParams?.subset?.field ? tmpInputParams.subset.field : "none"}
+                                                        >
+                                                            <option value="none">None</option>
+                                                            {
+                                                                (() => {
+                                                                    let collected = new Set;
+                                                                    for (const v of Object.values(preInputFilesStatus.annotations)) {
+                                                                        if (v !== null) {
+                                                                            Object.keys(v).forEach(k => collected.add(k));
+                                                                        }
+                                                                    }
+                                                                    return Array.from(collected).sort().map((x, i) => <option key={i} value={x}>{x}</option>)
+                                                                })()
+                                                            }
+                                                        </HTMLSelect>
+                                                    </div>
                                                     {
                                                         tmpInputFiles &&
                                                         tmpInputFiles.length > 0  && 
