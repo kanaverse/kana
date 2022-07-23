@@ -1,0 +1,40 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Single-cell data analysis in the browser
+message: >-
+  If you use this software, please cite it as below.
+url: "https://github.com/jkanche/kana"
+doi: "10.1101/2022.03.02.482701"
+authors:
+  - given-names: Aaron
+    name-particle: Lun
+    email: infinite.monkeys.with.keyboards@gmail.com
+    affiliation: Genentech
+    orcid: 'https://orcid.org/0000-0002-3564-4813'
+  - given-names: Jayaram
+    name-particle: Kancherla
+    email: jayaram.kancherla@gmail.com
+    affiliation: Genentech
+    orcid: 'https://orcid.org/0000-0001-5855-5031'
+preferred-citation:
+  type: article
+  authors:
+  - given-names: Aaron
+    name-particle: Lun
+    email: infinite.monkeys.with.keyboards@gmail.com
+    affiliation: Genentech
+    orcid: 'https://orcid.org/0000-0002-3564-4813'
+  - given-names: Jayaram
+    name-particle: Kancherla
+    email: jayaram.kancherla@gmail.com
+    affiliation: Genentech
+    orcid: 'https://orcid.org/0000-0001-5855-5031'
+  doi: "10.1101/2022.03.02.482701"
+  journal: "bioRxiv"
+  publisher: "Cold Spring Harbor Laboratory"
+  title: "Single-cell data analysis in the browser"
+  URL: "https://www.biorxiv.org/content/early/2022/03/04/2022.03.02.482701"
+  eprint: "https://www.biorxiv.org/content/early/2022/03/04/2022.03.02.482701.full.pdf"
+  year: 2022
