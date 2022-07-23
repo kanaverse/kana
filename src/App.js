@@ -207,7 +207,7 @@ const App = () => {
   // when a new custom selection of cells is made through the UI
   useEffect(() => {
 
-    if (customSelection !== null && Object.keys(customSelection).length > 0) {
+    if (customSelection !== null && Object.keys(customSelection).length > 0 && !initLoadState) {
       let csLen = `cs${Object.keys(customSelection).length}`;
       var cs = customSelection[csLen].sort((a, b) => { return a-b });
       scranWorker.postMessage({
