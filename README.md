@@ -4,6 +4,8 @@
 
 ## Overview
 
+[Checkout our preprint on bioRxiv](https://www.biorxiv.org/content/10.1101/2022.03.02.482701v1)
+
 **kana** is a web application for single-cell RNA-seq data analysis that works directly in the browser.
 That's right - the calculations are performed client-side, by your browser, on your computer!
 This differs from the usual paradigm of, e.g., Shiny applications where data needs to be sent to a backend server that does the actual analysis.
