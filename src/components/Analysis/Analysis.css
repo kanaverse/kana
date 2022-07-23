@@ -80,3 +80,41 @@
     width: 100%;
     height: 100%;
 }
+
+.subset-section {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items:flex-start;
+    padding: 5px;
+    width: 100%;
+}
+
+.subset-section-top {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items:flex-start;
+    padding: 5px;
+}
+
+.subset-section-top > label {
+    margin-top: 5px;
+}
+
+.subset-range-field {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items:center;
+    padding: 5px;
+}
+
+.subset-range-field > h5 {
+    padding-right: 15px;
+    text-align: center;
+    vertical-align: middle;
+    padding-top: 5px;
+}

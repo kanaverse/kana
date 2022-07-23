@@ -207,7 +207,7 @@ const App = () => {
   // when a new custom selection of cells is made through the UI
   useEffect(() => {
 
-    if (customSelection !== null && Object.keys(customSelection).length > 0) {
+    if (customSelection !== null && Object.keys(customSelection).length > 0 && !initLoadState) {
       let csLen = `cs${Object.keys(customSelection).length}`;
       var cs = customSelection[csLen];
       scranWorker.postMessage({
@@ -425,14 +425,16 @@ const App = () => {
         add_to_logs("complete", payload.type.toLowerCase().replace("_cache", ""), "finished (from cache)");
       } else if (payload.type.toLowerCase().endsWith("data")) {
         add_to_logs("complete", payload.type.toLowerCase().replace("_data", ""), "finished");
-      } else if (payload.type.toLowerCase().endsWith("error")) {
-        const { resp } = payload;
+      }
+
+      const { resp } = payload;
+      if (payload.type.toLowerCase().endsWith("error") || resp?.status === "ERROR") {
         add_to_logs("error", `${resp.reason}`, "");
 
         setScranError({
           type: payload.type,
           msg: resp.reason,
-          fatal: resp.fatal
+          fatal: resp?.fatal === undefined ? true: resp.fatal
         });
 
         return;
@@ -470,21 +472,26 @@ const App = () => {
     } else if (payload.type === "quality_control_DATA") {
       const { resp } = payload;
 
-      var ranges = {}, data = resp["data"], all = {};
+      if (!resp) {
+        setQcData(null);
+        setShowQCLoader(false);
+      } else {
+        var ranges = {}, data = resp["data"], all = {};
 
-      for (const [group, gvals] of Object.entries(data)) {
-        for (const [key, val] of Object.entries(gvals)) {
-          if (!all[key]) all[key] = [Infinity, -Infinity];
-          let [min, max] = getMinMax(val);
-          if (min < all[key][0]) all[key][0] = min;
-          if (max > all[key][1]) all[key][1] = max;
+        for (const [group, gvals] of Object.entries(data)) {
+          for (const [key, val] of Object.entries(gvals)) {
+            if (!all[key]) all[key] = [Infinity, -Infinity];
+            let [min, max] = getMinMax(val);
+            if (min < all[key][0]) all[key][0] = min;
+            if (max > all[key][1]) all[key][1] = max;
+          }
+          ranges[group] = all;
         }
-        ranges[group] = all;
+  
+        resp["ranges"] = ranges;
+        setQcData(resp);
+        setShowQCLoader(false);
       }
-
-      resp["ranges"] = ranges;
-      setQcData(resp);
-      setShowQCLoader(false);
     } else if (payload.type === "adt_quality_control_DATA") {
       const { resp } = payload;
 
@@ -651,10 +658,10 @@ const App = () => {
       setIndexedDBState(false);
     } else if (payload.type === "loadedParameters") {
       const { resp } = payload;
-      setLoadParams(resp);
+      setLoadParams(resp.parameters);
 
-      if (resp?.custom_selections?.selections) {
-        let cluster_count = clusterColors.length + Object.keys(resp?.custom_selections?.selections).length;
+      if (resp.other.custom_selections) {
+        let cluster_count = clusterColors.length + Object.keys(resp.other.custom_selections).length;
         let cluster_colors = null;
         if (cluster_count > Object.keys(palette).length) {
           cluster_colors = randomColor({ luminosity: 'dark', count: cluster_count + 1 });
@@ -663,7 +670,7 @@ const App = () => {
         }
         setClusterColors(cluster_colors);
 
-        setCustomSelection(resp?.custom_selections?.selections);
+        setCustomSelection(resp.other.custom_selections);
       }
 
       setTimeout(() => {

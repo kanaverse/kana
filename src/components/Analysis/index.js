@@ -1,6 +1,6 @@
 import {
     Button, Classes, Text, FileInput, NumericInput,
-    Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
+    Label, H5, H4, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
     RadioGroup, Radio, Icon, Position,
     InputGroup, Checkbox,
     Drawer,
@@ -88,12 +88,35 @@ const AnalysisDialog = ({
             mapFiles[f.name] = f
         }
 
-        setInputFiles({
-            "files": mapFiles,
-            "batch": tabSelected === "new" ? Object.keys(mapFiles).length == 1 ?
-                mapFiles[Object.keys(mapFiles)[0]]?.batch == undefined || mapFiles[Object.keys(mapFiles)[0]]?.batch == "none"
-                    ? null : mapFiles[Object.keys(mapFiles)[0]]?.batch : null : null,
-        });
+        let newInputFiles = { files: mapFiles };
+        if (tabSelected === "new") {
+            let mapkeys = Object.keys(mapFiles);
+
+            if (mapkeys.length == 1) {
+                let first = mapFiles[mapkeys[0]];
+                if (first.batch == undefined || first.batch == "none") {
+                    newInputFiles.batch = null;
+                } else {
+                    newInputFiles.batch = first.batch;
+                }
+            }
+
+            if (mapkeys.length == 1) {
+                let first = tmpInputParams;
+                if (first.subset == undefined || first.subset.field == "none") {
+                    newInputFiles.subset = null;
+                } else {
+                    newInputFiles.subset = { field: first.subset.field };
+                    if ("values" in first.subset) {
+                        newInputFiles.subset.values = Array.from(first.subset.values);
+                    } else {
+                        newInputFiles.subset.ranges = [[first.subset.chosen_min, first.subset.chosen_max]];
+                    }
+                }
+            }
+        }
+
+        setInputFiles(newInputFiles);
 
         setLoadParamsFor(tabSelected === "new" ?
             newImportFormat : loadImportFormat);
@@ -148,7 +171,6 @@ const AnalysisDialog = ({
     useEffect(() => {
         if (loadParams && tabSelected === "load") {
             setTmpInputParams(loadParams);
-            console.log(loadParams);
         }
     }, [loadParams]);
 
@@ -375,6 +397,12 @@ const AnalysisDialog = ({
                             Prefix to use to identify the mitochondrial genes from the feature annotation.
                             Only used if we choose to not use the default mitochondrial list.
                         </p>
+                        <p>
+                            <strong>Skip</strong>:
+                            Skip all quality control on the RNA count matrix.
+                            This is occasionally desirable if the input data has already been subjected to QC (e.g., as part of a published paper),
+                            in which case no further filtering should be applied.
+                        </p>
                     </Callout>
                 }
                 {showStepHelper === 3 &&
@@ -579,6 +607,12 @@ const AnalysisDialog = ({
                             Prefix to use to identify features in the dataset that are isotype controls.
                             This is not case-sensitive.
                         </p>
+                        <p>
+                            <strong>Skip</strong>:
+                            Skip all quality control on the ADT count matrix.
+                            This is occasionally desirable if the input data has already been subjected to QC (e.g., as part of a published paper),
+                            in which case no further filtering should be applied.
+                        </p>
                     </Callout>
                 }
                 {showStepHelper === 12 &&
@@ -657,38 +691,51 @@ const AnalysisDialog = ({
                             <Text className="text-100">
                                 <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                     onMouseEnter={() => setShowStepHelper(2)}>
-                                    Number of MADs
+                                    Skip
                                 </span>
                             </Text>
-                            <NumericInput
-                                placeholder="3" value={tmpInputParams["qc"]["qc-nmads"]}
-                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-nmads": nval } }) }} />
-                        </Label>
-                        <Label className="row-input">
-                            <Text className="text-100">
-                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(2)}>
-                                    Use default mitochondrial list ?
-                                </span>
-                            </Text>
-                            <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-usemitodefault"]}
+                            <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["skip"]}
                                 innerLabelChecked="yes" innerLabel="no"
-                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-usemitodefault": e.target.checked } }) }} />
+                                onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "skip": e.target.checked } }) }} />
                         </Label>
-                        {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
-                            <Text className="text-100">
-                                <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                    onMouseEnter={() => setShowStepHelper(2)}>
-                                    Mitochondrial gene prefix
-                                </span>
-                            </Text>
-                            <InputGroup
-                                leftIcon="filter"
-                                onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-mito": nval?.target?.value } }) }}
-                                placeholder="mt-"
-                                value={tmpInputParams["qc"]["qc-mito"]}
-                            />
-                        </Label>}
+                        { tmpInputParams?.qc?.skip !== true && <>
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(2)}>
+                                        Number of MADs
+                                    </span>
+                                </Text>
+                                <NumericInput
+                                    placeholder="3" value={tmpInputParams["qc"]["qc-nmads"]}
+                                    onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-nmads": nval } }) }} />
+                            </Label>
+                            <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(2)}>
+                                        Use default mitochondrial list ?
+                                    </span>
+                                </Text>
+                                <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["qc"]["qc-usemitodefault"]}
+                                    innerLabelChecked="yes" innerLabel="no"
+                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-usemitodefault": e.target.checked } }) }} />
+                            </Label>
+                            {!tmpInputParams["qc"]["qc-usemitodefault"] && <Label className="row-input">
+                                <Text className="text-100">
+                                    <span className={showStepHelper == 2 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                        onMouseEnter={() => setShowStepHelper(2)}>
+                                        Mitochondrial gene prefix
+                                    </span>
+                                </Text>
+                                <InputGroup
+                                    leftIcon="filter"
+                                    onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "qc": { ...tmpInputParams["qc"], "qc-mito": nval?.target?.value } }) }}
+                                    placeholder="mt-"
+                                    value={tmpInputParams["qc"]["qc-mito"]}
+                                />
+                            </Label>}
+                        </>}
                     </div>
                 </div>
             </div>
@@ -1061,13 +1108,28 @@ const AnalysisDialog = ({
                             <div className="row"
                             >
                                 <Label className="row-input">
-                                    <FileInput text={sinputText.mtx} onInputChange={(msg) => { ssetInputText({ ...sinputText, "mtx": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "mtx": msg.target.files[0] }) }} />
+                                    <FileInput text={sinputText.mtx} onInputChange={(msg) => { 
+                                        if (msg.target.files) {
+                                            ssetInputText({ ...sinputText, "mtx": msg.target.files[0].name }); 
+                                            ssetTmpInputFiles({ ...stmpInputFiles, "mtx": msg.target.files[0] }) 
+                                        }
+                                    }} />
                                 </Label>
                                 <Label className="row-input">
-                                    <FileInput text={sinputText.genes} onInputChange={(msg) => { ssetInputText({ ...sinputText, "genes": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "genes": msg.target.files[0] }) }} />
+                                    <FileInput text={sinputText.genes} onInputChange={(msg) => { 
+                                        if (msg.target.files) {
+                                            ssetInputText({ ...sinputText, "genes": msg.target.files[0].name }); 
+                                            ssetTmpInputFiles({ ...stmpInputFiles, "genes": msg.target.files[0] }) 
+                                        }
+                                    }} />
                                 </Label>
                                 <Label className="row-input">
-                                    <FileInput text={sinputText.annotations} onInputChange={(msg) => { ssetInputText({ ...sinputText, "annotations": msg.target.files[0].name }); ssetTmpInputFiles({ ...stmpInputFiles, "annotations": msg.target.files[0] }) }} />
+                                    <FileInput text={sinputText.annotations} onInputChange={(msg) => { 
+                                        if (msg.target.files) {
+                                            ssetInputText({ ...sinputText, "annotations": msg.target.files[0].name }); 
+                                            ssetTmpInputFiles({ ...stmpInputFiles, "annotations": msg.target.files[0] }) 
+                                        }
+                                    }} />
                                 </Label>
                             </div>
                         } />
@@ -1080,8 +1142,10 @@ const AnalysisDialog = ({
                                     }}
                                         text={sinputText.h5}
                                         onInputChange={(msg) => {
-                                            ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
-                                            ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
+                                            if (msg.target.files) {
+                                                ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
+                                                ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
+                                            }
                                         }} />
                                 </Label>
                             </div>
@@ -1095,8 +1159,10 @@ const AnalysisDialog = ({
                                     }}
                                         text={sinputText.h5}
                                         onInputChange={(msg) => {
-                                            ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
-                                            ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
+                                            if (msg.target.files) {
+                                                ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
+                                                ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
+                                            }
                                         }} />
                                 </Label>
                             </div>
@@ -1197,41 +1263,54 @@ const AnalysisDialog = ({
                                 <Text className="text-100">
                                     <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
                                         onMouseEnter={() => setShowStepHelper(11)}>
-                                        Number of MADs
+                                        Skip
                                     </span>
                                 </Text>
-                                <NumericInput
-                                    placeholder="3" value={tmpInputParams["adt_qualitycontrol"]["nmads"]}
-                                    onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "nmads": nval } }) }} />
+                                <Switch style={{ marginTop: '10px' }} large={true} checked={tmpInputParams["adt_qualitycontrol"]["skip"]}
+                                    innerLabelChecked="yes" innerLabel="no"
+                                    onChange={(e) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "skip": e.target.checked } }) }} />
                             </Label>
-                            <Label className="row-input">
-                                <Text className="text-100">
-                                    <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(11)}>
-                                        Minimum Detected Drop
-                                    </span>
-                                </Text>
-                                <NumericInput
-                                placeholder="0.1"
-                                stepSize={0.01}
-                                minorStepSize={0.01}
-                                value={tmpInputParams["adt_qualitycontrol"]["min_detected_drop"]}
-                                onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "min_detected_drop": val } }) }} />
-                            </Label>
-                            <Label className="row-input">
-                                <Text className="text-100">
-                                    <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
-                                        onMouseEnter={() => setShowStepHelper(11)}>
-                                        Prefix for isotype controls.
-                                    </span>
-                                </Text>
-                                <InputGroup
-                                    leftIcon="filter"
-                                    onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "igg_prefix": nval?.target?.value } }) }}
-                                    placeholder="IgG"
-                                    value={tmpInputParams["adt_qualitycontrol"]["igg_prefix"]}
-                                />
-                            </Label>
+                            { tmpInputParams?.adt_qualitycontrol?.skip !== true && <>
+                                <Label className="row-input">
+                                    <Text className="text-100">
+                                        <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                            onMouseEnter={() => setShowStepHelper(11)}>
+                                            Number of MADs
+                                        </span>
+                                    </Text>
+                                    <NumericInput
+                                        placeholder="3" value={tmpInputParams["adt_qualitycontrol"]["nmads"]}
+                                        onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "nmads": nval } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">
+                                        <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                            onMouseEnter={() => setShowStepHelper(11)}>
+                                            Minimum Detected Drop
+                                        </span>
+                                    </Text>
+                                    <NumericInput
+                                    placeholder="0.1"
+                                    stepSize={0.01}
+                                    minorStepSize={0.01}
+                                    value={tmpInputParams["adt_qualitycontrol"]["min_detected_drop"]}
+                                    onValueChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "min_detected_drop": val } }) }} />
+                                </Label>
+                                <Label className="row-input">
+                                    <Text className="text-100">
+                                        <span className={showStepHelper == 11 ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                            onMouseEnter={() => setShowStepHelper(11)}>
+                                            Prefix for isotype controls.
+                                        </span>
+                                    </Text>
+                                    <InputGroup
+                                        leftIcon="filter"
+                                        onChange={(nval, val) => { setTmpInputParams({ ...tmpInputParams, "adt_qualitycontrol": { ...tmpInputParams["adt_qualitycontrol"], "igg_prefix": nval?.target?.value } }) }}
+                                        placeholder="IgG"
+                                        value={tmpInputParams["adt_qualitycontrol"]["igg_prefix"]}
+                                    />
+                                </Label>
+                            </>}
                         </div>
                     </div>
                 </div>
@@ -1443,13 +1522,18 @@ const AnalysisDialog = ({
                                     let tmp = [...tmpInputFiles];
                                     tmp[0]["batch"] = e.target.value;
                                     setTmpInputFiles(tmp);
+
+                                    let gip = {...tmpInputParams};
+                                    gip["batch_correction"]["batch"] = e.target.value;
+                                    setTmpInputParams(gip);
                                 }}
                                 defaultValue={tmpInputFiles[0].batch ? tmpInputFiles[0].batch : "none"}
                             >
                                 <option value="none">None</option>
                                 {
+                                    // AL: why are these checks even necessary? You've got them in the ifs() above.
                                     preInputFilesStatus && preInputFilesStatus?.annotations?.[row["name"]] ?
-                                        preInputFilesStatus.annotations[row["name"]].map((x, i) => <option key={i} value={x}>{x}</option>) : "-"
+                                        Object.keys(preInputFilesStatus.annotations[row["name"]]).map((x, i) => <option key={i} value={x}>{x}</option>) : "-"
                                 }
                             </HTMLSelect>
                         </Cell>
@@ -1547,7 +1631,7 @@ const AnalysisDialog = ({
                                                 preInputFilesStatus && 
                                                 preInputFilesStatus?.features &&
                                                 <div>
-                                                    <Label> Dataset contains:</Label>
+                                                    <H4> Dataset contains:</H4>
                                                     <ul>
                                                         {Object.keys(preInputFilesStatus?.features).map((x,i) => {
                                                         return (
@@ -1569,10 +1653,8 @@ const AnalysisDialog = ({
                                                 tmpInputFiles &&
                                                 tmpInputFiles.length > 0 &&
                                                 preInputFilesStatus && 
-                                                <div style={{
-                                                    "height": ((tmpInputFiles.length + 1) * 40) + "px"
-                                                }}>
-                                                    <h4>Selected datasets:</h4>
+                                                <div>
+                                                    <H4>Selected datasets:</H4>
                                                     {
                                                         preInputFilesStatus && tmpInputFiles.length == 1 ?
                                                             <>
@@ -1611,7 +1693,7 @@ const AnalysisDialog = ({
                                                                 }
                                                             </>
                                                             :
-                                                            <>
+                                                            <div>
                                                                 <div>
                                                                     <Table2
                                                                         numRows={tmpInputFiles.length}
@@ -1635,11 +1717,170 @@ const AnalysisDialog = ({
                                                                     <strong>Note: when multiple files are imported, each dataset is considered a batch.</strong>
     
                                                                 </p>
-                                                            </>
+                                                            </div>
                                                     }
                                                 </div>
                                             }
-    
+
+                                            {
+                                                showSection == "input" && 
+                                                tmpInputFiles &&
+                                                tmpInputFiles.length > 0 &&
+                                                preInputFilesStatus && 
+                                                preInputFilesStatus.annotations &&
+                                                Object.values(preInputFilesStatus.annotations).some(x => x !== null) &&
+                                                <div style={{marginTop: "15px"}}>
+                                                    <H5 className="section-title">
+                                                        <span className={showStepHelper == "subset" ? 'row-tooltip row-tooltip-highlight' : 'row-tooltip'}
+                                                            onMouseEnter={() => setShowStepHelper("subset")}>
+                                                            Subset cells by annotation
+                                                        </span>
+                                                    </H5>
+                                                    <div className="subset-section-top">
+                                                        <Label>Choose an annotation: </Label>
+                                                        <HTMLSelect
+                                                            minimal={true}
+                                                            onChange={(e) => {
+                                                                let gip = {...tmpInputParams};
+
+                                                                if (e.target.value == "none") {
+                                                                    gip["subset"] = null;
+                                                                } else {
+                                                                    gip["subset"] = {field: e.target.value};
+
+                                                                    let available = new Set;
+                                                                    let lower = Number.POSITIVE_INFINITY, upper = Number.NEGATIVE_INFINITY;
+                                                                    let truncated = false;
+                                                                    let any_categorical = false;
+
+                                                                    for (const v of Object.values(preInputFilesStatus.annotations)) {
+                                                                        if (v == null || !(e.target.value in v)) {
+                                                                            continue;
+                                                                        }
+
+                                                                        let current = v[e.target.value];
+                                                                        if (current.type == "categorical") { 
+                                                                            any_categorical = true;
+                                                                            current.values.forEach(x => available.add(x));
+                                                                            truncated = truncated || current.truncated;
+                                                                        } else {
+                                                                            lower = Math.min(lower, current.min);
+                                                                            upper = Math.max(upper, current.max);
+                                                                        }
+                                                                    }
+
+                                                                    if (any_categorical) {
+                                                                        let options = Array.from(available).sort();
+                                                                        if (options.length >= 70) {
+                                                                            // yes, these numbers are meant to be different.
+                                                                            // it's like speeding; you have to be way over the 
+                                                                            // limit before the truncation kicks in.
+                                                                            options = options.slice(0, 50); 
+                                                                            truncated = true;
+                                                                        }
+                                                                        gip["subset"]["options"] = options;
+                                                                        gip["subset"]["values"] = new Set();
+                                                                        gip["subset"]["truncated"] = truncated;
+                                                                    } else {
+                                                                        gip["subset"]["min"] = lower;
+                                                                        gip["subset"]["max"] = upper;
+                                                                        gip["subset"]["chosen_min"] = lower ;
+                                                                        gip["subset"]["chosen_max"] = upper;
+                                                                    }
+                                                                }
+
+                                                                setTmpInputParams(gip);
+                                                            }}
+                                                            defaultValue={tmpInputParams?.subset?.field ? tmpInputParams.subset.field : "none"}
+                                                        >
+                                                            <option value="none">None</option>
+                                                            {
+                                                                (() => {
+                                                                    let collected = new Set;
+                                                                    for (const v of Object.values(preInputFilesStatus.annotations)) {
+                                                                        if (v !== null) {
+                                                                            Object.keys(v).forEach(k => collected.add(k));
+                                                                        }
+                                                                    }
+                                                                    return Array.from(collected).sort().map((x, i) => <option key={i} value={x}>{x}</option>)
+                                                                })()
+                                                            }
+                                                        </HTMLSelect>
+                                                    </div>
+                                                    {
+                                                        tmpInputFiles &&
+                                                        tmpInputFiles.length > 0  && 
+                                                        tmpInputParams.subset &&
+                                                        tmpInputParams.subset?.field != "none" &&
+                                                        <>
+                                                            {
+                                                                (() => {
+                                                                    if ("options" in tmpInputParams.subset) {
+                                                                        return <div className="subset-section">
+                                                                            {
+                                                                                tmpInputParams.subset.options.map(x => 
+                                                                                    <Checkbox
+                                                                                        key={"subset-" + x}
+                                                                                        checked={tmpInputParams.subset.values.has(x)} 
+                                                                                        label={x}
+                                                                                        inline={true}
+                                                                                        onChange={e => {
+                                                                                            let gip = {...tmpInputParams};
+
+                                                                                            if (e.target.checked) {
+                                                                                                gip["subset"]["values"].add(x);
+                                                                                            } else {
+                                                                                                gip["subset"]["values"].delete(x);
+                                                                                            }
+
+                                                                                            setTmpInputParams(gip);
+                                                                                        }}
+                                                                                    />
+                                                                                )
+                                                                            }
+                                                                            {
+                                                                                tmpInputParams.subset.truncated && "... and more"
+                                                                            }
+                                                                        </div>
+                                                                    } else {
+                                                                        return <>
+                                                                            <div className="subset-section">
+                                                                                <div className="subset-range-field">
+                                                                                    <H5>from</H5>
+                                                                                    <NumericInput 
+                                                                                        min={isFinite(tmpInputParams.subset.min) ? tmpInputParams.subset.min : undefined}
+                                                                                        max={isFinite(tmpInputParams.subset.max) ? tmpInputParams.subset.max: undefined}
+                                                                                        value={isFinite(tmpInputParams.subset.chosen_min) ? tmpInputParams.subset.chosen_min : undefined}
+                                                                                        onValueChange={e => {
+                                                                                            let gip = {...tmpInputParams};
+                                                                                            gip["subset"]["chosen_min"] = e;
+                                                                                            setTmpInputParams(gip);
+                                                                                        }}
+                                                                                    />
+                                                                                </div>
+                                                                                <div className="subset-range-field">
+                                                                                    <H5>to</H5>
+                                                                                    <NumericInput 
+                                                                                        min={isFinite(tmpInputParams.subset.min) ? tmpInputParams.subset.min : undefined}
+                                                                                        max={isFinite(tmpInputParams.subset.max) ? tmpInputParams.subset.max: undefined}
+                                                                                        value={isFinite(tmpInputParams.subset.chosen_max) ? tmpInputParams.subset.chosen_max : undefined}
+                                                                                        onValueChange={e => {
+                                                                                            let gip = {...tmpInputParams};
+                                                                                            gip["subset"]["chosen_max"] = e;
+                                                                                            setTmpInputParams(gip);
+                                                                                        }}
+                                                                                    />  
+                                                                                </div>
+                                                                            </div>
+                                                                        </>
+                                                                    }
+                                                                })()
+                                                            }
+                                                        </>
+                                                    }
+                                                </div>
+                                            }
+
                                             {showSection == "params" && get_input_qc()}
                                             {showSection == "params" && 
                                                 Object.keys(preInputFilesStatus?.features).length > 1
@@ -1734,6 +1975,21 @@ const AnalysisDialog = ({
 
                                                 <p><strong>Batch correction:</strong> you can now import more than one file to integrate and analyze datasets.
                                                     If you only import a single dataset, specify the annotation column that contains the batch information.</p>
+                                            </Callout>
+                                        }
+                                        {showStepHelper === "subset" &&
+                                            <Callout intent="primary">
+                                                <p>We can (optionally) restrict the analysis to a pre-defined subset of cells.</p>
+                                                <p>
+                                                    We peek at the per-cell annotation available from the dataset, if any exists.
+                                                    For an annotation field of interest, we can select groups of interest (for categorical fields) or a range of values (for continuous fields).
+                                                    This defines a subset of cells that is passed onto the downstream analysis.
+                                                </p>
+                                                <p>
+                                                    For categorical fields, only the first 50 levels are shown, otherwise we'd run out of space.
+                                                    For continuous fields, the defaults are set to the minimum and maximum values across all cells -
+                                                    empty fields correspond to negative and positive infinity, respectively.
+                                                </p>
                                             </Callout>
                                         }
                                         {get_common_tooltips()}

@@ -20,7 +20,8 @@ const AppContextProvider = ({ children }) => {
     qc: {
       "qc-nmads": 3,
       "qc-usemitodefault": true,
-      "qc-mito": "mt-"
+      "qc-mito": "mt-",
+      "skip": false
     },
     fSelection: {
       "fsel-span": 0.3
@@ -56,7 +57,8 @@ const AppContextProvider = ({ children }) => {
     adt_qualitycontrol: {
       igg_prefix: "IgG",
       nmads: 3,
-      min_detected_drop: 0.1
+      min_detected_drop: 0.1,
+      skip: false
     },
     adt_pca: {
       num_pcs: 20,
@@ -71,10 +73,12 @@ const AppContextProvider = ({ children }) => {
     batch_correction: {
       method: "none",
       num_neighbors: 15,
+      batch: null
     },
     ann: {
       approximate: true
-    }
+    },
+    subset : null
   });
 
   // which tab is selected ? defaults to new

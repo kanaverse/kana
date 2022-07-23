@@ -511,7 +511,7 @@ const DimPlot = (props) => {
 
         let cid = Object.keys(props?.customSelection).length;
         let tmpSelection = { ...props?.customSelection };
-        tmpSelection[`cs${cid + 1}`] = props?.selectedPoints;
+        tmpSelection[`cs${cid + 1}`] = props?.selectedPoints?.sort((a, b) => { return a-b });
         props?.setCustomSelection(tmpSelection);
 
         props?.setSelectedPoints(null);
@@ -858,10 +858,6 @@ const DimPlot = (props) => {
                 }
                 {showGradient ?
                     <div className='right-sidebar-slider'>
-                        {props?.selectedModality}
-                        {geneColSel[props?.selectedModality]}
-                        {props?.gene}
-                        {genesInfo[geneColSel[props?.selectedModality]][props?.gene]}
                         <Callout>
                             <span>Gradient for <Tag
                                 minimal={true}
