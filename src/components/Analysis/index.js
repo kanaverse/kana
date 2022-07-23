@@ -1,6 +1,6 @@
 import {
     Button, Classes, Text, FileInput, NumericInput,
-    Label, H5, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
+    Label, H5, H4, Tag, HTMLSelect, Switch, Callout, Tabs, Tab,
     RadioGroup, Radio, Icon, Position,
     InputGroup, Checkbox,
     Drawer,
@@ -1738,7 +1738,7 @@ const AnalysisDialog = ({
                                                             {
                                                                 (() => {
                                                                     if ("options" in tmpInputParams.subset) {
-                                                                        return <>
+                                                                        return <div className="subset-section">
                                                                             {
                                                                                 tmpInputParams.subset.options.map(x => 
                                                                                     <Checkbox
@@ -1763,39 +1763,37 @@ const AnalysisDialog = ({
                                                                             {
                                                                                 tmpInputParams.subset.truncated && "... and more"
                                                                             }
-                                                                        </>
+                                                                        </div>
                                                                     } else {
                                                                         return <>
-                                                                            <table style={{display:"inline-table", verticalAlign: "top"}}>
-                                                                                <tr>
-                                                                                    <td>from</td>
-                                                                                    <td> 
-                                                                                        <NumericInput 
-                                                                                            min={isFinite(tmpInputParams.subset.min) ? tmpInputParams.subset.min : undefined}
-                                                                                            max={isFinite(tmpInputParams.subset.max) ? tmpInputParams.subset.max: undefined}
-                                                                                            value={isFinite(tmpInputParams.subset.chosen_min) ? tmpInputParams.subset.chosen_min : undefined}
-                                                                                            onValueChange={e => {
-                                                                                                let gip = {...tmpInputParams};
-                                                                                                gip["subset"]["chosen_min"] = e;
-                                                                                                setTmpInputParams(gip);
-                                                                                            }}
-                                                                                        />
-                                                                                    </td>
-                                                                                    <td>to</td>
-                                                                                    <td>
-                                                                                        <NumericInput 
-                                                                                            min={isFinite(tmpInputParams.subset.min) ? tmpInputParams.subset.min : undefined}
-                                                                                            max={isFinite(tmpInputParams.subset.max) ? tmpInputParams.subset.max: undefined}
-                                                                                            value={isFinite(tmpInputParams.subset.chosen_max) ? tmpInputParams.subset.chosen_max : undefined}
-                                                                                            onValueChange={e => {
-                                                                                                let gip = {...tmpInputParams};
-                                                                                                gip["subset"]["chosen_max"] = e;
-                                                                                                setTmpInputParams(gip);
-                                                                                            }}
-                                                                                        />
-                                                                                    </td>
-                                                                                </tr>
-                                                                            </table>
+                                                                            <div className="subset-section">
+                                                                                <div className="subset-range-field">
+                                                                                    <H5>from</H5>
+                                                                                    <NumericInput 
+                                                                                        min={isFinite(tmpInputParams.subset.min) ? tmpInputParams.subset.min : undefined}
+                                                                                        max={isFinite(tmpInputParams.subset.max) ? tmpInputParams.subset.max: undefined}
+                                                                                        value={isFinite(tmpInputParams.subset.chosen_min) ? tmpInputParams.subset.chosen_min : undefined}
+                                                                                        onValueChange={e => {
+                                                                                            let gip = {...tmpInputParams};
+                                                                                            gip["subset"]["chosen_min"] = e;
+                                                                                            setTmpInputParams(gip);
+                                                                                        }}
+                                                                                    />
+                                                                                </div>
+                                                                                <div className="subset-range-field">
+                                                                                    <H5>to</H5>
+                                                                                    <NumericInput 
+                                                                                        min={isFinite(tmpInputParams.subset.min) ? tmpInputParams.subset.min : undefined}
+                                                                                        max={isFinite(tmpInputParams.subset.max) ? tmpInputParams.subset.max: undefined}
+                                                                                        value={isFinite(tmpInputParams.subset.chosen_max) ? tmpInputParams.subset.chosen_max : undefined}
+                                                                                        onValueChange={e => {
+                                                                                            let gip = {...tmpInputParams};
+                                                                                            gip["subset"]["chosen_max"] = e;
+                                                                                            setTmpInputParams(gip);
+                                                                                        }}
+                                                                                    />  
+                                                                                </div>
+                                                                            </div>
                                                                         </>
                                                                     }
                                                                 })()
