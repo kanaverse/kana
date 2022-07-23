@@ -28,6 +28,7 @@ const Gallery = (props) => {
   const [items, setItems] = useState([]);
   const [itemContent, setItemContent] = useState({});
   const { datasetName, genesInfo, geneColSel } = useContext(AppContext);
+  const [qcids, setQCids] = useState([]);
 
   function get_image_title(data) {
     let text = ` ${data?.config?.embedding} `;
@@ -92,6 +93,7 @@ const Gallery = (props) => {
     let tmpItemContent = { ...itemContent };
 
     if (props?.qcData && isObject(props?.qcData?.data)) {
+      let tqcid = [...qcids];
       Object.keys(props?.qcData?.data).map((x, qci) => {
         let tqc = {
           data: props?.qcData?.data[x],
@@ -101,6 +103,7 @@ const Gallery = (props) => {
 
         if (!tmpItems.includes(`${1 + qci}`)) {
           tmpItems.push(`${1 + qci}`);
+          tqcid.push(`${1 + qci}`);
         }
 
         let title = `QC for batch: ${x}`;
@@ -124,6 +127,16 @@ const Gallery = (props) => {
           content: <QCPlotMgr title={x} data={tqc} />,
         };
       });
+
+      setQCids(tqcid);
+    } else {
+      if (qcids && qcids.length > 0) {
+        qcids.map(x => {
+          tmpItems.splice(tmpItems.indexOf(x), 1);
+          delete tmpItemContent[`${x}`];
+        });
+        setQCids([]);
+      }
     }
 
     if (Object.keys(props?.pcaVarExp).length > 0) {
