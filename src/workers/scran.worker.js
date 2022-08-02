@@ -3,50 +3,7 @@ import * as kana_db from "./KanaDBHandler.js";
 import * as downloads from "./DownloadsDBHandler.js";
 import * as hashwasm from "hash-wasm";
 import * as translate from "./translate.js";
-
-/***************************************/
-
-function extractBuffers(object, store) {
-    if (!object) {
-        return;
-    }
-
-    if (Array.isArray(object)) {
-        for (const element of object) {
-            extractBuffers(element, store);
-        }
-    } else if (object.constructor == Object) {
-        for (const [key, element] of Object.entries(object)) {
-            extractBuffers(element, store);
-        }
-    } else if (ArrayBuffer.isView(object)) {
-        if (!(object.buffer instanceof ArrayBuffer)) {
-            throw "only ArrayBuffers should be in the message payload";
-        }
-        store.push(object.buffer);
-    }
-}
-
-function postAttempt(step) {
-    postMessage({
-        type: `${step}_START`
-    });
-}
-
-function postSuccess(step, info) {
-    if (typeof info == "undefined") {
-        postMessage({
-            type: `${step}_CACHE`
-        });
-    } else {
-        var transferable = [];
-        extractBuffers(info, transferable);
-        postMessage({
-            type: `${step}_DATA`,
-            resp: info
-        }, transferable);
-    }
-}
+import { extractBuffers, postAttempt, postSuccess, postError } from "./helpers.js";
 
 /***************************************/
 
@@ -62,16 +19,6 @@ bakana.setVisualizationAnimate((type, x, y, iter) => {
         iteration: iter
     }, [x.buffer, y.buffer]);
 });
-
-function runAllSteps(inputs, params) {
-    let formatted = translate.fromUI(inputs, params);
-
-    console.log("formatted", formatted);
-
-    return bakana.runAnalysis(superstate, inputs.files, formatted, { startFun: postAttempt, finishFun: postSuccess });
-}
-
-/***************************************/
 
 function linkKanaDb(collected) {
     return async (type, name, buffer) => {
@@ -139,16 +86,6 @@ async function unserializeAllSteps(contents) {
     }
 
     return output;
-}
-
-function postError(type, err, fatal) {
-    postMessage({
-        type: `${type}_ERROR`,
-        resp: {
-            reason: err.toString(),
-            fatal: fatal
-        },
-    });
 }
 
 /***************************************/
@@ -234,7 +171,9 @@ onmessage = function (msg) {
         fatal = true;
         loaded
             .then(x => {
-                runAllSteps(payload.inputs, payload.params)
+                let inputs = payload.inputs;
+                let formatted = translate.fromUI(inputs, payload.params);
+                bakana.runAnalysis(superstate, inputs.files, formatted, { startFun: postAttempt, finishFun: postSuccess })
                     .catch(err => {
                         console.error(err);
                         postError(type, err, fatal)
