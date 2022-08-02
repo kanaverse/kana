@@ -129,7 +129,8 @@ export function toUI(params) {
 
     let reversed = {
         inputs: {
-            "batch": safeExtract("inputs", "sample_factor")
+            "batch": safeExtract("inputs", "sample_factor"),
+            "subset": safeExtract("inputs", "subset")
         }
     };
 

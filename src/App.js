@@ -348,7 +348,8 @@ const App = () => {
             "payload": {
               "inputs": {
                 "files": null,
-                "batch": loadParams?.inputs?.batch
+                "batch": loadParams?.inputs?.batch,
+                "subset": loadParams?.inputs?.subset
               },
               "params": params
             },
