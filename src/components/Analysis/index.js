@@ -99,19 +99,18 @@ const AnalysisDialog = ({
                 } else {
                     newInputFiles.batch = first.batch;
                 }
+            } else {
+                newInputFiles.batch = null;
             }
 
-            if (mapkeys.length == 1) {
-                let first = tmpInputParams;
-                if (first.subset == undefined || first.subset.field == "none") {
-                    newInputFiles.subset = null;
+            if (tmpInputParams.subset == undefined || tmpInputParams.subset.field == "none") {
+                newInputFiles.subset = null;
+            } else {
+                newInputFiles.subset = { field: tmpInputParams.subset.field };
+                if ("values" in tmpInputParams.subset) {
+                    newInputFiles.subset.values = Array.from(tmpInputParams.subset.values);
                 } else {
-                    newInputFiles.subset = { field: first.subset.field };
-                    if ("values" in first.subset) {
-                        newInputFiles.subset.values = Array.from(first.subset.values);
-                    } else {
-                        newInputFiles.subset.ranges = [[first.subset.chosen_min, first.subset.chosen_max]];
-                    }
+                    newInputFiles.subset.ranges = [[tmpInputParams.subset.chosen_min, tmpInputParams.subset.chosen_max]];
                 }
             }
         }
