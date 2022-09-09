@@ -1,7 +1,7 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
 import {
     Button, H4, H5, Icon, Collapse, InputGroup, Text,
-    RangeSlider, Tag, HTMLSelect, Classes, Card, Elevation
+    RangeSlider, Tag, HTMLSelect, Classes, Card, Elevation, Label
 } from "@blueprintjs/core";
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 import { Virtuoso } from 'react-virtuoso';
@@ -207,40 +207,46 @@ const MarkerPlot = (props) => {
             </Popover2>
             {
                 props?.modality ?
-                    <HTMLSelect
-                        onChange={(x) => {
-                            props?.setSelectedModality(x.currentTarget?.value);
-                            setMarkerFilter({});
-                        }}>
-                        {
-                            props?.modality.map((x, i) => (
-                                <option key={x}>{x}</option>
-                            ))
-                        }
-                    </HTMLSelect>
+                    <Label style={{textAlign: "left"}}>
+                        Select Modality
+                        <HTMLSelect
+                            onChange={(x) => {
+                                props?.setSelectedModality(x.currentTarget?.value);
+                                setMarkerFilter({});
+                            }}>
+                            {
+                                props?.modality.map((x, i) => (
+                                    <option key={x}>{x}</option>
+                                ))
+                            }
+                        </HTMLSelect>
+                    </Label>
                     : ""
             }
             {
                 clusSel ?
-                    <HTMLSelect
-                        onChange={(x) => {
-                            let tmpselection = x.currentTarget?.value;
-                            if (tmpselection.startsWith("Cluster")) {
-                                tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1
-                            } else if (tmpselection.startsWith("Custom")) {
-                                tmpselection = tmpselection.replace("Custom Selection ", "")
-                            }
-                            props?.setSelectedCluster(tmpselection);
+                    <Label style={{textAlign: "left"}}>
+                        Select Cluster
+                            <HTMLSelect
+                                onChange={(x) => {
+                                    let tmpselection = x.currentTarget?.value;
+                                    if (tmpselection.startsWith("Cluster")) {
+                                        tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1
+                                    } else if (tmpselection.startsWith("Custom")) {
+                                        tmpselection = tmpselection.replace("Custom Selection ", "")
+                                    }
+                                    props?.setSelectedCluster(tmpselection);
 
-                            setMarkerFilter({});
-                            props?.setGene(null);
-                        }}>
-                        {
-                            clusSel.map((x, i) => (
-                                <option key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
-                            ))
-                        }
-                    </HTMLSelect>
+                                    setMarkerFilter({});
+                                    props?.setGene(null);
+                                }}>
+                                {
+                                    clusSel.map((x, i) => (
+                                        <option key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
+                                    ))
+                                }
+                            </HTMLSelect>
+                    </Label>
                     : ""
             }
             {
