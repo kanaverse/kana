@@ -6,7 +6,7 @@
 
 .marker-table {
     display: grid;
-    grid-template-rows: 35px calc(100vh - 450px) 275px;
+    grid-template-rows: 35px calc(100vh - 550px) 275px;
     grid-template-columns: auto;
     padding: 5px 0 0 0;
     /* gap: 5px; */
