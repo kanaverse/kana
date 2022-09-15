@@ -274,6 +274,7 @@ const MarkerPlot = (props) => {
 
                                 setMarkerFilter({});
                                 props?.setGene(null);
+                                props?.setSelectedVSCluster(null);
                             }}>
                             {
                                 clusSel.map((x, i) => (
@@ -300,7 +301,7 @@ const MarkerPlot = (props) => {
                                 props?.selectedVSCluster == null && <option selected={true}>Choose a Cluster</option>
                             }
                             {
-                                clusSel.map((x, i) => (
+                                clusSel.filter((x,i) => String(props?.selectedCluster).startsWith("cs") ? String(x).startsWith("cs") : !String(x).startsWith("cs") ).map((x, i) => (
                                     <option key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
                                 ))
                             }
