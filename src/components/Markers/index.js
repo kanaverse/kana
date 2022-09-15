@@ -297,8 +297,11 @@ const MarkerPlot = (props) => {
                                 props?.setGene(null);
                             }}>
                             {
+                                props?.selectedVSCluster == null && <option selected={true}>Choose a Cluster</option>
+                            }
+                            {
                                 clusSel.map((x, i) => (
-                                    <option selected={String(props?.selectedCluster).startsWith("cs") ? props?.selectedCluster == x : parseInt(props?.selectedCluster) + 1 == x} key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
+                                    <option key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
                                 ))
                             }
                         </HTMLSelect>

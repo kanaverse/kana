@@ -209,14 +209,14 @@ const App = () => {
   useEffect(() => {
     if (selectedVSCluster !== null && selectedModality != null && 
       selectedCluster !== selectedVSCluster) {
-      scranWorker.postMessage({
-        "type": "VS_MODE", // TODO: change this type later
-        "payload": {
-          "modality": selectedModality,
-          "cluster": selectedCluster,
-          "rank_type": clusterRank,
-        }
-      });
+      // scranWorker.postMessage({
+      //   "type": "VS_MODE", // TODO: change this type later
+      //   "payload": {
+      //     "modality": selectedModality,
+      //     "cluster": selectedCluster,
+      //     "rank_type": clusterRank,
+      //   }
+      // });
 
       add_to_logs("info", `--- ${type} sent ---`);
     }
