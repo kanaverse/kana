@@ -187,38 +187,38 @@ const App = () => {
 
   // request worker for new markers 
   // if either the cluster or the ranking changes
-  useEffect(() => {
-    if (selectedCluster !== null && selectedModality != null) {
-
-      let type = String(selectedCluster).startsWith("cs") ?
-        "getMarkersForSelection" : "getMarkersForCluster";
-      scranWorker.postMessage({
-        "type": type,
-        "payload": {
-          "modality": selectedModality,
-          "cluster": selectedCluster,
-          "rank_type": clusterRank,
-        }
-      });
-
-      add_to_logs("info", `--- ${type} sent ---`);
-    }
-  }, [selectedCluster, clusterRank, selectedModality]);
-
   // VS mode
   useEffect(() => {
-    if (selectedVSCluster !== null && selectedModality != null && 
-      selectedCluster !== selectedVSCluster) {
-      // scranWorker.postMessage({
-      //   "type": "VS_MODE", // TODO: change this type later
-      //   "payload": {
-      //     "modality": selectedModality,
-      //     "cluster": selectedCluster,
-      //     "rank_type": clusterRank,
-      //   }
-      // });
+    if (selectedModality !== null && clusterRank !== null) {
+      if (selectedVSCluster !== null && selectedCluster !== null) {
+          let type = String(selectedCluster).startsWith("cs") ?
+          "computeVersusSelections" : "computeVersusClusters";
+        scranWorker.postMessage({
+          "type": type,
+          "payload": {
+            "modality": selectedModality,
+            "left": selectedCluster,
+            "right": selectedVSCluster,
+            "rank_type": clusterRank,
+          }
+        });
+  
+        add_to_logs("info", `--- ${type} sent ---`);
+      } else if (selectedCluster !== null) {
 
-      add_to_logs("info", `--- ${type} sent ---`);
+        let type = String(selectedCluster).startsWith("cs") ?
+          "getMarkersForSelection" : "getMarkersForCluster";
+        scranWorker.postMessage({
+          "type": type,
+          "payload": {
+            "modality": selectedModality,
+            "cluster": selectedCluster,
+            "rank_type": clusterRank,
+          }
+        });
+  
+        add_to_logs("info", `--- ${type} sent ---`);
+      }
     }
   }, [selectedCluster, selectedVSCluster, clusterRank, selectedModality]);
 
@@ -637,7 +637,9 @@ const App = () => {
       setTriggerAnimation(false);
       setShowDimPlotLoader(false);
     } else if (payload.type === "setMarkersForCluster"
-      || payload.type === "setMarkersForCustomSelection") {
+      || payload.type === "setMarkersForCustomSelection" 
+      || payload.type === "computeVersusSelections" 
+      || payload.type === "computeVersusClusters" ) {
       const { resp } = payload;
       let records = [];
       let index = Array(resp.ordering.length);

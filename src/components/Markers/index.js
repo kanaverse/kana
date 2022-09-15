@@ -254,7 +254,12 @@ const MarkerPlot = (props) => {
                         </Popover2>
                         <Switch large={false} checked={vsmode}
                             innerLabelChecked="yes" innerLabel="no"
-                            onChange={(e) => { setVsmode(e.target.checked) }} />
+                            onChange={(e) => { 
+                                if (e.target.checked === false) {
+                                    props?.setSelectedVSCluster(null);
+                                }
+                                setVsmode(e.target.checked) 
+                            }} />
                     </div>
                 </div>
             }
