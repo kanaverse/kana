@@ -105,6 +105,8 @@ const App = () => {
   const [selectedClusterIndex, setSelectedClusterIndex] = useState([]);
   // set Cluster rank-type
   const [clusterRank, setClusterRank] = useState("cohen-min-rank");
+  // which cluster is selected for vsmode
+  const [selectedVSCluster, setSelectedVSCluster] = useState(null);
 
   // Cluster Analysis
   // cluster assignments
@@ -202,6 +204,23 @@ const App = () => {
       add_to_logs("info", `--- ${type} sent ---`);
     }
   }, [selectedCluster, clusterRank, selectedModality]);
+
+  // VS mode
+  useEffect(() => {
+    if (selectedVSCluster !== null && selectedModality != null && 
+      selectedCluster !== selectedVSCluster) {
+      scranWorker.postMessage({
+        "type": "VS_MODE", // TODO: change this type later
+        "payload": {
+          "modality": selectedModality,
+          "cluster": selectedCluster,
+          "rank_type": clusterRank,
+        }
+      });
+
+      add_to_logs("info", `--- ${type} sent ---`);
+    }
+  }, [selectedCluster, selectedVSCluster, clusterRank, selectedModality]);
 
   // compute markers in the worker 
   // when a new custom selection of cells is made through the UI
@@ -849,6 +868,8 @@ const App = () => {
                   selectedClusterIndex={selectedClusterIndex}
                   selectedCluster={selectedCluster}
                   setSelectedCluster={setSelectedCluster}
+                  selectedVSCluster={selectedVSCluster} 
+                  setSelectedVSCluster={setSelectedVSCluster}
                   setClusterRank={setClusterRank}
                   clusterData={clusterData}
                   customSelection={customSelection}

@@ -125,3 +125,25 @@
     font-weight: bold;
     overflow-wrap: break-word;
 }
+
+.marker-cluster-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.marker-vsmode {
+    display: flex;
+    flex-direction: row;
+}
+
+.marker-cluster-selection {
+    display: flex;
+    flex-direction: row;
+    justify-content: stretch;
+}
+
+.marker-cluster-selection-width {
+    width: 100%;
+    margin: 0 2px;
+}
