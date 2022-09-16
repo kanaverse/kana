@@ -267,7 +267,7 @@ const MarkerPlot = (props) => {
                 clusSel ?
                     <div className='marker-cluster-selection'>
                         <HTMLSelect
-                        className='marker-cluster-selection-width'
+                            className='marker-cluster-selection-width'
                             onChange={(x) => {
                                 let tmpselection = x.currentTarget?.value;
                                 if (tmpselection.startsWith("Cluster")) {
@@ -283,34 +283,53 @@ const MarkerPlot = (props) => {
                             }}>
                             {
                                 clusSel.map((x, i) => (
-                                    <option key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
+                                    <option 
+                                        selected={String(props?.selectedCluster).startsWith("cs") ? x ==  props?.selectedCluster : parseInt(x) - 1 == parseInt(props?.selectedCluster)} 
+                                        key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
                                 ))
                             }
                         </HTMLSelect>
                         {
-                            vsmode &&  <HTMLSelect
-                            className='marker-cluster-selection-width'
-                            onChange={(x) => {
-                                let tmpselection = x.currentTarget?.value;
-                                if (tmpselection.startsWith("Cluster")) {
-                                    tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1
-                                } else if (tmpselection.startsWith("Custom")) {
-                                    tmpselection = tmpselection.replace("Custom Selection ", "")
-                                }
-                                props?.setSelectedVSCluster(tmpselection);
+                            vsmode &&  
+                            <>
+                            <Button style={{margin: "0 3px"}} onClick={() => {
+                                let mid = props?.selectedVSCluster;
+                                props?.setSelectedVSCluster(props?.selectedCluster)
+                                props?.setSelectedCluster(mid);
 
                                 setMarkerFilter({});
                                 props?.setGene(null);
-                            }}>
-                            {
-                                props?.selectedVSCluster == null && <option selected={true}>Choose a Cluster</option>
-                            }
-                            {
-                                clusSel.filter((x,i) => String(props?.selectedCluster).startsWith("cs") ? String(x).startsWith("cs") : !String(x).startsWith("cs") ).map((x, i) => (
-                                    <option key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
-                                ))
-                            }
-                        </HTMLSelect>
+                            }} icon="exchange" disabled={props?.selectedVSCluster == null} outlined={true} intent="primary"></Button>
+                            <HTMLSelect
+                                className='marker-cluster-selection-width'
+                                onChange={(x) => {
+                                    let tmpselection = x.currentTarget?.value;
+                                    if (tmpselection.startsWith("Cluster")) {
+                                        tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1
+                                    } else if (tmpselection.startsWith("Custom")) {
+                                        tmpselection = tmpselection.replace("Custom Selection ", "")
+                                    }
+                                    props?.setSelectedVSCluster(tmpselection);
+
+                                    setMarkerFilter({});
+                                    props?.setGene(null);
+                                }}>
+                                {
+                                    props?.selectedVSCluster == null && <option selected={true}>Choose a Cluster</option>
+                                }
+                                {
+                                    clusSel.filter((x,i) => String(props?.selectedCluster).startsWith("cs") ? 
+                                            String(x).startsWith("cs") && String(x) !== String(props?.selectedCluster) : 
+                                            !String(x).startsWith("cs") && parseInt(x) - 1 !== parseInt(props?.selectedCluster))
+                                        // .filter((x,i) => String(props?.selectedCluster) == String(x) )
+                                        .map((x, i) => (
+                                            <option 
+                                                selected={String(props?.selectedVSCluster).startsWith("cs") ? x ==  props?.selectedVSCluster : parseInt(x) - 1 == parseInt(props?.selectedVSCluster)}
+                                                key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
+                                        ))
+                                }
+                            </HTMLSelect>
+                            </>
                         }
                     </div>
                     : ""
