@@ -316,6 +316,35 @@ onmessage = function (msg) {
                 postError(type, err, fatal)
             });
 
+        /**************** VERSUS MODE *******************/
+    } else if (type == "computeVersusClusters") {
+        loaded.then(x => {
+            let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
+            let res = superstate.marker_detection.computeVersus(payload.left, payload.right, rank_type, payload.modality);
+            postMessage({
+                type: "computeVersusClusters",
+                resp: res,
+                msg: "Success: COMPUTE_VERSUS_CLUSTERS done"
+            });
+        }).catch(err => {
+            console.error(err);
+            postError(type, err, fatal)
+        });
+
+    } else if (type == "computeVersusSelections") {
+        loaded.then(x => {
+            let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
+            let res = superstate.custom_selections.computeVersus(payload.left, payload.right, rank_type, payload.modality);
+            postMessage({
+                type: "computeVersusSelections",
+                resp: res,
+                msg: "Success: COMPUTE_VERSUS_SELECTIONS done"
+            });
+        }).catch(err => {
+            console.error(err);
+            postError(type, err, fatal)
+        });
+
         /**************** OTHER EVENTS FROM UI *******************/
     } else if (type == "getMarkersForCluster") {
         loaded.then(x => {

@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useState, useMemo } from 'react';
 import {
-    Button, H4, H5, Icon, Collapse, InputGroup, Text,
+    Button, H4, H5, Icon, Collapse, InputGroup, Text, Switch,
     RangeSlider, Tag, HTMLSelect, Classes, Card, Elevation, Label
 } from "@blueprintjs/core";
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
@@ -39,6 +39,9 @@ const MarkerPlot = (props) => {
     const [markerFilter, setMarkerFilter] = useState({});
     // records to show after filtering
     const [prosRecords, setProsRecords] = useState(null);
+
+    // toggle for vs mode
+    const [vsmode, setVsmode] = useState(false);
 
     // scale to use for detected on expression bar
     const detectedScale = d3.interpolateRdYlBu; //d3.interpolateRdBu;
@@ -207,7 +210,7 @@ const MarkerPlot = (props) => {
             </Popover2>
             {
                 props?.modality ?
-                    <Label style={{textAlign: "left"}}>
+                    <Label style={{textAlign: "left", marginBottom:"5px"}}>
                         Select Modality
                         <HTMLSelect
                             onChange={(x) => {
@@ -224,29 +227,115 @@ const MarkerPlot = (props) => {
                     : ""
             }
             {
+                <div className='marker-cluster-header'>
+                    <Label style={{marginBottom:"0"}}>Select Cluster</Label>
+                    <div className='marker-vsmode'>
+                        <Popover2
+                            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                            hasBackdrop={false}
+                            interactionKind="hover"
+                            placement='left'
+                            hoverOpenDelay={500}
+                            modifiers={{
+                                arrow: { enabled: true },
+                                flip: { enabled: true },
+                                preventOverflow: { enabled: true },
+                            }}
+                            content={
+                                <Card style={{
+                                    width: '450px'
+                                }} elevation={Elevation.ZERO}
+                                >
+                                    <p>
+                                    By default, the <strong>general</strong> mode will rank markers for a cluster or custom selection based on the comparison to all other clusters or cells.
+                                    <br /><br />Users can instead enable <strong>versus</strong> mode to compare markers between two clusters or between two custom selections.
+                                    This is useful for identifying subtle differences between closely related groups of cells.
+                                   </p>
+                                </Card>
+                            }
+                        >
+                            <Icon intent="warning" icon="comparison" style={{ paddingRight: '5px' }}></Icon>
+                        </Popover2>
+                        <Switch large={false} checked={vsmode}
+                            innerLabelChecked="versus" innerLabel="general"
+                            onChange={(e) => { 
+                                if (e.target.checked === false) {
+                                    props?.setSelectedVSCluster(null);
+                                }
+                                setVsmode(e.target.checked) 
+                            }} />
+                    </div>
+                </div>
+            }
+            {
                 clusSel ?
-                    <Label style={{textAlign: "left"}}>
-                        Select Cluster
-                            <HTMLSelect
-                                onChange={(x) => {
-                                    let tmpselection = x.currentTarget?.value;
-                                    if (tmpselection.startsWith("Cluster")) {
-                                        tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1
-                                    } else if (tmpselection.startsWith("Custom")) {
-                                        tmpselection = tmpselection.replace("Custom Selection ", "")
-                                    }
-                                    props?.setSelectedCluster(tmpselection);
+                    <div className='marker-cluster-selection'>
+                        <HTMLSelect
+                            className='marker-cluster-selection-width'
+                            onChange={(x) => {
+                                let tmpselection = x.currentTarget?.value;
+                                if (tmpselection.startsWith("Cluster")) {
+                                    tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1
+                                } else if (tmpselection.startsWith("Custom")) {
+                                    tmpselection = tmpselection.replace("Custom Selection ", "")
+                                }
+                                props?.setSelectedCluster(tmpselection);
+
+                                setMarkerFilter({});
+                                props?.setGene(null);
+                                props?.setSelectedVSCluster(null);
+                            }}>
+                            {
+                                clusSel.map((x, i) => (
+                                    <option 
+                                        selected={String(props?.selectedCluster).startsWith("cs") ? x ==  props?.selectedCluster : parseInt(x) - 1 == parseInt(props?.selectedCluster)} 
+                                        key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
+                                ))
+                            }
+                        </HTMLSelect>
+                        {
+                            vsmode &&  
+                            <>
+                                <Button style={{margin: "0 3px"}} onClick={() => {
+                                    let mid = props?.selectedVSCluster;
+                                    props?.setSelectedVSCluster(props?.selectedCluster)
+                                    props?.setSelectedCluster(mid);
 
                                     setMarkerFilter({});
                                     props?.setGene(null);
-                                }}>
-                                {
-                                    clusSel.map((x, i) => (
-                                        <option key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
-                                    ))
-                                }
-                            </HTMLSelect>
-                    </Label>
+                                }} icon="exchange" disabled={props?.selectedVSCluster == null} outlined={true} intent="primary"></Button>
+                                <HTMLSelect
+                                    className='marker-cluster-selection-width'
+                                    onChange={(x) => {
+                                        let tmpselection = x.currentTarget?.value;
+                                        if (tmpselection.startsWith("Cluster")) {
+                                            tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1
+                                        } else if (tmpselection.startsWith("Custom")) {
+                                            tmpselection = tmpselection.replace("Custom Selection ", "")
+                                        }
+                                        props?.setSelectedVSCluster(tmpselection);
+
+                                        setMarkerFilter({});
+                                        props?.setGene(null);
+                                    }}>
+                                    {
+                                        props?.selectedVSCluster == null && <option selected={true}>Choose a Cluster</option>
+                                    }
+                                    {
+                                        clusSel.filter((x,i) => String(props?.selectedCluster).startsWith("cs") ? 
+                                                String(x).startsWith("cs") && String(x) !== String(props?.selectedCluster) : 
+                                                !String(x).startsWith("cs") && parseInt(x) - 1 !== parseInt(props?.selectedCluster))
+                                            // .filter((x,i) => String(props?.selectedCluster) == String(x) )
+                                            .map((x, i) => (
+                                                <option 
+                                                    selected={String(props?.selectedVSCluster).startsWith("cs") ? x ==  props?.selectedVSCluster : parseInt(x) - 1 == parseInt(props?.selectedVSCluster)}
+                                                    key={i}>{String(x).startsWith("cs") ? "Custom Selection" : "Cluster"} {x}</option>
+                                            ))
+                                    }
+                                </HTMLSelect>
+                            </>
+                        }
+                    </div>
                     : ""
             }
             {

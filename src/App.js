@@ -105,6 +105,8 @@ const App = () => {
   const [selectedClusterIndex, setSelectedClusterIndex] = useState([]);
   // set Cluster rank-type
   const [clusterRank, setClusterRank] = useState("cohen-min-rank");
+  // which cluster is selected for vsmode
+  const [selectedVSCluster, setSelectedVSCluster] = useState(null);
 
   // Cluster Analysis
   // cluster assignments
@@ -185,23 +187,40 @@ const App = () => {
 
   // request worker for new markers 
   // if either the cluster or the ranking changes
+  // VS mode
   useEffect(() => {
-    if (selectedCluster !== null && selectedModality != null) {
+    if (selectedModality !== null && clusterRank !== null) {
+      if (selectedVSCluster !== null && selectedCluster !== null) {
+          let type = String(selectedCluster).startsWith("cs") ?
+          "computeVersusSelections" : "computeVersusClusters";
+        scranWorker.postMessage({
+          "type": type,
+          "payload": {
+            "modality": selectedModality,
+            "left": selectedCluster,
+            "right": selectedVSCluster,
+            "rank_type": clusterRank,
+          }
+        });
+  
+        add_to_logs("info", `--- ${type} sent ---`);
+      } else if (selectedCluster !== null) {
 
-      let type = String(selectedCluster).startsWith("cs") ?
-        "getMarkersForSelection" : "getMarkersForCluster";
-      scranWorker.postMessage({
-        "type": type,
-        "payload": {
-          "modality": selectedModality,
-          "cluster": selectedCluster,
-          "rank_type": clusterRank,
-        }
-      });
-
-      add_to_logs("info", `--- ${type} sent ---`);
+        let type = String(selectedCluster).startsWith("cs") ?
+          "getMarkersForSelection" : "getMarkersForCluster";
+        scranWorker.postMessage({
+          "type": type,
+          "payload": {
+            "modality": selectedModality,
+            "cluster": selectedCluster,
+            "rank_type": clusterRank,
+          }
+        });
+  
+        add_to_logs("info", `--- ${type} sent ---`);
+      }
     }
-  }, [selectedCluster, clusterRank, selectedModality]);
+  }, [selectedCluster, selectedVSCluster, clusterRank, selectedModality]);
 
   // compute markers in the worker 
   // when a new custom selection of cells is made through the UI
@@ -618,7 +637,9 @@ const App = () => {
       setTriggerAnimation(false);
       setShowDimPlotLoader(false);
     } else if (payload.type === "setMarkersForCluster"
-      || payload.type === "setMarkersForCustomSelection") {
+      || payload.type === "setMarkersForCustomSelection" 
+      || payload.type === "computeVersusSelections" 
+      || payload.type === "computeVersusClusters" ) {
       const { resp } = payload;
       let records = [];
       let index = Array(resp.ordering.length);
@@ -849,6 +870,8 @@ const App = () => {
                   selectedClusterIndex={selectedClusterIndex}
                   selectedCluster={selectedCluster}
                   setSelectedCluster={setSelectedCluster}
+                  selectedVSCluster={selectedVSCluster} 
+                  setSelectedVSCluster={setSelectedVSCluster}
                   setClusterRank={setClusterRank}
                   clusterData={clusterData}
                   customSelection={customSelection}
