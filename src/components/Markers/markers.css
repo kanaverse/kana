@@ -130,6 +130,7 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    height: 22px;
 }
 
 .marker-vsmode {

@@ -210,7 +210,7 @@ const MarkerPlot = (props) => {
             </Popover2>
             {
                 props?.modality ?
-                    <Label style={{textAlign: "left"}}>
+                    <Label style={{textAlign: "left", marginBottom:"5px"}}>
                         Select Modality
                         <HTMLSelect
                             onChange={(x) => {
@@ -228,7 +228,7 @@ const MarkerPlot = (props) => {
             }
             {
                 <div className='marker-cluster-header'>
-                    <Label>Select Cluster</Label>
+                    <Label style={{marginBottom:"0"}}>Select Cluster</Label>
                     <div className='marker-vsmode'>
                         <Popover2
                             popoverClassName={Classes.POPOVER_CONTENT_SIZING}
