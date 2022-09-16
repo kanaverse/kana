@@ -230,6 +230,14 @@ const MarkerPlot = (props) => {
                 <div className='marker-cluster-header'>
                     <Label>Select Cluster</Label>
                     <div className='marker-vsmode'>
+                        <Switch large={false} checked={vsmode}
+                            innerLabelChecked="versus" innerLabel="general"
+                            onChange={(e) => { 
+                                if (e.target.checked === false) {
+                                    props?.setSelectedVSCluster(null);
+                                }
+                                setVsmode(e.target.checked) 
+                            }} />
                         <Popover2
                             popoverClassName={Classes.POPOVER_CONTENT_SIZING}
                             hasBackdrop={false}
@@ -246,20 +254,16 @@ const MarkerPlot = (props) => {
                                     width: '450px'
                                 }} elevation={Elevation.ZERO}
                                 >
-                                    <p>Enable VS mode to compare markers across two clusters.</p>
+                                    <p>
+                                    By default, the <strong>general</strong> mode will rank markers for a cluster or custom selection based on the comparison to all other clusters or cells.
+                                    Users can instead enable <strong>versus</strong> mode to compare markers between two clusters or between two custom selections.
+                                    This is useful for identifying subtle differences between closely related groups of cells.
+                                   </p>
                                 </Card>
                             }
                         >
-                            <span style={{fontStyle: "italic",paddingRight:"3px" }}>vs mode ?</span>
+                            <span style={{fontStyle: "italic",paddingRight:"3px" }}>?</span>
                         </Popover2>
-                        <Switch large={false} checked={vsmode}
-                            innerLabelChecked="yes" innerLabel="no"
-                            onChange={(e) => { 
-                                if (e.target.checked === false) {
-                                    props?.setSelectedVSCluster(null);
-                                }
-                                setVsmode(e.target.checked) 
-                            }} />
                     </div>
                 </div>
             }
