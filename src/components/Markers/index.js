@@ -216,6 +216,8 @@ const MarkerPlot = (props) => {
                             onChange={(x) => {
                                 props?.setSelectedModality(x.currentTarget?.value);
                                 setMarkerFilter({});
+                                props?.setGene(null);
+                                props?.setSelectedVSCluster(null);
                             }}>
                             {
                                 props?.modality.map((x, i) => (
