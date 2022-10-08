@@ -32,7 +32,7 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
-    "bakana": "^0.5.0",
+    "bakana": "^0.6.0",
     "d3": "^7.1.1",
     "epiviz.gl": "^1.0.2",
     "epiviz.scatter.gl": "^0.0.5",

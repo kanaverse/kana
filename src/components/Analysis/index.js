@@ -46,6 +46,7 @@ const AnalysisDialog = ({
         genes: "Choose feature/gene file",
         annotations: "Choose barcode/annotation file",
         file: "Choose file...",
+        rds: "Choose file..."
     });
 
     let [stmpInputFiles, ssetTmpInputFiles] = useState({
@@ -218,9 +219,19 @@ const AnalysisDialog = ({
                         ) {
                             all_valid = false;
                         }
+
+                        if (
+                            x?.rds && !(
+                                inputText[ix]?.rds.toLowerCase().endsWith("rds")
+                            )
+                        ) {
+                            all_valid = false;
+                        }
     
                         if (x.format === "MatrixMarket") {
                             if (!x.mtx) all_valid = false;
+                        } else if (x.format === "SummarizedExperiment") {
+                            if (!x.rds) all_valid = false;
                         } else {
                             if (!x.h5) all_valid = false;
                         }
@@ -323,6 +334,16 @@ const AnalysisDialog = ({
                     }
 
                     if (!x.h5 && (sinputText?.file !== "Choose file...")) all_valid = false;
+                }  else if (
+                    x.format === "SummarizedExperiment") {
+                    if (x?.rds && !(
+                        sinputText?.rds.toLowerCase().endsWith("rds")
+                    )
+                    ) {
+                        all_valid = false;
+                    }
+
+                    if (!x.rds && (sinputText?.rds !== "Choose file...")) all_valid = false;
                 }
 
                 // setTmpInputValid(all_valid);
@@ -1166,6 +1187,23 @@ const AnalysisDialog = ({
                                 </Label>
                             </div>
                         } />
+                        <Tab id="SummarizedExperiment" title="SummarizedExperiment RDS File" panel={
+                            <div className="row"
+                            >
+                                <Label className="row-input">
+                                    <FileInput style={{
+                                        marginTop: '5px'
+                                    }}
+                                        text={sinputText.rds}
+                                        onInputChange={(msg) => {
+                                            if (msg.target.files) {
+                                                ssetInputText({ ...sinputText, "rds": msg.target.files[0].name });
+                                                ssetTmpInputFiles({ ...stmpInputFiles, "rds": msg.target.files[0] })
+                                            }
+                                        }} />
+                                </Label>
+                            </div>
+                        } />
                     </Tabs>
                 </div>
             </div>
@@ -1490,6 +1528,8 @@ const AnalysisDialog = ({
                 if (row.annotations) {
                     tname += ` annotations: ${row.annotations.name} `;
                 }
+            } else if (row["format"] === "SummarizedExperiment") {
+                tname += ` file: ${row.rds.name} `;
             } else {
                 tname += ` file: ${row.h5.name} `;
             }
@@ -1975,6 +2015,12 @@ const AnalysisDialog = ({
                                                     <strong>A count matrix in the H5AD (<code>*.h5ad</code>) format. </strong>
                                                     We assume that the count matrix is stored in the <code>X</code> group.
                                                     We will also try to guess which field in the <code>obs</code> annotation contains gene symbols.
+                                                </p>
+
+                                                <p>
+                                                    <strong>A SummarizedExperiment object stored in a RDS (<code>*.rds</code>) format (from R). </strong>
+                                                    We assume the single-cell dataset is properly serialized from R and is represented as either SummarizedExperiment 
+                                                    or SingleCellExperiment.
                                                 </p>
 
                                                 <p><strong>Batch correction:</strong> you can now import more than one file to integrate and analyze datasets.
