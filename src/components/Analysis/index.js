@@ -1408,14 +1408,19 @@ const AnalysisDialog = ({
                                     </span>
                                 </Text>
                                 RNA: <NumericInput
-                                    placeholder="1" value={tmpInputParams["combine_embeddings"]["weights"]["RNA"]}
+                                    placeholder="1" 
+                                    defaultValue={tmpInputParams["combine_embeddings"]["weights"]["RNA"]}
+                                    min={0} value={tmpInputParams["combine_embeddings"]["weights"]["RNA"]}
                                     onValueChange={(nval, val) => { 
                                         let gip = {...tmpInputParams};
                                         gip["combine_embeddings"]["weights"]["RNA"] = nval;
                                         setTmpInputParams(gip);
                                     }} />
                                 ADT: <NumericInput
-                                    placeholder="1" value={tmpInputParams["combine_embeddings"]["weights"]["ADT"]}
+                                    placeholder="1" 
+                                    min={0}
+                                    defaultValue={tmpInputParams["combine_embeddings"]["weights"]["RNA"]}
+                                    value={tmpInputParams["combine_embeddings"]["weights"]["ADT"]}
                                     onValueChange={(nval, val) => { 
                                         let gip = {...tmpInputParams};
                                         gip["combine_embeddings"]["weights"]["ADT"] = nval;
