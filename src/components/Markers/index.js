@@ -216,6 +216,8 @@ const MarkerPlot = (props) => {
                             onChange={(x) => {
                                 props?.setSelectedModality(x.currentTarget?.value);
                                 setMarkerFilter({});
+                                props?.setGene(null);
+                                props?.setSelectedVSCluster(null);
                             }}>
                             {
                                 props?.modality.map((x, i) => (
@@ -672,6 +674,10 @@ const MarkerPlot = (props) => {
                                                 <Tooltip2 content="Compare this gene's expression across clusters">
                                                     <Button icon={rowexp ? 'minus' : 'plus'} small={true} fill={false}
                                                         className='row-action'
+                                                        intent={rowexp ?
+                                                            "primary"
+                                                            // String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
+                                                            : null}
                                                         onClick={() => {
                                                             let tmp = [...props?.selectedClusterSummary];
                                                             var gindex = props?.selectedClusterIndex[row.gene];
@@ -688,6 +694,10 @@ const MarkerPlot = (props) => {
                                                 </Tooltip2>
                                                 <Tooltip2 content="Visualize this gene's expression">
                                                     <Button small={true} fill={false}
+                                                        intent={row.gene === props?.gene ?
+                                                            "primary"
+                                                            // String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
+                                                            : null}
                                                         className='row-action'
                                                         onClick={() => {
                                                             if (row.gene === props?.gene) {
@@ -701,9 +711,6 @@ const MarkerPlot = (props) => {
                                                         }}
                                                     >
                                                         <Icon icon={'tint'}
-                                                            color={row.gene === props?.gene ?
-                                                                String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
-                                                                : ''}
                                                         ></Icon>
                                                     </Button>
                                                 </Tooltip2>

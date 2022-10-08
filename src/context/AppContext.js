@@ -68,7 +68,10 @@ const AppContextProvider = ({ children }) => {
       num_clusters: 20
     },
     combine_embeddings: {
-      weights: {}
+      weights: {
+        RNA: 1,
+        ADT: 1
+      }
     },
     batch_correction: {
       method: "none",
