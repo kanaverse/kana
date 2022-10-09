@@ -46,6 +46,7 @@ const AnalysisDialog = ({
         genes: "Choose feature/gene file",
         annotations: "Choose barcode/annotation file",
         file: "Choose file...",
+        rds: "Choose file..."
     });
 
     let [stmpInputFiles, ssetTmpInputFiles] = useState({
@@ -218,9 +219,19 @@ const AnalysisDialog = ({
                         ) {
                             all_valid = false;
                         }
+
+                        if (
+                            x?.rds && !(
+                                inputText[ix]?.rds.toLowerCase().endsWith("rds")
+                            )
+                        ) {
+                            all_valid = false;
+                        }
     
                         if (x.format === "MatrixMarket") {
                             if (!x.mtx) all_valid = false;
+                        } else if (x.format === "SummarizedExperiment") {
+                            if (!x.rds) all_valid = false;
                         } else {
                             if (!x.h5) all_valid = false;
                         }
@@ -323,11 +334,20 @@ const AnalysisDialog = ({
                     }
 
                     if (!x.h5 && (sinputText?.file !== "Choose file...")) all_valid = false;
+                }  else if (
+                    x.format === "SummarizedExperiment") {
+                    if (x?.rds && !(
+                        sinputText?.rds.toLowerCase().endsWith("rds")
+                    )
+                    ) {
+                        all_valid = false;
+                    }
+
+                    if (!x.rds && (sinputText?.file !== "Choose file...")) all_valid = false;
                 }
 
                 // setTmpInputValid(all_valid);
                 ssetTmpInputValid(all_valid);
-
             }
         }
     }, [stmpInputFiles]);
@@ -1103,7 +1123,7 @@ const AnalysisDialog = ({
                         }}
                         defaultSelectedTabId={newImportFormat}
                     >
-                        <Tab id="MatrixMarket" title="Matrix Market file" panel={
+                        <Tab id="MatrixMarket" title="Matrix Market" panel={
                             <div className="row"
                             >
                                 <Label className="row-input">
@@ -1132,7 +1152,7 @@ const AnalysisDialog = ({
                                 </Label>
                             </div>
                         } />
-                        <Tab id="10X" title="10x HDF5 matrix" panel={
+                        <Tab id="10X" title="10X HDF5 Matrix" panel={
                             <div className="row"
                             >
                                 <Label className="row-input">
@@ -1161,6 +1181,23 @@ const AnalysisDialog = ({
                                             if (msg.target.files) {
                                                 ssetInputText({ ...sinputText, "h5": msg.target.files[0].name });
                                                 ssetTmpInputFiles({ ...stmpInputFiles, "h5": msg.target.files[0] })
+                                            }
+                                        }} />
+                                </Label>
+                            </div>
+                        } />
+                        <Tab id="SummarizedExperiment" title="SummarizedExperiment (RDS)" panel={
+                            <div className="row"
+                            >
+                                <Label className="row-input">
+                                    <FileInput style={{
+                                        marginTop: '5px'
+                                    }}
+                                        text={sinputText.rds}
+                                        onInputChange={(msg) => {
+                                            if (msg.target.files) {
+                                                ssetInputText({ ...sinputText, "rds": msg.target.files[0].name });
+                                                ssetTmpInputFiles({ ...stmpInputFiles, "rds": msg.target.files[0] })
                                             }
                                         }} />
                                 </Label>
@@ -1490,6 +1527,8 @@ const AnalysisDialog = ({
                 if (row.annotations) {
                     tname += ` annotations: ${row.annotations.name} `;
                 }
+            } else if (row["format"] === "SummarizedExperiment") {
+                tname += ` file: ${row.rds.name} `;
             } else {
                 tname += ` file: ${row.h5.name} `;
             }
@@ -1948,7 +1987,8 @@ const AnalysisDialog = ({
                                                 <ul>
                                                     <li>Matrix Market - <code>*.mtx</code> or <code>*.mtx.gz</code></li>
                                                     <li>features or genes, <code>*.tsv</code> or <code>*.tsv.gz</code></li>
-                                                    <li>HDF5 (10x or h5ad) - <code>*.h5</code> or <code>*.hdf5</code> or <code>*.h5ad</code></li>
+                                                    <li>HDF5 (10X or H5AD) - <code>*.h5</code> or <code>*.hdf5</code> or <code>*.h5ad</code></li>
+                                                    <li>RDS - <code>*.rds</code></li>
                                                 </ul>
 
                                                 Note: Names of dataset must be unique!
@@ -1975,6 +2015,13 @@ const AnalysisDialog = ({
                                                     <strong>A count matrix in the H5AD (<code>*.h5ad</code>) format. </strong>
                                                     We assume that the count matrix is stored in the <code>X</code> group.
                                                     We will also try to guess which field in the <code>obs</code> annotation contains gene symbols.
+                                                </p>
+
+                                                <p>
+                                                    <strong>A SummarizedExperiment object saved in the RDS (<code>*.rds</code>) format. </strong>
+                                                    We support any SummarizedExperiment subclass containing a dense or sparse count matrix 
+                                                    (identified as any assay with name starting with "counts", or if none exist, just the first assay).
+                                                    For a SingleCellExperiment, any alternative experiment with name starting with "hto", "adt" or "antibody" is assumed to represent CITE-seq data.
                                                 </p>
 
                                                 <p><strong>Batch correction:</strong> you can now import more than one file to integrate and analyze datasets.
