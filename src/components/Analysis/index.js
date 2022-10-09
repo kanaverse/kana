@@ -343,12 +343,11 @@ const AnalysisDialog = ({
                         all_valid = false;
                     }
 
-                    if (!x.rds && (sinputText?.rds !== "Choose file...")) all_valid = false;
+                    if (!x.rds && (sinputText?.file !== "Choose file...")) all_valid = false;
                 }
 
                 // setTmpInputValid(all_valid);
                 ssetTmpInputValid(all_valid);
-
             }
         }
     }, [stmpInputFiles]);
@@ -1124,7 +1123,7 @@ const AnalysisDialog = ({
                         }}
                         defaultSelectedTabId={newImportFormat}
                     >
-                        <Tab id="MatrixMarket" title="Matrix Market file" panel={
+                        <Tab id="MatrixMarket" title="Matrix Market" panel={
                             <div className="row"
                             >
                                 <Label className="row-input">
@@ -1153,7 +1152,7 @@ const AnalysisDialog = ({
                                 </Label>
                             </div>
                         } />
-                        <Tab id="10X" title="10x HDF5 matrix" panel={
+                        <Tab id="10X" title="10X HDF5 Matrix" panel={
                             <div className="row"
                             >
                                 <Label className="row-input">
@@ -1187,7 +1186,7 @@ const AnalysisDialog = ({
                                 </Label>
                             </div>
                         } />
-                        <Tab id="SummarizedExperiment" title="SummarizedExperiment RDS File" panel={
+                        <Tab id="SummarizedExperiment" title="SummarizedExperiment (RDS)" panel={
                             <div className="row"
                             >
                                 <Label className="row-input">
@@ -1988,7 +1987,8 @@ const AnalysisDialog = ({
                                                 <ul>
                                                     <li>Matrix Market - <code>*.mtx</code> or <code>*.mtx.gz</code></li>
                                                     <li>features or genes, <code>*.tsv</code> or <code>*.tsv.gz</code></li>
-                                                    <li>HDF5 (10x or h5ad) - <code>*.h5</code> or <code>*.hdf5</code> or <code>*.h5ad</code></li>
+                                                    <li>HDF5 (10X or H5AD) - <code>*.h5</code> or <code>*.hdf5</code> or <code>*.h5ad</code></li>
+                                                    <li>RDS - <code>*.rds</code></li>
                                                 </ul>
 
                                                 Note: Names of dataset must be unique!
@@ -2018,9 +2018,10 @@ const AnalysisDialog = ({
                                                 </p>
 
                                                 <p>
-                                                    <strong>A SummarizedExperiment object stored in a RDS (<code>*.rds</code>) format (from R). </strong>
-                                                    We assume the single-cell dataset is properly serialized from R and is represented as either SummarizedExperiment 
-                                                    or SingleCellExperiment.
+                                                    <strong>A SummarizedExperiment object saved in the RDS (<code>*.rds</code>) format. </strong>
+                                                    We support any SummarizedExperiment subclass containing a dense or sparse count matrix 
+                                                    (identified as any assay with name starting with "counts", or if none exist, just the first assay).
+                                                    For a SingleCellExperiment, any alternative experiment with name starting with "hto", "adt" or "antibody" is assumed to represent CITE-seq data.
                                                 </p>
 
                                                 <p><strong>Batch correction:</strong> you can now import more than one file to integrate and analyze datasets.
