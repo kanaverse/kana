@@ -365,7 +365,7 @@ const AnalysisDialog = ({
                         all_valid = false;
                     }
 
-                    if (!x.id && (sinputText?.file !== "Choose id...")) all_valid = false;
+                    if (!x.id && (sinputText?.id !== "Choose id...")) all_valid = false;
                 }
 
                 // setTmpInputValid(all_valid);
@@ -1705,7 +1705,8 @@ const AnalysisDialog = ({
                                                                 mtx: "Choose Matrix Market file",
                                                                 genes: "Choose feature/gene file",
                                                                 annotations: "Choose barcode/annotation file",
-                                                                file: "Choose file..."
+                                                                file: "Choose file...",
+                                                                id: "Choose id..."
                                                             });
     
                                                             ssetTmpInputFiles({
