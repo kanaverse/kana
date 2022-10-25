@@ -25,7 +25,8 @@ const AnalysisDialog = ({
         tabSelected, setTabSelected,
         loadParams,
         setLoadParamsFor, loadParamsFor, setDatasetName,
-        setPreInputFiles, preInputFilesStatus, setPreInputFilesStatus } = useContext(AppContext);
+        setPreInputFiles, preInputFilesStatus, setPreInputFilesStatus,
+        ehubDatasets } = useContext(AppContext);
 
     const [inputText, setInputText] = useState([]);
 
@@ -46,7 +47,8 @@ const AnalysisDialog = ({
         genes: "Choose feature/gene file",
         annotations: "Choose barcode/annotation file",
         file: "Choose file...",
-        rds: "Choose file..."
+        rds: "Choose file...",
+        id: "Choose id..."
     });
 
     let [stmpInputFiles, ssetTmpInputFiles] = useState({
@@ -227,11 +229,21 @@ const AnalysisDialog = ({
                         ) {
                             all_valid = false;
                         }
+
+                        if (
+                            x?.id && !(
+                                ehubDatasets.indexOf(inputText[ix]?.id) !== -1
+                            )
+                        ) {
+                            all_valid = false;
+                        }
     
                         if (x.format === "MatrixMarket") {
                             if (!x.mtx) all_valid = false;
                         } else if (x.format === "SummarizedExperiment") {
                             if (!x.rds) all_valid = false;
+                        } else if (x.format === "ExperimentHub") {
+                            if (!x.id) all_valid = false;
                         } else {
                             if (!x.h5) all_valid = false;
                         }
@@ -344,6 +356,16 @@ const AnalysisDialog = ({
                     }
 
                     if (!x.rds && (sinputText?.file !== "Choose file...")) all_valid = false;
+                }  else if (
+                    x.format === "ExperimentHub") {
+                    if (x?.id && !(
+                        ehubDatasets.indexOf(sinputText?.id) !== -1
+                    )
+                    ) {
+                        all_valid = false;
+                    }
+
+                    if (!x.id && (sinputText?.id !== "Choose id...")) all_valid = false;
                 }
 
                 // setTmpInputValid(all_valid);
@@ -1197,9 +1219,38 @@ const AnalysisDialog = ({
                                         onInputChange={(msg) => {
                                             if (msg.target.files) {
                                                 ssetInputText({ ...sinputText, "rds": msg.target.files[0].name });
-                                                ssetTmpInputFiles({ ...stmpInputFiles, "rds": msg.target.files[0] })
+                                                ssetTmpInputFiles({ ...stmpInputFiles, "rds": msg.target.files[0] });
                                             }
                                         }} />
+                                </Label>
+                            </div>
+                        } />
+                        <Tab id="ExperimentHub" title="Experiment Hub" panel={
+                            <div className="row"
+                            >
+                                <Label className="row-input">
+                                    <Text className="text-100">
+                                        <span>
+                                            Choose an ExperimentHub dataset id:
+                                        </span>
+                                    </Text>
+                                    {Array.isArray(ehubDatasets) ? 
+                                        <HTMLSelect
+                                            onChange={(e) => {
+                                                if (e.target.value && e.target.value !== "none") {
+                                                    ssetInputText({ ...sinputText, "id": e.target.value });
+                                                    ssetTmpInputFiles({ ...stmpInputFiles, "id": e.target.value });
+                                                }
+                                            }}
+                                            defaultValue={"none"}
+                                        >
+                                            <option value="none">None</option>
+                                            {
+                                                ehubDatasets.map((x, i) => <option key={i} value={x}>{x}</option>)
+                                            }
+                                        </HTMLSelect>
+                                    : "No ExperimentHub datasets available"
+                                    }
                                 </Label>
                             </div>
                         } />
@@ -1529,6 +1580,8 @@ const AnalysisDialog = ({
                 }
             } else if (row["format"] === "SummarizedExperiment") {
                 tname += ` file: ${row.rds.name} `;
+            } else if (row["format"] === "ExperimentHub") {
+                tname += ` file: ${row.id} `;
             } else {
                 tname += ` file: ${row.h5.name} `;
             }
@@ -1652,7 +1705,8 @@ const AnalysisDialog = ({
                                                                 mtx: "Choose Matrix Market file",
                                                                 genes: "Choose feature/gene file",
                                                                 annotations: "Choose barcode/annotation file",
-                                                                file: "Choose file..."
+                                                                file: "Choose file...",
+                                                                id: "Choose id..."
                                                             });
     
                                                             ssetTmpInputFiles({
@@ -1988,7 +2042,8 @@ const AnalysisDialog = ({
                                                     <li>Matrix Market - <code>*.mtx</code> or <code>*.mtx.gz</code></li>
                                                     <li>features or genes, <code>*.tsv</code> or <code>*.tsv.gz</code></li>
                                                     <li>HDF5 (10X or H5AD) - <code>*.h5</code> or <code>*.hdf5</code> or <code>*.h5ad</code></li>
-                                                    <li>RDS - <code>*.rds</code></li>
+                                                    <li>RDS - <code>*.rds</code> or </li>
+                                                    <li>ExperimentHub ID</li>
                                                 </ul>
 
                                                 Note: Names of dataset must be unique!
@@ -2019,6 +2074,13 @@ const AnalysisDialog = ({
 
                                                 <p>
                                                     <strong>A SummarizedExperiment object saved in the RDS (<code>*.rds</code>) format. </strong>
+                                                    We support any SummarizedExperiment subclass containing a dense or sparse count matrix 
+                                                    (identified as any assay with name starting with "counts", or if none exist, just the first assay).
+                                                    For a SingleCellExperiment, any alternative experiment with name starting with "hto", "adt" or "antibody" is assumed to represent CITE-seq data.
+                                                </p>
+
+                                                <p>
+                                                    <strong>A Dataset saved to <code>ExperimentHub</code>. </strong>
                                                     We support any SummarizedExperiment subclass containing a dense or sparse count matrix 
                                                     (identified as any assay with name starting with "counts", or if none exist, just the first assay).
                                                     For a SingleCellExperiment, any alternative experiment with name starting with "hto", "adt" or "antibody" is assumed to represent CITE-seq data.

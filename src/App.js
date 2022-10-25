@@ -158,7 +158,7 @@ const App = () => {
     setGeneColSel, setLoadParams,
     setInitLoadState, inputFiles, annotationCols, setAnnotationCols,
     annotationObj, setAnnotationObj, preInputFiles,
-    setPreInputFilesStatus, geneColSel } = useContext(AppContext);
+    setPreInputFilesStatus, geneColSel, setEhubDatasets } = useContext(AppContext);
 
   // initializes various things on the worker side
   useEffect(() => {
@@ -469,6 +469,11 @@ const App = () => {
         setKanaIDBRecs(resp);
       }
       setIndexedDBState(false);
+    } else if (payload.type === "ExperimentHub_store") {
+      const { resp } = payload;
+      if (resp !== undefined && Array.isArray(resp)) {
+        setEhubDatasets(resp);
+      }
     } else if (payload.type === "inputs_DATA") {
       var info = [];
       if ("RNA" in payload.resp.num_genes) {
@@ -488,7 +493,6 @@ const App = () => {
 
         let pmods = Object.keys(payload.resp.genes);
         setModality(pmods);
-
     } else if (payload.type === "quality_control_DATA") {
       const { resp } = payload;
 
