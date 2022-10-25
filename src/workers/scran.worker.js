@@ -9,8 +9,15 @@ import * as ehub from "bakana-remotes/ExperimentHub";
 /***************************************/
 
 let superstate = null;
+const proxy = "https://cors-proxy.aaron-lun.workers.dev";
 
 bakana.setCellLabellingDownload(downloads.get);
+
+async function EhubDownloadFun(url) {
+    return downloads.get(proxy + "/" + encodeURIComponent(url));
+}
+
+ehub.setDownloadFun(EhubDownloadFun);
 bakana.availableReaders["ExperimentHub"] = ehub;
 
 bakana.setVisualizationAnimate((type, x, y, iter) => {
