@@ -4,6 +4,7 @@ import * as downloads from "./DownloadsDBHandler.js";
 import * as hashwasm from "hash-wasm";
 import * as translate from "./translate.js";
 import { extractBuffers, postAttempt, postSuccess, postError } from "./helpers.js";
+import * as remotes from "bakana-remotes";
 import * as ehub from "bakana-remotes/ExperimentHub";
 
 /***************************************/
@@ -11,13 +12,10 @@ import * as ehub from "bakana-remotes/ExperimentHub";
 let superstate = null;
 const proxy = "https://cors-proxy.aaron-lun.workers.dev";
 
+// TODO: consolidate all bakana-related download functions into a single getter/setter.
 bakana.setCellLabellingDownload(downloads.get);
+remotes.setDownloadFun(url => downloads.get(proxy + "/" + encodeURIComponent(url)));
 
-async function EhubDownloadFun(url) {
-    return downloads.get(proxy + "/" + encodeURIComponent(url));
-}
-
-ehub.setDownloadFun(EhubDownloadFun);
 bakana.availableReaders["ExperimentHub"] = ehub;
 
 bakana.setVisualizationAnimate((type, x, y, iter) => {
