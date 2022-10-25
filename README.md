@@ -24,7 +24,7 @@ Our client-side approach has a number of advantages:
 
 ## For users
 
-If you have a Matrix Market (`.mtx`) file or HDF5 (tenx V3 or `AnnData` representation stored as h5ad), or `SummarizedExperiment` (or derivatives like `SingleCellExperiment`) stored as an RDS file, you're ready to go.
+If you have a Matrix Market (`.mtx`) file or HDF5 (tenx V3 or `AnnData` representation stored as h5ad), or `SummarizedExperiment` (or derivatives like `SingleCellExperiment`) stored as an RDS file, or an [ExperimentHub](https://bioconductor.org/packages/release/bioc/html/ExperimentHub.html) id, you're ready to go.
 
 1. Launch the application by clicking [**here**](https://www.jkanche.com/kana/).
 2. Select the Matrix Market file (this may be Gzip-compressed).
