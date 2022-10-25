@@ -15,6 +15,9 @@ const AppContextProvider = ({ children }) => {
   // Pre flight Input Status
   const [preInputFilesStatus, setPreInputFilesStatus] = useState(null);
 
+  // Ehub datasets
+  const [ehubDatasets, setEhubDatasets] = useState(null);
+
   // default params 
   const [params, setParams] = useState({
     qc: {
@@ -129,7 +132,8 @@ const AppContextProvider = ({ children }) => {
         annotationCols, setAnnotationCols,
         annotationObj, setAnnotationObj,
         preInputFiles, setPreInputFiles,
-        preInputFilesStatus, setPreInputFilesStatus
+        preInputFilesStatus, setPreInputFilesStatus,
+        ehubDatasets, setEhubDatasets
       }}
     >
       {children}

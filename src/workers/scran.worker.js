@@ -4,12 +4,14 @@ import * as downloads from "./DownloadsDBHandler.js";
 import * as hashwasm from "hash-wasm";
 import * as translate from "./translate.js";
 import { extractBuffers, postAttempt, postSuccess, postError } from "./helpers.js";
+import * as ehub from "bakana-remotes/ExperimentHub";
 
 /***************************************/
 
 let superstate = null;
 
 bakana.setCellLabellingDownload(downloads.get);
+bakana.availableReaders["ExperimentHub"] = ehub;
 
 bakana.setVisualizationAnimate((type, x, y, iter) => {
     postMessage({
@@ -148,6 +150,20 @@ onmessage = function (msg) {
                     msg: "Error: Cannot initialize DownloadsDB"
                 });
             });
+
+            try {
+                let ehub_ids = ehub.availableDatasets();
+                postMessage({
+                    type: "ExperimentHub_store",
+                    resp: ehub_ids,
+                    msg: "Success: ExperimentHub initialized"
+                });
+            } catch {
+                postMessage({
+                    type: "ExperimentHub_ERROR",
+                    msg: "Error: Cannot access datasets in ExperimentHub"
+                });
+            }
 
 
         loaded = Promise.all([
