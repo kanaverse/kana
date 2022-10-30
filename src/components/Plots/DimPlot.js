@@ -526,7 +526,7 @@ const DimPlot = (props) => {
                 props?.setDefaultRedDims(config?.embedding);
                 props?.setClusHighlight(config?.highlight);
                 // props?.setClusHighlightLabel(null);
-                props?.setGene(config?.gene);
+                props?.setGene(config?.geneIdx);
 
                 if (config?.annotation) {
                     props?.setColorByAnnotation(config?.annotation);
@@ -571,7 +571,8 @@ const DimPlot = (props) => {
                     "embedding": JSON.parse(JSON.stringify(props?.defaultRedDims)),
                     "annotation": JSON.parse(JSON.stringify(props?.colorByAnnotation)),
                     "highlight": plotGroups[props?.clusHighlight] ? JSON.parse(JSON.stringify(plotGroups[props?.clusHighlight])): plotGroups[props?.clusHighlight],
-                    "gene": props?.gene ? JSON.parse(JSON.stringify(genesInfo[geneColSel[props?.selectedModality]][props?.gene])): props?.gene
+                    "gene": props?.gene ? JSON.parse(JSON.stringify(genesInfo[geneColSel[props?.selectedModality]][props?.gene])): props?.gene,
+                    "geneIdx": props?.gene
                 }
             });
 
