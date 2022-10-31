@@ -67,9 +67,10 @@ const DimPlot = (props) => {
 
     // if either gene or expression changes, compute gradients and min/max
     useEffect(() => {
-        if (props?.gene === null) {
+        if (props?.gene === null || props?.gene === undefined) {
             setShowGradient(false);
             setGradient(null);
+            return;
         }
 
         let index = props?.selectedClusterIndex?.[props?.gene];
@@ -526,7 +527,12 @@ const DimPlot = (props) => {
                 props?.setDefaultRedDims(config?.embedding);
                 props?.setClusHighlight(config?.highlight);
                 // props?.setClusHighlightLabel(null);
-                props?.setGene(config?.gene);
+
+                if (config?.geneIdx === null || config?.gene === undefined) {
+                    props?.setGene(null);
+                } else {
+                    props?.setGene(config?.geneIdx);
+                }
 
                 if (config?.annotation) {
                     props?.setColorByAnnotation(config?.annotation);
@@ -571,7 +577,8 @@ const DimPlot = (props) => {
                     "embedding": JSON.parse(JSON.stringify(props?.defaultRedDims)),
                     "annotation": JSON.parse(JSON.stringify(props?.colorByAnnotation)),
                     "highlight": plotGroups[props?.clusHighlight] ? JSON.parse(JSON.stringify(plotGroups[props?.clusHighlight])): plotGroups[props?.clusHighlight],
-                    "gene": props?.gene ? JSON.parse(JSON.stringify(genesInfo[geneColSel[props?.selectedModality]][props?.gene])): props?.gene
+                    "gene": props?.gene ? JSON.parse(JSON.stringify(genesInfo[geneColSel[props?.selectedModality]][props?.gene])): null,
+                    "geneIdx": props?.gene
                 }
             });
 

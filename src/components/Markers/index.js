@@ -135,7 +135,15 @@ const MarkerPlot = (props) => {
             setClusSel(clus);
             if (props?.selectedCluster === null) {
                 props?.setSelectedCluster(0);
+
+                if (String(props?.selectedVSCluster).startsWith("cs")) {
+                    props?.setSelectedVSCluster(null);
+                }
             }
+        }
+
+        if ((!String(props?.selectedCluster).startsWith("cs")) && String(props?.selectedVSCluster).startsWith("cs")) {
+            props?.setSelectedVSCluster(null);
         }
     }, [props?.clusterData, props?.customSelection, props?.selectedCluster]);
 
@@ -216,8 +224,8 @@ const MarkerPlot = (props) => {
                             onChange={(x) => {
                                 props?.setSelectedModality(x.currentTarget?.value);
                                 setMarkerFilter({});
-                                props?.setGene(null);
-                                props?.setSelectedVSCluster(null);
+                                // props?.setGene(null);
+                                // props?.setSelectedVSCluster(null);
                             }}>
                             {
                                 props?.modality.map((x, i) => (

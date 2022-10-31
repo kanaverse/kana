@@ -25,6 +25,8 @@ import { AppContext } from "../../context/AppContext";
 
 import pkgVersion from "../../../package.json";
 
+import logo from "./kana-cropped.png";
+
 const Header = (props) => {
   // state for dialogs
   const [state] = useState({
@@ -48,7 +50,7 @@ const Header = (props) => {
       <Navbar className="bp3-dark">
         <NavbarGroup className="navbar-group" align={Alignment.LEFT}>
 
-          <NavbarHeading>kana <span style={{
+          <NavbarHeading>{<img height="25px" src={logo}></img>} <span style={{
             fontSize: "8px"
           }}>v{pkgVersion.version}</span></NavbarHeading>
 
@@ -105,8 +107,8 @@ const Header = (props) => {
           <NavbarDivider />
 
           <IntroDialog
-            icon="document"
-            title="Single-cell RNA-seq analysis in the browser"
+            icon={<img height="20px" src={logo}></img>}
+            title="&nbsp; Single-cell RNA-seq analysis in the browser"
             isOpen={true}
             setOpenInput={setOpenInput}
             {...state}
