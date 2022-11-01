@@ -374,6 +374,7 @@ onmessage = function (msg) {
                     resp.status = "SUCCESS";
                     resp.details = await bakana.validateAnnotations(current, { cache: true });
                 } catch (e) {
+                    console.error(e);
                     resp.status = "ERROR";
                     resp.reason = e.toString();
                 }
