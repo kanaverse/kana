@@ -5,18 +5,38 @@ import * as hashwasm from "hash-wasm";
 import * as translate from "./translate.js";
 import { extractBuffers, postAttempt, postSuccess, postError } from "./helpers.js";
 import * as remotes from "bakana-remotes";
-import * as ehub from "bakana-remotes/ExperimentHub";
 
 /***************************************/
 
 let superstate = null;
+let preflights = {};
+
+// Evade CORS problems and enable caching.
 const proxy = "https://cors-proxy.aaron-lun.workers.dev";
+async function proxyAndCache(url) {
+    let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
+    return new Uint8Array(buffer);
+}
+bakana.setCellLabellingDownload(proxyAndCache);
+remotes.setDownloadFun(proxyAndCache);
 
-// TODO: consolidate all bakana-related download functions into a single getter/setter.
-bakana.setCellLabellingDownload(downloads.get);
-remotes.setDownloadFun(url => downloads.get(proxy + "/" + encodeURIComponent(url)));
+bakana.availableReaders["ExperimentHub"] = remotes.ExperimentHubDataset;
 
-bakana.availableReaders["ExperimentHub"] = ehub;
+function createDataset(args) {
+    if (args.format == "10X") {
+        return new bakana.TenxHdf5Dataset(args.h5);
+    } else if (args.format == "MatrixMarket") {
+        return new bakana.TenxMatrixMarketDataset(args.mtx, args.genes || null, args.annotations || null);
+    } else if (args.format == "H5AD") {
+        return new bakana.H5adDataset(args.h5);
+    } else if (args.format == "SummarizedExperiment") {
+        return new bakana.SummarizedExperimentDataset(args.rds);
+    } else if (args.format == "ExperimentHub") {
+        return new remotes.ExperimentHubDataset(args.id);
+    } else {
+        throw new Error("unknown format '" + args.format + "'");
+    }
+}
 
 bakana.setVisualizationAnimate((type, x, y, iter) => {
     postMessage({
@@ -28,9 +48,10 @@ bakana.setVisualizationAnimate((type, x, y, iter) => {
 });
 
 function linkKanaDb(collected) {
-    return async (type, name, buffer) => {
-        var md5 = await hashwasm.md5(new Uint8Array(buffer));
-        var id = type + "_" + name + "_" + buffer.byteLength + "_" + md5;
+    return async (type, file) => {
+        let buffer = file.buffer();
+        var md5 = await hashwasm.md5(buffer);
+        var id = type + "_" + file.name() + "_" + buffer.length + "_" + md5;
         var ok = await kana_db.saveFile(id, buffer);
         if (!ok) {
             throw "failed to save file '" + id + "' to KanaDB";
@@ -38,31 +59,6 @@ function linkKanaDb(collected) {
         collected.push(id);
         return id;
     };
-}
-
-async function serializeAllSteps(embedded) {
-    const h5path = "serialized_in.h5";
-    let collected = [];
-    let old = bakana.setCreateLink(linkKanaDb(collected));
-
-    let output;
-    try {
-        let collected = await bakana.saveAnalysis(superstate, h5path, { embedded: embedded });
-
-        if (embedded) {
-            output = bakana.createKanaFile(h5path, collected.collected);
-        } else {
-            output = {
-                state: bakana.createKanaFile(h5path, null),
-                files: collected
-            };
-        }
-    } finally {
-        bakana.removeHDF5File(h5path);
-        bakana.setCreateLink(old);
-    }
-
-    return output;
 }
 
 bakana.setResolveLink(kana_db.loadFile);
@@ -89,7 +85,7 @@ async function unserializeAllSteps(contents) {
         console.log(output.other.custom_selections);
 
     } finally {
-        bakana.removeHDF5File(h5path);
+        bakana.callScran(scran => scran.removeFile(h5path));
     }
 
     return output;
@@ -157,7 +153,7 @@ onmessage = function (msg) {
             });
 
             try {
-                let ehub_ids = ehub.availableDatasets();
+                let ehub_ids = remotes.ExperimentHubDataset.availableDatasets();
                 postMessage({
                     type: "ExperimentHub_store",
                     resp: ehub_ids,
@@ -193,8 +189,31 @@ onmessage = function (msg) {
         loaded
             .then(x => {
                 let inputs = payload.inputs;
+                let files = inputs.files;
+
+                if (inputs !== null) {
+                    // Extracting existing datasets from the preflights.
+                    let current = {};
+                    for (const [k, v] of Object.entries(files)) {
+                        if ("uid" in v && v.uid in preflight) {
+                            let existing = preflight[v.uid];
+                            current[k] = existing.dataset;
+                        } else {
+                            current[k] = createDataset(v);
+                        }
+                    }
+
+                    // Cleaning out the preflight datasets that weren't used.
+                    for (const [k, v] of Object.entries(preflights)) {
+                        v.clear();
+                        delete preflights[k];
+                    }
+
+                    files = current;
+                }
+
                 let formatted = translate.fromUI(inputs, payload.params);
-                bakana.runAnalysis(superstate, inputs.files, formatted, { startFun: postAttempt, finishFun: postSuccess })
+                bakana.runAnalysis(superstate, files, formatted, { startFun: postAttempt, finishFun: postSuccess })
                     .catch(err => {
                         console.error(err);
                         postError(type, err, fatal)
@@ -255,12 +274,19 @@ onmessage = function (msg) {
     } else if (type == "EXPORT") {
         loaded
             .then(async (x) => {
-                var contents = await serializeAllSteps(true);
-                postMessage({
-                    type: "exportState",
-                    resp: contents,
-                    msg: "Success: application state exported"
-                }, [contents]);
+                const h5path = "serialized_in.h5";
+                try {
+                    let collected = await bakana.saveAnalysis(superstate, h5path, { embedded: true });
+                    let arr = bakana.createKanaFile(h5path, collected.collected);
+                    let contents = arr.buffer;
+                    postMessage({
+                        type: "exportState",
+                        resp: contents,
+                        msg: "Success: application state exported"
+                    }, [contents]);
+                } finally {
+                    bakana.callScran(scran => scran.removeFile(h5path));
+                }
             }).catch(err => {
                 console.error(err);
                 postError(type, err, fatal)
@@ -270,8 +296,20 @@ onmessage = function (msg) {
         var title = payload.title;
         loaded
             .then(async (x) => {
-                var contents = await serializeAllSteps(false);
-                let id = await kana_db.saveAnalysis(null, contents.state, contents.files, title);
+                let collected = [];
+                let old = bakana.setCreateLink(linkKanaDb(collected));
+
+                const h5path = "serialized_in.h5";
+                let id = null;
+                try {
+                    await bakana.saveAnalysis(superstate, h5path, { embedded: false });
+                    let state = bakana.createKanaFile(h5path, null);
+                    id = await kana_db.saveAnalysis(null, state, collected, title);
+                } finally {
+                    bakana.callScran(scran => scran.removeFile(h5path));
+                    bakana.setCreateLink(old);
+                }
+
                 if (id !== null) {
                     let recs = await kana_db.getRecords();
                     postMessage({
@@ -320,8 +358,21 @@ onmessage = function (msg) {
             .then(async x => {
                 let resp = {};
                 try {
+                    // Registering the UIDs of each new dataset.
+                    let current = {};
+                    for (const [k, v] of Object.entries(payload.inputs.files)) {
+                        if ("uid" in v) {
+                            if (!(v.uid in preflights)) {
+                                preflights[v.uid] = createDataset(v);
+                            }
+                            current[k] = preflights[v.uid];
+                        } else {
+                            current[k] = createDataset(v);
+                        }
+                    }
+
                     resp.status = "SUCCESS";
-                    resp.details = await bakana.validateAnnotations(payload.inputs.files);
+                    resp.details = await bakana.validateAnnotations(current, { cache: true });
                 } catch (e) {
                     resp.status = "ERROR";
                     resp.reason = e.toString();

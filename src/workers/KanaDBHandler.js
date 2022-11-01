@@ -115,7 +115,7 @@ export async function saveFile(id, buffer) {
     refcount++;
 
     var data_saving = new Promise(resolve => {
-        var putrequest = file_store.put({ "id": id, "payload": buffer });
+        var putrequest = file_store.put({ "id": id, "payload": buffer.buffer });
         putrequest.onsuccess = function (event) {
             resolve(true);
         };
@@ -150,7 +150,7 @@ export async function saveAnalysis(id, state, files, title) {
     }
 
     var data_saving = new Promise(resolve => {
-        var putrequest = analysis_store.put({ "id": id, "payload": state });
+        var putrequest = analysis_store.put({ "id": id, "payload": state.buffer });
         putrequest.onsuccess = function (event) {
             resolve(true);
         };
@@ -184,7 +184,7 @@ export async function loadFile(id) {
         .objectStore("file");
 
     var meta = await loadContent(id, file_store);
-    return meta["payload"];
+    return new Uint8Array(meta["payload"]);
 }
 
 export async function loadAnalysis(id) {
@@ -193,7 +193,7 @@ export async function loadAnalysis(id) {
         .transaction(["analysis"], "readonly")
         .objectStore("analysis");
     var meta = await loadContent(id, analysis_store);
-    return meta["payload"];
+    return new Uint8Array(meta["payload"]);
 }
 
 /** Functions to load content **/
