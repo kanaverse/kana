@@ -191,7 +191,7 @@ onmessage = function (msg) {
                 let inputs = payload.inputs;
                 let files = inputs.files;
 
-                if (inputs !== null) {
+                if (files !== null) {
                     // Extracting existing datasets from the preflights.
                     let current = {};
                     for (const [k, v] of Object.entries(files)) {
