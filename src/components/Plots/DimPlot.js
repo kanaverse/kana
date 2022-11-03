@@ -702,11 +702,28 @@ const DimPlot = (props) => {
                                         }
                                         setToggleFactorsGradient(state);
                                     }}>
+                                    <optgroup label="Supplied">
                                     {
-                                        annotationCols.map((x, i) => (
-                                            <option key={i}>{x}</option>
-                                        ))
+                                        annotationCols.map((x, i) => {
+                                            if (x == "CLUSTERS" || x == "__batch__") {
+                                                return "";
+                                            } else {
+                                                return <option key={i}>{x}</option>;
+                                            }
+                                        })
                                     }
+                                    </optgroup>
+                                    <optgroup label="Computed">
+                                    {
+                                        annotationCols.map((x, i) => {
+                                            if (x == "CLUSTERS" || x == "__batch__") {
+                                                return <option key={i}>{x}</option>
+                                            } else {
+                                                return "";
+                                            }
+                                        })
+                                    }
+                                    </optgroup>
                                 </HTMLSelect>
                                 {
                                     showToggleFactors && <Switch large={false} inline={true} checked={toggleFactorsGradient}
