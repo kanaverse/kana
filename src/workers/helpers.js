@@ -1,3 +1,5 @@
+import * as bakana from "bakana";
+
 export function extractBuffers(object, store) {
     if (!object) {
         return;
@@ -49,5 +51,3 @@ export function postError(type, err, fatal) {
         },
     });
 }
-
-
