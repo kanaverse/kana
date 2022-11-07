@@ -1548,6 +1548,38 @@ const AnalysisDialog = ({
         return cname;
     }
 
+    // this function is from https://developer.mozilla.org/en-US/docs/Glossary/Base64
+    function utf8_to_b64(str) {
+    return window.btoa(unescape(encodeURIComponent(str)));
+    }
+
+    function generate_uid(resource) {
+        let base = `${resource.format}`;
+        switch (resource.format) {
+            case "SummarizedExperiment": 
+                base += `::${resource.rds.name}::${resource.rds.lastModified}::${resource.rds.size}`;
+                return utf8_to_b64(base);
+            case "MatrixMarket":
+
+                for (let key of ["genes", "mtx", "annotations"]) {
+                    if (resource[key]) {
+                        base += `::${resource[key].name}::${resource[key].lastModified}::${resource[key].size}`;
+                    }
+                }
+                return utf8_to_b64(base);
+            case "10X":
+            case "H5AD":
+                base += `::${resource.file.name}::${resource.file.lastModified}::${resource.file.size}`;
+                return utf8_to_b64(base);
+            case "ExperimentHub":
+                base += `::${resource.id}`;
+                return utf8_to_b64(base);
+            default:
+                throw Error(`format: ${resource.format} does not exist`);
+                break;
+        }
+    }
+
     function table_render_cell(rowIdx, colIdx) {
         let key = get_table_colname(colIdx);
         let row = tmpInputFiles[rowIdx];
@@ -1698,6 +1730,9 @@ const AnalysisDialog = ({
                                                             margin: "3px"
                                                         }}
                                                         onClick={(() => {
+
+                                                            stmpInputFiles["uid"] = generate_uid(stmpInputFiles);
+
                                                             setTmpInputFiles([...tmpInputFiles, stmpInputFiles]);
                                                             setInputText([...inputText, sinputText]);
     
