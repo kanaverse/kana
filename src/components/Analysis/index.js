@@ -1569,7 +1569,7 @@ const AnalysisDialog = ({
                 return utf8_to_b64(base);
             case "10X":
             case "H5AD":
-                base += `::${resource.file.name}::${resource.file.lastModified}::${resource.file.size}`;
+                base += `::${resource.h5.name}::${resource.h5.lastModified}::${resource.h5.size}`;
                 return utf8_to_b64(base);
             case "ExperimentHub":
                 base += `::${resource.id}`;
