@@ -195,8 +195,8 @@ onmessage = function (msg) {
                     // Extracting existing datasets from the preflights.
                     let current = {};
                     for (const [k, v] of Object.entries(files)) {
-                        if ("uid" in v && v.uid in preflight) {
-                            current[k] = preflight[v.uid];
+                        if ("uid" in v && v.uid in preflights) {
+                            current[k] = preflights[v.uid];
                         } else {
                             current[k] = createDataset(v);
                         }
