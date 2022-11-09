@@ -93,3 +93,5 @@ export const get_colors = (data) => {
 export function isObject(object) {
     return typeof object === 'object' && Array.isArray(object) === false;
 }
+
+export const code = "K@𝜂a#$c3ll";

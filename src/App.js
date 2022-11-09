@@ -20,6 +20,8 @@ import Split from 'react-split-grid'
 import Logs from './components/Logs';
 
 import { palette } from './components/Plots/utils';
+
+import { code } from './context/utils';
 // App is the single point of contact with the web workers
 // All requests and responses are received here
 
@@ -91,7 +93,7 @@ const App = () => {
   // set which clusterlabel is highlighted
   const [clusHighlightLabel, setClusHighlightLabel] = useState(null);
   // selected colorBy
-  const [colorByAnnotation, setColorByAnnotation] = useState("clusters");
+  const [colorByAnnotation, setColorByAnnotation] = useState(`${code}::CLUSTERS`);
 
   // PCA
   const [pcaVarExp, setPcaVarExp] = useState({});
@@ -507,15 +509,30 @@ const App = () => {
       } else {
         var ranges = {}, data = resp["data"], all = {};
 
+        let t_annots = [...annotationCols];
+        let tmp_obj = { ...annotationObj };
+
         for (const [group, gvals] of Object.entries(data)) {
           for (const [key, val] of Object.entries(gvals)) {
             if (!all[key]) all[key] = [Infinity, -Infinity];
             let [min, max] = getMinMax(val);
             if (min < all[key][0]) all[key][0] = min;
             if (max > all[key][1]) all[key][1] = max;
+
+            if (t_annots.indexOf(`${code}::RNA_${key}`) == -1) {
+              t_annots.push(`${code}::RNA_${key}`);
+            }
+
+            tmp_obj[`${code}::RNA_${key}`] = {
+              "type": "array",
+              "values": val
+            }
           }
           ranges[group] = all;
         }
+
+        setAnnotationCols(t_annots);
+        setAnnotationObj(tmp_obj);
   
         resp["ranges"] = ranges;
         setQcData(resp);
@@ -527,15 +544,30 @@ const App = () => {
       if (resp) {
         var ranges = {}, data = resp["data"], all = {};
 
+        let t_annots = [...annotationCols];
+        let tmp_obj = { ...annotationObj };
+
         for (const [group, gvals] of Object.entries(data)) {
           for (const [key, val] of Object.entries(gvals)) {
             if (!all[key]) all[key] = [Infinity, -Infinity];
             let [min, max] = getMinMax(val);
             if (min < all[key][0]) all[key][0] = min;
             if (max > all[key][1]) all[key][1] = max;
+
+            if (t_annots.indexOf(`${code}::ADT_${key}`) == -1) {
+              t_annots.push(`${code}::ADT_${key}`);
+            }
+
+            tmp_obj[`${code}::ADT_${key}`] = {
+              "type": "array",
+              "values": val
+            };
           }
           ranges[group] = all;
         }
+
+        setAnnotationCols(t_annots);
+        setAnnotationObj(tmp_obj);
   
         resp["ranges"] = ranges;
   
@@ -571,8 +603,8 @@ const App = () => {
       const { resp } = payload;
 
       let t_annots = [...annotationCols];
-      if (t_annots.indexOf("CLUSTERS") == -1) {
-        t_annots.push("CLUSTERS");
+      if (t_annots.indexOf(`${code}::CLUSTERS`) == -1) {
+        t_annots.push(`${code}::CLUSTERS`);
       }
 
       setAnnotationCols(t_annots);

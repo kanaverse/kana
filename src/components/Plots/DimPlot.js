@@ -16,6 +16,7 @@ import "./DimPlot.css";
 import { AppToaster } from "../Spinners/AppToaster";
 
 import WebGLVis from 'epiviz.gl';
+import { code } from '../../context/utils';
 
 const DimPlot = (props) => {
     const container = useRef();
@@ -377,7 +378,7 @@ const DimPlot = (props) => {
     props?.selectedPoints]);
 
     useEffect(() => {
-        if (props?.colorByAnnotation.toLowerCase() == "clusters") {
+        if (props?.colorByAnnotation === `${code}::CLUSTERS`) {
 
             setPlotColorMappings(props?.clusterColors);
             let clus_names = [];
@@ -687,8 +688,8 @@ const DimPlot = (props) => {
                                 flexDirection: "row",
                                 flexWrap: "wrap"
                             }}>
-                                <HTMLSelect elementRef={selector} large={false} minimal={true} defaultValue={"CLUSTERS"}
-                                    onChange={(nval, val) => {
+                                <HTMLSelect elementRef={selector} large={false} minimal={true} defaultValue={`${code}::CLUSTERS`}
+                                    onChange={(nval) => {
                                         props?.setColorByAnnotation(nval?.currentTarget?.value);
                                         setShowToggleFactors(false);
                                         setFactorsMinMax(null);
@@ -702,11 +703,16 @@ const DimPlot = (props) => {
                                         }
                                         setToggleFactorsGradient(state);
                                     }}>
+                                    <optgroup label="Supplied">
                                     {
-                                        annotationCols.map((x, i) => (
-                                            <option key={i}>{x}</option>
-                                        ))
+                                        annotationCols.filter(x => !x.startsWith(code)).map(x => <option value={x} key={x}>{x}</option>)
                                     }
+                                    </optgroup>
+                                    <optgroup label="Computed">
+                                    {
+                                        annotationCols.filter(x => x.startsWith(code)).map(x => <option value={x} key={x}>{x.replace(`${code}::`, "")}</option>)
+                                    }
+                                    </optgroup>
                                 </HTMLSelect>
                                 {
                                     showToggleFactors && <Switch large={false} inline={true} checked={toggleFactorsGradient}

@@ -5,10 +5,10 @@ import CellLabelTable from "../Plots/CellLabelTable";
 
 import { useContext } from "react";
 import { AppContext } from "./../../context/AppContext";
-import { Card, Elevation, Classes, Button, Divider } from "@blueprintjs/core";
+import { Card, Elevation, Classes } from "@blueprintjs/core";
 import QCPlotMgr from "../Plots/QCPlotMgr";
 
-import { isObject } from "../../context/utils.js";
+import { code, isObject } from "../../context/utils.js";
 
 import "./Gallery.css";
 import UDimPlot from "../Plots/uDimPlot";
@@ -27,7 +27,7 @@ import { Popover2 } from "@blueprintjs/popover2";
 const Gallery = (props) => {
   const [items, setItems] = useState([]);
   const [itemContent, setItemContent] = useState({});
-  const { datasetName, genesInfo, geneColSel } = useContext(AppContext);
+  const { datasetName } = useContext(AppContext);
   const [qcids, setQCids] = useState([]);
 
   function get_image_title(data) {
@@ -48,7 +48,7 @@ const Gallery = (props) => {
             ""
           )}) `;
         } else {
-          text += `(${data?.config?.highlight.replace("Cluster ", "")}) `;
+          text += `(${data?.config?.highlight.replace("Cluster ", "").replace(`${code}::`, "")}) `;
         }
       }
 
@@ -72,7 +72,7 @@ const Gallery = (props) => {
           text += `${props?.colorByAnnotation.toLowerCase()} `;
         }
 
-        text += `(${props?.clusHighlightLabel.replace("Cluster ", "")})`;
+        text += `(${props?.clusHighlightLabel.replace("Cluster ", "").replace(`${code}::`, "")})`;
       }
     }
 
@@ -318,7 +318,7 @@ const Gallery = (props) => {
                 color: colors,
                 config: {
                   embedding: x,
-                  annotation: "clusters",
+                  annotation: `${code}::clusters`,
                   highlight: null,
                   gene: null,
                 },
