@@ -66,6 +66,8 @@ const App = () => {
 
   // QC Data
   const [qcData, setQcData] = useState(null);
+  // QC Data
+  const [cellSubsetData, setCellSubsetData] = useState(null);
   // Feature Selection
   const [fSelectionData, setFSelectionData] = useState(null);
 
@@ -588,6 +590,13 @@ const App = () => {
       setShowQCLoader(false);
     } else if (payload.type === "cell_filtering_DATA") {
       setQcDims(`${payload.resp.retained}`);
+      setCellSubsetData(payload.resp.subset);
+
+      for (let key in annotationObj) {
+        if (key.startsWith(code) && (key.indexOf("RNA") != -1 || key.indexOf("ADT") != -1)) {
+          annotationObj[key]["values"] = annotationObj[key]["values"].filter((_,i) => payload.resp.subset[i] == 0)
+        }
+      }
     } else if (payload.type === "feature_selection_DATA") {
       const { resp } = payload;
       setFSelectionData(resp);
