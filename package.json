@@ -1,7 +1,7 @@
 {
   "name": "kana",
   "description": "Single cell data analysis in the browser",
-  "version": "2.5.4",
+  "version": "2.5.5",
   "private": true,
   "author": {
     "name": "Jayaram Kancherla",
