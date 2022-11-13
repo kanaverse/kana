@@ -5,6 +5,7 @@ import * as hashwasm from "hash-wasm";
 import * as translate from "./translate.js";
 import { extractBuffers, postAttempt, postSuccess, postError } from "./helpers.js";
 import * as remotes from "bakana-remotes";
+import { code } from '../context/utils.js';
 
 /***************************************/
 
@@ -523,8 +524,11 @@ onmessage = function (msg) {
             let annot = payload.annotation;
             let vec, result;
 
+            if (annot.startsWith(code)) {
+                let splits = annot.replace(`${code}::`, "");
+                vec = superstate.cell_filtering.fetchFilteredQualityMetric(splits.substring(4), splits.substring(0,3));
             // Filter to match QC unless requested otherwise.
-            if (payload.unfiltered !== false) {
+            } else if (payload.unfiltered !== false) {
                 vec = superstate.cell_filtering.fetchFilteredAnnotations(annot);
             } else {
                 vec = superstate.inputs.fetchAnnotations(annot);

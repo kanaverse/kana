@@ -512,7 +512,6 @@ const App = () => {
         var ranges = {}, data = resp["data"], all = {};
 
         let t_annots = [...annotationCols];
-        let tmp_obj = { ...annotationObj };
 
         for (const [group, gvals] of Object.entries(data)) {
           for (const [key, val] of Object.entries(gvals)) {
@@ -525,16 +524,11 @@ const App = () => {
               t_annots.push(`${code}::RNA_${key}`);
             }
 
-            tmp_obj[`${code}::RNA_${key}`] = {
-              "type": "array",
-              "values": val
-            }
           }
           ranges[group] = all;
         }
 
         setAnnotationCols(t_annots);
-        setAnnotationObj(tmp_obj);
   
         resp["ranges"] = ranges;
         setQcData(resp);
@@ -547,7 +541,6 @@ const App = () => {
         var ranges = {}, data = resp["data"], all = {};
 
         let t_annots = [...annotationCols];
-        let tmp_obj = { ...annotationObj };
 
         for (const [group, gvals] of Object.entries(data)) {
           for (const [key, val] of Object.entries(gvals)) {
@@ -560,16 +553,11 @@ const App = () => {
               t_annots.push(`${code}::ADT_${key}`);
             }
 
-            tmp_obj[`${code}::ADT_${key}`] = {
-              "type": "array",
-              "values": val
-            };
           }
           ranges[group] = all;
         }
 
         setAnnotationCols(t_annots);
-        setAnnotationObj(tmp_obj);
   
         resp["ranges"] = ranges;
   
