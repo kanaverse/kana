@@ -524,8 +524,8 @@ onmessage = function (msg) {
             let annot = payload.annotation;
             let vec, result;
 
-            if (annot.startsWith(code)) {
-                let splits = annot.replace(`${code}::`, "");
+            if (annot.startsWith(`${code}::QC::`)) {
+                let splits = annot.replace(`${code}::QC::`, "");
                 vec = superstate.cell_filtering.fetchFilteredQualityMetric(splits.substring(4), splits.substring(0,3));
             // Filter to match QC unless requested otherwise.
             } else if (payload.unfiltered !== false) {

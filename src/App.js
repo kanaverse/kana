@@ -520,8 +520,8 @@ const App = () => {
             if (min < all[key][0]) all[key][0] = min;
             if (max > all[key][1]) all[key][1] = max;
 
-            if (t_annots.indexOf(`${code}::RNA_${key}`) == -1) {
-              t_annots.push(`${code}::RNA_${key}`);
+            if (t_annots.indexOf(`${code}::QC::RNA_${key}`) == -1) {
+              t_annots.push(`${code}::QC::RNA_${key}`);
             }
 
           }
@@ -549,8 +549,8 @@ const App = () => {
             if (min < all[key][0]) all[key][0] = min;
             if (max > all[key][1]) all[key][1] = max;
 
-            if (t_annots.indexOf(`${code}::ADT_${key}`) == -1) {
-              t_annots.push(`${code}::ADT_${key}`);
+            if (t_annots.indexOf(`${code}::QC::ADT_${key}`) == -1) {
+              t_annots.push(`${code}::QC::ADT_${key}`);
             }
 
           }
