@@ -705,12 +705,12 @@ const DimPlot = (props) => {
                                     }}>
                                     <optgroup label="Supplied">
                                     {
-                                        annotationCols.filter(x => !x.startsWith(code)).map(x => <option value={x} key={x}>{x}</option>)
+                                        annotationCols.filter(x => (!x.startsWith(code) && x !== "__batch__")).map(x => <option value={x} key={x}>{x}</option>)
                                     }
                                     </optgroup>
                                     <optgroup label="Computed">
                                     {
-                                        annotationCols.filter(x => x.startsWith(code)).map(x => <option value={x} key={x}>{x.replace(`${code}::`, "")}</option>)
+                                        annotationCols.filter(x => x.startsWith(code) || x === "__batch__").map(x => <option value={x} key={x}>{x.replace(`${code}::`, "")}</option>)
                                     }
                                     </optgroup>
                                 </HTMLSelect>

@@ -66,6 +66,8 @@ const App = () => {
 
   // QC Data
   const [qcData, setQcData] = useState(null);
+  // QC Data
+  const [cellSubsetData, setCellSubsetData] = useState(null);
   // Feature Selection
   const [fSelectionData, setFSelectionData] = useState(null);
 
@@ -510,7 +512,6 @@ const App = () => {
         var ranges = {}, data = resp["data"], all = {};
 
         let t_annots = [...annotationCols];
-        let tmp_obj = { ...annotationObj };
 
         for (const [group, gvals] of Object.entries(data)) {
           for (const [key, val] of Object.entries(gvals)) {
@@ -519,20 +520,15 @@ const App = () => {
             if (min < all[key][0]) all[key][0] = min;
             if (max > all[key][1]) all[key][1] = max;
 
-            if (t_annots.indexOf(`${code}::RNA_${key}`) == -1) {
-              t_annots.push(`${code}::RNA_${key}`);
+            if (t_annots.indexOf(`${code}::QC::RNA_${key}`) == -1) {
+              t_annots.push(`${code}::QC::RNA_${key}`);
             }
 
-            tmp_obj[`${code}::RNA_${key}`] = {
-              "type": "array",
-              "values": val
-            }
           }
           ranges[group] = all;
         }
 
         setAnnotationCols(t_annots);
-        setAnnotationObj(tmp_obj);
   
         resp["ranges"] = ranges;
         setQcData(resp);
@@ -545,7 +541,6 @@ const App = () => {
         var ranges = {}, data = resp["data"], all = {};
 
         let t_annots = [...annotationCols];
-        let tmp_obj = { ...annotationObj };
 
         for (const [group, gvals] of Object.entries(data)) {
           for (const [key, val] of Object.entries(gvals)) {
@@ -554,20 +549,15 @@ const App = () => {
             if (min < all[key][0]) all[key][0] = min;
             if (max > all[key][1]) all[key][1] = max;
 
-            if (t_annots.indexOf(`${code}::ADT_${key}`) == -1) {
-              t_annots.push(`${code}::ADT_${key}`);
+            if (t_annots.indexOf(`${code}::QC::ADT_${key}`) == -1) {
+              t_annots.push(`${code}::QC::ADT_${key}`);
             }
 
-            tmp_obj[`${code}::ADT_${key}`] = {
-              "type": "array",
-              "values": val
-            };
           }
           ranges[group] = all;
         }
 
         setAnnotationCols(t_annots);
-        setAnnotationObj(tmp_obj);
   
         resp["ranges"] = ranges;
   
@@ -588,6 +578,13 @@ const App = () => {
       setShowQCLoader(false);
     } else if (payload.type === "cell_filtering_DATA") {
       setQcDims(`${payload.resp.retained}`);
+      setCellSubsetData(payload.resp.subset);
+
+      for (let key in annotationObj) {
+        if (key.startsWith(code) && (key.indexOf("RNA") != -1 || key.indexOf("ADT") != -1)) {
+          annotationObj[key]["values"] = annotationObj[key]["values"].filter((_,i) => payload.resp.subset[i] == 0)
+        }
+      }
     } else if (payload.type === "feature_selection_DATA") {
       const { resp } = payload;
       setFSelectionData(resp);
