@@ -10,7 +10,7 @@ import {
     postError,
 } from "./helpers.js";
 import * as remotes from "bakana-remotes";
-import { code } from "../utils/utils.js";
+import { code, summarizeArray } from "../utils/utils.js";
 
 /***************************************/
 
@@ -49,64 +49,30 @@ function createDataset(args) {
 }
 
 function summarizeDataset(summary, args) {
-    if (args.format == "10X") {
-        let tmp_meta = {
-            cells: {
-                columnNames: summary.cells.columnNames(),
-                numberOfCells: summary.cells.numberOfRows(),
-            },
-        };
-
-        tmp_meta["modality_features"] = {};
-        for (const [k, v] of Object.entries(summary.modality_features)) {
-            tmp_meta["modality_features"][k] = {
-                columnNames: v.columnNames(),
-                numberOfFeatures: v.numberOfRows(),
-            };
-        }
-
-        return tmp_meta;
-    } else if (args.format == "MatrixMarket") {
-        let tmp_meta = {
-            cells: {
-                columnNames: summary.cells.columnNames(),
-                numberOfCells: summary.cells.numberOfRows(),
-            },
-        };
-
-        tmp_meta["modality_features"] = {};
-        for (const [k, v] of Object.entries(summary.modality_features)) {
-            tmp_meta["modality_features"][k] = {
-                columnNames: v.columnNames(),
-                numberOfFeatures: v.numberOfRows(),
-            };
-        }
-
-        return tmp_meta;
-    } else if (args.format == "H5AD") {
-        return;
-    } else if (args.format == "SummarizedExperiment") {
-        return;
-    } else if (args.format == "ExperimentHub") {
-        let tmp_meta = {
-            cells: {
-                columnNames: summary.cells.columnNames(),
-                numberOfCells: summary.cells.numberOfRows(),
-            },
-        };
-
-        tmp_meta["modality_features"] = {};
-        for (const [k, v] of Object.entries(summary.modality_features)) {
-            tmp_meta["modality_features"][k] = {
-                columnNames: v.columnNames(),
-                numberOfFeatures: v.numberOfRows(),
-            };
-        }
-
-        return tmp_meta;
-    } else {
-        throw new Error("unknown format '" + args.format + "'");
+    let cells_summary = {}
+    for (const k of summary.cells.columnNames()) {
+        cells_summary[k] = bakana.summarizeArray(summary.cells.column(k))
     }
+    let tmp_meta = {
+        cells: {
+            columns: cells_summary,
+            numberOfCells: summary.cells.numberOfRows(),
+        },
+    };
+
+    tmp_meta["modality_features"] = {};
+    for (const [k, v] of Object.entries(summary.modality_features)) {
+        let tmod_summary = {}
+        for (const k of v.columnNames()) {
+            tmod_summary[k] = bakana.summarizeArray(v.column(k))
+        }
+        tmp_meta["modality_features"][k] = {
+            columns: tmod_summary,
+            numberOfFeatures: v.numberOfRows(),
+        };
+    }
+
+    return tmp_meta;
 }
 
 bakana.setVisualizationAnimate((type, x, y, iter) => {

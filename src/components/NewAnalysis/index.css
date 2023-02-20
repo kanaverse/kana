@@ -47,6 +47,12 @@
   gap: 10px;
 }
 
+.section .subset-section {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .row {
   display: flex;
   flex-direction: row;

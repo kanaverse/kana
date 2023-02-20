@@ -57,7 +57,7 @@ export function ExperimentHub({
       let tmpOptions = {};
       for (const [k, v] of Object.entries(preflight.modality_features)) {
         if (k.toLowerCase().indexOf("rna") > -1) {
-          tmpOptions["primaryRnaFeatureIdColumn"] = v.columnNames[0];
+          tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
         }
       }
 
@@ -121,7 +121,7 @@ export function ExperimentHub({
                 </Text>
                 <HTMLSelect
                   defaultValue={
-                    dsMeta.modality_features["RNA"]["columnNames"][0]
+                    Object.keys(dsMeta.modality_features["RNA"]["columns"])[0]
                   }
                   onChange={(e) => {
                     let tmpOptions = { ...options };
@@ -129,7 +129,7 @@ export function ExperimentHub({
                     setOptions(tmpOptions);
                   }}
                 >
-                  {dsMeta.modality_features["RNA"]["columnNames"].map(
+                  {Object.keys(dsMeta.modality_features["RNA"]["columns"]).map(
                     (x, i) => (
                       <option key={i} value={x}>
                         {x}

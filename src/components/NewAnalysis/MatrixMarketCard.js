@@ -222,14 +222,26 @@ export function MatrixMarket({
                         </Text>
                         <HTMLSelect
                           defaultValue={
-                            dsMeta.modality_features[
-                              options?.[
-                                `featureType${
-                                  mod.toLowerCase().charAt(0).toUpperCase() +
-                                  mod.toLowerCase().slice(1)
-                                }Name`
-                              ]
-                            ]?.["columnNames"]?.[0]
+                            options?.[
+                              `featureType${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }Name`
+                            ]
+                              ? Object.keys(
+                                  dsMeta.modality_features[
+                                    options?.[
+                                      `featureType${
+                                        mod
+                                          .toLowerCase()
+                                          .charAt(0)
+                                          .toUpperCase() +
+                                        mod.toLowerCase().slice(1)
+                                      }Name`
+                                    ]
+                                  ]?.["columns"]
+                                )[0]
+                              : null
                           }
                           onChange={(e) => {
                             if (e.target.value) {
@@ -260,15 +272,17 @@ export function MatrixMarket({
                                 mod.toLowerCase().slice(1)
                               }Name`
                             ]
-                          ]?.["columnNames"] &&
-                            dsMeta.modality_features[
-                              options[
-                                `featureType${
-                                  mod.toLowerCase().charAt(0).toUpperCase() +
-                                  mod.toLowerCase().slice(1)
-                                }Name`
-                              ]
-                            ]["columnNames"].map((x, i) => (
+                          ]?.["columns"] &&
+                            Object.keys(
+                              dsMeta.modality_features[
+                                options[
+                                  `featureType${
+                                    mod.toLowerCase().charAt(0).toUpperCase() +
+                                    mod.toLowerCase().slice(1)
+                                  }Name`
+                                ]
+                              ]["columns"]
+                            ).map((x, i) => (
                               <option key={i} value={x}>
                                 {x}
                               </option>

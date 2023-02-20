@@ -1,15 +1,12 @@
-import { useState, useCallback, useContext, useEffect } from "react";
+import { useState, useContext, useEffect } from "react";
 
 import {
   Tabs,
   Tab,
-  Classes,
-  Drawer,
   Label,
   Text,
   HTMLSelect,
   FileInput,
-  Icon,
   Card,
   Elevation,
   Button,
@@ -18,24 +15,19 @@ import {
   Code,
   H2,
   Collapse,
+  Checkbox,
+  NumericInput,
   Tag,
-  OverflowList,
   H5,
-  H6,
-  FormGroup,
-  InputGroup,
-  EditableText,
-  ButtonGroup,
 } from "@blueprintjs/core";
+import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
+import { ItemRenderer, MultiSelect2 } from "@blueprintjs/select";
 
 import "./index.css";
 
 import { AppContext } from "../../context/AppContext";
 
 import { generateUID } from "../../utils/utils";
-import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
-
-import { MODALITIES } from "../../utils/utils";
 
 import { MatrixMarket } from "./MatrixMarketCard";
 import { ExperimentHub } from "./ExperimentHubCard";
@@ -68,6 +60,14 @@ export function NewAnalysis({ open, setOpen, ...props }) {
 
   // contains the full list of inputs
   const [newInputs, setNewInputs] = useState([]);
+
+  // contains batch selection
+  const [batch, setBatch] = useState(null);
+
+  // contains subset selection
+  const [subset, setSubset] = useState({
+    subset: null,
+  });
 
   // final inputs for confirmation with options
   const [inputOptions, setInputOptions] = useState([]);
@@ -110,31 +110,29 @@ export function NewAnalysis({ open, setOpen, ...props }) {
           };
         }
 
-        let newInputFiles = { files: mapFiles };
-        let mapkeys = Object.keys(mapFiles);
-        if (mapkeys.length == 1) {
-          let first = mapFiles[mapkeys[0]];
-          if (first.batch == undefined || first.batch == "none") {
-            newInputFiles.batch = null;
-          } else {
-            newInputFiles.batch = first.batch;
-          }
+        let fInputFiles = { files: mapFiles };
+
+        if (!(batch === "none" || batch === null)) {
+          fInputFiles["batch"] = batch;
         } else {
-          newInputFiles.batch = null;
+          fInputFiles["batch"] = null;
         }
 
-        //   if (tmpInputParams.subset == undefined || tmpInputParams.subset.field == "none") {
-        //     newInputFiles.subset = null;
-        // } else {
-        //     newInputFiles.subset = { field: tmpInputParams.subset.field };
-        //     if ("values" in tmpInputParams.subset) {
-        //         newInputFiles.subset.values = Array.from(tmpInputParams.subset.values);
-        //     } else {
-        //         newInputFiles.subset.ranges = [[tmpInputParams.subset.chosen_min, tmpInputParams.subset.chosen_max]];
-        //     }
-        // }
-        newInputFiles.subset = null;
-        setInputFiles(newInputFiles);
+        if (!(subset["subset"] === "none" || subset["subset"] === null)) {
+          fInputFiles["subset"] = {
+            field: subset["subset"],
+          };
+
+          if ("values" in subset) {
+            fInputFiles.subset.values = Array.from(subset.values);
+          } else {
+            fInputFiles.subset.ranges = [subset.chosen_minmax];
+          }
+        } else {
+          fInputFiles["subset"] = null;
+        }
+
+        setInputFiles(fInputFiles);
       }
     }
   };
@@ -429,6 +427,208 @@ export function NewAnalysis({ open, setOpen, ...props }) {
     );
   };
 
+  const render_batch_correction = () => {
+    return (
+      <Callout
+        className="section-input-item"
+        intent="primary"
+        title="Optional Parameters"
+        icon="predictive-analysis"
+      >
+        <div
+          className={
+            preInputFilesStatus &&
+            newInputs.length > 0 &&
+            preInputFilesStatus[newInputs[0].name]
+              ? ""
+              : "bp4-skeleton"
+          }
+        ></div>
+        <Label className="row-input">
+          {/* <Text>
+            <span>Batch Column</span>
+          </Text> */}
+          Choose the annotation column that specifies <strong>batch</strong>{" "}
+          information.
+          <HTMLSelect
+            defaultValue="none"
+            onChange={(e) => {
+              let tmpBatch = null;
+
+              tmpBatch = e.target.value;
+              if (e.target.value === "none") {
+                tmpBatch = null;
+              }
+              setBatch(tmpBatch);
+            }}
+          >
+            <option key="none" value="none">
+              none
+            </option>
+            {Object.keys(
+              preInputFilesStatus[newInputs[0].name].cells["columns"]
+            ).map((x, i) => (
+              <option key={i} value={x}>
+                {x}
+              </option>
+            ))}
+          </HTMLSelect>
+        </Label>
+        <Label className="row-input">
+          Perform analysis on a subset of cells
+          <HTMLSelect
+            defaultValue="none"
+            onChange={(e) => {
+              let tmpSubset = { ...subset };
+
+              tmpSubset["subset"] = e.target.value;
+              if (e.target.value === "none") {
+                tmpSubset["subset"] = null;
+              } else {
+                if (
+                  preInputFilesStatus[newInputs[0].name].cells["columns"][
+                    tmpSubset["subset"]
+                  ].type === "categorical"
+                ) {
+                  tmpSubset["values"] = [];
+                } else {
+                  tmpSubset["minmax"] = [
+                    preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      tmpSubset["subset"]
+                    ].min,
+                    preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      tmpSubset["subset"]
+                    ].max,
+                  ];
+                  tmpSubset["chosen_minmax"] = [
+                    preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      tmpSubset["subset"]
+                    ].min,
+                    preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      tmpSubset["subset"]
+                    ].max,
+                  ];
+                }
+              }
+
+              setSubset(tmpSubset);
+            }}
+          >
+            <option key="none" value="none">
+              none
+            </option>
+            {Object.keys(
+              preInputFilesStatus[newInputs[0].name].cells["columns"]
+            ).map((x, i) => (
+              <option key={i} value={x}>
+                {x}
+              </option>
+            ))}
+          </HTMLSelect>
+        </Label>
+        {subset?.["subset"] !== null && (
+          <>
+            {(() => {
+              if (
+                preInputFilesStatus[newInputs[0].name].cells["columns"][
+                  subset["subset"]
+                ].type == "categorical"
+              ) {
+                return (
+                  <div className="subset-section">
+                    {preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      subset["subset"]
+                    ].values.map((x) => (
+                      <Checkbox
+                        key={"subset-" + x}
+                        checked={subset.values.includes(x)}
+                        label={x}
+                        inline={true}
+                        onChange={(e) => {
+                          let gip = { ...subset };
+
+                          if (e.target.checked) {
+                            if (!gip.values.includes(x)) gip.values.push(x);
+                          } else {
+                            if (gip.values.includes(x))
+                              gip.values = gip.values.filter((y) => y !== x);
+                          }
+
+                          setSubset(gip);
+                        }}
+                      />
+                    ))}
+                    {preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      subset["subset"]
+                    ].truncated && "... and more"}
+                  </div>
+                );
+              } else {
+                return (
+                  <>
+                    <div className="subset-section">
+                      <div className="subset-range-field">
+                        <H5>from</H5>
+                        {console.log(subset)}
+                        <NumericInput
+                          min={
+                            isFinite(subset.minmax[0])
+                              ? subset.minmax[0]
+                              : undefined
+                          }
+                          max={
+                            isFinite(subset.minmax[1])
+                              ? subset.minmax[1]
+                              : undefined
+                          }
+                          value={
+                            isFinite(subset.chosen_minmax[0])
+                              ? subset.chosen_minmax[0]
+                              : undefined
+                          }
+                          onValueChange={(e) => {
+                            let gip = { ...subset };
+                            gip["chosen_minmax"][0] = e;
+                            setSubset(gip);
+                          }}
+                        />
+                      </div>
+                      <div className="subset-range-field">
+                        <H5>to</H5>
+                        <NumericInput
+                          min={
+                            isFinite(subset.minmax[0])
+                              ? subset.minmax[0]
+                              : undefined
+                          }
+                          max={
+                            isFinite(subset.minmax[1])
+                              ? subset.minmax[1]
+                              : undefined
+                          }
+                          value={
+                            isFinite(subset.chosen_minmax[1])
+                              ? subset.chosen_minmax[1]
+                              : undefined
+                          }
+                          onValueChange={(e) => {
+                            let gip = { ...subset };
+                            gip["chosen_minmax"][1] = e;
+                            setSubset(gip);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </>
+                );
+              }
+            })()}
+          </>
+        )}
+      </Callout>
+    );
+  };
+
   return (
     <Card className="section" interactive={false} elevation={Elevation.ZERO}>
       <div className="section-header">
@@ -486,7 +686,12 @@ export function NewAnalysis({ open, setOpen, ...props }) {
             disabled={!tmpStatusValid}
             onClick={handleAddDataset}
           ></Button>
-          {/* <Divider /> */}
+          {preInputFilesStatus && newInputs && newInputs.length === 1 && (
+            <>
+              <Divider />
+              {render_batch_correction()}
+            </>
+          )}
         </div>
         <div className="section-info">
           <div>

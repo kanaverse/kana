@@ -1,43 +1,28 @@
 import { useState, useCallback, useContext, useEffect } from "react";
 
 import {
-  Tabs,
-  Tab,
-  Classes,
-  Drawer,
   Label,
   Text,
   HTMLSelect,
-  FileInput,
-  Icon,
   Card,
   Elevation,
   Button,
   Divider,
   Callout,
-  Code,
   H2,
   Collapse,
-  Tag,
-  OverflowList,
   H5,
-  H6,
-  FormGroup,
   InputGroup,
-  EditableText,
-  ButtonGroup,
   Switch,
   NumericInput,
+  Checkbox,
 } from "@blueprintjs/core";
 
 import "./index.css";
 
 import { AppContext } from "../../context/AppContext";
 
-import { generateUID } from "../../utils/utils";
 import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
-
-import { MODALITIES } from "../../utils/utils";
 
 export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
   const handleClose = () => setOpen(false);
@@ -46,7 +31,7 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
   const [openInfo, setOpenInfo] = useState(true);
 
   // which helper to show? (on the right info box)
-  const [showStepHelper, setShowStepHelper] = useState("qc");
+  const [showStepHelper, setShowStepHelper] = useState(null);
 
   // access app context
   const { params, setParams } = useContext(AppContext);
@@ -57,7 +42,12 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
   const render_stepinfo = () => {
     return (
       <>
-        {showStepHelper === "qc" && (
+        {(showStepHelper === null || showStepHelper === undefined) && (
+          <Callout intent="primary">
+            Mouse over a parameter to show detailed information.
+          </Callout>
+        )}
+        {showStepHelper === "rnaqc" && (
           <Callout intent="primary">
             <p>
               Remove low-quality cells to ensure that they do not interfere with
@@ -81,13 +71,13 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
               identify mitochondrial genes in the dataset based on the{" "}
               <a
                 target="_blank"
-                href="https://github.com/jkanche/kana/blob/master/public/scran/mito.js"
+                href="https://github.com/kanaverse/bakana/blob/master/src/steps/mito.js"
               >
                 <strong>
                   in-built list of Ensembl identifiers and gene symbols for
                   mitochondrial genes in human and mouse genomes?
                 </strong>
-              </a>
+              </a>{" "}
               This assumes that the dataset contains feature annotation with
               Ensembl identifiers or gene symbols.
             </p>
@@ -125,7 +115,7 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
             </p>
           </Callout>
         )}
-        {showStepHelper === "pca" && (
+        {showStepHelper === "rnapca" && (
           <Callout intent="primary">
             <p>
               Perform a principal components analysis (PCA) to obtain per-cell
@@ -356,7 +346,7 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
             </p>
           </Callout>
         )}
-        {showStepHelper === "adtclus" && (
+        {showStepHelper === "adtnorm" && (
           <Callout intent="primary">
             <p>
               Log-normalize the ADT count data. This involves some more work
@@ -408,7 +398,38 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
             </p>
           </Callout>
         )}
-        {showStepHelper === "weights" && (
+        {showStepHelper === "crisprqc" && (
+          <Callout intent="primary">
+            <p>Remove low-quality cells based on the Crispr counts.</p>
+            <p>
+              <strong>Number of MADs</strong>: Number of median absolute
+              deviations (MADs) from the median, used to define a filter
+              threshold in the appropriate direction for each QC metric.
+              Increasing this value will reduce the stringency of the filtering.
+            </p>
+            <p>
+              <strong>Skip</strong>: Skip all quality control on the ADT count
+              matrix. This is occasionally desirable if the input data has
+              already been subjected to QC (e.g., as part of a published paper),
+              in which case no further filtering should be applied.
+            </p>
+          </Callout>
+        )}
+        {showStepHelper === "crisprpca" && (
+          <Callout intent="primary">
+            <p>
+              Perform a principal components analysis (PCA) on the
+              log-normalized CRISPR matrix.
+            </p>
+            <p>
+              <strong>Number of PCs</strong>: Number of principal components
+              with the highest variance to retain in downstream analyses. Larger
+              values will capture more biological signal at the cost of
+              increasing noise and computational work.
+            </p>
+          </Callout>
+        )}
+        {showStepHelper === "combweights" && (
           <Callout intent="primary">
             <p>
               Combine PC embeddings from multiple modalities. This yields a
@@ -426,89 +447,108 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
             </p>
           </Callout>
         )}
+        {showStepHelper === "markdet" && (
+          <Callout intent="primary">
+            <p>
+              Marker Detection
+            </p>
+            <p>
+              <strong>Compute AUC</strong>: 
+            </p>
+            <p>
+              <strong>Log-FC threshold</strong>: 
+            </p>
+          </Callout>
+        )}
       </>
     );
   };
 
-  const get_input_qc = () => {
+  const render_rna_qc = () => {
     return (
       <div className="col">
         <div>
-          <H5 className="section-title">
+          <H5 className="param-section-title">
             <span
               className={
-                showStepHelper == 2
-                  ? "row-tooltip row-tooltip-highlight"
-                  : "row-tooltip"
+                showStepHelper == "rnaqc"
+                  ? "param-row-tooltip param-row-tooltip-highlight"
+                  : "param-row-tooltip"
               }
-              onMouseEnter={() => setShowStepHelper(2)}
+              onMouseEnter={() => setShowStepHelper("rnaqc")}
             >
               Quality control (RNA)
             </span>
           </H5>
-          <div className="row">
-            <Label className="row-input">
-              <Text className="text-100">
+          <div className="param-row">
+            <Label className="param-row-input">
+              <Text className="param-text-100">
                 <span
                   className={
-                    showStepHelper == 2
-                      ? "row-tooltip row-tooltip-highlight"
-                      : "row-tooltip"
+                    showStepHelper == "rnaqc"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
                   }
-                  onMouseEnter={() => setShowStepHelper(2)}
+                  onMouseEnter={() => setShowStepHelper("rnaqc")}
                 >
-                  Skip
+                  Filter cells?
                 </span>
               </Text>
               <Switch
                 style={{ marginTop: "10px" }}
                 large={true}
-                checked={tmpParams["qc"]["skip"]}
+                checked={tmpParams["cell_filtering"]["use_rna"]}
                 innerLabelChecked="yes"
                 innerLabel="no"
                 onChange={(e) => {
                   setTmpParams({
                     ...tmpParams,
-                    qc: { ...tmpParams["qc"], skip: e.target.checked },
+                    cell_filtering: {
+                      ...tmpParams["use_rna"],
+                      use_rna: e.target.checked,
+                    },
                   });
                 }}
               />
             </Label>
-            {tmpParams?.qc?.skip !== true && (
+            {tmpParams?.cell_filtering?.use_rna === true && (
               <>
-                <Label className="row-input">
-                  <Text className="text-100">
+                <Label className="param-row-input">
+                  <Text className="param-text-100">
                     <span
                       className={
-                        showStepHelper == 2
-                          ? "row-tooltip row-tooltip-highlight"
-                          : "row-tooltip"
+                        showStepHelper == "rnaqc"
+                          ? "param-row-tooltip param-row-tooltip-highlight"
+                          : "param-row-tooltip"
                       }
-                      onMouseEnter={() => setShowStepHelper(2)}
+                      onMouseEnter={() => setShowStepHelper("rnaqc")}
                     >
                       Number of MADs
                     </span>
                   </Text>
                   <NumericInput
                     placeholder="3"
-                    value={tmpParams["qc"]["qc-nmads"]}
+                    value={tmpParams["rna_quality_control"]["nmads"]}
                     onValueChange={(nval, val) => {
                       setTmpParams({
                         ...tmpParams,
-                        qc: { ...tmpParams["qc"], "qc-nmads": nval },
+                        rna_quality_control: {
+                          ...tmpParams["rna_quality_control"],
+                          nmads: nval,
+                        },
                       });
                     }}
                   />
                 </Label>
-                <Label className="row-input">
-                  <Text className="text-100">
+                <Label className="param-row-input">
+                  <Text className="param-text-100">
                     <span
                       className={
-                        showStepHelper == 2
-                          ? "row-tooltip row-tooltip-highlight"
-                          : "row-tooltip"
+                        showStepHelper == "rnaqc"
+                          ? "param-row-tooltip param-row-tooltip-highlight"
+                          : "param-row-tooltip"
                       }
-                      onMouseEnter={() => setShowStepHelper(2)}
+                      onMouseEnter={() => setShowStepHelper("rnaqc")}
                     >
                       Use default mitochondrial list ?
                     </span>
@@ -516,30 +556,32 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
                   <Switch
                     style={{ marginTop: "10px" }}
                     large={true}
-                    checked={tmpParams["qc"]["qc-usemitodefault"]}
+                    checked={
+                      tmpParams["rna_quality_control"]["use_mito_default"]
+                    }
                     innerLabelChecked="yes"
                     innerLabel="no"
                     onChange={(e) => {
                       setTmpParams({
                         ...tmpParams,
-                        qc: {
-                          ...tmpParams["qc"],
-                          "qc-usemitodefault": e.target.checked,
+                        rna_quality_control: {
+                          ...tmpParams["rna_quality_control"],
+                          use_mito_default: e.target.checked,
                         },
                       });
                     }}
                   />
                 </Label>
-                {!tmpParams["qc"]["qc-usemitodefault"] && (
-                  <Label className="row-input">
-                    <Text className="text-100">
+                {!tmpParams["rna_quality_control"]["use_mito_default"] && (
+                  <Label className="param-row-input">
+                    <Text className="param-text-100">
                       <span
                         className={
-                          showStepHelper == 2
-                            ? "row-tooltip row-tooltip-highlight"
-                            : "row-tooltip"
+                          showStepHelper == "rnaqc"
+                            ? "param-row-tooltip param-row-tooltip-highlight"
+                            : "param-row-tooltip"
                         }
-                        onMouseEnter={() => setShowStepHelper(2)}
+                        onMouseEnter={() => setShowStepHelper("rnaqc")}
                       >
                         Mitochondrial gene prefix
                       </span>
@@ -549,19 +591,1496 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
                       onChange={(nval, val) => {
                         setTmpParams({
                           ...tmpParams,
-                          qc: {
-                            ...tmpParams["qc"],
-                            "qc-mito": nval?.target?.value,
+                          rna_quality_control: {
+                            ...tmpParams["rna_quality_control"],
+                            mito: nval?.target?.value,
                           },
                         });
                       }}
                       placeholder="mt-"
-                      value={tmpParams["qc"]["qc-mito"]}
+                      value={tmpParams["rna_quality_control"]["mito"]}
                     />
                   </Label>
                 )}
               </>
             )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_fs = () => {
+    return (
+      <div className="col">
+        <div>
+          <H5 className="param-section-title">
+            <span
+              className={
+                showStepHelper == "fs"
+                  ? "param-row-tooltip param-row-tooltip-highlight"
+                  : "param-row-tooltip"
+              }
+              onMouseEnter={() => setShowStepHelper("fs")}
+            >
+              Feature selection (RNA)
+            </span>
+          </H5>
+          <div className="param-row">
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "fs"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("fs")}
+                >
+                  Lowess span
+                </span>
+              </Text>
+              <NumericInput
+                placeholder="0.3"
+                stepSize={0.1}
+                minorStepSize={0.1}
+                value={tmpParams["feature_selection"]["span"]}
+                onValueChange={(nval, val) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    feature_selection: {
+                      ...tmpParams["feature_selection"],
+                      span: val,
+                    },
+                  });
+                }}
+              />
+            </Label>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_rna_pca = () => {
+    return (
+      <div className="col">
+        <div>
+          <H5 className="param-section-title">
+            <span
+              className={
+                showStepHelper == "rnapca"
+                  ? "param-row-tooltip param-row-tooltip-highlight"
+                  : "param-row-tooltip"
+              }
+              onMouseEnter={() => setShowStepHelper("rnapca")}
+            >
+              Principal components analysis (RNA)
+            </span>
+          </H5>
+          <div className="param-row">
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "rnapca"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("rnapca")}
+                >
+                  Number of HVGs
+                </span>
+              </Text>
+              <NumericInput
+                placeholder="2500"
+                value={tmpParams["rna_pca"]["num_hvgs"]}
+                onValueChange={(nval, val) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    rna_pca: { ...tmpParams["rna_pca"], num_hvgs: nval },
+                  });
+                }}
+              />
+            </Label>
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "rnapca"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("rnapca")}
+                >
+                  Number of PCs
+                </span>
+              </Text>
+              <NumericInput
+                placeholder="25"
+                value={tmpParams["rna_pca"]["num_pcs"]}
+                onValueChange={(nval, val) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    rna_pca: { ...tmpParams["rna_pca"], num_pcs: nval },
+                  });
+                }}
+              />
+            </Label>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_clus = () => {
+    return (
+      <div className="col">
+        <div>
+          <H5 className="param-section-title">
+            <span
+              className={
+                showStepHelper == "clus"
+                  ? "param-row-tooltip param-row-tooltip-highlight"
+                  : "param-row-tooltip"
+              }
+              onMouseEnter={() => setShowStepHelper("clus")}
+            >
+              Clustering
+            </span>
+          </H5>
+          <div className="param-row">
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "clus"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("clus")}
+                >
+                  Method
+                </span>
+              </Text>
+              <HTMLSelect
+                onChange={(e) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    choose_clustering: {
+                      ...tmpParams["choose_clustering"],
+                      method: e.target.value,
+                    },
+                  });
+                }}
+                defaultValue={tmpParams["choose_clustering"]["method"]}
+              >
+                <option value="kmeans">K-means</option>
+                <option value="snn_graph">SNN graph</option>
+              </HTMLSelect>
+            </Label>
+            {tmpParams["choose_clustering"]["method"] == "kmeans" && (
+              <Label className="param-row-input">
+                <Text className="param-text-100">
+                  <span
+                    className={
+                      showStepHelper == "clus"
+                        ? "param-row-tooltip param-row-tooltip-highlight"
+                        : "param-row-tooltip"
+                    }
+                    onMouseEnter={() => setShowStepHelper("clus")}
+                  >
+                    Number of clusters (k)
+                  </span>
+                </Text>
+                <NumericInput
+                  placeholder="10"
+                  max="40"
+                  value={tmpParams["kmeans_cluster"]["k"]}
+                  onValueChange={(nval, val) => {
+                    setTmpParams({
+                      ...tmpParams,
+                      kmeans_cluster: {
+                        ...tmpParams["kmeans_cluster"],
+                        k: nval,
+                      },
+                    });
+                  }}
+                />
+              </Label>
+            )}
+            {tmpParams["choose_clustering"]["method"] == "snn_graph" && (
+              <>
+                <Label className="param-row-input">
+                  <Text className="param-text-100">
+                    <span
+                      className={
+                        showStepHelper == "clus"
+                          ? "param-row-tooltip param-row-tooltip-highlight"
+                          : "param-row-tooltip"
+                      }
+                      onMouseEnter={() => setShowStepHelper("clus")}
+                    >
+                      Number of neighbors (k)
+                    </span>
+                  </Text>
+                  <NumericInput
+                    placeholder="10"
+                    value={tmpParams["snn_graph_cluster"]["k"]}
+                    onValueChange={(nval, val) => {
+                      setTmpParams({
+                        ...tmpParams,
+                        snn_graph_cluster: {
+                          ...tmpParams["snn_graph_cluster"],
+                          k: nval,
+                        },
+                      });
+                    }}
+                  />
+                </Label>
+                <Label className="param-row-input">
+                  <Text className="param-text-100">
+                    <span
+                      className={
+                        showStepHelper == "clus"
+                          ? "param-row-tooltip param-row-tooltip-highlight"
+                          : "param-row-tooltip"
+                      }
+                      onMouseEnter={() => setShowStepHelper("clus")}
+                    >
+                      Weighting scheme
+                    </span>
+                  </Text>
+                  <HTMLSelect
+                    onChange={(e) => {
+                      setTmpParams({
+                        ...tmpParams,
+                        snn_graph_cluster: {
+                          ...tmpParams["snn_graph_cluster"],
+                          scheme: e.target.value,
+                        },
+                      });
+                    }}
+                    defaultValue={tmpParams["snn_graph_cluster"]["scheme"]}
+                  >
+                    <option value="rank">Rank</option>
+                    <option value="number">Number</option>
+                    <option value="jaccard">Jaccard</option>
+                  </HTMLSelect>
+                </Label>
+                <Label className="param-row-input">
+                  <Text className="param-text-100">
+                    <span
+                      className={
+                        showStepHelper == "clus"
+                          ? "param-row-tooltip param-row-tooltip-highlight"
+                          : "param-row-tooltip"
+                      }
+                      onMouseEnter={() => setShowStepHelper("clus")}
+                    >
+                      Choose SNN graph clustering algorithm
+                    </span>
+                  </Text>
+                  <HTMLSelect
+                    onChange={(e) => {
+                      setTmpParams({
+                        ...tmpParams,
+                        snn_graph_cluster: {
+                          ...tmpParams["snn_graph_cluster"],
+                          algorithm: e.target.value,
+                        },
+                      });
+                    }}
+                    defaultValue={tmpParams["snn_graph_cluster"]["algorithm"]}
+                  >
+                    <option value="leiden">Leiden</option>
+                    <option value="multilevel">multilevel</option>
+                    <option value="walktrap">Walktrap</option>
+                  </HTMLSelect>
+                </Label>
+                {tmpParams["snn_graph_cluster"]["algorithm"] ==
+                  "multilevel" && (
+                  <>
+                    <Label className="param-row-input">
+                      <Text className="param-text-100">
+                        <span
+                          className={
+                            showStepHelper == "clus"
+                              ? "param-row-tooltip param-row-tooltip-highlight"
+                              : "param-row-tooltip"
+                          }
+                          onMouseEnter={() => setShowStepHelper("clus")}
+                        >
+                          Multilevel Resolution
+                        </span>
+                      </Text>
+                      <NumericInput
+                        placeholder="0.5"
+                        value={
+                          tmpParams["snn_graph_cluster"][
+                            "multilevel_resolution"
+                          ]
+                        }
+                        stepSize={0.1}
+                        minorStepSize={0.1}
+                        onValueChange={(nval, val) => {
+                          setTmpParams({
+                            ...tmpParams,
+                            snn_graph_cluster: {
+                              ...tmpParams["snn_graph_cluster"],
+                              multilevel_resolution: val,
+                            },
+                          });
+                        }}
+                      />
+                    </Label>
+                  </>
+                )}
+                {tmpParams["snn_graph_cluster"]["algorithm"] === "leiden" && (
+                  <>
+                    <Label className="param-row-input">
+                      <Text className="param-text-100">
+                        <span
+                          className={
+                            showStepHelper == "clus"
+                              ? "param-row-tooltip param-row-tooltip-highlight"
+                              : "param-row-tooltip"
+                          }
+                          onMouseEnter={() => setShowStepHelper("clus")}
+                        >
+                          Leiden Resolution
+                        </span>
+                      </Text>
+                      <NumericInput
+                        placeholder="0.5"
+                        value={
+                          tmpParams["snn_graph_cluster"]["leiden_resolution"]
+                        }
+                        stepSize={0.1}
+                        minorStepSize={0.1}
+                        onValueChange={(nval, val) => {
+                          setTmpParams({
+                            ...tmpParams,
+                            snn_graph_cluster: {
+                              ...tmpParams["snn_graph_cluster"],
+                              leiden_resolution: val,
+                            },
+                          });
+                        }}
+                      />
+                    </Label>
+                  </>
+                )}
+                {tmpParams["snn_graph_cluster"]["algorithm"] == "walktrap" && (
+                  <>
+                    <Label className="param-row-input">
+                      <Text className="param-text-100">
+                        <span
+                          className={
+                            showStepHelper == "clus"
+                              ? "param-row-tooltip param-row-tooltip-highlight"
+                              : "param-row-tooltip"
+                          }
+                          onMouseEnter={() => setShowStepHelper("clus")}
+                        >
+                          Walktrap Steps
+                        </span>
+                      </Text>
+                      <NumericInput
+                        placeholder="4"
+                        value={tmpParams["snn_graph_cluster"]["walktrap_steps"]}
+                        stepSize={1}
+                        minorStepSize={1}
+                        onValueChange={(nval, val) => {
+                          setTmpParams({
+                            ...tmpParams,
+                            snn_graph_cluster: {
+                              ...tmpParams["snn_graph_cluster"],
+                              walktrap_steps: val,
+                            },
+                          });
+                        }}
+                      />
+                    </Label>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_markdet = () => {
+    return (
+      <div className="col">
+        <div>
+          <H5 className="param-section-title">
+            <span
+              className={
+                showStepHelper == "markdet"
+                  ? "param-row-tooltip param-row-tooltip-highlight"
+                  : "param-row-tooltip"
+              }
+              onMouseEnter={() => setShowStepHelper("markdet")}
+            >
+              Marker detection
+            </span>
+          </H5>
+          <div className="param-row">
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "markdet"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("markdet")}
+                >
+                  Compute AUC?
+                </span>
+              </Text>
+              <Switch
+                style={{ marginTop: "10px" }}
+                large={true}
+                checked={tmpParams["marker_detection"]["compute_auc"]}
+                innerLabelChecked="yes"
+                innerLabel="no"
+                onChange={(e) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    marker_detection: {
+                      ...tmpParams["compute_auc"],
+                      compute_auc: e.target.checked,
+                    },
+                  });
+                }}
+              />
+            </Label>
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "markdet"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("markdet")}
+                >
+                  Log-FC threshold
+                </span>
+              </Text>
+              <NumericInput
+                placeholder="0"
+                value={tmpParams["marker_detection"]["lfc_threshold"]}
+                onValueChange={(nval, val) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    marker_detection: {
+                      ...tmpParams["marker_detection"],
+                      lfc_threshold: nval,
+                    },
+                  });
+                }}
+              />
+            </Label>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_tsne = () => {
+    return (
+      <div className="col">
+        <div>
+          <H5 className="param-section-title">
+            <span
+              className={
+                showStepHelper == "tsne"
+                  ? "param-row-tooltip param-row-tooltip-highlight"
+                  : "param-row-tooltip"
+              }
+              onMouseEnter={() => setShowStepHelper("tsne")}
+            >
+              t-SNE
+            </span>
+          </H5>
+          <div className="param-row">
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "tsne"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("tsne")}
+                >
+                  Perplexity
+                </span>
+              </Text>
+              <NumericInput
+                placeholder="30"
+                value={tmpParams["tsne"]["perplexity"]}
+                onValueChange={(nval, val) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    tsne: { ...tmpParams["tsne"], perplexity: nval },
+                  });
+                }}
+              />
+            </Label>
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "tsne"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("tsne")}
+                >
+                  Iterations
+                </span>
+              </Text>
+              <NumericInput
+                placeholder="500"
+                value={tmpParams["tsne"]["iterations"]}
+                onValueChange={(nval, val) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    tsne: { ...tmpParams["tsne"], iterations: nval },
+                  });
+                }}
+              />
+            </Label>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_umap = () => {
+    return (
+      <div className="col">
+        <div>
+          <H5 className="param-section-title">
+            <span
+              className={
+                showStepHelper == "umap"
+                  ? "param-row-tooltip param-row-tooltip-highlight"
+                  : "param-row-tooltip"
+              }
+              onMouseEnter={() => setShowStepHelper("umap")}
+            >
+              UMAP
+            </span>
+          </H5>
+          <div className="param-row">
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "umap"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("umap")}
+                >
+                  Number of neighbors
+                </span>
+              </Text>
+              <NumericInput
+                placeholder="15"
+                value={tmpParams["umap"]["num_neighbors"]}
+                onValueChange={(nval, val) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    umap: { ...tmpParams["umap"], num_neighbors: nval },
+                  });
+                }}
+              />
+            </Label>
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == 7
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper(7)}
+                >
+                  Minimum distance
+                </span>
+              </Text>
+              <NumericInput
+                placeholder="0.01"
+                stepSize={0.01}
+                minorStepSize={0.01}
+                value={tmpParams["umap"]["min_dist"]}
+                onValueChange={(nval, val) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    umap: { ...tmpParams["umap"], min_dist: val },
+                  });
+                }}
+              />
+            </Label>
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == 7
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper(7)}
+                >
+                  Epochs
+                </span>
+              </Text>
+              <NumericInput
+                placeholder="500"
+                value={tmpParams["umap"]["num_epochs"]}
+                onValueChange={(nval, val) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    umap: { ...tmpParams["umap"], num_epochs: nval },
+                  });
+                }}
+              />
+            </Label>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  function handleCheckbox(e, species, key) {
+    let tkey = `${species}_references`;
+    let tmpAnnoCells = [...tmpParams["cell_labelling"][tkey]];
+    if (e.target.checked) {
+      if (!tmpAnnoCells.includes(key)) {
+        tmpAnnoCells.push(key);
+      }
+    } else {
+      tmpAnnoCells = tmpAnnoCells.filter((y) => {
+        return y !== key;
+      });
+    }
+
+    let tmpAnno = {
+      ...tmpParams["cell_labelling"],
+    };
+
+    tmpAnno[tkey] = tmpAnnoCells;
+
+    setTmpParams({
+      ...tmpParams,
+      cell_labelling: tmpAnno,
+    });
+  }
+
+  function isCheckIncluded(species, key) {
+    let tkey = `${species}_references`;
+    return tmpParams["cell_labelling"][tkey].includes(key);
+  }
+
+  const render_cellann = () => {
+    return (
+      <div className="col">
+        <div>
+          <H5 className="param-section-title">
+            <span
+              className={
+                showStepHelper == "cellann"
+                  ? "param-row-tooltip param-row-tooltip-highlight"
+                  : "param-row-tooltip"
+              }
+              onMouseEnter={() => setShowStepHelper("cellann")}
+            >
+              Cell type annotation
+            </span>
+          </H5>
+          <div className="param-row">
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "cellann"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("cellann")}
+                >
+                  Choose reference datasets
+                </span>
+              </Text>
+              <div
+                style={{
+                  marginTop: "10px",
+                }}
+              >
+                <span
+                  style={{
+                    marginRight: "10px",
+                    textTransform: "capitalize",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Human:{" "}
+                </span>
+                <Checkbox
+                  defaultChecked={isCheckIncluded("human", "BlueprintEncode")}
+                  inline={true}
+                  label="Blueprint Encode"
+                  onChange={(e) => {
+                    handleCheckbox(e, "human", "BlueprintEncode");
+                  }}
+                />
+                <Checkbox
+                  defaultChecked={isCheckIncluded(
+                    "human",
+                    "DatabaseImmuneCellExpression"
+                  )}
+                  inline={true}
+                  label="Database ImmuneCell Expression"
+                  onChange={(e) => {
+                    handleCheckbox(e, "human", "DatabaseImmuneCellExpression");
+                  }}
+                />
+                <Checkbox
+                  defaultChecked={isCheckIncluded(
+                    "human",
+                    "HumanPrimaryCellAtlas"
+                  )}
+                  inline={true}
+                  label="Human Primary Cell Atlas"
+                  onChange={(e) => {
+                    handleCheckbox(e, "human", "HumanPrimaryCellAtlas");
+                  }}
+                />
+                <Checkbox
+                  defaultChecked={isCheckIncluded("human", "MonacoImmune")}
+                  inline={true}
+                  label="Monaco Immune"
+                  onChange={(e) => {
+                    handleCheckbox(e, "human", "MonacoImmune");
+                  }}
+                />
+                <Checkbox
+                  defaultChecked={isCheckIncluded(
+                    "human",
+                    "NovershternHematopoietic"
+                  )}
+                  inline={true}
+                  label="Novershtern Hematopoietic"
+                  onChange={(e) => {
+                    handleCheckbox(e, "human", "NovershternHematopoietic");
+                  }}
+                />
+              </div>
+              <div>
+                <span
+                  style={{
+                    marginRight: "10px",
+                    textTransform: "capitalize",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Mouse:{" "}
+                </span>
+                <Checkbox
+                  defaultChecked={isCheckIncluded("mouse", "ImmGen")}
+                  inline={true}
+                  label="ImmGen"
+                  onChange={(e) => {
+                    handleCheckbox(e, "mouse", "ImmGen");
+                  }}
+                />
+                <Checkbox
+                  defaultChecked={isCheckIncluded("mouse", "MouseRNAseq")}
+                  inline={true}
+                  label="Mouse RNA-seq"
+                  onChange={(e) => {
+                    handleCheckbox(e, "mouse", "MouseRNAseq");
+                  }}
+                />
+              </div>
+            </Label>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_ann = () => {
+    return (
+      <div className="col">
+        <div>
+          <H5 className="param-section-title">
+            <span
+              className={
+                showStepHelper == "ann"
+                  ? "param-row-tooltip param-row-tooltip-highlight"
+                  : "param-row-tooltip"
+              }
+              onMouseEnter={() => setShowStepHelper("ann")}
+            >
+              Nearest neighbor search
+            </span>
+          </H5>
+
+          <div className="param-row">
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "ann"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("ann")}
+                >
+                  Approximate
+                </span>
+              </Text>
+              <Switch
+                style={{ marginTop: "10px" }}
+                large={true}
+                checked={tmpParams["neighbor_index"]["approximate"]}
+                innerLabelChecked="yes"
+                innerLabel="no"
+                onChange={(e) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    neighbor_index: {
+                      ...tmpParams["neighbor_index"],
+                      approximate: e.target.checked,
+                    },
+                  });
+                }}
+              />
+            </Label>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_batch_correction = () => {
+    return (
+      <div className="col">
+        <div>
+          <H5 className="param-section-title">
+            <span
+              className={
+                showStepHelper == "batch"
+                  ? "param-row-tooltip param-row-tooltip-highlight"
+                  : "param-row-tooltip"
+              }
+              onMouseEnter={() => setShowStepHelper("batch")}
+            >
+              Batch Correction
+            </span>
+          </H5>
+
+          <div className="param-row">
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "batch"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("batch")}
+                >
+                  Method
+                </span>
+              </Text>
+              <HTMLSelect
+                onChange={(e) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    batch_correction: {
+                      ...tmpParams["batch_correction"],
+                      method: e.target.value,
+                    },
+                  });
+                }}
+                defaultValue={tmpParams["batch_correction"]["method"]}
+              >
+                <option value="mnn">MNN correction</option>
+                <option value="regress">Linear regression</option>
+                <option value="none">No correction</option>
+              </HTMLSelect>
+            </Label>
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "batch"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("batch")}
+                >
+                  Number of neighbors
+                </span>
+              </Text>
+              <NumericInput
+                placeholder="15"
+                value={tmpParams["batch_correction"]["num_neighbors"]}
+                onValueChange={(nval, val) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    batch_correction: {
+                      ...tmpParams["batch_correction"],
+                      num_neighbors: nval,
+                    },
+                  });
+                }}
+              />
+            </Label>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_adtqc = () => {
+    return (
+      <div className="col">
+        <div>
+          <div>
+            <H5 className="param-section-title">
+              <span
+                className={
+                  showStepHelper == "adtqc"
+                    ? "param-row-tooltip param-row-tooltip-highlight"
+                    : "param-row-tooltip"
+                }
+                onMouseEnter={() => setShowStepHelper("adtqc")}
+              >
+                Quality control (ADT)
+              </span>
+            </H5>
+            <div className="param-row">
+              <Label className="param-row-input">
+                <Text className="param-text-100">
+                  <span
+                    className={
+                      showStepHelper == "adtqc"
+                        ? "param-row-tooltip param-row-tooltip-highlight"
+                        : "param-row-tooltip"
+                    }
+                    onMouseEnter={() => setShowStepHelper("adtqc")}
+                  >
+                    Filter cells?
+                  </span>
+                </Text>
+                <Switch
+                  style={{ marginTop: "10px" }}
+                  large={true}
+                  checked={tmpParams["cell_filtering"]["use_adt"]}
+                  innerLabelChecked="yes"
+                  innerLabel="no"
+                  onChange={(e) => {
+                    setTmpParams({
+                      ...tmpParams,
+                      cell_filtering: {
+                        ...tmpParams["cell_filtering"],
+                        use_adt: e.target.checked,
+                      },
+                    });
+                  }}
+                />
+              </Label>
+              {tmpParams?.cell_filtering?.use_adt === true && (
+                <>
+                  <Label className="param-row-input">
+                    <Text className="param-text-100">
+                      <span
+                        className={
+                          showStepHelper == "adtqc"
+                            ? "param-row-tooltip param-row-tooltip-highlight"
+                            : "param-row-tooltip"
+                        }
+                        onMouseEnter={() => setShowStepHelper("adtqc")}
+                      >
+                        Number of MADs
+                      </span>
+                    </Text>
+                    <NumericInput
+                      placeholder="3"
+                      value={tmpParams["adt_quality_control"]["nmads"]}
+                      onValueChange={(nval, val) => {
+                        setTmpParams({
+                          ...tmpParams,
+                          adt_quality_control: {
+                            ...tmpParams["adt_quality_control"],
+                            nmads: nval,
+                          },
+                        });
+                      }}
+                    />
+                  </Label>
+                  <Label className="param-row-input">
+                    <Text className="param-text-100">
+                      <span
+                        className={
+                          showStepHelper == "adtqc"
+                            ? "param-row-tooltip param-row-tooltip-highlight"
+                            : "vrow-tooltip"
+                        }
+                        onMouseEnter={() => setShowStepHelper("adtqc")}
+                      >
+                        Minimum Detected Drop
+                      </span>
+                    </Text>
+                    <NumericInput
+                      placeholder="0.1"
+                      stepSize={0.01}
+                      minorStepSize={0.01}
+                      value={
+                        tmpParams["adt_quality_control"]["min_detected_drop"]
+                      }
+                      onValueChange={(nval, val) => {
+                        setTmpParams({
+                          ...tmpParams,
+                          adt_quality_control: {
+                            ...tmpParams["adt_quality_control"],
+                            min_detected_drop: val,
+                          },
+                        });
+                      }}
+                    />
+                  </Label>
+                  <Label className="param-row-input">
+                    <Text className="param-text-100">
+                      <span
+                        className={
+                          showStepHelper == "adtqc"
+                            ? "param-row-tooltip param-row-tooltip-highlight"
+                            : "param-row-tooltip"
+                        }
+                        onMouseEnter={() => setShowStepHelper("adtqc")}
+                      >
+                        Prefix for isotype controls
+                      </span>
+                    </Text>
+                    <InputGroup
+                      leftIcon="filter"
+                      onChange={(nval, val) => {
+                        setTmpParams({
+                          ...tmpParams,
+                          adt_quality_control: {
+                            ...tmpParams["adt_quality_control"],
+                            igg_prefix: nval?.target?.value,
+                          },
+                        });
+                      }}
+                      placeholder="IgG"
+                      value={tmpParams["adt_quality_control"]["igg_prefix"]}
+                    />
+                  </Label>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_adtnorm = () => {
+    return (
+      <div className="col">
+        <div>
+          <div>
+            <H5 className="param-section-title">
+              <span
+                className={
+                  showStepHelper == "adtnorm"
+                    ? "param-row-tooltip param-row-tooltip-highlight"
+                    : "param-row-tooltip"
+                }
+                onMouseEnter={() => setShowStepHelper("adtnorm")}
+              >
+                Normalization (ADT)
+              </span>
+            </H5>
+            <div className="param-row">
+              <Label className="param-row-input">
+                <Text className="param-text-100">
+                  <span
+                    className={
+                      showStepHelper == "adtnorm"
+                        ? "param-row-tooltip param-row-tooltip-highlight"
+                        : "param-row-tooltip"
+                    }
+                    onMouseEnter={() => setShowStepHelper("adtnorm")}
+                  >
+                    Number of PC's
+                  </span>
+                </Text>
+                <NumericInput
+                  placeholder="25"
+                  value={tmpParams["adt_normalization"]["num_pcs"]}
+                  onValueChange={(nval, val) => {
+                    setTmpParams({
+                      ...tmpParams,
+                      adt_normalization: {
+                        ...tmpParams["adt_normalization"],
+                        num_pcs: nval,
+                      },
+                    });
+                  }}
+                />
+              </Label>
+              <Label className="param-row-input">
+                <Text className="param-text-100">
+                  <span
+                    className={
+                      showStepHelper == "adtnorm"
+                        ? "param-row-tooltip param-row-tooltip-highlight"
+                        : "param-row-tooltip"
+                    }
+                    onMouseEnter={() => setShowStepHelper("adtnorm")}
+                  >
+                    Number of Clusters
+                  </span>
+                </Text>
+                <NumericInput
+                  placeholder="20"
+                  value={tmpParams["adt_normalization"]["num_clusters"]}
+                  onValueChange={(nval, val) => {
+                    setTmpParams({
+                      ...tmpParams,
+                      adt_normalization: {
+                        ...tmpParams["adt_normalization"],
+                        num_clusters: nval,
+                      },
+                    });
+                  }}
+                />
+              </Label>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_adtpca = () => {
+    return (
+      <div className="col">
+        <div>
+          <div>
+            <H5 className="param-section-title">
+              <span
+                className={
+                  showStepHelper == "adtpca"
+                    ? "param-row-tooltip param-row-tooltip-highlight"
+                    : "param-row-tooltip"
+                }
+                onMouseEnter={() => setShowStepHelper("adtpca")}
+              >
+                Principal components analysis (ADT)
+              </span>
+            </H5>
+            <div className="param-row">
+              <Label className="param-row-input">
+                <Text className="param-text-100">
+                  <span
+                    className={
+                      showStepHelper == "adtpca"
+                        ? "param-row-tooltip param-row-tooltip-highlight"
+                        : "param-row-tooltip"
+                    }
+                    onMouseEnter={() => setShowStepHelper("adtpca")}
+                  >
+                    Number of PC's
+                  </span>
+                </Text>
+                <NumericInput
+                  placeholder="25"
+                  value={tmpParams["adt_pca"]["num_pcs"]}
+                  onValueChange={(nval, val) => {
+                    setTmpParams({
+                      ...tmpParams,
+                      adt_pca: { ...tmpParams["adt_pca"], num_pcs: nval },
+                    });
+                  }}
+                />
+              </Label>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_combweights = () => {
+    return (
+      <div className="col">
+        <div>
+          <div>
+            <H5 className="param-section-title">
+              <span
+                className={
+                  showStepHelper == "combweights"
+                    ? "param-row-tooltip param-row-tooltip-highlight"
+                    : "param-row-tooltip"
+                }
+                onMouseEnter={() => setShowStepHelper("combweights")}
+              >
+                Combined Embedding
+              </span>
+            </H5>
+            <div className="param-row">
+              <Label className="param-row-input">
+                <Text className="param-text-100">
+                  <span
+                    className={
+                      showStepHelper == "combweights"
+                        ? "param-row-tooltip param-row-tooltip-highlight"
+                        : "param-row-tooltip"
+                    }
+                    onMouseEnter={() => setShowStepHelper("combweights")}
+                  >
+                    RNA Weight
+                  </span>
+                </Text>
+                <NumericInput
+                  placeholder="1"
+                  defaultValue={tmpParams["combine_embeddings"]["rna_weight"]}
+                  min={0}
+                  value={tmpParams["combine_embeddings"]["rna_weight"]}
+                  onValueChange={(nval, val) => {
+                    let gip = { ...tmpParams };
+                    gip["combine_embeddings"]["rna_weight"] = nval;
+                    setTmpParams(gip);
+                  }}
+                />
+              </Label>
+              <Label className="param-row-input">
+                <Text className="param-text-100">
+                  <span
+                    className={
+                      showStepHelper == "combweights"
+                        ? "param-row-tooltip param-row-tooltip-highlight"
+                        : "param-row-tooltip"
+                    }
+                    onMouseEnter={() => setShowStepHelper("combweights")}
+                  >
+                    ADT Weight
+                  </span>
+                </Text>
+                <NumericInput
+                  placeholder="1"
+                  min={0}
+                  defaultValue={tmpParams["combine_embeddings"]["adt_weight"]}
+                  value={tmpParams["combine_embeddings"]["adt_weight"]}
+                  onValueChange={(nval, val) => {
+                    let gip = { ...tmpParams };
+                    gip["combine_embeddings"]["adt_weight"] = nval;
+                    setTmpParams(gip);
+                  }}
+                />
+              </Label>
+              <Label className="param-row-input">
+                <Text className="param-text-100">
+                  <span
+                    className={
+                      showStepHelper == "combweights"
+                        ? "param-row-tooltip param-row-tooltip-highlight"
+                        : "param-row-tooltip"
+                    }
+                    onMouseEnter={() => setShowStepHelper("combweights")}
+                  >
+                    CRISPR Weight
+                  </span>
+                </Text>
+                <NumericInput
+                  placeholder="1"
+                  min={0}
+                  defaultValue={
+                    tmpParams["combine_embeddings"]["crispr_weight"]
+                  }
+                  value={tmpParams["combine_embeddings"]["crispr_weight"]}
+                  onValueChange={(nval, val) => {
+                    let gip = { ...tmpParams };
+                    gip["combine_embeddings"]["crispr_weight"] = nval;
+                    setTmpParams(gip);
+                  }}
+                />
+              </Label>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_crisprqc = () => {
+    return (
+      <div className="col">
+        <div>
+          <div>
+            <H5 className="param-section-title">
+              <span
+                className={
+                  showStepHelper == "crisprqc"
+                    ? "param-row-tooltip param-row-tooltip-highlight"
+                    : "param-row-tooltip"
+                }
+                onMouseEnter={() => setShowStepHelper("crisprqc")}
+              >
+                Quality control (CRISPR)
+              </span>
+            </H5>
+            <div className="param-row">
+              <Label className="param-row-input">
+                <Text className="param-text-100">
+                  <span
+                    className={
+                      showStepHelper == "crisprqc"
+                        ? "param-row-tooltip param-row-tooltip-highlight"
+                        : "param-row-tooltip"
+                    }
+                    onMouseEnter={() => setShowStepHelper("crisprqc")}
+                  >
+                    Filter cells?
+                  </span>
+                </Text>
+                <Switch
+                  style={{ marginTop: "10px" }}
+                  large={true}
+                  checked={tmpParams["cell_filtering"]["use_crispr"]}
+                  innerLabelChecked="yes"
+                  innerLabel="no"
+                  onChange={(e) => {
+                    setTmpParams({
+                      ...tmpParams,
+                      cell_filtering: {
+                        ...tmpParams["cell_filtering"],
+                        use_crispr: e.target.checked,
+                      },
+                    });
+                  }}
+                />
+              </Label>
+              {tmpParams?.cell_filtering?.use_crispr === true && (
+                <>
+                  <Label className="param-row-input">
+                    <Text className="param-text-100">
+                      <span
+                        className={
+                          showStepHelper == "crisprqc"
+                            ? "param-row-tooltip param-row-tooltip-highlight"
+                            : "param-row-tooltip"
+                        }
+                        onMouseEnter={() => setShowStepHelper("crisprqc")}
+                      >
+                        Number of MADs
+                      </span>
+                    </Text>
+                    <NumericInput
+                      placeholder="3"
+                      value={tmpParams["crispr_quality_control"]["nmads"]}
+                      onValueChange={(nval, val) => {
+                        setTmpParams({
+                          ...tmpParams,
+                          crispr_quality_control: {
+                            ...tmpParams["crispr_quality_control"],
+                            nmads: nval,
+                          },
+                        });
+                      }}
+                    />
+                  </Label>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_crisprnorm = () => {
+    return (
+      <div className="col">
+        <div>
+          <div>
+            <H5 className="param-section-title">
+              <span
+                className={
+                  showStepHelper == "crisprqc"
+                    ? "param-row-tooltip param-row-tooltip-highlight"
+                    : "param-row-tooltip"
+                }
+                onMouseEnter={() => setShowStepHelper("crisprqc")}
+              >
+                Normalization (CRISPR)
+              </span>
+            </H5>
+            <div className="param-row"></div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const render_crisprpca = () => {
+    return (
+      <div className="col">
+        <div>
+          <div>
+            <H5 className="param-section-title">
+              <span
+                className={
+                  showStepHelper == "crisprpca"
+                    ? "param-row-tooltip param-row-tooltip-highlight"
+                    : "param-row-tooltip"
+                }
+                onMouseEnter={() => setShowStepHelper("crisprpca")}
+              >
+                Principal components analysis (CRISPR)
+              </span>
+            </H5>
+            <div className="param-row">
+              <Label className="param-row-input">
+                <Text className="param-text-100">
+                  <span
+                    className={
+                      showStepHelper == "crisprpca"
+                        ? "param-row-tooltip param-row-tooltip-highlight"
+                        : "param-row-tooltip"
+                    }
+                    onMouseEnter={() => setShowStepHelper("crisprpca")}
+                  >
+                    Number of PC's
+                  </span>
+                </Text>
+                <NumericInput
+                  placeholder="25"
+                  value={tmpParams["crispr_pca"]["num_pcs"]}
+                  onValueChange={(nval, val) => {
+                    setTmpParams({
+                      ...tmpParams,
+                      crispr_pca: { ...tmpParams["crispr_pca"], num_pcs: nval },
+                    });
+                  }}
+                />
+              </Label>
+            </div>
           </div>
         </div>
       </div>
@@ -585,13 +2104,45 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
             <p>
               <strong>
                 <i>
-                  you can choose to set parameters now, but be aware that this
-                  might change based on what type of dataset is imported into
-                  Kana.
+                  you can choose to set parameters now, but be aware the
+                  available parameters depends on the type of analysis (batch,
+                  multi-modal etc) & dataset imported into Kana.
                 </i>
               </strong>
             </p>
           </Callout>
+          <Divider />
+          {render_rna_qc()}
+          <Divider />
+          {render_fs()}
+          <Divider />
+          {render_rna_pca()}
+          <Divider />
+          {render_batch_correction()}
+          <Divider />
+          {render_clus()}
+          <Divider />
+          {render_ann()}
+          <Divider />
+          {render_markdet()}
+          <Divider />
+          {render_tsne()}
+          <Divider />
+          {render_umap()}
+          <Divider />
+          {render_cellann()}
+          <Divider />
+          {render_adtqc()}
+          <Divider />
+          {render_adtnorm()}
+          <Divider />
+          {render_adtpca()}
+          <Divider />
+          {render_crisprqc()}
+          <Divider />
+          {render_crisprpca()}
+          <Divider />
+          {render_combweights()}
         </div>
         <div className="section-info">
           <div>
@@ -626,7 +2177,7 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
             large={true}
             // onClick={handleClose}
           >
-            Cancel
+            Discard
           </Button>
         </Tooltip2>
         <Tooltip2 content="Run Analysis" placement="right">
@@ -636,7 +2187,7 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
             intent={"primary"}
             large={true}
           >
-            Analyze
+            Set Parameters
           </Button>
         </Tooltip2>
       </div>
