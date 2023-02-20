@@ -511,30 +511,6 @@ function App() {
           )}
         </div>
       </SplitPane>
-      {/* {showNewAnalysisDialog && (
-        <NewAnalysis
-          open={showNewAnalysisDialog}
-          setOpen={setShowNewAnalysisDialog}
-        />
-      )}
-      {showLoadAnalysisDialog && (
-        <LoadAnalysis
-          open={showLoadAnalysisDialog}
-          setOpen={setShowLoadAnalysisDialog}
-        />
-      )}
-      {showSaveAnalysisDialog && (
-        <SaveAnalysis
-          open={showSaveAnalysisDialog}
-          setOpen={setShowSaveAnalysisDialog}
-        />
-      )}
-      {showParamDialog && (
-        <ParameterSelection
-          open={showParamDialog}
-          setOpen={setShowParamDialog}
-        />
-      )} */}
     </div>
   );
 }

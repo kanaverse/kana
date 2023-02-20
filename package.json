@@ -11,6 +11,7 @@
     "@testing-library/user-event": "^13.5.0",
     "bakana": "2.0.0-alpha.1",
     "bakana-remotes": "^1.0.0-alpha.1",
+    "bioconductor": "^0.3.0",
     "hash-wasm": "^4.9.0",
     "randomcolor": "^0.6.2",
     "react": "^18.2.0",
