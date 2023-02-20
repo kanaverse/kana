@@ -196,10 +196,10 @@ export async function fetchStepSummary(state, step) {
     return {};
   } else if (step === "feature_selection") {
     let output = {
-      means: state[step].fetchResults().means({ copy: copy }),
-      vars: state[step].fetchResults().variances({ copy: copy }),
-      fitted: state[step].fetchResults().fitted({ copy: copy }),
-      resids: state[step].fetchResults().residuals({ copy: copy }),
+      means: state[step].fetchResults().means({ copy: true }),
+      vars: state[step].fetchResults().variances({ copy: true }),
+      fitted: state[step].fetchResults().fitted({ copy: true }),
+      resids: state[step].fetchResults().residuals({ copy: true }),
     };
     return output;
   } else if (

@@ -133,7 +133,7 @@ async function unserializeAllSteps(contents) {
 
 async function postStepSummary(step) {
   try {
-    let output = await fetchStepSummary(state, step);
+    let output = await fetchStepSummary(superstate, step);
 
     if (output) {
       postSuccess(step, output);
