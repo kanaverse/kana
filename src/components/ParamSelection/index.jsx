@@ -2170,24 +2170,24 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
       </div>
       <Divider />
       <div className="section-footer">
-        <Tooltip2 content="Cancel Analysis" placement="left">
+        <Tooltip2 content="Cancel changes" placement="left">
           <Button
             icon="cross"
-            intent={"warning"}
+            intent={"danger"}
             large={true}
             // onClick={handleClose}
           >
             Discard
           </Button>
         </Tooltip2>
-        <Tooltip2 content="Run Analysis" placement="right">
+        <Tooltip2 content="Update parameters and run analysis!" placement="right">
           <Button
             icon="function"
             // onClick={handleRunAnalysis}
             intent={"primary"}
             large={true}
           >
-            Set Parameters
+            Set parameters
           </Button>
         </Tooltip2>
       </div>

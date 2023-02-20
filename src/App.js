@@ -51,6 +51,10 @@ function App() {
   // show various components, reacts to left side bar clicks
   const [showPanel, setShowPanel] = useState(null);
 
+  // if a user is transitioning from inputs to params, the state is indeterminate,
+  // let the user finish setting the params so we can finally run the analysis.
+  const [stateIndeterminate, setStateIndeterminate] = useState(false);
+
   // app export state - store to indexedDB
   const [indexedDBState, setIndexedDBState] = useState(false);
   // list of saved analysis in the browser's indexeddb
@@ -99,7 +103,7 @@ function App() {
 
   // New analysis: files are imported into Kana
   useEffect(() => {
-    if (wasmInitialized) {
+    if (wasmInitialized && !stateIndeterminate) {
       if (inputFiles.files != null) {
         scranWorker.postMessage({
           type: "RUN",
@@ -112,7 +116,7 @@ function App() {
         add_to_logs("info", `--- Analyis started---`);
       }
     }
-  }, [inputFiles, params, wasmInitialized]);
+  }, [inputFiles, params, wasmInitialized, stateIndeterminate]);
 
   function add_to_logs(type, msg, status) {
     let tmp = [...logs];
@@ -442,8 +446,15 @@ function App() {
           </div>
         </div>
         <div className="App-body">
-          {showPanel === "new" && <NewAnalysis />}
-          {showPanel === "params" && <ParameterSelection />}
+          {showPanel === "new" && (
+            <NewAnalysis
+              setShowPanel={setShowPanel}
+              setStateIndeterminate={setStateIndeterminate}
+            />
+          )}
+          {showPanel === "params" && (
+            <ParameterSelection setStateIndeterminate={setStateIndeterminate} />
+          )}
           {(showPanel === null || showPanel === undefined) && (
             <NonIdealState
               icon={"control"}

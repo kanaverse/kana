@@ -33,7 +33,13 @@ import { MatrixMarket } from "./MatrixMarketCard";
 import { ExperimentHub } from "./ExperimentHubCard";
 import { TenxHDF5 } from "./TenxHDF5Card";
 
-export function NewAnalysis({ open, setOpen, ...props }) {
+export function NewAnalysis({
+  open,
+  setOpen,
+  setShowPanel,
+  setStateIndeterminate,
+  ...props
+}) {
   // close the entire panel
   const handleClose = () => {
     setNewInputs([]);
@@ -133,6 +139,53 @@ export function NewAnalysis({ open, setOpen, ...props }) {
         }
 
         setInputFiles(fInputFiles);
+      }
+    }
+  };
+
+  const handleRunAndParams = () => {
+    if (Array.isArray(newInputs) && Array.isArray(inputOptions)) {
+      if (newInputs.length != inputOptions.length) {
+        console.error("forgot to set options?");
+      } else {
+
+        setStateIndeterminate(true);
+
+        let mapFiles = {};
+        for (let i = 0; i < newInputs.length; i++) {
+          let f = newInputs[i],
+            o = inputOptions[i];
+
+          mapFiles[f.name] = {
+            ...f,
+            options: o,
+          };
+        }
+
+        let fInputFiles = { files: mapFiles };
+
+        if (!(batch === "none" || batch === null)) {
+          fInputFiles["batch"] = batch;
+        } else {
+          fInputFiles["batch"] = null;
+        }
+
+        if (!(subset["subset"] === "none" || subset["subset"] === null)) {
+          fInputFiles["subset"] = {
+            field: subset["subset"],
+          };
+
+          if ("values" in subset) {
+            fInputFiles.subset.values = Array.from(subset.values);
+          } else {
+            fInputFiles.subset.ranges = [subset.chosen_minmax];
+          }
+        } else {
+          fInputFiles["subset"] = null;
+        }
+
+        setInputFiles(fInputFiles);
+        setShowPanel("params");
       }
     }
   };
@@ -433,7 +486,7 @@ export function NewAnalysis({ open, setOpen, ...props }) {
         className="section-input-item"
         intent="primary"
         title="Optional Parameters"
-        icon="predictive-analysis"
+        icon="issue"
       >
         <div
           className={
@@ -645,10 +698,29 @@ export function NewAnalysis({ open, setOpen, ...props }) {
             </p>
 
             <p>
-              <strong>Batch correction:</strong> You can import more than one
-              dataset to integrate and analyze datasets. If you only import a
-              single dataset, specify the annotation column that contains the
-              batch information.
+              <strong>(optionally) Batch correction:</strong> You can import
+              more than one dataset to integrate and analyze datasets. If you
+              only import a single dataset, specify the annotation column that
+              contains the batch information.
+            </p>
+
+            <p>
+              <strong>
+                Kana can (optionally) restrict the analysis to a pre-defined
+                subset of cells.
+              </strong>{" "}
+              We peek at the per-cell annotation available from the dataset, if
+              any exists. For an annotation field of interest, we can select
+              groups of interest (for categorical fields) or a range of values
+              (for continuous fields). This defines a subset of cells that is
+              passed onto the downstream analysis.
+            </p>
+            <p>
+              For categorical fields, only the first 50 levels are shown,
+              otherwise we'd run out of space. For continuous fields, the
+              defaults are set to the minimum and maximum values across all
+              cells - empty fields correspond to negative and positive infinity,
+              respectively.
             </p>
 
             <p>
@@ -659,22 +731,6 @@ export function NewAnalysis({ open, setOpen, ...props }) {
                 </i>
               </strong>
             </p>
-            {/* <div className="section-footer">
-              {openInfo && (
-                <Button
-                  outlined={true}
-                  text="Hide Info"
-                  onClick={() => setOpenInfo(false)}
-                />
-              )}
-              {!openInfo && (
-                <Button
-                  outlined={true}
-                  text="Show Info"
-                  onClick={() => setOpenInfo(true)}
-                />
-              )}
-            </div> */}
           </Callout>
           {newInputs && render_inputs()}
           <Button
@@ -843,21 +899,34 @@ export function NewAnalysis({ open, setOpen, ...props }) {
         <Tooltip2 content="Cancel Analysis" placement="left">
           <Button
             icon="cross"
-            intent={"warning"}
+            intent={"danger"}
             large={true}
             onClick={handleClose}
           >
             Cancel
           </Button>
         </Tooltip2>
-        <Tooltip2 content="Run Analysis" placement="right">
+        <Tooltip2 content="Run Analysis" placement="top">
           <Button
-            icon="function"
+            icon="flame"
             onClick={handleRunAnalysis}
-            intent={"primary"}
+            intent={"warning"}
             large={true}
           >
             Analyze
+          </Button>
+        </Tooltip2>
+        <Tooltip2
+          content="Update or modify default analysis parameters"
+          placement="right"
+        >
+          <Button
+            icon="arrow-right"
+            onClick={handleRunAndParams}
+            intent={"primary"}
+            large={true}
+          >
+            Modify analysis parameters
           </Button>
         </Tooltip2>
       </div>
