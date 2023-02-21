@@ -516,11 +516,8 @@ onmessage = function (msg) {
         let cluster = payload.cluster;
         let rank_type = payload.rank_type;
         let modality = payload.modality;
-        var resp = superstate.marker_detection.fetchGroupoutputs(
-          cluster,
-          rank_type,
-          modality
-        );
+        var raw_res = superstate.marker_detection.fetchResults()[modality];
+        let resp = bakana.formatMarkerResults(raw_res, cluster, rank_type);
 
         var transferrable = [];
         extractBuffers(resp, transferrable);
@@ -545,7 +542,9 @@ onmessage = function (msg) {
 
         var vec;
         if (modality === "rna") {
-          vec = superstate.normalization.fetchExpression(row_idx);
+          vec = superstate.rna_normalization
+            .fetchNormalizedMatrix()
+            .row(row_idx);
         } else if (modality === "adt") {
           vec = superstate.adt_normalization.fetchExpression(row_idx);
         } else {
@@ -588,11 +587,12 @@ onmessage = function (msg) {
     loaded
       .then((x) => {
         let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
-        var resp = superstate.custom_selections.fetchoutputs(
-          payload.cluster,
-          rank_type,
-          payload.modality
-        );
+
+        let raw_res = superstate.custom_selections.fetchResults(
+          payload.cluster
+        )[payload.modality];
+        let resp = bakana.formatMarkerResults(raw_res, 1, rank_type);
+
         var transferrable = [];
         extractBuffers(resp, transferrable);
         postMessage(

@@ -103,7 +103,10 @@ export async function fetchStepSummary(state, step) {
     )) {
       let info = {};
       for (const c of v.columnNames()) {
-        info[c] = bioc.CLONE(v.column(c));
+        let col = v.column(c);
+        if (Array.isArray(col)) {
+          info[c] = col;
+        }
       }
       gene_info[k] = info;
     }
@@ -121,14 +124,28 @@ export async function fetchStepSummary(state, step) {
     var blocks = state["inputs"].fetchBlockLevels();
     if (blocks === null) {
       blocks = ["default"];
-      output.data = { default: state[step].fetchMetrics() };
+      output.data = {
+        default: {
+          sums: state[step].fetchMetrics().sums(),
+          detected: state[step].fetchMetrics().detected(),
+          proportion: state[step].fetchMetrics().subsetProportions(0),
+        },
+      };
     } else {
-      let metrics = state[step].fetchMetrics({ copy: "view" });
+      let metrics = {
+        sums: state[step].fetchMetrics().sums(),
+        detected: state[step].fetchMetrics().detected(),
+        proportion: state[step].fetchMetrics().subsetProportions(0),
+      };
       let bids = state["inputs"].fetchBlock();
       output.data = splitMetricsByBlock(metrics, blocks, bids);
     }
 
-    let listed = state[step].fetchFilters();
+    let listed = {
+      sums: state[step].fetchFilters().thresholdsSums(),
+      detected: state[step].fetchFilters().thresholdsDetected(),
+      proportion: state[step].fetchFilters().thresholdsSubsetProportions(0),
+    };
     output.thresholds = splitThresholdsByBlock(listed, blocks);
 
     return output;
@@ -138,14 +155,28 @@ export async function fetchStepSummary(state, step) {
     var blocks = state["inputs"].fetchBlockLevels();
     if (blocks === null) {
       blocks = ["default"];
-      output.data = { default: state[step].fetchMetrics() };
+      output.data = {
+        default: {
+          sums: state[step].fetchMetrics().sums(),
+          detected: state[step].fetchMetrics().detected(),
+          proportion: state[step].fetchMetrics().subsetProportions(0),
+        },
+      };
     } else {
-      let metrics = state[step].fetchMetrics({ copy: "view" });
+      let metrics = {
+        sums: state[step].fetchMetrics().sums(),
+        detected: state[step].fetchMetrics().detected(),
+        proportion: state[step].fetchMetrics().subsetProportions(0),
+      };
       let bids = state["inputs"].fetchBlock();
       output.data = splitMetricsByBlock(metrics, blocks, bids);
     }
 
-    let listed = state[step].fetchFilters();
+    let listed = {
+      sums: state[step].fetchFilters().thresholdsSums(),
+      detected: state[step].fetchFilters().thresholdsDetected(),
+      proportion: state[step].fetchFilters().thresholdsSubsetProportions(0),
+    };
     output.thresholds = splitThresholdsByBlock(listed, blocks);
 
     // We don't use sums for filtering but we do report it in the metrics,
@@ -160,14 +191,28 @@ export async function fetchStepSummary(state, step) {
     var blocks = state["inputs"].fetchBlockLevels();
     if (blocks === null) {
       blocks = ["default"];
-      output.data = { default: state[step].fetchMetrics() };
+      output.data = {
+        default: {
+          sums: state[step].fetchMetrics().sums(),
+          detected: state[step].fetchMetrics().detected(),
+          proportion: state[step].fetchMetrics().subsetProportions(0),
+        },
+      };
     } else {
-      let metrics = state[step].fetchMetrics({ copy: "view" });
+      let metrics = {
+        sums: state[step].fetchMetrics().sums(),
+        detected: state[step].fetchMetrics().detected(),
+        proportion: state[step].fetchMetrics().subsetProportions(0),
+      };
       let bids = state["inputs"].fetchBlock();
       output.data = splitMetricsByBlock(metrics, blocks, bids);
     }
 
-    let listed = state[step].fetchFilters();
+    let listed = {
+      sums: state[step].fetchFilters().thresholdsSums(),
+      detected: state[step].fetchFilters().thresholdsDetected(),
+      proportion: state[step].fetchFilters().thresholdsSubsetProportions(0),
+    };
     output.thresholds = splitThresholdsByBlock(listed, blocks);
 
     return output;
@@ -196,10 +241,10 @@ export async function fetchStepSummary(state, step) {
     return {};
   } else if (step === "feature_selection") {
     let output = {
-      means: state[step].fetchResults().means({ copy: true }),
-      vars: state[step].fetchResults().variances({ copy: true }),
-      fitted: state[step].fetchResults().fitted({ copy: true }),
-      resids: state[step].fetchResults().residuals({ copy: true }),
+      means: state[step].fetchResults().means(),
+      vars: state[step].fetchResults().variances(),
+      fitted: state[step].fetchResults().fitted(),
+      resids: state[step].fetchResults().residuals(),
     };
     return output;
   } else if (
@@ -209,7 +254,7 @@ export async function fetchStepSummary(state, step) {
   ) {
     let pcs = state[step].fetchPCs();
     return {
-      pcs: pcs.principalComponents({ copy: "view" }),
+      pcs: pcs.principalComponents(),
       num_pcs: pcs.numberOfPCs(),
       num_obs: pcs.numberOfCells(),
     };
@@ -220,7 +265,7 @@ export async function fetchStepSummary(state, step) {
   } else if (step === "neighbor_index") {
     return {};
   } else if (step === "tsne" || step === "umap") {
-    return await state[step].fetchResults({ copy: true });
+    return await state[step].fetchResults();
   } else if (step === "kmeans_cluster") {
     return {};
   } else if (step === "snn_graph_cluster") {
