@@ -32,6 +32,10 @@ import { NewAnalysis } from "./components/NewAnalysis";
 import { LoadAnalysis } from "./components/LoadAnalysis";
 import { SaveAnalysis } from "./components/SaveAnalysis";
 import { ParameterSelection } from "./components/ParamSelection";
+import { AnnResults } from "./components/Results";
+import Stats from "./components/Stats";
+import { getMinMax, code } from "./utils/utils";
+
 import { AppContext } from "./context/AppContext";
 
 import pkgVersion from "../package.json";
@@ -74,11 +78,94 @@ function App() {
     preInputFiles,
     setWasmInitialized,
     datasetName,
+    setDatasetName,
     setEhubDatasets,
     setPreInputFilesStatus,
     inputFiles,
     params,
+    annotationCols,
+    setAnnotationCols,
+    annotationObj,
+    setAnnotationObj,
   } = useContext(AppContext);
+
+  // modalities
+  const [modality, setModality] = useState(null);
+  const [selectedModality, setSelectedModality] = useState(null);
+
+  /*******
+   * State to hold analysis specific results - START
+   */
+
+  // STEP: INPUTS
+  // dim sizes
+  const [initDims, setInitDims] = useState(null);
+  const [inputData, setInputData] = useState(null);
+
+  // STEP: QC; for all three, RNA, ADT, CRISPR
+  // dim sizes
+  const [qcDims, setQcDims] = useState(null);
+  const [qcData, setQcData] = useState(null);
+
+  // STEP: CELL_FILTERING
+  const [cellSubsetData, setCellSubsetData] = useState(null);
+
+  // STEP: FEATURE_SELECTION
+  const [fSelectionData, setFSelectionData] = useState(null);
+
+  // STEP: PCA; for all three - RNA, ADT, CRISPR
+  const [pcaVarExp, setPcaVarExp] = useState({});
+
+  // STEP: MARKER_DETECTION, CHOOSE_CLUSTERING
+  // only valid for column `KANA_CODE::CLUSTERS`
+  // cohen, mean scores per gene
+  const [selectedClusterSummary, setSelectedClusterSummary] = useState([]);
+  // ordering of genes for the selected cluster
+  const [selectedClusterIndex, setSelectedClusterIndex] = useState([]);
+
+  // STEP: REDUCED_DIMENSIONS: TSNE & UMAP
+  // actual embeddings
+  const [redDimsData, setRedDimsData] = useState({});
+
+  // STEP: CELL_LABELLING
+  const [cellLabelData, setCellLabelData] = useState(null);
+
+  /*******
+   * State to hold analysis specific results - END
+   ******/
+
+  /*******
+   * USER STATE REQUESTS - START
+   */
+
+  // request gene expression
+  const [reqGene, setReqGene] = useState(null);
+
+  // request annotation column
+  const [reqAnnotation, setReqAnnotation] = useState(null);
+
+  // which cluster is selected
+  const [selectedCluster, setSelectedCluster] = useState(null);
+
+  // which dimension is selected
+  const [selectedRedDim, setSelectedRedDim] = useState(null);
+
+  // if a user manually triggers an embedding animation (using the play button)
+  const [triggerAnimation, setTriggerAnimation] = useState(false);
+
+  // set Cluster rank-type
+  const [clusterRank, setClusterRank] = useState("cohen-min-rank");
+  // which cluster is selected for vsmode
+  const [selectedVSCluster, setSelectedVSCluster] = useState(null);
+
+  // custom selection on reducded dims plot
+  const [customSelection, setCustomSelection] = useState({});
+  // remove custom Selection
+  const [delCustomSelection, setDelCustomSelection] = useState(null);
+
+  /*******
+   * USER REQUESTS - END
+   ******/
 
   // initializes various things on the worker side
   useEffect(() => {
@@ -117,6 +204,137 @@ function App() {
       }
     }
   }, [inputFiles, params, wasmInitialized, stateIndeterminate]);
+
+  // request worker for new markers
+  // if either the cluster or the ranking changes
+  // VS mode
+  useEffect(() => {
+    if (selectedModality !== null && clusterRank !== null) {
+      if (selectedVSCluster !== null && selectedCluster !== null) {
+        let type = String(selectedCluster).startsWith("cs")
+          ? "computeVersusSelections"
+          : "computeVersusClusters";
+        scranWorker.postMessage({
+          type: type,
+          payload: {
+            modality: selectedModality,
+            left: selectedCluster,
+            right: selectedVSCluster,
+            rank_type: clusterRank,
+          },
+        });
+
+        add_to_logs("info", `--- ${type} sent ---`);
+      } else if (selectedCluster !== null) {
+        let type = String(selectedCluster).startsWith("cs")
+          ? "getMarkersForSelection"
+          : "getMarkersForCluster";
+        scranWorker.postMessage({
+          type: type,
+          payload: {
+            modality: selectedModality,
+            cluster: selectedCluster,
+            rank_type: clusterRank,
+          },
+        });
+
+        add_to_logs("info", `--- ${type} sent ---`);
+      }
+    }
+  }, [selectedCluster, selectedVSCluster, clusterRank, selectedModality]);
+
+  // compute markers in the worker
+  // when a new custom selection of cells is made through the UI
+  useEffect(() => {
+    if (
+      delCustomSelection === null &&
+      customSelection !== null &&
+      Object.keys(customSelection).length > 0
+    ) {
+      let csLen = `cs${Object.keys(customSelection).length}`;
+      var cs = customSelection[csLen];
+      scranWorker.postMessage({
+        type: "computeCustomMarkers",
+        payload: {
+          selection: cs,
+          id: csLen,
+        },
+      });
+
+      add_to_logs("info", `--- Compute markers for ${csLen} sent ---`);
+    }
+  }, [customSelection]);
+
+  // Remove a custom selection from cache
+  useEffect(() => {
+    if (delCustomSelection !== null) {
+      scranWorker.postMessage({
+        type: "removeCustomMarkers",
+        payload: {
+          id: delCustomSelection,
+        },
+      });
+
+      setDelCustomSelection(null);
+      add_to_logs(
+        "info",
+        `--- Delete custom markers for ${delCustomSelection} ---`
+      );
+
+      if (selectedCluster === delCustomSelection) {
+        setSelectedCluster(null);
+      }
+    }
+  }, [delCustomSelection]);
+
+  // get expression for a gene from worker
+  useEffect(() => {
+    if (reqGene != null && selectedModality != null) {
+      scranWorker.postMessage({
+        type: "getGeneExpression",
+        payload: {
+          gene: reqGene,
+          modality: selectedModality,
+        },
+      });
+
+      add_to_logs(
+        "info",
+        `--- Request gene expression for gene:${reqGene} sent ---`
+      );
+    }
+  }, [reqGene, selectedModality]);
+
+  // trigger an embedding animation
+  useEffect(() => {
+    if (triggerAnimation && selectedRedDim) {
+      scranWorker.postMessage({
+        type: "animate" + selectedRedDim,
+        payload: {
+          params: params[selectedRedDim.toLowerCase()],
+        },
+      });
+
+      add_to_logs("info", `--- Request to animate ${selectedRedDim} sent ---`);
+    }
+  }, [triggerAnimation]);
+
+  // get annotation for a column from worker
+  useEffect(() => {
+    if (reqAnnotation) {
+      scranWorker.postMessage({
+        type: "getAnnotation",
+        payload: {
+          annotation: reqAnnotation,
+        },
+      });
+
+      add_to_logs(
+        "info",
+        `--- Request annotation for ${reqAnnotation} sent---`
+      );
+    }
+  }, [reqAnnotation]);
 
   function add_to_logs(type, msg, status) {
     let tmp = [...logs];
@@ -199,6 +417,235 @@ function App() {
       if (resp.details) {
         setPreInputFilesStatus(resp.details);
       }
+    } else if (type === "inputs_DATA") {
+      var info = [];
+      if ("RNA" in resp.num_genes) {
+        info.push(`${resp.num_genes.RNA} genes`);
+      }
+      if ("ADT" in resp.num_genes) {
+        info.push(`${resp.num_genes.ADT} ADTs`);
+      }
+      if ("CRISPR" in resp.num_genes) {
+        info.push(`${resp.num_genes.ADT} Guides`);
+      }
+      info.push(`${resp.num_cells} cells`);
+
+      setInitDims(info.join(", "));
+      setInputData(resp);
+
+      if (resp?.annotations) {
+        setAnnotationCols(resp.annotations);
+      }
+
+      let pmods = Object.keys(resp.genes);
+      setModality(pmods);
+    } else if (type === "rna_quality_control_DATA") {
+      if (!resp) {
+        setQcData(null);
+      } else {
+        var ranges = {},
+          data = resp["data"],
+          all = {};
+
+        let t_annots = [...annotationCols];
+
+        for (const [group, gvals] of Object.entries(data)) {
+          for (const [key, val] of Object.entries(gvals)) {
+            if (!all[key]) all[key] = [Infinity, -Infinity];
+            let [min, max] = getMinMax(val);
+            if (min < all[key][0]) all[key][0] = min;
+            if (max > all[key][1]) all[key][1] = max;
+
+            if (t_annots.indexOf(`${code}::QC::RNA_${key}`) == -1) {
+              t_annots.push(`${code}::QC::RNA_${key}`);
+            }
+          }
+          ranges[group] = all;
+        }
+
+        setAnnotationCols(t_annots);
+
+        resp["ranges"] = ranges;
+        setQcData(resp);
+      }
+    } else if (type === "adt_quality_control_DATA") {
+      if (resp) {
+        var ranges = {},
+          data = resp["data"],
+          all = {};
+
+        let t_annots = [...annotationCols];
+
+        for (const [group, gvals] of Object.entries(data)) {
+          for (const [key, val] of Object.entries(gvals)) {
+            if (!all[key]) all[key] = [Infinity, -Infinity];
+            let [min, max] = getMinMax(val);
+            if (min < all[key][0]) all[key][0] = min;
+            if (max > all[key][1]) all[key][1] = max;
+
+            if (t_annots.indexOf(`${code}::QC::ADT_${key}`) == -1) {
+              t_annots.push(`${code}::QC::ADT_${key}`);
+            }
+          }
+          ranges[group] = all;
+        }
+
+        setAnnotationCols(t_annots);
+
+        resp["ranges"] = ranges;
+
+        let prevQC = { ...qcData };
+        for (const key in data) {
+          prevQC["data"][`adt_${key}`] = data[key];
+          let tval = resp["thresholds"][key];
+          if (key === "sums") {
+            tval = null;
+          }
+          prevQC["thresholds"][`adt_${key}`] = tval;
+          prevQC["ranges"][`adt_${key}`] = ranges[key];
+        }
+
+        setQcData(prevQC);
+      }
+    } else if (type === "crispr_quality_control_DATA") {
+      if (resp) {
+        var ranges = {},
+          data = resp["data"],
+          all = {};
+
+        let t_annots = [...annotationCols];
+
+        for (const [group, gvals] of Object.entries(data)) {
+          for (const [key, val] of Object.entries(gvals)) {
+            if (!all[key]) all[key] = [Infinity, -Infinity];
+            let [min, max] = getMinMax(val);
+            if (min < all[key][0]) all[key][0] = min;
+            if (max > all[key][1]) all[key][1] = max;
+
+            if (t_annots.indexOf(`${code}::QC::CRISPR${key}`) == -1) {
+              t_annots.push(`${code}::QC::CRISPR_${key}`);
+            }
+          }
+          ranges[group] = all;
+        }
+
+        setAnnotationCols(t_annots);
+
+        resp["ranges"] = ranges;
+
+        let prevQC = { ...qcData };
+        for (const key in data) {
+          prevQC["data"][`crispr_${key}`] = data[key];
+          let tval = resp["thresholds"][key];
+          if (key === "sums") {
+            tval = null;
+          }
+          prevQC["thresholds"][`crispr_${key}`] = tval;
+          prevQC["ranges"][`crispr_${key}`] = ranges[key];
+        }
+
+        setQcData(prevQC);
+      }
+    } else if (type === "cell_filtering_DATA") {
+      setQcDims(`${resp.retained}`);
+      setCellSubsetData(resp.subset);
+
+      for (let key in annotationObj) {
+        if (
+          key.startsWith(code) &&
+          (key.indexOf("RNA") != -1 || key.indexOf("ADT") != -1)
+        ) {
+          annotationObj[key]["values"] = annotationObj[key]["values"].filter(
+            (_, i) => payload.resp.subset[i] == 0
+          );
+        }
+      }
+    } else if (type === "feature_selection_DATA") {
+      setFSelectionData(resp);
+    } else if (type === "rna_pca_DATA") {
+      setPcaVarExp({ ...pcaVarExp, RNA: resp["var_exp"] });
+    } else if (type === "adt_pca_DATA") {
+      setPcaVarExp({ ...pcaVarExp, ADT: resp["var_exp"] });
+    } else if (type === "crispr_pca_DATA") {
+      setPcaVarExp({ ...pcaVarExp, CRISPR: resp["var_exp"] });
+    } else if (type === "choose_clustering_DATA") {
+      let t_annots = [...annotationCols];
+      if (t_annots.indexOf(`${code}::CLUSTERS`) == -1) {
+        t_annots.push(`${code}::CLUSTERS`);
+      }
+
+      setAnnotationCols(t_annots);
+
+      let t_annoObj = { ...annotationObj };
+      t_annoObj[`${code}::CLUSTERS`] = resp.clusters;
+      setAnnotationObj(t_annoObj);
+    } else if (type === "marker_detection_START") {
+      setSelectedCluster(null);
+      setSelectedClusterIndex([]);
+      setSelectedClusterSummary([]);
+    } else if (type === "marker_detection_DATA") {
+      if (selectedCluster === null) {
+        // show markers for the first cluster
+        if (selectedModality === null) {
+          setSelectedModality(modality[0]);
+        }
+        setSelectedCluster(0);
+      }
+    } else if (type === "tsne_DATA" || type === "tsne_iter") {
+      // once t-SNE is available, set this as the default display
+      if (selectedRedDim === null) {
+        setSelectedRedDim("TSNE");
+      }
+
+      let tmpDims = { ...redDimsData };
+      tmpDims["TSNE"] = resp;
+      setRedDimsData(tmpDims);
+    } else if (type === "umap_DATA" || type === "umap_iter") {
+      // once t-SNE is available, set this as the default display
+      if (selectedRedDim === null) {
+        setSelectedRedDim("UMAP");
+      }
+
+      let tmpDims = { ...redDimsData };
+      tmpDims["UMAP"] = resp;
+      setRedDimsData(tmpDims);
+    } else if (
+      type === "setMarkersForCluster" ||
+      type === "setMarkersForCustomSelection" ||
+      type === "computeVersusSelections" ||
+      type === "computeVersusClusters"
+    ) {
+      let records = [];
+      let index = Array(resp.ordering.length);
+      resp.means.forEach((x, i) => {
+        index[resp.ordering[i]] = i;
+        records.push({
+          gene: resp?.ordering?.[i],
+          mean: isNaN(x) ? 0 : parseFloat(x.toFixed(2)),
+          delta: isNaN(x)
+            ? 0
+            : parseFloat(resp?.delta_detected?.[i].toFixed(2)),
+          lfc: isNaN(x) ? 0 : parseFloat(resp?.lfc?.[i].toFixed(2)),
+          detected: isNaN(x) ? 0 : parseFloat(resp?.detected?.[i].toFixed(2)),
+          expanded: false,
+          expr: null,
+        });
+      });
+      setSelectedClusterIndex(index);
+      setSelectedClusterSummary(records);
+    } else if (type === "setGeneExpression") {
+      let tmp = [...selectedClusterSummary];
+      tmp[selectedClusterIndex[resp.gene]].expr = Object.values(resp.expr);
+      setSelectedClusterSummary(tmp);
+      setReqGene(null);
+    } else if (type === "setAnnotation") {
+      let tmp = { ...annotationObj };
+      tmp[resp.annotation] = resp.values;
+      setAnnotationObj(tmp);
+
+      setReqAnnotation(null);
+    } else if (type === "cell_labelling_DATA") {
+      setCellLabelData(resp);
     }
   };
 
@@ -216,10 +663,25 @@ function App() {
               v{pkgVersion.version}
             </span>
           </NavbarHeading>
-
           <NavbarDivider />
           <span>Single cell analysis in the browser</span>
           <NavbarDivider />
+          <Tooltip2
+            content="Click to modify the dataset title"
+            position={Position.BOTTOM}
+          >
+            <EditableText
+              value={datasetName}
+              intent="primary"
+              onConfirm={(val) => {
+                setDatasetName(val);
+              }}
+              onChange={(val) => {
+                setDatasetName(val);
+              }}
+            />
+          </Tooltip2>
+          <Stats initDims={initDims} qcDims={qcDims} />
         </NavbarGroup>
       </Navbar>
       <SplitPane
@@ -458,6 +920,7 @@ function App() {
               setStateIndeterminate={setStateIndeterminate}
             />
           )}
+          {showPanel === "results" && <AnnResults />}
           {(showPanel === null || showPanel === undefined) && (
             <NonIdealState
               icon={"control"}

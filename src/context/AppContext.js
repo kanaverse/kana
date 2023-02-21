@@ -9,6 +9,9 @@ const AppContextProvider = ({ children }) => {
     files: null,
   });
 
+  // creates a default dataset name
+  const [datasetName, setDatasetName] = useState("My Analysis Title");
+
   // Pre flight Input State
   const [preInputFiles, setPreInputFiles] = useState(null);
 
@@ -24,6 +27,21 @@ const AppContextProvider = ({ children }) => {
   // wasm state and error
   const [wasmInitialized, setWasmInitialized] = useState(false);
   const [error, setError] = useState(null);
+
+  // Response State for various components - these are state that are spread
+  // allover the app so its better they are at the context level
+  // Gene details
+  const [genesInfo, setGenesInfo] = useState(null);
+  // default column to show in markers table
+  const [geneColSel, setGeneColSel] = useState({
+    RNA: null,
+    ADT: null,
+    CRISPR: null,
+  });
+
+  // all cell annotations available
+  const [annotationCols, setAnnotationCols] = useState([]);
+  const [annotationObj, setAnnotationObj] = useState({});
 
   // default params
   const [params, setParams] = useState({
@@ -143,6 +161,16 @@ const AppContextProvider = ({ children }) => {
         setWasmInitialized,
         error,
         setError,
+        genesInfo,
+        setGenesInfo,
+        geneColSel,
+        setGeneColSel,
+        annotationCols,
+        setAnnotationCols,
+        annotationObj,
+        setAnnotationObj,
+        datasetName,
+        setDatasetName,
       }}
     >
       {children}
