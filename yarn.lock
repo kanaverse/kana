@@ -1102,6 +1102,23 @@
     react-transition-group "^4.4.5"
     tslib "~2.3.1"
 
+"@blueprintjs/core@^4.16.3":
+  version "4.16.3"
+  resolved "https://npm.vida.science.roche.com/@blueprintjs%2fcore/-/core-4.16.3.tgz#04b5f02589f3bfca30c28a08edc1ca5b43d99d8b"
+  integrity sha512-XFqcuwG9QBP/6LxegzDBv7PlTY8LdPM53nfJ8nRcUMcHmHoZ8HyYA9f40lMbiUTg4yAFz50Yw8Fc8uAja267ag==
+  dependencies:
+    "@blueprintjs/colors" "^4.1.15"
+    "@blueprintjs/icons" "^4.13.2"
+    "@juggle/resize-observer" "^3.4.0"
+    "@types/dom4" "^2.0.2"
+    classnames "^2.3.1"
+    dom4 "^2.1.5"
+    normalize.css "^8.0.1"
+    popper.js "^1.16.1"
+    react-popper "^1.3.11"
+    react-transition-group "^4.4.5"
+    tslib "~2.3.1"
+
 "@blueprintjs/icons@^4.13.2":
   version "4.13.2"
   resolved "https://npm.vida.science.roche.com/@blueprintjs%2ficons/-/icons-4.13.2.tgz#df748957984a4f22988136f89aaaf4c686c100bb"
@@ -1122,6 +1139,29 @@
     classnames "^2.3.1"
     dom4 "^2.1.5"
     react-popper "^2.3.0"
+    tslib "~2.3.1"
+
+"@blueprintjs/popover2@^1.13.3":
+  version "1.13.3"
+  resolved "https://npm.vida.science.roche.com/@blueprintjs%2fpopover2/-/popover2-1.13.3.tgz#437c35b7e7c2cd394fb5eb4042f94acea4ed8e9a"
+  integrity sha512-FJ1QamBHRf45rIU3iDbGRnSAOM7SCI+I9DjBCWQlmjNa8fCJXOPd7mmLuolhlNfI9kdgRs0+6RgCifonIJ9BTg==
+  dependencies:
+    "@blueprintjs/core" "^4.16.3"
+    "@juggle/resize-observer" "^3.4.0"
+    "@popperjs/core" "^2.11.6"
+    classnames "^2.3.1"
+    dom4 "^2.1.5"
+    react-popper "^2.3.0"
+    tslib "~2.3.1"
+
+"@blueprintjs/select@^4.9.3":
+  version "4.9.3"
+  resolved "https://npm.vida.science.roche.com/@blueprintjs%2fselect/-/select-4.9.3.tgz#8204b0f6b069cf839f5897b3ee59727778c89abb"
+  integrity sha512-G5hQxVUN/wS2yVFe0ASjdM2BV+K7gQXwVceOGbRPN3nIa5puFLBa3d9Y3fdN1gSO1LRpJhpAgUL75OFJC3Ku5Q==
+  dependencies:
+    "@blueprintjs/core" "^4.16.3"
+    "@blueprintjs/popover2" "^1.13.3"
+    classnames "^2.3.1"
     tslib "~2.3.1"
 
 "@csstools/normalize.css@*":
@@ -2919,6 +2959,11 @@ bioconductor@^0.1.1:
   version "0.1.1"
   resolved "https://npm.vida.science.roche.com/bioconductor/-/bioconductor-0.1.1.tgz#80adfd9263d16fd44ed15fd6a10aa1e324bbe936"
   integrity sha512-R8rb5iO3RYuj2yELT/TYBhl+DPwN7pueu93sxcFFEQwe3YLQ2eVaBs2CJrMgxxoILRPoqjLKMss5XvaCyC/ClA==
+
+bioconductor@^0.3.0:
+  version "0.3.0"
+  resolved "https://npm.vida.science.roche.com/bioconductor/-/bioconductor-0.3.0.tgz#889a22f45166f097796b91822221d1640320c038"
+  integrity sha512-350/pQ57uChvf/K2xTvLIvhd2muVqPfRVybF90E2mcFz7ZikS5Su/Ko+PW79Uq94hrfshnGPRiTrEcbzeWlmcQ==
 
 bluebird@^3.5.5:
   version "3.7.2"

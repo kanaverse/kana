@@ -139,6 +139,8 @@ export function NewAnalysis({
         }
 
         setInputFiles(fInputFiles);
+
+        setShowPanel("results");
       }
     }
   };

@@ -24,7 +24,14 @@ import { AppContext } from "../../context/AppContext";
 
 import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 
-export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
+export function ParameterSelection({
+  open,
+  setOpen,
+  openIndex,
+  setStateIndeterminate,
+  setShowPanel,
+  ...props
+}) {
   const handleClose = () => setOpen(false);
 
   // minimise info box on the right
@@ -38,6 +45,12 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
 
   // new params, so that they can be discarded later
   const [tmpParams, setTmpParams] = useState(params);
+
+  const handleRunAnalysis = () => {
+    setStateIndeterminate(false);
+    setParams(tmpParams);
+    setShowPanel("results");
+  };
 
   const render_stepinfo = () => {
     return (
@@ -449,14 +462,12 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
         )}
         {showStepHelper === "markdet" && (
           <Callout intent="primary">
+            <p>Marker Detection</p>
             <p>
-              Marker Detection
+              <strong>Compute AUC</strong>:
             </p>
             <p>
-              <strong>Compute AUC</strong>: 
-            </p>
-            <p>
-              <strong>Log-FC threshold</strong>: 
+              <strong>Log-FC threshold</strong>:
             </p>
           </Callout>
         )}
@@ -2175,15 +2186,18 @@ export function ParameterSelection({ open, setOpen, openIndex, ...props }) {
             icon="cross"
             intent={"danger"}
             large={true}
-            // onClick={handleClose}
+            onClick={handleClose}
           >
             Discard
           </Button>
         </Tooltip2>
-        <Tooltip2 content="Update parameters and run analysis!" placement="right">
+        <Tooltip2
+          content="Update parameters and run analysis!"
+          placement="right"
+        >
           <Button
             icon="function"
-            // onClick={handleRunAnalysis}
+            onClick={handleRunAnalysis}
             intent={"primary"}
             large={true}
           >

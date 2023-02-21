@@ -453,7 +453,10 @@ function App() {
             />
           )}
           {showPanel === "params" && (
-            <ParameterSelection setStateIndeterminate={setStateIndeterminate} />
+            <ParameterSelection
+              setShowPanel={setShowPanel}
+              setStateIndeterminate={setStateIndeterminate}
+            />
           )}
           {(showPanel === null || showPanel === undefined) && (
             <NonIdealState
