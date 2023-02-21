@@ -1,0 +1,53 @@
+.logs-container {
+  background-color: #000000;
+  /* background-image: radial-gradient(rgba(206, 202, 202, 0.75), black 120%); */
+  padding: 2rem;
+  color: white;
+  font-family: "Courier New", Courier, monospace;
+  /* font-weight: bold; */
+}
+
+.logs-container::after {
+  content: "";
+  position: absolute;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+}
+
+.logs-error,
+.logs-warn {
+  color: #ff0000;
+}
+
+.logs-info {
+  color: #86e9fe;
+}
+
+.logs-start {
+  color: #ffff00;
+}
+
+.logs-success,
+.logs-complete {
+  color: #00ff00;
+}
+
+::selection {
+  background: #bebebe;
+  text-shadow: none;
+}
+
+.logs-container > pre {
+  margin: 0;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}

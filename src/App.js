@@ -22,6 +22,7 @@ import {
   H5,
   NonIdealState,
   NonIdealStateIconSize,
+  Alert,
 } from "@blueprintjs/core";
 
 import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
@@ -34,6 +35,7 @@ import { SaveAnalysis } from "./components/SaveAnalysis";
 import { ParameterSelection } from "./components/ParamSelection";
 import { AnnResults } from "./components/Results";
 import Stats from "./components/Stats";
+import Logs from "./components/Logs";
 import { getMinMax, code } from "./utils/utils";
 
 import { AppContext } from "./context/AppContext";
@@ -87,6 +89,9 @@ function App() {
     setAnnotationCols,
     annotationObj,
     setAnnotationObj,
+    setGenesInfo,
+    geneColSel,
+    setGeneColSel,
   } = useContext(AppContext);
 
   // modalities
@@ -335,6 +340,20 @@ function App() {
       );
     }
   }, [reqAnnotation]);
+
+  // if modality changes, show the new markers list
+  useEffect(() => {
+    if (selectedModality) {
+      setGenesInfo(inputData.genes[selectedModality]);
+      if (geneColSel[selectedModality] == null) {
+        let tmp = geneColSel;
+        tmp[selectedModality] = Object.keys(
+          inputData.genes[selectedModality]
+        )[0];
+        setGeneColSel(tmp);
+      }
+    }
+  }, [selectedModality]);
 
   function add_to_logs(type, msg, status) {
     let tmp = [...logs];
@@ -820,6 +839,37 @@ function App() {
             <Divider />
             <div
               className={
+                showPanel === "results" ? "item-sidebar-intent" : "item-sidebar"
+              }
+            >
+              <Tooltip2
+                className={popclass.TOOLTIP2_INDICATOR}
+                content="Explore results!"
+                minimal={false}
+                placement={"right"}
+                intent={showPanel === "results" ? "primary" : ""}
+              >
+                <div className="item-button-group">
+                  <Button
+                    outlined={false}
+                    large={false}
+                    minimal={true}
+                    fill={true}
+                    icon={"rocket-slant"}
+                    onClick={() =>
+                      showPanel !== "results"
+                        ? setShowPanel("results")
+                        : setShowPanel(null)
+                    }
+                    intent={showPanel === "results" ? "primary" : "none"}
+                  ></Button>
+                  <span>RESULTS</span>
+                </div>
+              </Tooltip2>
+            </div>
+            <Divider />
+            <div
+              className={
                 showPanel === "logs" ? "item-sidebar-intent" : "item-sidebar"
               }
             >
@@ -988,6 +1038,39 @@ function App() {
           )}
         </div>
       </SplitPane>
+      <Alert
+        canEscapeKeyCancel={false}
+        canOutsideClickCancel={false}
+        confirmButtonText={scranError?.fatal ? "Reload App" : "close"}
+        icon="warning-sign"
+        intent="danger"
+        isOpen={scranError != null}
+        onConfirm={() => {
+          if (scranError?.fatal) {
+            window.location.reload();
+          } else {
+            setScranError(null);
+          }
+        }}
+      >
+        <h3>{scranError?.type.replace("_", " ").toUpperCase()}</h3>
+        <Divider />
+        <p>{scranError?.msg}</p>
+        <Divider />
+        <p>
+          Please report the issue on{" "}
+          <a href="https://github.com/jkanche/kana/issues" target="_blank">
+            GitHub
+          </a>
+          .
+        </p>
+        <Divider />
+        {scranError?.fatal && (
+          <div>
+            Check logs here <Logs loadingStatus={true} logs={logs} />
+          </div>
+        )}
+      </Alert>
     </div>
   );
 }
