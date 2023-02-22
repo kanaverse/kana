@@ -8,7 +8,7 @@ const ClusterBarPlot = (props) => {
   const { datasetName } = useContext(AppContext);
 
   useEffect(() => {
-    let data = props?.data?.clusters;
+    let data = props?.data;
 
     if (!data) return;
 

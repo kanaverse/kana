@@ -252,10 +252,13 @@ export async function fetchStepSummary(state, step) {
     step === "crispr_pca"
   ) {
     let pcs = state[step].fetchPCs();
+    var var_exp = pcs.varianceExplained();
+    var total_var = pcs.totalVariance();
+    var_exp.forEach((x, i) => {
+      var_exp[i] = x / total_var;
+    });
     return {
-      pcs: pcs.principalComponents(),
-      num_pcs: pcs.numberOfPCs(),
-      num_obs: pcs.numberOfCells(),
+      var_exp: var_exp,
     };
   } else if (step === "combine_embeddings") {
     return {};

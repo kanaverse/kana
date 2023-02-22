@@ -74,7 +74,8 @@ const DimPlot = (props) => {
   // const [resizeTimeout, setResizeTimeout] = useState(null);
   let resizeTimeout, resizeObserver;
 
-  const max = getMinMax(props?.clusterData.clusters)[1] + 1;
+  const default_cluster = `${code}::CLUSTERS`;
+  const max = getMinMax(annotationObj[default_cluster])[1] + 1;
 
   // if either gene or expression changes, compute gradients and min/max
   useEffect(() => {
@@ -133,14 +134,12 @@ const DimPlot = (props) => {
     if (containerEl) {
       let data = null;
 
+      console.log(props?.selectedRedDim)
+
       if (props?.showAnimation) {
         data = props?.animateData;
       } else {
-        if (props?.defaultRedDims === "TSNE") {
-          data = props?.tsneData;
-        } else if (props?.defaultRedDims === "UMAP") {
-          data = props?.umapData;
-        }
+        data = props?.redDimsData[props?.selectedRedDim];
       }
 
       // if dimensions are available
@@ -403,10 +402,9 @@ const DimPlot = (props) => {
       }
     }
   }, [
-    props?.tsneData,
-    props?.umapData,
+    props?.redDimsData,
     props?.animateData,
-    props?.defaultRedDims,
+    props?.selectedRedDim,
     gradient,
     props?.clusHighlight,
     plotColorMappings,
@@ -424,7 +422,7 @@ const DimPlot = (props) => {
         clus_names.push(`Cluster ${i + 1}`);
       }
       setPlotGroups(clus_names);
-      setPlotFactors(props?.clusterData?.clusters);
+      setPlotFactors(annotationObj[default_cluster]);
     } else {
       if (!(props?.colorByAnnotation in annotationObj)) {
         props?.setReqAnnotation(props?.colorByAnnotation);
@@ -585,7 +583,7 @@ const DimPlot = (props) => {
     if (props?.restoreState) {
       let { config } = props?.restoreState;
       if (config) {
-        props?.setDefaultRedDims(config?.embedding);
+        props?.setSelectedRedDim(config?.embedding);
         props?.setClusHighlight(config?.highlight);
         // props?.setClusHighlightLabel(null);
 
@@ -635,7 +633,7 @@ const DimPlot = (props) => {
       tmp.push({
         color: cellColorArray,
         config: {
-          embedding: JSON.parse(JSON.stringify(props?.defaultRedDims)),
+          embedding: JSON.parse(JSON.stringify(props?.selectedRedDim)),
           annotation: JSON.parse(JSON.stringify(props?.colorByAnnotation)),
           highlight: plotGroups[props?.clusHighlight]
             ? JSON.parse(JSON.stringify(plotGroups[props?.clusHighlight]))
@@ -674,40 +672,34 @@ const DimPlot = (props) => {
   return (
     <div className="scatter-plot">
       <ButtonGroup
-        style={{ minWidth: 75, minHeight: 150 }}
+        // style={{ minWidth: 75, minHeight: 150 }}
         fill={false}
         large={false}
         minimal={false}
-        vertical={true}
-        className="left-sidebar"
+        vertical={false}
+        className="dimplot-left-sidebar"
       >
-        <Button
-          className="dim-button"
-          disabled={props?.redDims.indexOf("TSNE") === -1}
-          onClick={() => props?.setDefaultRedDims("TSNE")}
-          intent={props?.defaultRedDims === "TSNE" ? "primary" : ""}
-        >
-          <Icon icon="heatmap"></Icon>
-          <br />
-          <span>t-SNE</span>
-        </Button>
-        <Button
-          className="dim-button"
-          disabled={props?.redDims.indexOf("UMAP") === -1}
-          onClick={() => props?.setDefaultRedDims("UMAP")}
-          intent={props?.defaultRedDims === "UMAP" ? "primary" : ""}
-        >
-          <Icon icon="heatmap"></Icon>
-          <br />
-          <span>UMAP</span>
-        </Button>
-        <Button className="dim-button" disabled={true}>
+        {props?.redDimsData &&
+          Object.keys(props?.redDimsData).map((x, i) => {
+            return (
+              <Button
+                className="dim-button"
+                onClick={() => props?.setSelectedRedDim(x)}
+                intent={props?.selectedRedDim === x ? "primary" : ""}
+              >
+                {/* <Icon icon="heatmap"></Icon> */}
+                {/* <br /> */}
+                <span>{x}</span>
+              </Button>
+            );
+          })}
+        {/* <Button className="dim-button" disabled={true}>
           <Icon icon="heat-grid"></Icon>
           <br />
           <span>HEATMAP (coming soon)</span>
-        </Button>
+        </Button> */}
       </ButtonGroup>
-      <div className="top-header">
+      <div className="dimplot-top-header">
         <ControlGroup
           fill={false}
           vertical={false}
@@ -715,7 +707,7 @@ const DimPlot = (props) => {
             marginRight: "4px",
           }}
         >
-          <Tooltip2 content="Interactively visualize embeddings">
+          <Tooltip2 content="Interactively visualize embeddings from each step">
             <Button
               icon="play"
               onClick={() => {
@@ -733,22 +725,26 @@ const DimPlot = (props) => {
           </Tooltip2>
         </ControlGroup>
         <ControlGroup fill={false} vertical={false}>
-          <Button
-            active={plotMode === "PAN"}
-            intent={plotMode === "PAN" ? "primary" : "none"}
-            icon="hand-up"
-            onClick={(x) => setInteraction("PAN")}
-          >
-            Pan
-          </Button>
-          <Button
-            active={plotMode === "SELECT"}
-            intent={plotMode === "SELECT" ? "primary" : "none"}
-            icon="widget"
-            onClick={(x) => setInteraction("SELECT")}
-          >
-            Selection
-          </Button>
+          <Tooltip2 content="Pan to move the plot">
+            <Button
+              active={plotMode === "PAN"}
+              intent={plotMode === "PAN" ? "primary" : "none"}
+              icon="hand-up"
+              onClick={(x) => setInteraction("PAN")}
+            >
+              Pan
+            </Button>
+          </Tooltip2>
+          <Tooltip2 content="Make custom selection of cells">
+            <Button
+              active={plotMode === "SELECT"}
+              intent={plotMode === "SELECT" ? "primary" : "none"}
+              icon="widget"
+              onClick={(x) => setInteraction("SELECT")}
+            >
+              Selection
+            </Button>
+          </Tooltip2>
         </ControlGroup>
       </div>
       {props?.showAnimation ? (
@@ -759,7 +755,7 @@ const DimPlot = (props) => {
         ""
       )}
       <div className="dim-plot">
-        {props?.defaultRedDims ? (
+        {props?.selectedRedDim ? (
           <div
             ref={container}
             style={{
@@ -771,9 +767,9 @@ const DimPlot = (props) => {
           "Choose an Embedding... or Embeddings are being computed..."
         )}
       </div>
-      <div className="right-sidebar">
+      <div className="dimplot-right-sidebar">
         {
-          <div className="right-sidebar-cluster">
+          <div className="dimplot-right-sidebar-cluster">
             <Callout>
               <p>
                 NOTE: Clusters identified by Kana can be found under{" "}
@@ -945,7 +941,9 @@ const DimPlot = (props) => {
                               style={{
                                 color:
                                   props?.clusterColors[
-                                    getMinMax(props?.clusterData.clusters)[1] +
+                                    getMinMax(
+                                      annotationObj[default_cluster]
+                                    )[1] +
                                       1 +
                                       i
                                   ],
@@ -1015,9 +1013,9 @@ const DimPlot = (props) => {
                 {props?.selectedPoints && props?.selectedPoints.length > 0 ? (
                   <div>
                     <Divider />
-                    <div className="selection-container">
+                    <div className="dimplot-selection-container">
                       <span>{props?.selectedPoints.length} cells selected</span>
-                      <div className="selection-button-container">
+                      <div className="dimplot-selection-button-container">
                         <Button
                           small={true}
                           intent="primary"
@@ -1041,7 +1039,7 @@ const DimPlot = (props) => {
           </div>
         }
         {showGradient ? (
-          <div className="right-sidebar-slider">
+          <div className="dimplot-right-sidebar-slider">
             <Callout>
               <span>
                 Gradient for{" "}

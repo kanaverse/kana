@@ -26,12 +26,15 @@ import StackedHistogram from "../Plots/StackedHistogram";
 import Cell from "../Plots/Cell.js";
 import HeatmapCell from "../Plots/HeatmapCell";
 
-import { getMinMax } from "../Plots/utils";
+import { code, getMinMax } from "../../utils/utils";
 // import Histogram from '../Plots/Histogram';
 import "./markers.css";
 
 const MarkerPlot = (props) => {
-  const { genesInfo, geneColSel, setGeneColSel } = useContext(AppContext);
+  const { genesInfo, geneColSel, setGeneColSel, annotationObj } =
+    useContext(AppContext);
+
+  const default_cluster = `${code}::CLUSTERS`;
 
   // what cluster is selected
   const [clusSel, setClusSel] = useState(null);
@@ -65,87 +68,89 @@ const MarkerPlot = (props) => {
   // if a cluster changes, its summary data is requested from the worker
   // pre-process results for UI
   useEffect(() => {
-    if (!props?.selectedClusterSummary) return props?.selectedClusterSummary;
+    if (props?.selectedClusterSummary) {
+      let trecs = props?.selectedClusterSummary;
 
-    let trecs = props?.selectedClusterSummary;
+      if (trecs.length !== 0) {
+        let tmpmeans = trecs.map((x) => (isNaN(x?.mean) ? 0 : x?.mean));
+        let tmeanMinMax = d3.extent(tmpmeans);
+        let tmeanval = tmeanMinMax[1] === 0 ? 0.01 : tmeanMinMax[1];
+        setMeanMinMax([
+          parseFloat(tmeanMinMax[0].toFixed(2)),
+          parseFloat(tmeanval.toFixed(2)),
+        ]);
 
-    if (trecs.length === 0) return trecs;
+        let tmpdeltas = trecs.map((x) => (isNaN(x?.delta) ? 0 : x?.delta));
+        let tdeltaMinMax = d3.extent(tmpdeltas);
+        let tdeltaval = tdeltaMinMax[1] === 0 ? 0.01 : tdeltaMinMax[1];
+        setDeltaMinMax([
+          parseFloat(tdeltaMinMax[0].toFixed(2)),
+          parseFloat(tdeltaval.toFixed(2)),
+        ]);
 
-    let tmpmeans = trecs.map((x) => (isNaN(x?.mean) ? 0 : x?.mean));
-    let tmeanMinMax = d3.extent(tmpmeans);
-    let tmeanval = tmeanMinMax[1] === 0 ? 0.01 : tmeanMinMax[1];
-    setMeanMinMax([
-      parseFloat(tmeanMinMax[0].toFixed(2)),
-      parseFloat(tmeanval.toFixed(2)),
-    ]);
+        let tmplfcs = trecs.map((x) => (isNaN(x?.lfc) ? 0 : x?.lfc));
+        let tlfcsMinMax = d3.extent(tmplfcs);
+        let tlfcsval = tlfcsMinMax[1] === 0 ? 0.01 : tlfcsMinMax[1];
+        setLfcMinMax([
+          parseFloat(tlfcsMinMax[0].toFixed(2)),
+          parseFloat(tlfcsval.toFixed(2)),
+        ]);
 
-    let tmpdeltas = trecs.map((x) => (isNaN(x?.delta) ? 0 : x?.delta));
-    let tdeltaMinMax = d3.extent(tmpdeltas);
-    let tdeltaval = tdeltaMinMax[1] === 0 ? 0.01 : tdeltaMinMax[1];
-    setDeltaMinMax([
-      parseFloat(tdeltaMinMax[0].toFixed(2)),
-      parseFloat(tdeltaval.toFixed(2)),
-    ]);
+        let tmpdetects = trecs.map((x) =>
+          isNaN(x?.detected) ? 0 : x?.detected
+        );
+        let tdetectsMinMax = d3.extent(tmpdetects);
+        let tdetecval = tdetectsMinMax[1] === 0 ? 0.01 : tdetectsMinMax[1];
+        setDetectedMinMax([
+          parseFloat(tdetectsMinMax[0].toFixed(2)),
+          parseFloat(tdetecval.toFixed(2)),
+        ]);
 
-    let tmplfcs = trecs.map((x) => (isNaN(x?.lfc) ? 0 : x?.lfc));
-    let tlfcsMinMax = d3.extent(tmplfcs);
-    let tlfcsval = tlfcsMinMax[1] === 0 ? 0.01 : tlfcsMinMax[1];
-    setLfcMinMax([
-      parseFloat(tlfcsMinMax[0].toFixed(2)),
-      parseFloat(tlfcsval.toFixed(2)),
-    ]);
-
-    let tmpdetects = trecs.map((x) => (isNaN(x?.detected) ? 0 : x?.detected));
-    let tdetectsMinMax = d3.extent(tmpdetects);
-    let tdetecval = tdetectsMinMax[1] === 0 ? 0.01 : tdetectsMinMax[1];
-    setDetectedMinMax([
-      parseFloat(tdetectsMinMax[0].toFixed(2)),
-      parseFloat(tdetecval.toFixed(2)),
-    ]);
-
-    setMinMaxs({
-      lfc: [
-        parseFloat(tlfcsMinMax[0].toFixed(2)),
-        parseFloat(tlfcsval.toFixed(2)),
-      ],
-      mean: [
-        parseFloat(tmeanMinMax[0].toFixed(2)),
-        parseFloat(tmeanval.toFixed(2)),
-      ],
-      detected: [
-        parseFloat(tdetectsMinMax[0].toFixed(2)),
-        parseFloat(tdetecval.toFixed(2)),
-      ],
-      delta: [
-        parseFloat(tdeltaMinMax[0].toFixed(2)),
-        parseFloat(tdeltaval.toFixed(2)),
-      ],
-    });
-
-    let sortedRows = [...trecs];
-
-    setMarkerFilter({
-      lfc: markerFilter?.lfc
-        ? markerFilter?.lfc
-        : [0, parseFloat(tlfcsval.toFixed(2))],
-      delta: markerFilter?.delta
-        ? markerFilter?.delta
-        : [0, parseFloat(tdeltaval.toFixed(2))],
-      mean: markerFilter?.mean
-        ? markerFilter?.mean
-        : [
+        setMinMaxs({
+          lfc: [
+            parseFloat(tlfcsMinMax[0].toFixed(2)),
+            parseFloat(tlfcsval.toFixed(2)),
+          ],
+          mean: [
             parseFloat(tmeanMinMax[0].toFixed(2)),
             parseFloat(tmeanval.toFixed(2)),
           ],
-      detected: markerFilter?.detected
-        ? markerFilter?.detected
-        : [
+          detected: [
             parseFloat(tdetectsMinMax[0].toFixed(2)),
             parseFloat(tdetecval.toFixed(2)),
           ],
-    });
+          delta: [
+            parseFloat(tdeltaMinMax[0].toFixed(2)),
+            parseFloat(tdeltaval.toFixed(2)),
+          ],
+        });
 
-    setProsRecords(sortedRows);
+        let sortedRows = [...trecs];
+
+        setMarkerFilter({
+          lfc: markerFilter?.lfc
+            ? markerFilter?.lfc
+            : [0, parseFloat(tlfcsval.toFixed(2))],
+          delta: markerFilter?.delta
+            ? markerFilter?.delta
+            : [0, parseFloat(tdeltaval.toFixed(2))],
+          mean: markerFilter?.mean
+            ? markerFilter?.mean
+            : [
+                parseFloat(tmeanMinMax[0].toFixed(2)),
+                parseFloat(tmeanval.toFixed(2)),
+              ],
+          detected: markerFilter?.detected
+            ? markerFilter?.detected
+            : [
+                parseFloat(tdetectsMinMax[0].toFixed(2)),
+                parseFloat(tdetecval.toFixed(2)),
+              ],
+        });
+
+        setProsRecords(sortedRows);
+      }
+    }
   }, [props?.selectedClusterSummary]);
 
   // genes to show, hook for filters and input
@@ -178,8 +183,8 @@ const MarkerPlot = (props) => {
 
   // update clusters when custom selection is made in the UI
   useEffect(() => {
-    if (props?.clusterData?.clusters) {
-      let max_clusters = getMinMax(props?.clusterData.clusters)[1];
+    if (annotationObj[default_cluster]) {
+      let max_clusters = getMinMax(annotationObj[default_cluster])[1];
 
       let clus = [];
       for (let i = 0; i < max_clusters + 1; i++) {
@@ -210,13 +215,13 @@ const MarkerPlot = (props) => {
   useEffect(() => {
     var clusArray = [];
     if (String(props?.selectedCluster).startsWith("cs")) {
-      props?.clusterData?.clusters?.forEach((x, i) =>
+      annotationObj[default_cluster]?.forEach((x, i) =>
         props?.customSelection[props?.selectedCluster].includes(i)
           ? clusArray.push(1)
           : clusArray.push(0)
       );
     } else {
-      props?.clusterData?.clusters?.forEach((x) =>
+      annotationObj[default_cluster]?.forEach((x) =>
         x === props?.selectedCluster ? clusArray.push(1) : clusArray.push(0)
       );
     }
@@ -776,7 +781,7 @@ const MarkerPlot = (props) => {
                           row.gene === props?.gene
                             ? String(props?.selectedCluster).startsWith("cs")
                               ? props?.clusterColors[
-                                  getMinMax(props?.clusterData.clusters)[1] +
+                                  getMinMax(annotationObj[default_cluster])[1] +
                                     parseInt(
                                       props?.selectedCluster.replace("cs", "")
                                     )
@@ -1061,7 +1066,7 @@ const MarkerPlot = (props) => {
                         color={
                           String(props?.selectedCluster).startsWith("cs")
                             ? props?.clusterColors[
-                                getMinMax(props?.clusterData.clusters)[1] +
+                                getMinMax(annotationObj[default_cluster])[1] +
                                   parseInt(
                                     props?.selectedCluster.replace("cs", "")
                                   )

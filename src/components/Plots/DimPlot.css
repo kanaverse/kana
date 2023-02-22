@@ -4,7 +4,7 @@
   height: 100%;
   display: grid;
   grid-gap: 5px;
-  grid-template-columns: 100px auto 250px;
+  grid-template-columns: auto 250px;
   grid-template-rows: 25px auto;
   background-color: #fff;
 }
@@ -14,7 +14,7 @@
 }
 
 .dimplot-top-header {
-  grid-column: 2 / -1;
+  grid-column: 2;
   grid-row: 1;
   justify-self: end;
   display: flex;
@@ -22,16 +22,16 @@
 }
 
 .dimplot-left-sidebar {
-  grid-row: 1 / -1;
+  grid-row: 1;
   grid-column: 1;
   display: flex;
-  justify-content: center;
+  justify-content: left;
   align-items: center;
 }
 
 .dimplot-right-sidebar {
-  grid-row: 2 / -1;
-  grid-column: 3;
+  grid-row: 1 / -1;
+  grid-column: 2;
   align-self: center;
   flex-direction: column;
 }
@@ -76,7 +76,7 @@
 .dim-plot,
 .iter {
   grid-row: 2;
-  grid-column: 2;
+  grid-column: 1;
   vertical-align: middle;
 }
 
@@ -120,7 +120,7 @@ text {
   font: "8px sans-serif;";
 }
 
-.selection-container {
+.dimplot-selection-container {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -128,7 +128,7 @@ text {
   padding-top: 10px;
 }
 
-.selection-button-container > Button {
+.dimplot-selection-button-container > Button {
   margin: 2px;
 }
 

@@ -23,6 +23,8 @@ import {
   NonIdealState,
   NonIdealStateIconSize,
   Alert,
+  ResizeEntry,
+  ResizeSensor,
 } from "@blueprintjs/core";
 
 import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
@@ -33,12 +35,18 @@ import { NewAnalysis } from "./components/NewAnalysis";
 import { LoadAnalysis } from "./components/LoadAnalysis";
 import { SaveAnalysis } from "./components/SaveAnalysis";
 import { ParameterSelection } from "./components/ParamSelection";
-import { AnnResults } from "./components/Results";
+// import { AnnResults } from "./components/Results";
 import Stats from "./components/Stats";
 import Logs from "./components/Logs";
 import { getMinMax, code } from "./utils/utils";
+import DimPlot from "./components/Plots/DimPlot";
+import MarkerPlot from "./components/Markers/index";
+import Gallery from "./components/Gallery/index";
 
 import { AppContext } from "./context/AppContext";
+
+import { palette } from "./components/Plots/utils";
+import { randomColor } from "randomcolor";
 
 import pkgVersion from "../package.json";
 
@@ -131,6 +139,8 @@ function App() {
   // STEP: REDUCED_DIMENSIONS: TSNE & UMAP
   // actual embeddings
   const [redDimsData, setRedDimsData] = useState({});
+  // for tsne/umap animation
+  const [animateData, setAnimateData] = useState(null);
 
   // STEP: CELL_LABELLING
   const [cellLabelData, setCellLabelData] = useState(null);
@@ -139,12 +149,37 @@ function App() {
    * State to hold analysis specific results - END
    ******/
 
+  // loaders for UI components
+  const [showDimPlotLoader, setShowDimPlotLoader] = useState(true);
+  const [showMarkerLoader, setShowMarkerLoader] = useState(true);
+  const [showQCLoader, setShowQCLoader] = useState(true);
+  const [showPCALoader, setShowPCALoader] = useState(true);
+  const [showNClusLoader, setShowNClusLoader] = useState(true);
+  const [showCellLabelLoader, setShowCellLabelLoader] = useState(true);
+
+  function setAllLoaders() {
+    setShowDimPlotLoader(true);
+    setShowMarkerLoader(true);
+    setShowQCLoader(true);
+    setShowPCALoader(true);
+    setShowNClusLoader(true);
+    setShowCellLabelLoader(true);
+  }
+
+  const default_cluster = `${code}::CLUSTERS`;
+
   /*******
    * USER STATE REQUESTS - START
    */
 
+  // what gene is selected for scatterplot
+  const [gene, setGene] = useState(null);
+
   // request gene expression
   const [reqGene, setReqGene] = useState(null);
+
+  // ImageData user saves while exploring
+  const [savedPlot, setSavedPlot] = useState([]);
 
   // request annotation column
   const [reqAnnotation, setReqAnnotation] = useState(null);
@@ -155,18 +190,37 @@ function App() {
   // which dimension is selected
   const [selectedRedDim, setSelectedRedDim] = useState(null);
 
+  // is animation in progress ?
+  const [showAnimation, setShowAnimation] = useState(false);
+
   // if a user manually triggers an embedding animation (using the play button)
   const [triggerAnimation, setTriggerAnimation] = useState(false);
+
+  // keeps track of what points were selected in lasso selections
+  const [selectedPoints, setSelectedPoints] = useState(null);
 
   // set Cluster rank-type
   const [clusterRank, setClusterRank] = useState("cohen-min-rank");
   // which cluster is selected for vsmode
   const [selectedVSCluster, setSelectedVSCluster] = useState(null);
+  // set cluster colors
+  const [clusterColors, setClusterColors] = useState(null);
 
-  // custom selection on reducded dims plot
+  // custom selection on reduced dims plot
   const [customSelection, setCustomSelection] = useState({});
   // remove custom Selection
   const [delCustomSelection, setDelCustomSelection] = useState(null);
+
+  // state captured
+  const [restoreState, setRestoreState] = useState(null);
+  // for highlight in uDimPlots
+  const [highlightPoints, setHighlightPoints] = useState(null);
+  // set which cluster to highlight, also for custom selections
+  const [clusHighlight, setClusHighlight] = useState(null);
+  // set which clusterlabel is highlighted
+  const [clusHighlightLabel, setClusHighlightLabel] = useState(null);
+  // selected colorBy
+  const [colorByAnnotation, setColorByAnnotation] = useState(default_cluster);
 
   /*******
    * USER REQUESTS - END
@@ -206,6 +260,7 @@ function App() {
         });
 
         add_to_logs("info", `--- Analyis started---`);
+        setAllLoaders();
       }
     }
   }, [inputFiles, params, wasmInitialized, stateIndeterminate]);
@@ -458,9 +513,14 @@ function App() {
 
       let pmods = Object.keys(resp.genes);
       setModality(pmods);
+
+      if (selectedModality === null) {
+        setSelectedModality(pmods[0]);
+      }
     } else if (type === "rna_quality_control_DATA") {
       if (!resp) {
         setQcData(null);
+        setShowQCLoader(false);
       } else {
         var ranges = {},
           data = resp["data"],
@@ -486,6 +546,7 @@ function App() {
 
         resp["ranges"] = ranges;
         setQcData(resp);
+        setShowQCLoader(false);
       }
     } else if (type === "adt_quality_control_DATA") {
       if (resp) {
@@ -526,6 +587,7 @@ function App() {
 
         setQcData(prevQC);
       }
+      setShowQCLoader(false);
     } else if (type === "crispr_quality_control_DATA") {
       if (resp) {
         var ranges = {},
@@ -565,6 +627,7 @@ function App() {
 
         setQcData(prevQC);
       }
+      setShowQCLoader(false);
     } else if (type === "cell_filtering_DATA") {
       setQcDims(`${resp.retained}`);
       setCellSubsetData(resp.subset);
@@ -583,21 +646,40 @@ function App() {
       setFSelectionData(resp);
     } else if (type === "rna_pca_DATA") {
       setPcaVarExp({ ...pcaVarExp, RNA: resp["var_exp"] });
+      setShowPCALoader(false);
     } else if (type === "adt_pca_DATA") {
       setPcaVarExp({ ...pcaVarExp, ADT: resp["var_exp"] });
+      setShowPCALoader(false);
     } else if (type === "crispr_pca_DATA") {
       setPcaVarExp({ ...pcaVarExp, CRISPR: resp["var_exp"] });
+      setShowPCALoader(false);
     } else if (type === "choose_clustering_DATA") {
       let t_annots = [...annotationCols];
-      if (t_annots.indexOf(`${code}::CLUSTERS`) == -1) {
-        t_annots.push(`${code}::CLUSTERS`);
+      if (t_annots.indexOf(default_cluster) == -1) {
+        t_annots.push(default_cluster);
       }
 
       setAnnotationCols(t_annots);
 
+      let cluster_count = getMinMax(resp?.clusters)[1] + 1;
+      if (customSelection) {
+        cluster_count += Object.keys(customSelection).length;
+      }
+      let cluster_colors = null;
+      if (cluster_count > Object.keys(palette).length) {
+        cluster_colors = randomColor({
+          luminosity: "dark",
+          count: cluster_count + 1,
+        });
+      } else {
+        cluster_colors = palette[cluster_count.toString()];
+      }
+      setClusterColors(cluster_colors);
+
       let t_annoObj = { ...annotationObj };
-      t_annoObj[`${code}::CLUSTERS`] = resp.clusters;
+      t_annoObj[default_cluster] = resp.clusters;
       setAnnotationObj(t_annoObj);
+      setShowNClusLoader(false);
     } else if (type === "marker_detection_START") {
       setSelectedCluster(null);
       setSelectedClusterIndex([]);
@@ -610,7 +692,7 @@ function App() {
         }
         setSelectedCluster(0);
       }
-    } else if (type === "tsne_DATA" || type === "tsne_iter") {
+    } else if (type === "tsne_DATA") {
       // once t-SNE is available, set this as the default display
       if (selectedRedDim === null) {
         setSelectedRedDim("TSNE");
@@ -619,8 +701,14 @@ function App() {
       let tmpDims = { ...redDimsData };
       tmpDims["TSNE"] = resp;
       setRedDimsData(tmpDims);
-    } else if (type === "umap_DATA" || type === "umap_iter") {
-      // once t-SNE is available, set this as the default display
+
+      // hide game and all loaders
+      // setShowGame(false);
+      setShowAnimation(false);
+      setTriggerAnimation(false);
+      setShowDimPlotLoader(false);
+    } else if (type === "umap_DATA") {
+      // once UMAP is available, set this as the default display
       if (selectedRedDim === null) {
         setSelectedRedDim("UMAP");
       }
@@ -628,6 +716,14 @@ function App() {
       let tmpDims = { ...redDimsData };
       tmpDims["UMAP"] = resp;
       setRedDimsData(tmpDims);
+
+      // hide game and all loaders
+      // setShowGame(false);
+      setShowAnimation(false);
+      setTriggerAnimation(false);
+      setShowDimPlotLoader(false);
+    } else if (payload.type === "tsne_iter" || payload.type === "umap_iter") {
+      setAnimateData(payload);
     } else if (
       type === "setMarkersForCluster" ||
       type === "setMarkersForCustomSelection" ||
@@ -652,6 +748,7 @@ function App() {
       });
       setSelectedClusterIndex(index);
       setSelectedClusterSummary(records);
+      setShowMarkerLoader(false);
     } else if (type === "setGeneExpression") {
       let tmp = [...selectedClusterSummary];
       tmp[selectedClusterIndex[resp.gene]].expr = Object.values(resp.expr);
@@ -665,7 +762,28 @@ function App() {
       setReqAnnotation(null);
     } else if (type === "cell_labelling_DATA") {
       setCellLabelData(resp);
+      setShowCellLabelLoader(false);
+    } else if (payload.type === "custom_selections_DATA") {
+    } else if (payload.type === "tsne_CACHE" || payload.type === "umap_CACHE") {
+      setShowDimPlotLoader(false);
+    } else if (payload.type === "marker_detection_CACHE") {
+      setShowMarkerLoader(false);
+    } else if (payload.type === "quality_control_CACHE") {
+      setShowQCLoader(false);
+    } else if (payload.type === "pca_CACHE") {
+      setShowPCALoader(false);
+    } else if (payload.type === "choose_clustering_CACHE") {
+      setShowNClusLoader(false);
+    } else if (payload.type === "cell_labelling_CACHE") {
+      setShowCellLabelLoader(false);
     }
+  };
+
+  // resize managers for window width
+  const [windowWidth, setWindowWidth] = useState(0);
+
+  const handleResize = () => {
+    setWindowWidth(window.innerWidth);
   };
 
   return (
@@ -737,7 +855,7 @@ function App() {
                     }
                     intent={showPanel === "new" ? "primary" : "none"}
                   ></Button>
-                  <span>NEW</span>
+                  <span style={{color: showPanel === "new" ? "#184A90" : "black"}}>NEW</span>
                 </div>
               </Tooltip2>
             </div>
@@ -768,7 +886,7 @@ function App() {
                     }
                     intent={showPanel === "load" ? "primary" : "none"}
                   ></Button>
-                  <span>LOAD</span>
+                  <span style={{color: showPanel === "load" ? "#184A90" : "black"}}>LOAD</span>
                 </div>
               </Tooltip2>
             </div>
@@ -800,7 +918,7 @@ function App() {
                     }
                     intent={showPanel === "save" ? "primary" : "none"}
                   ></Button>
-                  <span>SAVE</span>
+                  <span style={{color: showPanel === "save" ? "#184A90" : "black"}}>SAVE</span>
                 </div>
               </Tooltip2>
             </div>
@@ -832,7 +950,7 @@ function App() {
                     }
                     intent={showPanel === "params" ? "primary" : "none"}
                   ></Button>
-                  <span>PARAMS</span>
+                  <span style={{color: showPanel === "params" ? "#184A90" : "black"}}>PARAMS</span>
                 </div>
               </Tooltip2>
             </div>
@@ -863,7 +981,7 @@ function App() {
                     }
                     intent={showPanel === "results" ? "primary" : "none"}
                   ></Button>
-                  <span>RESULTS</span>
+                  <span style={{color: showPanel === "results" ? "#184A90" : "black"}}>RESULTS</span>
                 </div>
               </Tooltip2>
             </div>
@@ -895,7 +1013,7 @@ function App() {
                     }
                     intent={showPanel === "logs" ? "primary" : "none"}
                   ></Button>
-                  <span>LOGS</span>
+                  <span style={{color: showPanel === "logs" ? "#184A90" : "black"}}>LOGS</span>
                 </div>
               </Tooltip2>
             </div>
@@ -970,7 +1088,120 @@ function App() {
               setStateIndeterminate={setStateIndeterminate}
             />
           )}
-          {showPanel === "results" && <AnnResults />}
+          {showPanel === "results" && (
+            <ResizeSensor onResize={handleResize}>
+              <SplitPane
+                defaultSize={300}
+                split={windowWidth >= 900 ? "vertical" : "horizontal"}
+                primary="second"
+                allowResize={false}
+              >
+                <SplitPane defaultSize={300} split="vertical" primary="second">
+                  <div
+                    className={
+                      showDimPlotLoader
+                        ? "results-dims effect-opacitygrayscale"
+                        : "results-dims"
+                    }
+                  >
+                    {redDimsData && annotationObj[default_cluster] && (
+                      <DimPlot
+                        className={"effect-opacitygrayscale"}
+                        redDimsData={redDimsData}
+                        selectedRedDim={selectedRedDim}
+                        setSelectedRedDim={setSelectedRedDim}
+                        showAnimation={showAnimation}
+                        setShowAnimation={setShowAnimation}
+                        animateData={animateData}
+                        setTriggerAnimation={setTriggerAnimation}
+                        selectedClusterSummary={selectedClusterSummary}
+                        setSelectedClusterSummary={setSelectedClusterSummary}
+                        selectedClusterIndex={selectedClusterIndex}
+                        selectedCluster={selectedCluster}
+                        clusterColors={clusterColors}
+                        setClusterColors={setClusterColors}
+                        savedPlot={savedPlot}
+                        setSavedPlot={setSavedPlot}
+                        customSelection={customSelection}
+                        setCustomSelection={setCustomSelection}
+                        setGene={setGene}
+                        gene={gene}
+                        setDelCustomSelection={setDelCustomSelection}
+                        setReqAnnotation={setReqAnnotation}
+                        selectedPoints={selectedPoints}
+                        setSelectedPoints={setSelectedPoints}
+                        restoreState={restoreState}
+                        setRestoreState={setRestoreState}
+                        setHighlightPoints={setHighlightPoints}
+                        clusHighlight={clusHighlight}
+                        setClusHighlight={setClusHighlight}
+                        clusHighlightLabel={clusHighlightLabel}
+                        setClusHighlightLabel={setClusHighlightLabel}
+                        colorByAnnotation={colorByAnnotation}
+                        setColorByAnnotation={setColorByAnnotation}
+                        selectedModality={selectedModality}
+                      />
+                    )}
+                  </div>
+                  <div
+                    className={
+                      showMarkerLoader
+                        ? "results-markers effect-opacitygrayscale"
+                        : "results-markers"
+                    }
+                  >
+                    {annotationObj[default_cluster] &&
+                      selectedClusterSummary && (
+                        <MarkerPlot
+                          selectedClusterSummary={selectedClusterSummary}
+                          setSelectedClusterSummary={setSelectedClusterSummary}
+                          selectedClusterIndex={selectedClusterIndex}
+                          selectedCluster={selectedCluster}
+                          setSelectedCluster={setSelectedCluster}
+                          selectedVSCluster={selectedVSCluster}
+                          setSelectedVSCluster={setSelectedVSCluster}
+                          setClusterRank={setClusterRank}
+                          customSelection={customSelection}
+                          setGene={setGene}
+                          gene={gene}
+                          setReqGene={setReqGene}
+                          clusterColors={clusterColors}
+                          modality={modality}
+                          selectedModality={selectedModality}
+                          setSelectedModality={setSelectedModality}
+                        />
+                      )}
+                  </div>
+                </SplitPane>
+                <div className="results-gallery">
+                  <Gallery
+                    qcData={qcData}
+                    pcaVarExp={pcaVarExp}
+                    savedPlot={savedPlot}
+                    setSavedPlot={setSavedPlot}
+                    clusterColors={clusterColors}
+                    cellLabelData={cellLabelData}
+                    gene={gene}
+                    showQCLoader={showQCLoader}
+                    showPCALoader={showPCALoader}
+                    showNClusLoader={showNClusLoader}
+                    showCellLabelLoader={showCellLabelLoader}
+                    redDimsData={redDimsData}
+                    selectedRedDim={selectedRedDim}
+                    selectedPoints={selectedPoints}
+                    setSelectedPoints={setSelectedPoints}
+                    restoreState={restoreState}
+                    setRestoreState={setRestoreState}
+                    highlightPoints={highlightPoints}
+                    clusHighlight={clusHighlight}
+                    clusHighlightLabel={clusHighlightLabel}
+                    setClusHighlight={setClusHighlight}
+                    colorByAnnotation={colorByAnnotation}
+                  />
+                </div>
+              </SplitPane>
+            </ResizeSensor>
+          )}
           {(showPanel === null || showPanel === undefined) && (
             <NonIdealState
               icon={"control"}

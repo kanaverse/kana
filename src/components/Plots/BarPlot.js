@@ -22,7 +22,7 @@ const BarPlot = (props) => {
     }
 
     if (!propwidth) {
-      propwidth = 325;
+      propwidth = 225;
     }
 
     if (!color) {

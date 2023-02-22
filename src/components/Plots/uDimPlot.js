@@ -8,10 +8,14 @@ const UDimPlot = (props) => {
 
   useEffect(() => {
     const containerEl = container.current;
-    if (containerEl && props?.tsneData && props?.umapData) {
+    if (containerEl && props?.embeddata) {
       let tmp_scatterplot = scatterplot;
       // only create the plot object once
       if (!tmp_scatterplot) {
+        
+        containerEl.firstChild &&
+          containerEl.removeChild(containerEl.firstChild);
+
         tmp_scatterplot = new ScatterGL(containerEl);
         setScatterplot(tmp_scatterplot);
 
@@ -22,12 +26,7 @@ const UDimPlot = (props) => {
         };
       }
 
-      let rdata;
-      if (props?.data?.config?.embedding === "TSNE") {
-        rdata = props?.tsneData;
-      } else if (props?.data?.config?.embedding === "UMAP") {
-        rdata = props?.umapData;
-      }
+      let rdata = props?.embeddata;
 
       tmp_scatterplot.setInput({
         x: rdata.x,
@@ -78,7 +77,6 @@ const UDimPlot = (props) => {
           color: color,
         });
       }
-
       tmp_scatterplot.render();
     }
   }, [props]);
@@ -96,8 +94,8 @@ const UDimPlot = (props) => {
         <div
           ref={container}
           style={{
-            width: "400px",
-            height: "400px",
+            width: "225px",
+            height: "225px",
           }}
         ></div>
       </div>

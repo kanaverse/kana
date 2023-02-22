@@ -46,7 +46,7 @@
   flex-direction: column;
   background-color: #f6f7f9;
   overflow-y: auto;
-  height: 100%;
+  /* height: 100%; */
 }
 
 .left-sidebar-content-flex-bottom {
@@ -119,4 +119,20 @@
 }
 .Resizer.disabled:hover {
   border-color: transparent;
+}
+
+.results-dims {
+  padding: 10px;
+  height: 100%;
+}
+
+.results-markers {
+  padding: 10px;
+  height: 100%;
+}
+
+.results-gallery {
+  padding: 10px;
+  height: 100%;
+  overflow-y: auto;
 }
