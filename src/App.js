@@ -1145,14 +1145,13 @@ function App() {
           {showPanel === "results" && (
             <ResizeSensor onResize={handleResize}>
               <SplitPane
-                defaultSize={300}
+                defaultSize={windowWidth >= 1200 ? 300 : 275}
                 split={windowWidth >= 1200 ? "vertical" : "horizontal"}
                 primary="second"
                 allowResize={false}
               >
                 <SplitPane
                   defaultSize={markersWidth}
-                  minSize={markersWidth}
                   allowResize={false}
                   split="vertical"
                   primary="second"
@@ -1231,6 +1230,7 @@ function App() {
                           setSelectedModality={setSelectedModality}
                           setMarkersWidth={setMarkersWidth}
                           markersWidth={markersWidth}
+                          windowWidth={windowWidth}
                         />
                       )}
                   </div>

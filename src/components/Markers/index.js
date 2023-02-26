@@ -295,10 +295,14 @@ const MarkerPlot = (props) => {
   };
 
   const getTableHeight = () => {
-    let defheight = "293px";
-    if (showFilters) defheight = "530px";
+    let defheight = 293;
+    if (showFilters) defheight = 530;
 
-    return `35px calc(100vh - ${defheight})`;
+    if (props?.windowWidth < 1200) {
+      defheight += 270
+    }
+
+    return `35px calc(100vh - ${defheight}px)`;
   };
 
   return (
@@ -516,7 +520,6 @@ const MarkerPlot = (props) => {
             onChange={(x) => {
               props?.setClusterRank(x.currentTarget.value);
             }}
-            minimal={true}
             defaultValue={"cohen-min-rank"}
           >
             <option>cohen-min</option>
