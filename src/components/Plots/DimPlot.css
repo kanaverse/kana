@@ -4,7 +4,7 @@
   height: 100%;
   display: grid;
   grid-gap: 5px;
-  grid-template-columns: auto 250px;
+  grid-template-columns: auto 175px;
   grid-template-rows: 25px auto;
   background-color: #fff;
 }
@@ -34,6 +34,7 @@
   grid-column: 2;
   align-self: center;
   flex-direction: column;
+  font-size: x-small;
 }
 
 .dimplot-right-sidebar ul {
