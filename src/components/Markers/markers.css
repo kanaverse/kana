@@ -2,11 +2,17 @@
   display: flex;
   padding: 5px;
   flex-direction: column;
+  font-size: x-small;
+}
+
+.marker-container-header {
+  display: flex;
+  justify-content: space-between;
 }
 
 .marker-table {
   display: grid;
-  grid-template-rows: 35px calc(100vh - 550px) 275px;
+  /* grid-template-rows: 35px calc(100vh - 290px); */
   grid-template-columns: auto;
   padding: 5px 0 0 0;
   /* gap: 5px; */
@@ -35,6 +41,11 @@
   grid-template-rows: 25px repeat(4, auto);
 }
 
+.marker-footer-header {
+  display: flex;
+  justify-content: space-between;
+}
+
 /* .marker-footer-title {
     grid-row: 1;
     grid-column: 1/-1;
@@ -48,7 +59,7 @@
   justify-content: center;
   position: relative;
   width: 100%;
-  min-height: 35px;
+  min-height: 55px;
   margin-top: 2px;
 }
 
@@ -61,7 +72,7 @@
 
 .marker-slider-container {
   position: relative;
-  width: 350px;
+  width: 310px;
 }
 
 .marker-filter-gradient {
@@ -77,7 +88,7 @@
 
 .row-card {
   padding: 2px;
-  font-size: 12px;
+  /* font-size: 12px; */
   border-bottom: solid gainsboro 1px;
 }
 
@@ -89,13 +100,13 @@
 
 .row-container {
   display: grid;
-  grid-template-columns: 25% 14% 17% 25% 17%;
+  /* grid-template-columns: 25% 14% 17% 25% 17%; */
   gap: 2px;
   align-items: center;
 }
 
 .row-header {
-  font-size: 12px;
+  /* font-size: 12px; */
   text-align: center;
   align-items: center;
 }

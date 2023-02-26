@@ -651,7 +651,9 @@ onmessage = function (msg) {
           );
           // Filter to match QC unless requested otherwise.
         } else if (payload.unfiltered !== false) {
-          vec = superstate.cell_filtering.fetchFilteredAnnotations(annot);
+          vec = superstate.cell_filtering.applyFilter(
+            superstate.inputs.fetchCellAnnotations().column(annot)
+          );
         } else {
           vec = superstate.inputs.fetchAnnotations(annot);
         }

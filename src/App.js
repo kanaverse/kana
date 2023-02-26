@@ -782,6 +782,9 @@ function App() {
   // resize managers for window width
   const [windowWidth, setWindowWidth] = useState(0);
 
+  // resize markers width
+  const [markersWidth, setMarkersWidth] = useState(350);
+
   const handleResize = () => {
     setWindowWidth(window.innerWidth);
   };
@@ -855,7 +858,11 @@ function App() {
                     }
                     intent={showPanel === "new" ? "primary" : "none"}
                   ></Button>
-                  <span style={{color: showPanel === "new" ? "#184A90" : "black"}}>NEW</span>
+                  <span
+                    style={{ color: showPanel === "new" ? "#184A90" : "black" }}
+                  >
+                    NEW
+                  </span>
                 </div>
               </Tooltip2>
             </div>
@@ -886,7 +893,13 @@ function App() {
                     }
                     intent={showPanel === "load" ? "primary" : "none"}
                   ></Button>
-                  <span style={{color: showPanel === "load" ? "#184A90" : "black"}}>LOAD</span>
+                  <span
+                    style={{
+                      color: showPanel === "load" ? "#184A90" : "black",
+                    }}
+                  >
+                    LOAD
+                  </span>
                 </div>
               </Tooltip2>
             </div>
@@ -918,7 +931,13 @@ function App() {
                     }
                     intent={showPanel === "save" ? "primary" : "none"}
                   ></Button>
-                  <span style={{color: showPanel === "save" ? "#184A90" : "black"}}>SAVE</span>
+                  <span
+                    style={{
+                      color: showPanel === "save" ? "#184A90" : "black",
+                    }}
+                  >
+                    SAVE
+                  </span>
                 </div>
               </Tooltip2>
             </div>
@@ -950,7 +969,13 @@ function App() {
                     }
                     intent={showPanel === "params" ? "primary" : "none"}
                   ></Button>
-                  <span style={{color: showPanel === "params" ? "#184A90" : "black"}}>PARAMS</span>
+                  <span
+                    style={{
+                      color: showPanel === "params" ? "#184A90" : "black",
+                    }}
+                  >
+                    PARAMS
+                  </span>
                 </div>
               </Tooltip2>
             </div>
@@ -981,7 +1006,13 @@ function App() {
                     }
                     intent={showPanel === "results" ? "primary" : "none"}
                   ></Button>
-                  <span style={{color: showPanel === "results" ? "#184A90" : "black"}}>RESULTS</span>
+                  <span
+                    style={{
+                      color: showPanel === "results" ? "#184A90" : "black",
+                    }}
+                  >
+                    RESULTS
+                  </span>
                 </div>
               </Tooltip2>
             </div>
@@ -1013,7 +1044,13 @@ function App() {
                     }
                     intent={showPanel === "logs" ? "primary" : "none"}
                   ></Button>
-                  <span style={{color: showPanel === "logs" ? "#184A90" : "black"}}>LOGS</span>
+                  <span
+                    style={{
+                      color: showPanel === "logs" ? "#184A90" : "black",
+                    }}
+                  >
+                    LOGS
+                  </span>
                 </div>
               </Tooltip2>
             </div>
@@ -1092,11 +1129,17 @@ function App() {
             <ResizeSensor onResize={handleResize}>
               <SplitPane
                 defaultSize={300}
-                split={windowWidth >= 900 ? "vertical" : "horizontal"}
+                split={windowWidth >= 1100 ? "vertical" : "horizontal"}
                 primary="second"
                 allowResize={false}
               >
-                <SplitPane defaultSize={300} split="vertical" primary="second">
+                <SplitPane
+                  defaultSize={markersWidth}
+                  minSize={markersWidth}
+                  allowResize={false}
+                  split="vertical"
+                  primary="second"
+                >
                   <div
                     className={
                       showDimPlotLoader
@@ -1169,6 +1212,8 @@ function App() {
                           modality={modality}
                           selectedModality={selectedModality}
                           setSelectedModality={setSelectedModality}
+                          setMarkersWidth={setMarkersWidth}
+                          markersWidth={markersWidth}
                         />
                       )}
                   </div>
