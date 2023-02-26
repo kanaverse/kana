@@ -10,7 +10,6 @@
 
 .App-body {
   gap: 3px;
-  padding: 10px;
   height: 100%;
   overflow-y: auto;
 }
@@ -132,5 +131,5 @@
 .results-gallery {
   padding: 2px;
   height: 100%;
-  overflow-y: auto;
+  /* overflow-y: auto; */
 }

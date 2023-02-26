@@ -783,10 +783,27 @@ function App() {
   const [windowWidth, setWindowWidth] = useState(0);
 
   // resize markers width
-  const [markersWidth, setMarkersWidth] = useState(350);
+  const [markersWidth, setMarkersWidth] = useState(360);
 
   const handleResize = () => {
     setWindowWidth(window.innerWidth);
+  };
+
+  const getGalleryStyles = () => {
+    if (windowWidth >= 1200) {
+      return {
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+      };
+    } else {
+      return {
+        overflowX: "auto",
+        display: "flex",
+        flexDirection: "row",
+        marginRight: "10px",
+      };
+    }
   };
 
   return (
@@ -1129,7 +1146,7 @@ function App() {
             <ResizeSensor onResize={handleResize}>
               <SplitPane
                 defaultSize={300}
-                split={windowWidth >= 1100 ? "vertical" : "horizontal"}
+                split={windowWidth >= 1200 ? "vertical" : "horizontal"}
                 primary="second"
                 allowResize={false}
               >
@@ -1218,7 +1235,7 @@ function App() {
                       )}
                   </div>
                 </SplitPane>
-                <div className="results-gallery">
+                <div className="results-gallery" style={getGalleryStyles()}>
                   <Gallery
                     qcData={qcData}
                     pcaVarExp={pcaVarExp}
@@ -1242,6 +1259,7 @@ function App() {
                     clusHighlightLabel={clusHighlightLabel}
                     setClusHighlight={setClusHighlight}
                     colorByAnnotation={colorByAnnotation}
+                    windowWidth={windowWidth}
                   />
                 </div>
               </SplitPane>

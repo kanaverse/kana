@@ -136,7 +136,9 @@ const Gallery = (props) => {
             ? "gitem effect-opacitygrayscale"
             : "gitem",
           actions: ["download"],
-          content: <QCPlotMgr title={x} data={tqc} />,
+          content: (
+            <QCPlotMgr title={x} data={tqc} windowWidth={props?.windowWidth} />
+          ),
         };
       });
 

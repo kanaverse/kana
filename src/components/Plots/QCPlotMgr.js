@@ -12,9 +12,29 @@ const QCPlotMgr = (props) => {
     setQCData(props.data);
   }, [props]);
 
+  const getQCStyles = () => {
+    if (props?.windowWidth > 1200) {
+      return {
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "center",
+      }
+    } else {
+      return {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "center",
+      }
+    }
+  }
+
   return (
     qcData && (
-      <div className="qc-plots">
+      <div
+        className="qc-plots"
+        style={getQCStyles()}
+      >
         {["sums", "detected", "proportion", "igg_total"].map((x) => {
           if (qcData?.["data"]?.[x]) {
             const props2 = {
