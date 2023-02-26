@@ -26,7 +26,7 @@ const UDimPlot = (props) => {
         };
       }
 
-      let rdata = props?.embeddata;
+      let rdata = props.embeddata;
 
       tmp_scatterplot.setInput({
         x: rdata.x,
@@ -39,11 +39,6 @@ const UDimPlot = (props) => {
           if (props?.selectedPoints.includes(i)) {
             color[i] = data?.color[i];
           } else {
-            // if (Array.isArray(data?.color)) {
-            //   color[i] = data?.color[i];
-            // } else {
-            //   color[i] = data?.color;
-            // }
             color[i] = "#EDEFF2";
           }
         }

@@ -44,10 +44,7 @@ const Gallery = (props) => {
 
       if (data?.config?.highlight) {
         if (String(data?.config?.highlight).startsWith("cs")) {
-          text += `(custom selection ${data?.config?.highlight.replace(
-            "cs",
-            ""
-          )}) `;
+          text += `(selection ${data?.config?.highlight.replace("cs", "")}) `;
         } else {
           text += `(${data?.config?.highlight
             .replace("Cluster ", "")
@@ -76,7 +73,9 @@ const Gallery = (props) => {
         }
 
         if (props?.colorByAnnotation) {
-          text += `${props?.colorByAnnotation.toLowerCase()} `;
+          text += `${props?.colorByAnnotation
+            .replace(`${code}::`, "")
+            .toLowerCase()} `;
         }
 
         text += `(${props?.clusHighlightLabel
