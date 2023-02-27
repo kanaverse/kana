@@ -43,6 +43,8 @@ import DimPlot from "./components/Plots/DimPlot";
 import MarkerPlot from "./components/Markers/index";
 import Gallery from "./components/Gallery/index";
 
+import { AppToaster } from "./AppToaster";
+
 import { AppContext } from "./context/AppContext";
 
 import { palette } from "./components/Plots/utils";
@@ -75,9 +77,13 @@ function App() {
   const [kanaIDBRecs, setKanaIDBRecs] = useState([]);
   // delete saved analysis in the browser's indexeddb
   const [deletekdb, setDeletekdb] = useState(null);
+  // app export state - .kana file
+  const [exportState, setExportState] = useState(false);
 
   // Logs
   const [logs, setLogs] = useState([]);
+  // show logs drawer
+  const [showLogs, setShowLogs] = useState(false);
 
   // Error handling
   // error message caught from the worker
@@ -93,6 +99,7 @@ function App() {
     setPreInputFilesStatus,
     inputFiles,
     params,
+    setParams,
     annotationCols,
     setAnnotationCols,
     annotationObj,
@@ -100,6 +107,11 @@ function App() {
     setGenesInfo,
     geneColSel,
     setGeneColSel,
+    loadFiles,
+    initLoadState,
+    setInitLoadState,
+    loadParams,
+    setLoadParams,
   } = useContext(AppContext);
 
   // modalities
@@ -247,7 +259,7 @@ function App() {
     }
   }, [preInputFiles, wasmInitialized]);
 
-  // New analysis: files are imported into Kana
+  // NEW analysis: files are imported into Kana
   useEffect(() => {
     if (wasmInitialized && !stateIndeterminate) {
       if (inputFiles.files != null) {
@@ -264,6 +276,40 @@ function App() {
       }
     }
   }, [inputFiles, params, wasmInitialized, stateIndeterminate]);
+
+  // LOAD analysis: files are imported into Kana
+  useEffect(() => {
+    if (wasmInitialized && !initLoadState) {
+      if (loadFiles.files != null) {
+        if (loadParams == null) {
+          scranWorker.postMessage({
+            type: "LOAD",
+            payload: {
+              inputs: loadFiles,
+            },
+          });
+
+          add_to_logs("info", `--- Reloading saved analysis ---`);
+          setInitLoadState(true);
+        } else {
+          scranWorker.postMessage({
+            type: "RUN",
+            payload: {
+              inputs: {
+                files: null,
+                batch: loadParams?.inputs?.batch,
+                subset: loadParams?.inputs?.subset,
+              },
+              params: params,
+            },
+          });
+
+          add_to_logs("info", `--- Reanalyzing loaded analysis ---`);
+          setAllLoaders();
+        }
+      }
+    }
+  }, [loadFiles, params, loadParams, wasmInitialized]);
 
   // request worker for new markers
   // if either the cluster or the ranking changes
@@ -409,6 +455,66 @@ function App() {
       }
     }
   }, [selectedModality]);
+
+  // export an analysis to file
+  useEffect(() => {
+    if (exportState) {
+      scranWorker.postMessage({
+        type: "EXPORT",
+        payload: {
+          files: inputFiles,
+          params: params,
+        },
+      });
+
+      AppToaster.show({
+        icon: "download",
+        intent: "primary",
+        message: "Exporting analysis in the background",
+      });
+      add_to_logs(
+        "info",
+        `--- Export analysis state (to file) initialized ---`
+      );
+    } else {
+      inputFiles?.files &&
+        AppToaster.show({
+          icon: "download",
+          intent: "primary",
+          message: "Analysis saved. Please check your downloads directory!",
+        });
+    }
+  }, [exportState]);
+
+  // export an analysis to idxdb
+  useEffect(() => {
+    if (indexedDBState) {
+      scranWorker.postMessage({
+        type: "SAVEKDB",
+        payload: {
+          title: datasetName,
+        },
+      });
+
+      AppToaster.show({
+        icon: "floppy-disk",
+        intent: "primary",
+        message:
+          "Saving analysis in the background. Note: analysis is saved within the browser!!",
+      });
+      add_to_logs(
+        "info",
+        `--- Export analysis state (to browser) initialized ---`
+      );
+    } else {
+      inputFiles?.files &&
+        AppToaster.show({
+          icon: "floppy-disk",
+          intent: "primary",
+          message: "Analysis saved!",
+        });
+    }
+  }, [indexedDBState]);
 
   function add_to_logs(type, msg, status) {
     let tmp = [...logs];
@@ -776,6 +882,46 @@ function App() {
       setShowNClusLoader(false);
     } else if (payload.type === "cell_labelling_CACHE") {
       setShowCellLabelLoader(false);
+    } else if (payload.type === "loadedParameters") {
+      const { resp } = payload;
+      setParams(resp.parameters);
+      setLoadParams(resp.parameters);
+
+      if (resp.other.custom_selections) {
+        let cluster_count =
+          clusterColors.length +
+          Object.keys(resp.other.custom_selections).length;
+        let cluster_colors = null;
+        if (cluster_count > Object.keys(palette).length) {
+          cluster_colors = randomColor({
+            luminosity: "dark",
+            count: cluster_count + 1,
+          });
+        } else {
+          cluster_colors = palette[cluster_count.toString()];
+        }
+        setClusterColors(cluster_colors);
+
+        setCustomSelection(resp.other.custom_selections);
+      }
+
+      setTimeout(() => {
+        setInitLoadState(false);
+      }, 1000);
+    } else if (payload.type === "exportState") {
+      const { resp } = payload;
+
+      let tmpLink = document.createElement("a");
+      var fileNew = new Blob([resp], {
+        type: "text/plain",
+      });
+      tmpLink.href = URL.createObjectURL(fileNew);
+      tmpLink.download = datasetName.split(" ").join("_") + ".kana";
+      tmpLink.click();
+
+      setExportState(false);
+    } else if (payload.type === "KanaDB") {
+      setIndexedDBState(false);
     }
   };
 
@@ -891,7 +1037,7 @@ function App() {
             >
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
-                content="Load an existing analysis"
+                content="Load a saved analysis"
                 minimal={false}
                 placement={"right"}
                 intent={showPanel === "load" ? "primary" : ""}
@@ -921,12 +1067,7 @@ function App() {
               </Tooltip2>
             </div>
             <Divider />
-            <div
-              className={
-                showPanel === "save" ? "item-sidebar-intent" : "item-sidebar"
-              }
-            >
-              {" "}
+            <div className="item-sidebar">
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
                 content="Save analysis!"
@@ -935,19 +1076,39 @@ function App() {
                 intent={showPanel === "save" ? "primary" : "none"}
               >
                 <div className="item-button-group">
-                  <Button
-                    outlined={false}
-                    large={false}
-                    minimal={true}
-                    fill={true}
-                    icon={"floppy-disk"}
-                    onClick={() =>
-                      showPanel !== "save"
-                        ? setShowPanel("save")
-                        : setShowPanel(null)
+                  <Popover2
+                    content={
+                      <Menu>
+                        <MenuItem
+                          text="Save analysis to browser"
+                          icon="floppy-disk"
+                          disabled={selectedRedDim === null}
+                          onClick={() => {
+                            setIndexedDBState(true);
+                          }}
+                        />
+                        <Divider />
+                        <MenuItem
+                          text="Download analysis"
+                          icon="download"
+                          disabled={selectedRedDim === null}
+                          onClick={() => {
+                            setExportState(true);
+                          }}
+                        />
+                      </Menu>
                     }
-                    intent={showPanel === "save" ? "primary" : "none"}
-                  ></Button>
+                    placement="right"
+                  >
+                    <Button
+                      outlined={false}
+                      large={false}
+                      minimal={true}
+                      fill={true}
+                      icon={"floppy-disk"}
+                      intent={showPanel === "save" ? "primary" : "none"}
+                    ></Button>
+                  </Popover2>
                   <span
                     style={{
                       color: showPanel === "save" ? "#184A90" : "black",
@@ -1004,7 +1165,11 @@ function App() {
             >
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
-                content="Explore results!"
+                content={
+                  selectedRedDim === null
+                    ? "Start or load an analysis to explore results"
+                    : "Explore results!"
+                }
                 minimal={false}
                 placement={"right"}
                 intent={showPanel === "results" ? "primary" : ""}
@@ -1016,6 +1181,7 @@ function App() {
                     minimal={true}
                     fill={true}
                     icon={"rocket-slant"}
+                    disabled={selectedRedDim === null}
                     onClick={() =>
                       showPanel !== "results"
                         ? setShowPanel("results")
@@ -1054,11 +1220,7 @@ function App() {
                     minimal={true}
                     fill={true}
                     icon={"console"}
-                    onClick={() =>
-                      showPanel !== "logs"
-                        ? setShowPanel("logs")
-                        : setShowPanel(null)
-                    }
+                    onClick={() => setShowLogs(true)}
                     intent={showPanel === "logs" ? "primary" : "none"}
                   ></Button>
                   <span
@@ -1330,6 +1492,13 @@ function App() {
               }
             />
           )}
+          {showPanel === "load" && (
+            <LoadAnalysis
+              setShowPanel={setShowPanel}
+              setStateIndeterminate={setStateIndeterminate}
+              kanaIDBRecs={kanaIDBRecs}
+            />
+          )}
         </div>
       </SplitPane>
       <Alert
@@ -1352,7 +1521,7 @@ function App() {
         <p>{scranError?.msg}</p>
         <Divider />
         <p>
-          Please report the issue on{" "}
+          Please provide a reproducible example and report the issue on{" "}
           <a href="https://github.com/jkanche/kana/issues" target="_blank">
             GitHub
           </a>
@@ -1360,11 +1529,19 @@ function App() {
         </p>
         <Divider />
         {scranError?.fatal && (
-          <div>
-            Check logs here <Logs loadingStatus={true} logs={logs} />
-          </div>
+          <Button
+            intent="warning"
+            text="Check Logs"
+            onClick={() => setShowLogs(true)}
+          />
         )}
       </Alert>
+      <Logs
+        loadingStatus={true}
+        showLogs={showLogs}
+        setShowLogs={setShowLogs}
+        logs={logs}
+      />
     </div>
   );
 }

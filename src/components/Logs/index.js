@@ -1,27 +1,34 @@
 import { Button, Classes, Drawer, Position, Spinner } from "@blueprintjs/core";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import "./logs.css";
 
-const Logs = (props) => {
+const Logs = ({ showLogs, setShowLogs, ...props }) => {
   const [state, setState] = useState({
     autoFocus: true,
     canEscapeKeyClose: true,
     canOutsideClickClose: true,
     enforceFocus: true,
     hasBackdrop: true,
-    isOpen: false,
+    isOpen: showLogs,
     position: Position.RIGHT,
     size: undefined,
     usePortal: true,
   });
 
-  const handleOpen = () => setState({ isOpen: true });
-  const handleClose = () => setState({ isOpen: false });
+  useEffect(() => {
+    setState({ isOpen: showLogs });
+  }, [showLogs]);
+
+  // const handleOpen = () => setState({ isOpen: true });
+  const handleClose = () => {
+    setState({ isOpen: false });
+    setShowLogs(false);
+  };
 
   return (
     <>
-      <div>
+      {/* <div>
         {!props?.loadingStatus ? (
           <Button onClick={handleOpen} outlined={true} intent="warning">
             <div style={{ display: "flex" }}>
@@ -37,7 +44,7 @@ const Logs = (props) => {
             intent="warning"
           ></Button>
         )}
-      </div>
+      </div> */}
 
       <Drawer
         icon="info-sign"

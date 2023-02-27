@@ -42,9 +42,9 @@ export function ParameterSelection({
   const [showStepHelper, setShowStepHelper] = useState(null);
 
   // expand RNA section?
-  const [showRNA, setShowRNA] = useState(false);
-  const [showADT, setShowADT] = useState(false);
-  const [showCRISPR, setShowCRISPR] = useState(false);
+  const [showRNA, setShowRNA] = useState(true);
+  const [showADT, setShowADT] = useState(true);
+  const [showCRISPR, setShowCRISPR] = useState(true);
 
   // access app context
   const { params, setParams } = useContext(AppContext);

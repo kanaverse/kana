@@ -9,6 +9,12 @@ const AppContextProvider = ({ children }) => {
     files: null,
   });
 
+  // Load State
+  const [loadFiles, setLoadFiles] = useState({
+    format: null,
+    files: null,
+  });
+
   // creates a default dataset name
   const [datasetName, setDatasetName] = useState("My Analysis Title");
 
@@ -21,8 +27,10 @@ const AppContextProvider = ({ children }) => {
   // Ehub datasets
   const [ehubDatasets, setEhubDatasets] = useState(null);
 
-  // app export state - params loading first time ?
+  // app import state - params loading first time ?
   const [initLoadState, setInitLoadState] = useState(false);
+  // app export state - .kana file
+  const [exportState, setExportState] = useState(false);
 
   // wasm state and error
   const [wasmInitialized, setWasmInitialized] = useState(false);
@@ -142,6 +150,10 @@ const AppContextProvider = ({ children }) => {
     },
   });
 
+  // load params from pre-saved analysis
+  // params from worker for stored analysis (kana file)
+  const [loadParams, setLoadParams] = useState(null);
+
   return (
     <AppContext.Provider
       value={{
@@ -171,6 +183,10 @@ const AppContextProvider = ({ children }) => {
         setAnnotationObj,
         datasetName,
         setDatasetName,
+        loadFiles,
+        setLoadFiles,
+        loadParams,
+        setLoadParams,
       }}
     >
       {children}
