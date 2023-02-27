@@ -278,8 +278,8 @@ const MarkerPlot = (props) => {
 
   const getRowWidths = () => {
     // let def  = "25% 14% 17% 25% 17%";
-    let action = 60;
-    let rem_width = props?.markersWidth - action - 16;
+    let action = 52;
+    let rem_width = props?.markersWidth - action - 35;
     let widths = [];
     if (showLogFC) widths.push(Math.ceil(rem_width * 0.13));
     if (showDelta) widths.push(Math.ceil(rem_width * 0.17));
