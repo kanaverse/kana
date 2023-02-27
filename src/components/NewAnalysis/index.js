@@ -19,6 +19,7 @@ import {
   NumericInput,
   Tag,
   H5,
+  Switch,
 } from "@blueprintjs/core";
 import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 import { ItemRenderer, MultiSelect2 } from "@blueprintjs/select";
@@ -32,6 +33,8 @@ import { generateUID } from "../../utils/utils";
 import { MatrixMarket } from "./MatrixMarketCard";
 import { ExperimentHub } from "./ExperimentHubCard";
 import { TenxHDF5 } from "./TenxHDF5Card";
+
+import { code } from "../../utils/utils";
 
 export function NewAnalysis({
   open,
@@ -86,6 +89,15 @@ export function NewAnalysis({
 
   // should i enable the add button?
   const [tmpStatusValid, setTmpStatusValid] = useState(false);
+
+  // show batch field?
+  const [showBatch, setShowBatch] = useState(false);
+
+  // show subset field?
+  const [showSubset, setShowSubset] = useState(false);
+
+  // default code for none
+  const default_none = `${code}::none`;
 
   const handleAddDataset = () => {
     tmpNewInputs["uid"] = generateUID(tmpNewInputs);
@@ -150,7 +162,6 @@ export function NewAnalysis({
       if (newInputs.length != inputOptions.length) {
         console.error("forgot to set options?");
       } else {
-
         setStateIndeterminate(true);
 
         let mapFiles = {};
@@ -500,86 +511,101 @@ export function NewAnalysis({
           }
         ></div>
         <Label className="row-input">
-          {/* <Text>
-            <span>Batch Column</span>
-          </Text> */}
-          Choose the annotation column that specifies <strong>batch</strong>{" "}
-          information.
-          <HTMLSelect
-            defaultValue="none"
-            onChange={(e) => {
-              let tmpBatch = null;
+          <Switch
+            checked={showBatch}
+            label="Perform Batch correction?"
+            onChange={() => setShowBatch(!showBatch)}
+          />
+          {showBatch && (
+            <>
+              Choose the annotation column that specifies <strong>batch</strong>{" "}
+              information.
+              <HTMLSelect
+                defaultValue={default_none}
+                onChange={(e) => {
+                  let tmpBatch = null;
 
-              tmpBatch = e.target.value;
-              if (e.target.value === "none") {
-                tmpBatch = null;
-              }
-              setBatch(tmpBatch);
-            }}
-          >
-            <option key="none" value="none">
-              none
-            </option>
-            {Object.keys(
-              preInputFilesStatus[newInputs[0].name].cells["columns"]
-            ).map((x, i) => (
-              <option key={i} value={x}>
-                {x}
-              </option>
-            ))}
-          </HTMLSelect>
+                  tmpBatch = e.target.value;
+                  if (e.target.value === default_none) {
+                    tmpBatch = null;
+                  }
+                  setBatch(tmpBatch);
+                }}
+              >
+                <option key={default_none} value={default_none}>
+                  none
+                </option>
+                {Object.keys(
+                  preInputFilesStatus[newInputs[0].name].cells["columns"]
+                ).map((x, i) => (
+                  <option key={i} value={x}>
+                    {x}
+                  </option>
+                ))}
+              </HTMLSelect>
+            </>
+          )}
         </Label>
         <Label className="row-input">
-          Perform analysis on a subset of cells
-          <HTMLSelect
-            defaultValue="none"
-            onChange={(e) => {
-              let tmpSubset = { ...subset };
+          <Switch
+            checked={showSubset}
+            label="Subset dataset?"
+            onChange={() => setShowSubset(!showSubset)}
+          />
+          {showSubset && (
+            <>
+              Perform analysis on a subset of cells
+              <HTMLSelect
+                defaultValue={default_none}
+                onChange={(e) => {
+                  let tmpSubset = { ...subset };
 
-              tmpSubset["subset"] = e.target.value;
-              if (e.target.value === "none") {
-                tmpSubset["subset"] = null;
-              } else {
-                if (
-                  preInputFilesStatus[newInputs[0].name].cells["columns"][
-                    tmpSubset["subset"]
-                  ].type === "categorical"
-                ) {
-                  tmpSubset["values"] = [];
-                } else {
-                  tmpSubset["minmax"] = [
-                    preInputFilesStatus[newInputs[0].name].cells["columns"][
-                      tmpSubset["subset"]
-                    ].min,
-                    preInputFilesStatus[newInputs[0].name].cells["columns"][
-                      tmpSubset["subset"]
-                    ].max,
-                  ];
-                  tmpSubset["chosen_minmax"] = [
-                    preInputFilesStatus[newInputs[0].name].cells["columns"][
-                      tmpSubset["subset"]
-                    ].min,
-                    preInputFilesStatus[newInputs[0].name].cells["columns"][
-                      tmpSubset["subset"]
-                    ].max,
-                  ];
-                }
-              }
+                  tmpSubset["subset"] = e.target.value;
+                  if (e.target.value === default_none) {
+                    tmpSubset["subset"] = null;
+                  } else {
+                    if (
+                      preInputFilesStatus[newInputs[0].name].cells["columns"][
+                        tmpSubset["subset"]
+                      ].type === "categorical"
+                    ) {
+                      tmpSubset["values"] = [];
+                    } else {
+                      tmpSubset["minmax"] = [
+                        preInputFilesStatus[newInputs[0].name].cells["columns"][
+                          tmpSubset["subset"]
+                        ].min,
+                        preInputFilesStatus[newInputs[0].name].cells["columns"][
+                          tmpSubset["subset"]
+                        ].max,
+                      ];
+                      tmpSubset["chosen_minmax"] = [
+                        preInputFilesStatus[newInputs[0].name].cells["columns"][
+                          tmpSubset["subset"]
+                        ].min,
+                        preInputFilesStatus[newInputs[0].name].cells["columns"][
+                          tmpSubset["subset"]
+                        ].max,
+                      ];
+                    }
+                  }
 
-              setSubset(tmpSubset);
-            }}
-          >
-            <option key="none" value="none">
-              none
-            </option>
-            {Object.keys(
-              preInputFilesStatus[newInputs[0].name].cells["columns"]
-            ).map((x, i) => (
-              <option key={i} value={x}>
-                {x}
-              </option>
-            ))}
-          </HTMLSelect>
+                  setSubset(tmpSubset);
+                }}
+              >
+                <option key={default_none} value={default_none}>
+                  none
+                </option>
+                {Object.keys(
+                  preInputFilesStatus[newInputs[0].name].cells["columns"]
+                ).map((x, i) => (
+                  <option key={i} value={x}>
+                    {x}
+                  </option>
+                ))}
+              </HTMLSelect>
+            </>
+          )}
         </Label>
         {subset?.["subset"] !== null && (
           <>
@@ -744,12 +770,6 @@ export function NewAnalysis({
             disabled={!tmpStatusValid}
             onClick={handleAddDataset}
           ></Button>
-          {preInputFilesStatus && newInputs && newInputs.length === 1 && (
-            <>
-              <Divider />
-              {render_batch_correction()}
-            </>
-          )}
         </div>
         <div className="section-info">
           <div>
@@ -844,6 +864,12 @@ export function NewAnalysis({
               </Callout>
             </Collapse>
           </div>
+          {preInputFilesStatus && newInputs && newInputs.length === 1 && (
+            <>
+              <Divider />
+              {render_batch_correction()}
+            </>
+          )}
           <div className="section-inputs">
             {newInputs.map((x, i) => {
               if (x.format == "ExperimentHub") {
