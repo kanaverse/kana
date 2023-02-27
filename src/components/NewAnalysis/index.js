@@ -940,6 +940,7 @@ export function NewAnalysis({
             onClick={handleRunAnalysis}
             intent={"warning"}
             large={true}
+            disabled={newInputs.length == 0}
           >
             Analyze
           </Button>

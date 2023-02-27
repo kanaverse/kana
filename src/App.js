@@ -112,6 +112,7 @@ function App() {
     setInitLoadState,
     loadParams,
     setLoadParams,
+    setInputFiles,
   } = useContext(AppContext);
 
   // modalities
@@ -1447,7 +1448,7 @@ function App() {
                   elevation={Elevation.ZERO}
                 >
                   <p>
-                    <strong>kana</strong> performs a standard scRNA-seq data
+                    <strong>kana</strong> performs a standard single-cell data
                     analysis directly inside the browser.
                   </p>
                   <p>
@@ -1460,14 +1461,10 @@ function App() {
                   </p>
                   <p>
                     Check out our{" "}
-                    <a
-                      href="https://github.com/jkanche/scran.js.app"
-                      target="_blank"
-                    >
+                    <a href="https://github.com/kanaverse" target="_blank">
                       GitHub page
                     </a>{" "}
-                    for more details. Or you could just play around with the app
-                    to see what it can do.
+                    for more details.
                   </p>
                   <H5>Authors</H5>
                   Jayaram Kancherla (
@@ -1482,13 +1479,47 @@ function App() {
                 </Card>
               }
               action={
-                <Button
-                  outlined={true}
-                  text="Start a New Analysis"
-                  icon="plus"
-                  intent="primary"
-                  onClick={() => setShowPanel("new")}
-                />
+                <ButtonGroup>
+                  <Button
+                    outlined={true}
+                    text="Start a New Analysis"
+                    icon="plus"
+                    intent="primary"
+                    onClick={() => setShowPanel("new")}
+                  />
+                  <Tooltip2
+                    className={popclass.TOOLTIP2_INDICATOR}
+                    content="Analyze the zeisel dataset from ExperimentHub to checkout how Kana works!"
+                    minimal={false}
+                    placement={"right"}
+                    intent="primary"
+                  >
+                    <Button
+                      outlined={true}
+                      text="Try out Kana!!"
+                      icon="random"
+                      intent="warning"
+                      onClick={() => {
+                        setInputFiles({
+                          batch: null,
+                          subset: null,
+                          files: {
+                            "dataset-1": {
+                              name: "dataset-1",
+                              format: "ExperimentHub",
+                              id: "zeisel-brain",
+                              options: {
+                                primaryRNAFeatureColumn: "id",
+                              },
+                            },
+                          },
+                        });
+
+                        setShowPanel("results");
+                      }}
+                    />
+                  </Tooltip2>
+                </ButtonGroup>
               }
             />
           )}
