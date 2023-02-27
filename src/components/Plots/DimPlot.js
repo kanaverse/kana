@@ -681,14 +681,10 @@ const DimPlot = (props) => {
           Object.keys(props?.redDimsData).map((x, i) => {
             return (
               <Button
-                className="dim-button"
                 onClick={() => props?.setSelectedRedDim(x)}
                 intent={props?.selectedRedDim === x ? "primary" : ""}
-              >
-                {/* <Icon icon="heatmap"></Icon> */}
-                {/* <br /> */}
-                <span>{x}</span>
-              </Button>
+                text={x}
+              />
             );
           })}
         {/* <Button className="dim-button" disabled={true}>

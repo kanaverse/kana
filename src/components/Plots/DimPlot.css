@@ -76,14 +76,6 @@
   vertical-align: middle;
 }
 
-.dim-button {
-  text-align: center;
-}
-
-.dim-button > span {
-  margin-top: 5px;
-}
-
 .legend-highlight {
   font-weight: bold;
   font-style: italic;

@@ -16,6 +16,7 @@ import {
   Switch,
   NumericInput,
   Checkbox,
+  ButtonGroup,
 } from "@blueprintjs/core";
 
 import "./index.css";
@@ -39,6 +40,11 @@ export function ParameterSelection({
 
   // which helper to show? (on the right info box)
   const [showStepHelper, setShowStepHelper] = useState(null);
+
+  // expand RNA section?
+  const [showRNA, setShowRNA] = useState(false);
+  const [showADT, setShowADT] = useState(false);
+  const [showCRISPR, setShowCRISPR] = useState(false);
 
   // access app context
   const { params, setParams } = useContext(AppContext);
@@ -2123,12 +2129,56 @@ export function ParameterSelection({
             </p>
           </Callout>
           <Divider />
-          {render_rna_qc()}
+          <ButtonGroup>
+            <Button
+              intent={showRNA ? "primary" : "none"}
+              // icon={showRNA ? "double-chevron-down" : "double-chevron-up"}
+              onClick={() => setShowRNA(!showRNA)}
+              text={
+                showRNA ? "Collapse RNA parameters" : "Expand RNA parameters"
+              }
+            />
+            <Button
+              intent={showADT ? "primary" : "none"}
+              // icon={showADT ? "double-chevron-down" : "double-chevron-up"}
+              onClick={() => setShowADT(!showADT)}
+              text={
+                showADT ? "Collapse ADT parameters" : "Expand ADT parameters"
+              }
+            />
+            <Button
+              intent={showCRISPR ? "primary" : "none"}
+              // icon={showCRISPR ? "double-chevron-down" : "double-chevron-up"}
+              onClick={() => setShowCRISPR(!showCRISPR)}
+              text={
+                showCRISPR
+                  ? "Collapse CRISPR parameters"
+                  : "Expand CRISPR parameters"
+              }
+            />
+          </ButtonGroup>
           <Divider />
-          {render_fs()}
-          <Divider />
-          {render_rna_pca()}
-          <Divider />
+          <Collapse isOpen={showRNA}>
+            {render_rna_qc()}
+            <Divider />
+            {render_fs()}
+            <Divider />
+            {render_rna_pca()}
+          </Collapse>
+          <Collapse isOpen={showADT}>
+            {render_adtqc()}
+            <Divider />
+            {render_adtnorm()}
+            <Divider />
+            {render_adtpca()}
+            <Divider />
+          </Collapse>
+          <Collapse isOpen={showCRISPR}>
+            {render_crisprqc()}
+            <Divider />
+            {render_crisprpca()}
+            <Divider />
+          </Collapse>
           {render_batch_correction()}
           <Divider />
           {render_clus()}
@@ -2142,16 +2192,6 @@ export function ParameterSelection({
           {render_umap()}
           <Divider />
           {render_cellann()}
-          <Divider />
-          {render_adtqc()}
-          <Divider />
-          {render_adtnorm()}
-          <Divider />
-          {render_adtpca()}
-          <Divider />
-          {render_crisprqc()}
-          <Divider />
-          {render_crisprpca()}
           <Divider />
           {render_combweights()}
         </div>
