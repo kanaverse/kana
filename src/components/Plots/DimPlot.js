@@ -753,8 +753,8 @@ const DimPlot = (props) => {
           <div
             ref={container}
             style={{
-              width: "95%",
-              height: "95%",
+              width: "100%",
+              height: "100%",
             }}
           ></div>
         ) : (
