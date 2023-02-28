@@ -24,7 +24,7 @@ async function proxyAndCache(url) {
   let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
   return new Uint8Array(buffer);
 }
-bakana.setCellLabellingDownload(proxyAndCache);
+bakana.CellLabellingState.setDownloadFun(proxyAndCache);
 remotes.ExperimentHubDataset.setDownloadFun(proxyAndCache);
 bakana.availableReaders["ExperimentHub"] = remotes.ExperimentHubDataset;
 
@@ -332,71 +332,72 @@ onmessage = function (msg) {
         });
     }
     /**************** SAVING EXISTING ANALYSES *******************/
-  } else if (type == "EXPORT") {
-    loaded
-      .then(async (x) => {
-        const h5path = "serialized_in.h5";
-        try {
-          let collected = await bakana.saveAnalysis(superstate, h5path, {
-            embedded: true,
-          });
-          let arr = bakana.createKanaFile(h5path, collected.collected);
-          let contents = arr.buffer;
-          postMessage(
-            {
-              type: "exportState",
-              resp: contents,
-              msg: "Success: application state exported",
-            },
-            [contents]
-          );
-        } finally {
-          bakana.callScran((scran) => scran.removeFile(h5path));
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        postError(type, err, fatal);
-      });
-  } else if (type == "SAVEKDB") {
-    // save analysis to inbrowser indexedDB
-    var title = payload.title;
-    loaded
-      .then(async (x) => {
-        let collected = [];
-        let old = bakana.setCreateLink(linkKanaDb(collected));
+    // } else if (type == "EXPORT") {
+    //   loaded
+    //     .then(async (x) => {
+    //       const h5path = "serialized_in.h5";
+    //       try {
+    //         let collected = await bakana.saveAnalysis(superstate, h5path, {
+    //           embedded: true,
+    //         });
+    //         let arr = bakana.createKanaFile(h5path, collected.collected);
+    //         let contents = arr.buffer;
+    //         postMessage(
+    //           {
+    //             type: "exportState",
+    //             resp: contents,
+    //             msg: "Success: application state exported",
+    //           },
+    //           [contents]
+    //         );
+    //       } finally {
+    //         bakana.callScran((scran) => scran.removeFile(h5path));
+    //       }
+    //     })
+    //     .catch((err) => {
+    //       console.error(err);
+    //       postError(type, err, fatal);
+    //     });
+    // }
+    // else if (type == "SAVEKDB") {
+    //   // save analysis to inbrowser indexedDB
+    //   var title = payload.title;
+    //   loaded
+    //     .then(async (x) => {
+    //       let collected = [];
+    //       let old = bakana.setCreateLink(linkKanaDb(collected));
 
-        const h5path = "serialized_in.h5";
-        let id = null;
-        try {
-          await bakana.saveAnalysis(superstate, h5path, {
-            embedded: false,
-          });
-          let state = bakana.createKanaFile(h5path, null);
-          id = await kana_db.saveAnalysis(null, state, collected, title);
-        } finally {
-          bakana.callScran((scran) => scran.removeFile(h5path));
-          bakana.setCreateLink(old);
-        }
+    //       const h5path = "serialized_in.h5";
+    //       let id = null;
+    //       try {
+    //         await bakana.saveAnalysis(superstate, h5path, {
+    //           embedded: false,
+    //         });
+    //         let state = bakana.createKanaFile(h5path, null);
+    //         id = await kana_db.saveAnalysis(null, state, collected, title);
+    //       } finally {
+    //         bakana.callScran((scran) => scran.removeFile(h5path));
+    //         bakana.setCreateLink(old);
+    //       }
 
-        if (id !== null) {
-          let recs = await kana_db.getRecords();
-          postMessage({
-            type: "KanaDB_store",
-            resp: recs,
-            msg: `Success: Saved analysis to cache (${id})`,
-          });
-        } else {
-          postMessage({
-            type: "KanaDB_ERROR",
-            msg: `Fail: Cannot save analysis to cache`,
-          });
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        postError(type, err, fatal);
-      });
+    //       if (id !== null) {
+    //         let recs = await kana_db.getRecords();
+    //         postMessage({
+    //           type: "KanaDB_store",
+    //           resp: recs,
+    //           msg: `Success: Saved analysis to cache (${id})`,
+    //         });
+    //       } else {
+    //         postMessage({
+    //           type: "KanaDB_ERROR",
+    //           msg: `Fail: Cannot save analysis to cache`,
+    //         });
+    //       }
+    //     })
+    //     .catch((err) => {
+    //       console.error(err);
+    //       postError(type, err, fatal);
+    //     });
 
     /**************** KANADB EVENTS *******************/
   } else if (type == "REMOVEKDB") {

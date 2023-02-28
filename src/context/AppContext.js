@@ -193,6 +193,8 @@ const AppContextProvider = ({ children }) => {
         setLoadFiles,
         loadParams,
         setLoadParams,
+        exploreFiles,
+        setExploreFiles,
       }}
     >
       {children}

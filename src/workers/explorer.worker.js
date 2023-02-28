@@ -20,15 +20,15 @@ let preflights_summary = {};
 
 function createDataset(args) {
   if (args.format == "H5AD") {
-    return new bakana.H5adDataset(args.h5);
+    return new bakana.H5adResult(args.h5);
   } else if (args.format == "SummarizedExperiment") {
-    return new bakana.SummarizedExperimentDataset(args.rds);
+    return new bakana.SummarizedExperimentResult(args.rds);
   } else {
     throw new Error("unknown format '" + args.format + "'");
   }
 }
 
-function summarizeDataset(summary, args) {
+function summarizeResult(summary, args) {
   let cells_summary = {};
   for (const k of summary.cells.columnNames()) {
     cells_summary[k] = bakana.summarizeArray(summary.cells.column(k));
@@ -40,17 +40,18 @@ function summarizeDataset(summary, args) {
     },
   };
 
-  tmp_meta["modality_features"] = {};
-  for (const [k, v] of Object.entries(summary.modality_features)) {
-    let tmod_summary = {};
-    for (const k of v.columnNames()) {
-      tmod_summary[k] = bakana.summarizeArray(v.column(k));
-    }
-    tmp_meta["modality_features"][k] = {
-      columns: tmod_summary,
-      numberOfFeatures: v.numberOfRows(),
-    };
+  tmp_meta["all_features"] = {};
+  let tmod_summary = {};
+  for (const k of summary["all_features"].columnNames()) {
+    tmod_summary[k] = bakana.summarizeArray(summary["all_features"].column(k));
   }
+  tmp_meta["all_features"] = {
+    columns: tmod_summary,
+    numberOfFeatures: summary["all_features"].numberOfRows(),
+  };
+
+  tmp_meta["all_assay_names"] = summary["all_assay_names"];
+  tmp_meta["reduced_dimension_names"] = summary["reduced_dimension_names"];
 
   return tmp_meta;
 }
@@ -73,7 +74,7 @@ var loaded;
 onmessage = function (msg) {
   const { type, payload } = msg.data;
 
-  console.log("WORKER::RCV::", type, payload);
+  console.log("EXPLORE WORKER::RCV::", type, payload);
 
   let fatal = false;
   if (type == "INIT") {
@@ -93,57 +94,7 @@ onmessage = function (msg) {
       });
     });
 
-    let kana_init = kana_db.initialize();
-    kana_init
-      .then((output) => {
-        if (output !== null) {
-          postMessage({
-            type: "KanaDB_store",
-            resp: output,
-            msg: "Success: KanaDB initialized",
-          });
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-        postMessage({
-          type: "KanaDB_ERROR",
-          msg: "Error: Cannot initialize KanaDB",
-        });
-      });
-
-    let down_init = downloads.initialize();
-    down_init
-      .then((output) => {
-        postMessage({
-          type: "DownloadsDB_store",
-          resp: output,
-          msg: "Success: DownloadsDB initialized",
-        });
-      })
-      .catch((error) => {
-        console.error(error);
-        postMessage({
-          type: "DownloadsDB_ERROR",
-          msg: "Error: Cannot initialize DownloadsDB",
-        });
-      });
-
-    try {
-      let ehub_ids = remotes.ExperimentHubDataset.availableDatasets();
-      postMessage({
-        type: "ExperimentHub_store",
-        resp: ehub_ids,
-        msg: "Success: ExperimentHub initialized",
-      });
-    } catch {
-      postMessage({
-        type: "ExperimentHub_ERROR",
-        msg: "Error: Cannot access datasets in ExperimentHub",
-      });
-    }
-
-    loaded = Promise.all([back_init, kana_init, down_init, state_init]);
+    loaded = Promise.all([back_init, state_init]);
 
     loaded
       .then(() => {
@@ -156,8 +107,8 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-    /**************** RUNNING AN ANALYSIS *******************/
-  } else if (type == "RUN") {
+    /**************** EXPLORE AN ANALYSIS *******************/
+  } else if (type == "EXPLORE") {
     fatal = true;
     loaded
       .then((x) => {
@@ -215,11 +166,11 @@ onmessage = function (msg) {
                 preflights_summary[v.uid] = await preflights[v.uid].summary();
               }
               current[k] = preflights[v.uid];
-              summary[k] = summarizeDataset(preflights_summary[v.uid], v);
+              summary[k] = summarizeResult(preflights_summary[v.uid], v);
             } else {
               let tmp_dataset = createDataset(v);
               current[k] = tmp_dataset;
-              summary[k] = summarizeDataset(current[k], v);
+              summary[k] = summarizeResult(current[k], v);
             }
           }
 
