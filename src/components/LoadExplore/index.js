@@ -39,7 +39,7 @@ import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 
 import { MODALITIES } from "../../utils/utils";
 
-export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
+export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
   // close the entire panel
   const handleClose = () => {
     setOpen(false);
@@ -63,39 +63,35 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
     format: tabSelected,
   });
 
-  const parseKanaDate = (x) => {
-    let d = new Date(x);
-    return d.toDateString() + ", " + d.toLocaleTimeString();
-  };
-
-  const handleLoad = () => {
+  const handleExplore = () => {
     let mapFiles = {};
     mapFiles[tmpLoadInputs.name] = tmpLoadInputs;
 
     let fInputFiles = { files: mapFiles };
     setLoadFiles(fInputFiles);
-    setShowPanel("results");
+    setShowPanel("explore");
   };
 
   // making sure tmpNewInputs are valid as the user chooses datasets
   useEffect(() => {
     if (tmpLoadInputs) {
+      let all_valid = true;
       let x = tmpLoadInputs;
-      if (x?.file == null) {
-        setTmpStatusValid(false);
-      } else {
-        if (
-          tabSelected === "kana" &&
-          x?.file != null &&
-          !x.file.name.toLowerCase().endsWith("kana")
-        ) {
-          setTmpStatusValid(false);
-        } else if (tabSelected === "kanadb" && x?.file === null) {
-          setTmpStatusValid(false);
-        } else {
-          setTmpStatusValid(true);
+      if (x.format === "H5AD") {
+        if (x?.h5 && !x?.h5.name.toLowerCase().endsWith("h5ad")) {
+          all_valid = false;
         }
+
+        if (!x.h5) all_valid = false;
+      } else if (x.format === "SummarizedExperiment") {
+        if (x?.rds && !x?.rds.name.toLowerCase().endsWith("rds")) {
+          all_valid = false;
+        }
+
+        if (!x.rds) all_valid = false;
       }
+
+      setTmpStatusValid(all_valid);
     }
   }, [tmpLoadInputs]);
 
@@ -114,29 +110,25 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
         }}
       >
         <Tab
-          id="kana"
-          title="Load from file"
+          id="H5AD"
+          title="Load H5AD dataset"
           panel={
             <div>
               <div className="row">
                 <Label className="row-input">
                   <Text className="text-100">
-                    <span>Load analysis from Kana file</span>
+                    <span>Choose a H5AD dataset</span>
                   </Text>
                   <FileInput
                     style={{
                       marginTop: "5px",
                     }}
-                    text={
-                      tmpLoadInputs?.file
-                        ? tmpLoadInputs?.file.name
-                        : ".kana or .kana.gz"
-                    }
+                    text={tmpLoadInputs?.h5 ? tmpLoadInputs?.h5.name : ".H5AD"}
                     onInputChange={(msg) => {
                       if (msg.target.files) {
                         setTmpLoadInputs({
                           ...tmpLoadInputs,
-                          file: msg.target.files[0],
+                          h5: msg.target.files[0],
                         });
                       }
                     }}
@@ -148,77 +140,33 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
         />
         {
           <Tab
-            id="kanadb"
-            title="Load from browser"
+            id="SummarizedExperiment"
+            title="Load RDS file"
             panel={
               <div>
-                {props?.kanaIDBRecs.length > 0 ? (
-                  <div className="row">
-                    <Label className="row-input">
-                      <Text
-                        className="text-100"
-                        style={{
-                          paddingBottom: "10px",
-                        }}
-                      >
-                        <span>Load analysis saved to browser</span>
-                      </Text>
-                      <RadioGroup
-                        onChange={(x) => {
-                          let tmp = { ...tmpLoadInputs };
-                          tmp["file"] = x.currentTarget?.value;
-                          setTmpLoadInputs(tmp);
-
-                          setTmpStatusValid(true);
-                        }}
-                        selectedValue={tmpLoadInputs?.file}
-                      >
-                        {props?.kanaIDBRecs.map((x, i) => {
-                          return (
-                            <Radio
-                              key={i}
-                              style={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                              }}
-                              label={<strong>{x.title}</strong>}
-                              value={x.id}
-                            >
-                              &nbsp;
-                              <span className="kana-date">
-                                {parseKanaDate(x.time)}
-                              </span>{" "}
-                              &nbsp;
-                              <Icon
-                                icon="trash"
-                                size="10"
-                                style={{
-                                  alignSelf: "baseline",
-                                  paddingTop: "4px",
-                                  paddingLeft: "5px",
-                                }}
-                                onClick={() => {
-                                  props?.setDeletekdb(x.id);
-                                }}
-                              ></Icon>
-                            </Radio>
-                          );
-                        })}
-                      </RadioGroup>
-                    </Label>
-                  </div>
-                ) : (
-                  <div className="row">
-                    <Label className="row-input">
-                      <Text className="text-100">
-                        <span>Load analysis saved to browser</span>
-                      </Text>
-                      <br />
-                      <span>No saved analysis found in the browser!</span>
-                    </Label>
-                  </div>
-                )}
+                <div className="row">
+                  <Label className="row-input">
+                    <Text className="text-100">
+                      <span>Choose an RDS file</span>
+                    </Text>
+                    <FileInput
+                      style={{
+                        marginTop: "5px",
+                      }}
+                      text={
+                        tmpLoadInputs?.rds ? tmpLoadInputs?.rds.name : ".H5AD"
+                      }
+                      onInputChange={(msg) => {
+                        if (msg.target.files) {
+                          setTmpLoadInputs({
+                            ...tmpLoadInputs,
+                            rds: msg.target.files[0],
+                          });
+                        }
+                      }}
+                    />
+                  </Label>
+                </div>
               </div>
             }
           />
@@ -230,14 +178,20 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
   return (
     <Card className="section" interactive={false} elevation={Elevation.ZERO}>
       <div className="section-header">
-        <H2 className="section-header-title">Load Saved Analysis</H2>
+        <H2 className="section-header-title">
+          Explore a dataset with results.
+        </H2>
       </div>
       <Divider />
       <div className="section-content">
         <div className="section-content-body">
           <Callout icon="airplane">
             <p>
-              <strong> Import a saved analysis to get started. </strong>
+              <strong>
+                {" "}
+                Choose a dataset with pre-computed results (tsne, umap etc) to
+                get started.{" "}
+              </strong>
             </p>
           </Callout>
           <Divider />
@@ -266,9 +220,9 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
             <Collapse isOpen={openInfo}>
               <Callout intent="primary">
                 <p>
-                  These files are stored as{" "}
+                  Must be either files{" "}
                   <strong>
-                    <code>*.kana</code>
+                    <code>*.H5AD or *.RDS</code>
                   </strong>
                   . files.
                 </p>
@@ -279,7 +233,7 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
       </div>
       <Divider />
       <div className="section-footer">
-        <Tooltip2 content="Cancel Load" placement="left">
+        <Tooltip2 content="Cancel explore" placement="left">
           <Button
             icon="cross"
             intent={"warning"}
@@ -288,14 +242,14 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
             text="Cancel"
           />
         </Tooltip2>
-        <Tooltip2 content="Load Analysis" placement="right">
+        <Tooltip2 content="Explore dataset" placement="right">
           <Button
             icon="import"
-            onClick={handleLoad}
+            onClick={handleExplore}
             intent={"primary"}
             large={true}
             disabled={!tmpStatusValid}
-            text="Load"
+            text="Explore"
           />
         </Tooltip2>
       </div>

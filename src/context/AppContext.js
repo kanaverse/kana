@@ -15,6 +15,12 @@ const AppContextProvider = ({ children }) => {
     files: null,
   });
 
+  // Explore State
+  const [exploreFiles, setExploreFiles] = useState({
+    format: null,
+    files: null,
+  });
+
   // creates a default dataset name
   const [datasetName, setDatasetName] = useState("My Analysis Title");
 

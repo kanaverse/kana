@@ -4,8 +4,7 @@ const Stats = (props) => {
         <>
             {
                 <span>
-                    {props?.initDims ? `: ${props?.initDims}` : " "}
-                    {props?.qcDims ?  ` (${props?.qcDims} after QC)` : "" }
+                    {props?.headerInfo}
                 </span>
             }
         </>
