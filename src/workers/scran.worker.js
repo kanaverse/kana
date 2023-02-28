@@ -478,11 +478,22 @@ onmessage = function (msg) {
           rank_type,
           payload.modality
         );
-        postMessage({
-          type: "computeVersusClusters",
-          resp: res,
-          msg: "Success: COMPUTE_VERSUS_CLUSTERS done",
-        });
+        let resp = bakana.formatMarkerResults(
+          res["results"][payload.modality],
+          payload.left,
+          payload.rank_type
+        );
+
+        var transferrable = [];
+        extractBuffers(resp, transferrable);
+        postMessage(
+          {
+            type: "computeVersusClusters",
+            resp: resp,
+            msg: "Success: COMPUTE_VERSUS_CLUSTERS done",
+          },
+          transferrable
+        );
       })
       .catch((err) => {
         console.error(err);
@@ -498,11 +509,22 @@ onmessage = function (msg) {
           rank_type,
           payload.modality
         );
-        postMessage({
-          type: "computeVersusSelections",
-          resp: res,
-          msg: "Success: COMPUTE_VERSUS_SELECTIONS done",
-        });
+        let resp = bakana.formatMarkerResults(
+          res["results"][payload.modality],
+          payload.left,
+          payload.rank_type
+        );
+
+        var transferrable = [];
+        extractBuffers(resp, transferrable);
+        postMessage(
+          {
+            type: "computeVersusSelections",
+            resp: resp,
+            msg: "Success: COMPUTE_VERSUS_SELECTIONS done",
+          },
+          transferrable
+        );
       })
       .catch((err) => {
         console.error(err);
