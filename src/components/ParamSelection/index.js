@@ -567,7 +567,7 @@ export function ParameterSelection({
                       }
                       onMouseEnter={() => setShowStepHelper("rnaqc")}
                     >
-                      Use default mitochondrial list ?
+                      Use default mitochondrial prefix ?
                     </span>
                   </Text>
                   <Switch
