@@ -24,9 +24,12 @@ async function proxyAndCache(url) {
   let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
   return new Uint8Array(buffer);
 }
-bakana.CellLabellingState.setDownloadFun(proxyAndCache);
+
 remotes.ExperimentHubDataset.setDownloadFun(proxyAndCache);
 bakana.availableReaders["ExperimentHub"] = remotes.ExperimentHubDataset;
+bakana.CellLabellingState.setDownload(proxyAndCache);
+bakana.FeatureSetEnrichmentState.setDownload(proxyAndCache);
+bakana.RnaQualityControlState.setDownload(proxyAndCache);
 
 function createDataset(args) {
   if (args.format == "10X") {

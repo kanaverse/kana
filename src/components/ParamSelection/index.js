@@ -574,7 +574,7 @@ export function ParameterSelection({
                     style={{ marginTop: "10px" }}
                     large={true}
                     checked={
-                      tmpParams["rna_quality_control"]["use_mito_default"]
+                      tmpParams["rna_quality_control"]["use_reference_mito"]
                     }
                     innerLabelChecked="yes"
                     innerLabel="no"
@@ -583,13 +583,13 @@ export function ParameterSelection({
                         ...tmpParams,
                         rna_quality_control: {
                           ...tmpParams["rna_quality_control"],
-                          use_mito_default: e.target.checked,
+                          use_reference_mito: e.target.checked,
                         },
                       });
                     }}
                   />
                 </Label>
-                {!tmpParams["rna_quality_control"]["use_mito_default"] && (
+                {!tmpParams["rna_quality_control"]["use_reference_mito"] && (
                   <Label className="param-row-input">
                     <Text className="param-text-100">
                       <span
@@ -1278,8 +1278,7 @@ export function ParameterSelection({
   };
 
   function handleCheckbox(e, species, key) {
-    let tkey = `${species}_references`;
-    let tmpAnnoCells = [...tmpParams["cell_labelling"][tkey]];
+    let tmpAnnoCells = [...tmpParams["cell_labelling"]["references"]];
     if (e.target.checked) {
       if (!tmpAnnoCells.includes(key)) {
         tmpAnnoCells.push(key);
@@ -1294,7 +1293,7 @@ export function ParameterSelection({
       ...tmpParams["cell_labelling"],
     };
 
-    tmpAnno[tkey] = tmpAnnoCells;
+    tmpAnno["references"] = tmpAnnoCells;
 
     setTmpParams({
       ...tmpParams,
@@ -1303,8 +1302,7 @@ export function ParameterSelection({
   }
 
   function isCheckIncluded(species, key) {
-    let tkey = `${species}_references`;
-    return tmpParams["cell_labelling"][tkey].includes(key);
+    return tmpParams["cell_labelling"]["references"].includes(key);
   }
 
   const render_cellann = () => {

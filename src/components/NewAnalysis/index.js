@@ -105,11 +105,7 @@ export function NewAnalysis({
     setNewInputs([...newInputs, tmpNewInputs]);
     setOpenInfo(false);
 
-    setPreInputFiles([...newInputs, tmpNewInputs]);
-
-    // setTimeout(() => {
     setTmpNewInputs(initTmpFile());
-    // }, 1000);
   };
 
   const handleRunAnalysis = () => {

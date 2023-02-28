@@ -91,22 +91,31 @@ const AppContextProvider = ({ children }) => {
       method: "snn_graph",
     },
     cell_labelling: {
-      mouse_references: [],
-      human_references: [],
+      references: [],
+      automatic: true,
+      species: [],
+      gene_id_column: null,
+      gene_id_type: "ENSEMBL",
     },
     inputs: {
       block_factor: null,
       subset: null,
     },
     rna_quality_control: {
-      use_mito_default: true,
+      use_reference_mito: true,
       mito_prefix: "mt-",
       nmads: 3,
+      automatic: true,
+      gene_id_column: null,
+      gene_id_type: "ENSEMBL",
+      species: [],
     },
     adt_quality_control: {
       igg_prefix: "IgG",
       nmads: 3,
       min_detected_drop: 0.1,
+      automatic: true,
+      tag_id_column: null,
     },
     crispr_quality_control: {
       nmads: 3,
@@ -153,6 +162,13 @@ const AppContextProvider = ({ children }) => {
     custom_selections: {
       lfc_threshold: 0,
       compute_auc: true,
+    },
+    feature_set_enrichment: {
+      collections: [],
+      automatic: true,
+      gene_id_column: null,
+      gene_id_type: "ENSEMBL",
+      top_markers: 100,
     },
   });
 
