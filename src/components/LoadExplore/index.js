@@ -38,6 +38,8 @@ import { generateUID } from "../../utils/utils";
 import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 
 import { MODALITIES } from "../../utils/utils";
+import { H5ADCard } from "./H5ADCard";
+import { SECard } from "./SECard";
 
 export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
   // close the entire panel
@@ -49,10 +51,11 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
   const [openInfo, setOpenInfo] = useState(true);
 
   // Access App Context
-  const { setLoadFiles } = useContext(AppContext);
+  const { setExploreFiles, setPreInputFiles, preInputFilesStatus } =
+    useContext(AppContext);
 
   // what tab was selected to identify format
-  const [tabSelected, setTabSelected] = useState("kana");
+  const [tabSelected, setTabSelected] = useState("H5AD");
 
   // is eveyrthing good?
   const [tmpStatusValid, setTmpStatusValid] = useState(true);
@@ -63,12 +66,16 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
     format: tabSelected,
   });
 
+  // final inputs for confirmation with options
+  const [inputOptions, setInputOptions] = useState({});
+
   const handleExplore = () => {
     let mapFiles = {};
     mapFiles[tmpLoadInputs.name] = tmpLoadInputs;
+    mapFiles[tmpLoadInputs.name]["options"] = inputOptions;
 
     let fInputFiles = { files: mapFiles };
-    setLoadFiles(fInputFiles);
+    setExploreFiles(fInputFiles);
     setShowPanel("explore");
   };
 
@@ -92,6 +99,15 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
       }
 
       setTmpStatusValid(all_valid);
+
+      if (all_valid) {
+        tmpLoadInputs["uid"] = generateUID(tmpLoadInputs);
+        let mapFiles = {};
+        mapFiles[tmpLoadInputs.name] = tmpLoadInputs;
+
+        let fInputFiles = { files: mapFiles };
+        setPreInputFiles(fInputFiles);
+      }
     }
   }, [tmpLoadInputs]);
 
@@ -228,6 +244,45 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                 </p>
               </Callout>
             </Collapse>
+          </div>
+          <div className="section-inputs">
+            {[tmpLoadInputs].map((x, i) => {
+              if (x.format == "H5AD" && x.h5 !== null && x.h5 !== undefined) {
+                return (
+                  <H5ADCard
+                    key={i}
+                    resource={x}
+                    index={i}
+                    preflight={
+                      preInputFilesStatus && preInputFilesStatus[x.name]
+                    }
+                    inputOpts={inputOptions}
+                    setInputOpts={setInputOptions}
+                    inputs={tmpLoadInputs}
+                    setInputs={setTmpLoadInputs}
+                  />
+                );
+              } else if (
+                x.format == "SummarizedExperiment" &&
+                x.rds !== null &&
+                x.rds !== undefined
+              ) {
+                return (
+                  <SECard
+                    key={i}
+                    resource={x}
+                    index={i}
+                    preflight={
+                      preInputFilesStatus && preInputFilesStatus[x.name]
+                    }
+                    inputOpts={inputOptions}
+                    setInputOpts={setInputOptions}
+                    inputs={tmpLoadInputs}
+                    setInputs={setTmpLoadInputs}
+                  />
+                );
+              }
+            })}
           </div>
         </div>
       </div>

@@ -88,15 +88,10 @@ export function ExplorerMode() {
 
   const {
     wasmInitialized,
-    preInputFiles,
     setWasmInitialized,
     datasetName,
     setDatasetName,
-    setEhubDatasets,
     setPreInputFilesStatus,
-    inputFiles,
-    params,
-    setParams,
     annotationCols,
     setAnnotationCols,
     annotationObj,
@@ -104,12 +99,11 @@ export function ExplorerMode() {
     setGenesInfo,
     geneColSel,
     setGeneColSel,
-    loadFiles,
     initLoadState,
     setInitLoadState,
-    loadParams,
-    setLoadParams,
-    setInputFiles,
+    exploreFiles,
+    setExploreFiles,
+    preInputFiles,
   } = useContext(AppContext);
 
   // modalities
@@ -257,15 +251,14 @@ export function ExplorerMode() {
     }
   }, [preInputFiles, wasmInitialized]);
 
-  // NEW analysis: files are imported into Kana
+  // EXPLORE dataset: files are imported into Kana
   useEffect(() => {
-    if (wasmInitialized && !stateIndeterminate) {
-      if (inputFiles.files != null) {
+    if (wasmInitialized) {
+      if (exploreFiles.files != null) {
         scranWorker.postMessage({
-          type: "RUN",
+          type: "EXPLORE",
           payload: {
-            inputs: inputFiles,
-            params: params,
+            inputs: exploreFiles,
           },
         });
 
@@ -273,41 +266,7 @@ export function ExplorerMode() {
         setAllLoaders();
       }
     }
-  }, [inputFiles, params, wasmInitialized, stateIndeterminate]);
-
-  // LOAD analysis: files are imported into Kana
-  useEffect(() => {
-    if (wasmInitialized && !initLoadState) {
-      if (loadFiles.files != null) {
-        if (loadParams == null) {
-          scranWorker.postMessage({
-            type: "LOAD",
-            payload: {
-              inputs: loadFiles,
-            },
-          });
-
-          add_to_logs("info", `--- Reloading saved analysis ---`);
-          setInitLoadState(true);
-        } else {
-          scranWorker.postMessage({
-            type: "RUN",
-            payload: {
-              inputs: {
-                files: null,
-                batch: loadParams?.inputs?.batch,
-                subset: loadParams?.inputs?.subset,
-              },
-              params: params,
-            },
-          });
-
-          add_to_logs("info", `--- Reanalyzing loaded analysis ---`);
-          setAllLoaders();
-        }
-      }
-    }
-  }, [loadFiles, params, loadParams, wasmInitialized]);
+  }, [exploreFiles, wasmInitialized]);
 
   // request worker for new markers
   // if either the cluster or the ranking changes
@@ -409,20 +368,6 @@ export function ExplorerMode() {
     }
   }, [reqGene, selectedModality]);
 
-  // trigger an embedding animation
-  useEffect(() => {
-    if (triggerAnimation && selectedRedDim) {
-      scranWorker.postMessage({
-        type: "animate" + selectedRedDim,
-        payload: {
-          params: params[selectedRedDim.toLowerCase()],
-        },
-      });
-
-      add_to_logs("info", `--- Request to animate ${selectedRedDim} sent ---`);
-    }
-  }, [triggerAnimation]);
-
   // get annotation for a column from worker
   useEffect(() => {
     if (reqAnnotation) {
@@ -453,66 +398,6 @@ export function ExplorerMode() {
       }
     }
   }, [selectedModality]);
-
-  // export an analysis to file
-  useEffect(() => {
-    if (exportState) {
-      scranWorker.postMessage({
-        type: "EXPORT",
-        payload: {
-          files: inputFiles,
-          params: params,
-        },
-      });
-
-      AppToaster.show({
-        icon: "download",
-        intent: "primary",
-        message: "Exporting analysis in the background",
-      });
-      add_to_logs(
-        "info",
-        `--- Export analysis state (to file) initialized ---`
-      );
-    } else {
-      inputFiles?.files &&
-        AppToaster.show({
-          icon: "download",
-          intent: "primary",
-          message: "Analysis saved. Please check your downloads directory!",
-        });
-    }
-  }, [exportState]);
-
-  // export an analysis to idxdb
-  useEffect(() => {
-    if (indexedDBState) {
-      scranWorker.postMessage({
-        type: "SAVEKDB",
-        payload: {
-          title: datasetName,
-        },
-      });
-
-      AppToaster.show({
-        icon: "floppy-disk",
-        intent: "primary",
-        message:
-          "Saving analysis in the background. Note: analysis is saved within the browser!!",
-      });
-      add_to_logs(
-        "info",
-        `--- Export analysis state (to browser) initialized ---`
-      );
-    } else {
-      inputFiles?.files &&
-        AppToaster.show({
-          icon: "floppy-disk",
-          intent: "primary",
-          message: "Analysis saved!",
-        });
-    }
-  }, [indexedDBState]);
 
   function add_to_logs(type, msg, status) {
     let tmp = [...logs];
@@ -580,17 +465,6 @@ export function ExplorerMode() {
     if (type === "INIT") {
       setLoading(false);
       setWasmInitialized(true);
-    } else if (type === "KanaDB") {
-      setIndexedDBState(false);
-    } else if (type === "KanaDB_store") {
-      if (resp !== undefined) {
-        setKanaIDBRecs(resp);
-      }
-      setIndexedDBState(false);
-    } else if (type === "ExperimentHub_store") {
-      if (resp !== undefined && Array.isArray(resp)) {
-        setEhubDatasets(resp);
-      }
     } else if (type === "PREFLIGHT_INPUT_DATA") {
       if (resp.details) {
         setPreInputFilesStatus(resp.details);
@@ -880,46 +754,6 @@ export function ExplorerMode() {
       setShowNClusLoader(false);
     } else if (payload.type === "cell_labelling_CACHE") {
       setShowCellLabelLoader(false);
-    } else if (payload.type === "loadedParameters") {
-      const { resp } = payload;
-      setParams(resp.parameters);
-      setLoadParams(resp.parameters);
-
-      if (resp.other.custom_selections) {
-        let cluster_count =
-          clusterColors.length +
-          Object.keys(resp.other.custom_selections).length;
-        let cluster_colors = null;
-        if (cluster_count > Object.keys(palette).length) {
-          cluster_colors = randomColor({
-            luminosity: "dark",
-            count: cluster_count + 1,
-          });
-        } else {
-          cluster_colors = palette[cluster_count.toString()];
-        }
-        setClusterColors(cluster_colors);
-
-        setCustomSelection(resp.other.custom_selections);
-      }
-
-      setTimeout(() => {
-        setInitLoadState(false);
-      }, 1000);
-    } else if (payload.type === "exportState") {
-      const { resp } = payload;
-
-      let tmpLink = document.createElement("a");
-      var fileNew = new Blob([resp], {
-        type: "text/plain",
-      });
-      tmpLink.href = URL.createObjectURL(fileNew);
-      tmpLink.download = datasetName.split(" ").join("_") + ".kana";
-      tmpLink.click();
-
-      setExportState(false);
-    } else if (payload.type === "KanaDB") {
-      setIndexedDBState(false);
     }
   };
 
@@ -1352,9 +1186,7 @@ export function ExplorerMode() {
             />
           )}
           {showPanel === "explore-import" && (
-            <LoadExplore
-              setShowPanel={setShowPanel}
-            />
+            <LoadExplore setShowPanel={setShowPanel} />
           )}
         </div>
       </SplitPane>
