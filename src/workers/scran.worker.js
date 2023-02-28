@@ -621,7 +621,7 @@ onmessage = function (msg) {
     loaded
       .then(async (x) => {
         await superstate.tsne.animate();
-        postSuccess("tsne", await superstate.tsne.summary());
+        postSuccess("tsne", await superstate.tsne.fetchResults());
       })
       .catch((err) => {
         console.error(err);
@@ -631,7 +631,7 @@ onmessage = function (msg) {
     loaded
       .then(async (x) => {
         await superstate.umap.animate();
-        postSuccess("umap", await superstate.umap.summary());
+        postSuccess("umap", await superstate.umap.fetchResults());
       })
       .catch((err) => {
         console.error(err);
