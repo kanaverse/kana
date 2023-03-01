@@ -1,4 +1,5 @@
 import * as bakana from "bakana";
+import * as scran from "scran.js";
 import {
   extractBuffers,
   postAttempt,
@@ -13,6 +14,35 @@ let superstate = null;
 let preflights = {};
 let preflights_summary = {};
 let dataset = null;
+
+let cluster_indices = null;
+let cluster_markers = {};
+let cluster_versus_cache = {};
+let cluster_uniq_map = {};
+
+let custom_selections = {};
+let selection_markers = {};
+let selection_versus_cache = {};
+
+function release_versus_cache(x) {
+  for (const [k, v] of Object.entries(x)) {
+    if (v.constructor.name === "Object") {
+      release_versus_cache(v);
+    } else {
+      scran.free(v);
+    }
+  }
+}
+
+function delete_custom_selection(id) {
+  if (custom_selections[id]) {
+    for (const obj of Object.values(custom_selections[id])) {
+      scran.free(obj);
+    }
+  }
+  delete custom_selections[id];
+  delete selection_markers[id];
+}
 
 function createDataset(args, setOpts = false) {
   if (args.format == "H5AD") {
@@ -116,6 +146,8 @@ onmessage = function (msg) {
           for (const [k, v] of Object.entries(current)) {
             dataset = v.load();
 
+            let finput = files[k];
+
             console.log(dataset);
 
             let step_inputs = "inputs";
@@ -154,6 +186,18 @@ onmessage = function (msg) {
             }
 
             postSuccess(step_embed, step_embed_resp);
+
+            // Releasing all custom markers and versus mode results.
+            for (const id of Object.keys(custom_selections)) {
+              delete_custom_selection(id);
+            }
+            custom_selections = {};
+            selection_markers = {};
+
+            release_versus_cache(cluster_versus_cache);
+            cluster_versus_cache = {};
+            release_versus_cache(selection_versus_cache);
+            selection_versus_cache = {};
           }
         }
       })
@@ -269,46 +313,82 @@ onmessage = function (msg) {
     //     });
 
     //   /**************** OTHER EVENTS FROM UI *******************/
-    // } else if (type == "getMarkersForCluster") {
-    //   loaded
-    //     .then((x) => {
-    //       let cluster = payload.cluster;
-    //       let rank_type = payload.rank_type;
-    //       let modality = payload.modality;
-    //       var raw_res = superstate.marker_detection.fetchResults()[modality];
-    //       let resp = bakana.formatMarkerResults(raw_res, cluster, rank_type);
+  } else if (type == "getMarkersForCluster") {
+    loaded
+      .then((x) => {
+        let cluster = payload.cluster;
+        let rank_type = payload.rank_type;
+        let modality = payload.modality;
+        let annotation = payload.annotation;
 
-    //       var transferrable = [];
-    //       extractBuffers(resp, transferrable);
-    //       postMessage(
-    //         {
-    //           type: "setMarkersForCluster",
-    //           resp: resp,
-    //           msg: "Success: GET_MARKER_GENE done",
-    //         },
-    //         transferrable
-    //       );
-    //     })
-    //     .catch((err) => {
-    //       console.error(err);
-    //       postError(type, err, fatal);
-    //     });
+        // are these already computed?
+        let raw_res = null;
+        if (
+          cluster_markers[annotation] !== null ||
+          cluster_markers[annotation] !== undefined
+        ) {
+          cluster_markers[annotation] = {};
+        } else {
+          if (
+            cluster_markers[annotation][cluster] !== null &&
+            cluster_markers[annotation][cluster] !== undefined
+          ) {
+            raw_res = cluster_markers[annotation][cluster];
+          }
+        }
+
+        if (raw_res == null) {
+          // figure out cluster indices
+          let vec = dataset.cells.column(annotation);
+
+          let uniq_vals = [];
+          let uniq_map = {};
+          // scran.free(cluster_indices);
+          cluster_indices = new Int32Array(vec.length);
+          vec.forEach((x, i) => {
+            if (!(x in uniq_map)) {
+              uniq_map[x] = uniq_vals.length;
+              uniq_vals.push(x);
+            }
+            cluster_indices[i] = uniq_map[x];
+          });
+
+          cluster_markers[annotation][cluster] = scran.scoreMarkers(
+            dataset.matrix.get(modality),
+            cluster_indices
+          );
+
+          cluster_uniq_map[annotation] = uniq_map;
+          raw_res = cluster_markers[annotation][cluster];
+        }
+        let resp = bakana.formatMarkerResults(
+          raw_res,
+          cluster_uniq_map[annotation][cluster],
+          rank_type
+        );
+
+        var transferrable = [];
+        extractBuffers(resp, transferrable);
+        postMessage(
+          {
+            type: "setMarkersForCluster",
+            resp: resp,
+            msg: "Success: GET_MARKER_GENE done",
+          },
+          transferrable
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+        postError(type, err, fatal);
+      });
   } else if (type == "getGeneExpression") {
     loaded
       .then((x) => {
         let row_idx = payload.gene;
         let modality = payload.modality.toLowerCase();
 
-        var vec;
-        if (modality === "rna") {
-          vec = superstate.rna_normalization
-            .fetchNormalizedMatrix()
-            .row(row_idx);
-        } else if (modality === "adt") {
-          vec = superstate.adt_normalization.fetchExpression(row_idx);
-        } else {
-          throw new Error("unknown feature type '" + modality + "'");
-        }
+        var vec = dataset.matrix.get(modality).row(row_idx);
 
         postMessage(
           {

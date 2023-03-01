@@ -188,8 +188,12 @@ export function ExplorerMode() {
   // request annotation column
   const [reqAnnotation, setReqAnnotation] = useState(null);
 
-  // which cluster is selected
+  // which cluster is selected from markers table
   const [selectedCluster, setSelectedCluster] = useState(null);
+
+  // which cluster is selected from markers table
+  const [selectedMarkerAnnotation, setSelectedMarkerAnnotation] =
+    useState(null);
 
   // which dimension is selected
   const [selectedRedDim, setSelectedRedDim] = useState(null);
@@ -284,6 +288,7 @@ export function ExplorerMode() {
             left: selectedCluster,
             right: selectedVSCluster,
             rank_type: clusterRank,
+            annotation: selectedMarkerAnnotation,
           },
         });
 
@@ -298,13 +303,20 @@ export function ExplorerMode() {
             modality: selectedModality,
             cluster: selectedCluster,
             rank_type: clusterRank,
+            annotation: selectedMarkerAnnotation,
           },
         });
 
         add_to_logs("info", `--- ${type} sent ---`);
       }
     }
-  }, [selectedCluster, selectedVSCluster, clusterRank, selectedModality]);
+  }, [
+    selectedCluster,
+    selectedVSCluster,
+    clusterRank,
+    selectedModality,
+    selectedMarkerAnnotation,
+  ]);
 
   // compute markers in the worker
   // when a new custom selection of cells is made through the UI
@@ -502,7 +514,6 @@ export function ExplorerMode() {
       }
 
       setShowNClusLoader(false);
-
       setShowMarkerLoader(false);
     } else if (type === "marker_detection_START") {
       setSelectedCluster(null);
@@ -902,6 +913,10 @@ export function ExplorerMode() {
                         markersWidth={markersWidth}
                         windowWidth={windowWidth}
                         setReqAnnotation={setReqAnnotation}
+                        selectedMarkerAnnotation={selectedMarkerAnnotation}
+                        setSelectedMarkerAnnotation={
+                          setSelectedMarkerAnnotation
+                        }
                       />
                     )}
                   </div>

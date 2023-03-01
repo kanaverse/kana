@@ -27,13 +27,20 @@ import StackedHistogram from "../Plots/StackedHistogram";
 import Cell from "../Plots/Cell.js";
 import HeatmapCell from "../Plots/HeatmapCell";
 
-import { code, getMinMax } from "../../utils/utils";
+import { code, getMinMax, defaultColor } from "../../utils/utils";
 // import Histogram from '../Plots/Histogram';
 import "./markers.css";
+import { group } from "d3";
 
 const MarkerPlot = (props) => {
-  const { genesInfo, geneColSel, setGeneColSel, annotationObj } =
-    useContext(AppContext);
+  const {
+    genesInfo,
+    geneColSel,
+    setGeneColSel,
+    annotationObj,
+    annotationCols,
+    appMode,
+  } = useContext(AppContext);
 
   const default_cluster = `${code}::CLUSTERS`;
 
@@ -72,6 +79,16 @@ const MarkerPlot = (props) => {
   // .domain([0, 1])
   // .range(["red", "blue"])
   // .interpolate(d3.interpolateHcl);
+
+  useEffect(() => {
+    if (appMode === "explore") {
+      props?.setSelectedMarkerAnnotation(annotationCols[0]);
+      props?.setReqAnnotation(annotationCols[0]);
+      props?.setSelectedCluster(annotationCols[0]);
+    } else if (appMode === "analysis") {
+      props?.setSelectedMarkerAnnotation(default_cluster);
+    }
+  }, []);
 
   // if a cluster changes, its summary data is requested from the worker
   // pre-process results for UI
@@ -191,33 +208,54 @@ const MarkerPlot = (props) => {
 
   // update clusters when custom selection is made in the UI
   useEffect(() => {
-    if (annotationObj[default_cluster]) {
-      let max_clusters = getMinMax(annotationObj[default_cluster])[1];
-
-      let clus = [];
-      for (let i = 0; i < max_clusters + 1; i++) {
-        clus.push(i + 1);
-      }
-
-      clus = clus.concat(Object.keys(props?.customSelection));
-
-      setClusSel(clus);
-      if (props?.selectedCluster === null) {
-        props?.setSelectedCluster(0);
-
-        if (String(props?.selectedVSCluster).startsWith("cs")) {
-          props?.setSelectedVSCluster(null);
+    if (appMode === "explore") {
+      if (!(props?.selectedMarkerAnnotation in annotationObj)) {
+        props?.setReqAnnotation(props?.selectedMarkerAnnotation);
+      } else {
+        let tmp = annotationObj[props?.selectedMarkerAnnotation];
+        if (tmp.type === "array") {
+          const uniqueTmp = [...new Set(tmp.values)];
+          setClusSel(uniqueTmp);
+        } else if (tmp.type === "factor") {
+          setClusSel(tmp.levels);
         }
       }
-    }
+    } else if (appMode === "analysis") {
+      if (annotationObj[props?.selectedMarkerAnnotation]) {
+        let max_clusters = getMinMax(
+          annotationObj[props?.selectedMarkerAnnotation]
+        )[1];
 
-    if (
-      !String(props?.selectedCluster).startsWith("cs") &&
-      String(props?.selectedVSCluster).startsWith("cs")
-    ) {
-      props?.setSelectedVSCluster(null);
+        let clus = [];
+        for (let i = 0; i < max_clusters + 1; i++) {
+          clus.push(i + 1);
+        }
+
+        clus = clus.concat(Object.keys(props?.customSelection));
+
+        setClusSel(clus);
+        if (props?.selectedCluster === null) {
+          props?.setSelectedCluster(0);
+
+          if (String(props?.selectedVSCluster).startsWith("cs")) {
+            props?.setSelectedVSCluster(null);
+          }
+        }
+      }
+
+      if (
+        !String(props?.selectedCluster).startsWith("cs") &&
+        String(props?.selectedVSCluster).startsWith("cs")
+      ) {
+        props?.setSelectedVSCluster(null);
+      }
     }
-  }, [props?.clusterData, props?.customSelection, props?.selectedCluster]);
+  }, [
+    props?.customSelection,
+    props?.selectedMarkerAnnotation,
+    annotationObj,
+    props?.selectedCluster,
+  ]);
 
   // hook for figure out this vs other cells for stacked histograms
   useEffect(() => {
@@ -299,7 +337,11 @@ const MarkerPlot = (props) => {
     if (showFilters) defheight = 530;
 
     if (props?.windowWidth < 1200) {
-      defheight += 270
+      defheight += 270;
+    }
+
+    if (appMode === "explore") {
+      defheight += 40;
     }
 
     return `35px calc(100vh - ${defheight}px)`;
@@ -557,76 +599,112 @@ const MarkerPlot = (props) => {
       ) : (
         ""
       )}
-      {
-        <div className="marker-cluster-header">
-          <Label style={{ marginBottom: "0" }}>Select Cluster</Label>
-          <div className="marker-vsmode">
-            <Popover2
-              popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-              hasBackdrop={false}
-              interactionKind="hover"
-              placement="left"
-              hoverOpenDelay={500}
-              modifiers={{
-                arrow: { enabled: true },
-                flip: { enabled: true },
-                preventOverflow: { enabled: true },
-              }}
-              content={
-                <Card
-                  style={{
-                    width: "450px",
-                  }}
-                  elevation={Elevation.ZERO}
-                >
-                  <p>
-                    By default, the <strong>general</strong> mode will rank
-                    markers for a cluster or custom selection based on the
-                    comparison to all other clusters or cells.
-                    <br />
-                    <br />
-                    Users can instead enable <strong>versus</strong> mode to
-                    compare markers between two clusters or between two custom
-                    selections. This is useful for identifying subtle
-                    differences between closely related groups of cells.
-                  </p>
-                </Card>
+      {appMode == "explore" && (
+        <Label style={{ marginBottom: "0" }}>
+          Choose annotation
+          <HTMLSelect
+            defaultValue={props?.selectedMarkerAnnotation}
+            onChange={(nval) => {
+              props?.setSelectedMarkerAnnotation(nval?.currentTarget?.value);
+            }}
+          >
+            <optgroup label="Supplied">
+              {annotationCols
+                .filter((x) => !x.startsWith(code) && x !== "__batch__")
+                .map((x) => (
+                  <option value={x} key={x}>
+                    {x}
+                  </option>
+                ))}
+            </optgroup>
+            <optgroup label="Computed">
+              {annotationCols
+                .filter((x) => x.startsWith(code) || x === "__batch__")
+                .map((x) => (
+                  <option value={x} key={x}>
+                    {x.replace(`${code}::`, "")}
+                  </option>
+                ))}
+            </optgroup>
+          </HTMLSelect>
+        </Label>
+      )}
+      <div className="marker-cluster-header">
+        <Label style={{ marginBottom: "0" }}>Select Cluster</Label>
+        <div className="marker-vsmode">
+          <Popover2
+            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+            hasBackdrop={false}
+            interactionKind="hover"
+            placement="left"
+            hoverOpenDelay={500}
+            modifiers={{
+              arrow: { enabled: true },
+              flip: { enabled: true },
+              preventOverflow: { enabled: true },
+            }}
+            content={
+              <Card
+                style={{
+                  width: "450px",
+                }}
+                elevation={Elevation.ZERO}
+              >
+                <p>
+                  By default, the <strong>general</strong> mode will rank
+                  markers for a cluster or custom selection based on the
+                  comparison to all other clusters or cells.
+                  <br />
+                  <br />
+                  Users can instead enable <strong>versus</strong> mode to
+                  compare markers between two clusters or between two custom
+                  selections. This is useful for identifying subtle differences
+                  between closely related groups of cells.
+                </p>
+              </Card>
+            }
+          >
+            <Icon
+              intent="warning"
+              icon="comparison"
+              style={{ paddingRight: "5px" }}
+            ></Icon>
+          </Popover2>
+          <Switch
+            large={false}
+            checked={vsmode}
+            innerLabelChecked="versus"
+            innerLabel="general"
+            onChange={(e) => {
+              if (e.target.checked === false) {
+                props?.setSelectedVSCluster(null);
               }
-            >
-              <Icon
-                intent="warning"
-                icon="comparison"
-                style={{ paddingRight: "5px" }}
-              ></Icon>
-            </Popover2>
-            <Switch
-              large={false}
-              checked={vsmode}
-              innerLabelChecked="versus"
-              innerLabel="general"
-              onChange={(e) => {
-                if (e.target.checked === false) {
-                  props?.setSelectedVSCluster(null);
-                }
-                setVsmode(e.target.checked);
-              }}
-            />
-          </div>
+              setVsmode(e.target.checked);
+            }}
+          />
         </div>
-      }
+      </div>
       {clusSel ? (
         <div className="marker-cluster-selection">
           <HTMLSelect
             className="marker-cluster-selection-width"
             onChange={(x) => {
               let tmpselection = x.currentTarget?.value;
-              if (tmpselection.startsWith("Cluster")) {
-                tmpselection =
-                  parseInt(tmpselection.replace("Cluster ", "")) - 1;
-              } else if (tmpselection.startsWith("Custom")) {
-                tmpselection = tmpselection.replace("Custom Selection ", "");
+
+              if (appMode === "analysis") {
+                if (tmpselection.startsWith("Cluster")) {
+                  tmpselection =
+                    parseInt(tmpselection.replace("Cluster ", "")) - 1;
+                } else if (tmpselection.startsWith("Custom")) {
+                  tmpselection = tmpselection.replace("Custom Selection ", "");
+                }
+                props?.setSelectedCluster(tmpselection);
+              } else if (appMode === "explore") {
+                if (tmpselection.startsWith("Cluster")) {
+                  tmpselection = tmpselection.replace("Cluster ", "");
+                }
+                props?.setSelectedCluster(tmpselection);
               }
-              props?.setSelectedCluster(tmpselection);
 
               setMarkerFilter({});
               props?.setGene(null);
@@ -913,15 +991,22 @@ const MarkerPlot = (props) => {
                           color:
                             row.gene === props?.gene
                               ? String(props?.selectedCluster).startsWith("cs")
-                                ? props?.clusterColors[
-                                    getMinMax(
-                                      annotationObj[default_cluster]
-                                    )[1] +
-                                      parseInt(
-                                        props?.selectedCluster.replace("cs", "")
-                                      )
-                                  ]
-                                : props?.clusterColors[props?.selectedCluster]
+                                ? props?.clusterColors
+                                  ? props?.clusterColors[
+                                      getMinMax(
+                                        annotationObj[default_cluster]
+                                      )[1] +
+                                        parseInt(
+                                          props?.selectedCluster.replace(
+                                            "cs",
+                                            ""
+                                          )
+                                        )
+                                    ]
+                                  : defaultColor
+                                : props?.clusterColors
+                                ? props?.clusterColors[props?.selectedCluster]
+                                : defaultColor
                               : "black",
                         }}
                         className={
@@ -1207,13 +1292,19 @@ const MarkerPlot = (props) => {
                           data={rowExpr}
                           color={
                             String(props?.selectedCluster).startsWith("cs")
-                              ? props?.clusterColors[
-                                  getMinMax(annotationObj[default_cluster])[1] +
-                                    parseInt(
-                                      props?.selectedCluster.replace("cs", "")
-                                    )
-                                ]
-                              : props?.clusterColors[props?.selectedCluster]
+                              ? props?.clusterColors
+                                ? props?.clusterColors[
+                                    getMinMax(
+                                      annotationObj[default_cluster]
+                                    )[1] +
+                                      parseInt(
+                                        props?.selectedCluster.replace("cs", "")
+                                      )
+                                  ]
+                                : defaultColor
+                              : props?.clusterColors
+                              ? props?.clusterColors[props?.selectedCluster]
+                              : defaultColor
                           }
                           clusterlabel={
                             String(props?.selectedCluster).startsWith("cs")
