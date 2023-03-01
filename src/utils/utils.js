@@ -145,3 +145,5 @@ export const getMinMax = (arr) => {
   });
   return [min, max];
 };
+
+export const defaultColor = "#5F6B7C";

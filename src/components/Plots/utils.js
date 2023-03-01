@@ -178,4 +178,6 @@ const palette = {
   ],
 };
 
-export { getMinMax, saveSVG, palette };
+const defaultColor = "#5F6B7C";
+
+export { getMinMax, saveSVG, palette, defaultColor };

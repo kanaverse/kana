@@ -763,10 +763,10 @@ export function AnalysisMode(props) {
       let t_annots = [...annotationCols];
       if (t_annots.indexOf(default_cluster) == -1) {
         t_annots.push(default_cluster);
+        setAnnotationCols(t_annots);
       }
 
-      setAnnotationCols(t_annots);
-
+      // identify colors for computed clusters
       let cluster_count = getMinMax(resp?.clusters)[1] + 1;
       if (customSelection) {
         cluster_count += Object.keys(customSelection).length;
@@ -782,9 +782,11 @@ export function AnalysisMode(props) {
       }
       setClusterColors(cluster_colors);
 
+      // add clusters to annotations
       let t_annoObj = { ...annotationObj };
       t_annoObj[default_cluster] = resp.clusters;
       setAnnotationObj(t_annoObj);
+
       setShowNClusLoader(false);
     } else if (type === "marker_detection_START") {
       setSelectedCluster(null);

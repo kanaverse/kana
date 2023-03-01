@@ -19,7 +19,7 @@ import { getMinMax } from "./utils";
 
 import Rainbow from "./rainbowvis";
 import { randomColor } from "randomcolor";
-import { palette } from "./utils";
+import { palette, defaultColor } from "./utils";
 
 import "./DimPlot.css";
 import { AppToaster } from "../../AppToaster";
@@ -75,7 +75,9 @@ const DimPlot = (props) => {
   let resizeTimeout, resizeObserver;
 
   const default_cluster = `${code}::CLUSTERS`;
-  const max = getMinMax(annotationObj[default_cluster])[1] + 1;
+  const max = annotationObj[default_cluster]
+    ? getMinMax(annotationObj[default_cluster])[1] + 1
+    : 0;
 
   // if either gene or expression changes, compute gradients and min/max
   useEffect(() => {
@@ -560,10 +562,15 @@ const DimPlot = (props) => {
   const savePoints = () => {
     // generate random color
     let color = randomColor({ luminosity: "dark", count: 1 });
-    let tmpcolor = [...props?.clusterColors];
-    tmpcolor.push(color[0]);
-    props?.setClusterColors(tmpcolor);
-    setPlotColorMappings(tmpcolor);
+    if (props?.clusterColors) {
+      let tmpcolor = [...props?.clusterColors];
+      tmpcolor.push(color[0]);
+      props?.setClusterColors(tmpcolor);
+    }
+
+    let tmpcolors = [...plotColorMappings];
+    tmpcolors.push(color[0]);
+    setPlotColorMappings(tmpcolors);
 
     let cid = Object.keys(props?.customSelection).length;
     let tmpSelection = { ...props?.customSelection };
@@ -946,14 +953,15 @@ const DimPlot = (props) => {
                                     : ""
                                 }
                                 style={{
-                                  color:
-                                    props?.clusterColors[
-                                      getMinMax(
-                                        annotationObj[default_cluster]
-                                      )[1] +
-                                        1 +
-                                        i
-                                    ],
+                                  color: props?.clusterColors
+                                    ? props?.clusterColors[
+                                        getMinMax(
+                                          annotationObj[default_cluster]
+                                        )[1] +
+                                          1 +
+                                          i
+                                      ]
+                                    : defaultColor,
                                 }}
                               >
                                 <div
@@ -996,12 +1004,16 @@ const DimPlot = (props) => {
                                       delete tmpSel[x];
                                       props?.setCustomSelection(tmpSel);
 
-                                      let tmpcolors = [...props?.clusterColors];
-                                      tmpcolors = tmpcolors.slice(
-                                        0,
-                                        tmpcolors.length - 1
-                                      );
-                                      props?.setClusterColors(tmpcolors);
+                                      if (props?.clusterColors) {
+                                        let tmpcolors = [
+                                          ...props?.clusterColors,
+                                        ];
+                                        tmpcolors = tmpcolors.slice(
+                                          0,
+                                          tmpcolors.length - 1
+                                        );
+                                        props?.setClusterColors(tmpcolors);
+                                      }
 
                                       props?.setDelCustomSelection(x);
 
