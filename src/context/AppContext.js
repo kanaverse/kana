@@ -21,6 +21,9 @@ const AppContextProvider = ({ children }) => {
     files: null,
   });
 
+  // sets app mode
+  const [appMode, setAppMode] = useState(null);
+
   // creates a default dataset name
   const [datasetName, setDatasetName] = useState("My Analysis Title");
 
@@ -211,6 +214,8 @@ const AppContextProvider = ({ children }) => {
         setLoadParams,
         exploreFiles,
         setExploreFiles,
+        appMode,
+        setAppMode,
       }}
     >
       {children}

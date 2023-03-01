@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 
 import {
   Alignment,
@@ -21,13 +21,14 @@ import "./App.css";
 import { AnalysisMode } from "./components/AnalysisMode";
 import { ExplorerMode } from "./components/ExploreMode";
 
+import { AppContext } from "./context/AppContext";
+
 function App() {
-  // show app modes
-  const [showMode, setShowMode] = useState(null);
+  const { appMode, setAppMode } = useContext(AppContext);
 
   return (
     <>
-      {showMode === null && (
+      {appMode === null && (
         <div className="App">
           <Navbar className={Classes.DARK}>
             <NavbarGroup align={Alignment.LEFT}>
@@ -77,22 +78,22 @@ function App() {
                   text="Analysis Mode!"
                   icon="function"
                   intent="primary"
-                  onClick={() => setShowMode("analysis")}
+                  onClick={() => setAppMode("analysis")}
                 />
                 <Button
                   large={true}
                   text="Explore Mode!"
                   icon="geosearch"
                   intent="primary"
-                  onClick={() => setShowMode("explore")}
+                  onClick={() => setAppMode("explore")}
                 />
               </ButtonGroup>
             }
           />
         </div>
       )}
-      {showMode === "analysis" && <AnalysisMode />}
-      {showMode === "explore" && <ExplorerMode />}
+      {appMode === "analysis" && <AnalysisMode />}
+      {appMode === "explore" && <ExplorerMode />}
     </>
   );
 }
