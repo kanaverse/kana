@@ -475,17 +475,15 @@ onmessage = function (msg) {
   } else if (type == "computeVersusClusters") {
     loaded
       .then((x) => {
-        let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
+        let rank_type = payload.rank_type;
         let res = superstate.marker_detection.computeVersus(
           payload.left,
-          payload.right,
-          rank_type,
-          payload.modality
+          payload.right
         );
         let resp = bakana.formatMarkerResults(
           res["results"][payload.modality],
           payload.left,
-          payload.rank_type
+          rank_type
         );
 
         var transferrable = [];
@@ -506,17 +504,15 @@ onmessage = function (msg) {
   } else if (type == "computeVersusSelections") {
     loaded
       .then((x) => {
-        let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
+        let rank_type = payload.rank_type;
         let res = superstate.custom_selections.computeVersus(
           payload.left,
-          payload.right,
-          rank_type,
-          payload.modality
+          payload.right
         );
         let resp = bakana.formatMarkerResults(
           res["results"][payload.modality],
           payload.left,
-          payload.rank_type
+          rank_type
         );
 
         var transferrable = [];
@@ -612,12 +608,14 @@ onmessage = function (msg) {
   } else if (type == "getMarkersForSelection") {
     loaded
       .then((x) => {
-        let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
-
         let raw_res = superstate.custom_selections.fetchResults(
           payload.cluster
         )[payload.modality];
-        let resp = bakana.formatMarkerResults(raw_res, 1, rank_type);
+        let resp = bakana.formatMarkerResults(
+          raw_res,
+          payload.cluster,
+          payload.rank_type
+        );
 
         var transferrable = [];
         extractBuffers(resp, transferrable);
