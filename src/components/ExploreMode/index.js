@@ -489,56 +489,20 @@ export function ExplorerMode() {
       setInputData(resp);
 
       if (resp?.annotations) {
-        setAnnotationCols([...resp.annotations, default_cluster]);
+        setAnnotationCols(resp.annotations);
+        setColorByAnnotation(resp.annotations[0]);
       }
 
       let pmods = Object.keys(resp.genes);
       setModality(pmods);
 
       let tmodality = pmods[0];
-
-      // we don't know what the clusters are so everything is a single cluster
-      let tclusters = [];
-      for (let ic = 0; ic < resp.num_cells; ic++) {
-        tclusters.push(0);
-      }
-      let cluster_count = 1;
-      let cluster_colors = null;
-      if (cluster_count > Object.keys(palette).length) {
-        cluster_colors = randomColor({
-          luminosity: "dark",
-          count: cluster_count + 1,
-        });
-      } else {
-        cluster_colors = palette[cluster_count.toString()];
-      }
-      setClusterColors(cluster_colors);
-
-      let t_annoObj = { ...annotationObj };
-      t_annoObj[default_cluster] = tclusters;
-      setAnnotationObj(t_annoObj);
-      setSelectedCluster(0);
-      setShowNClusLoader(false);
-
       if (selectedModality === null) {
         setSelectedModality(tmodality);
       }
 
-      // no markers yet just show a list of genes
-      let records = [];
+      setShowNClusLoader(false);
 
-      let tmpFeatCol = Object.keys(resp.num_genes[tmodality])[0];
-      let index = Array(resp.num_genes[tmodality]);
-      resp.genes[tmodality].forEach((x, i) => {
-        index[i] = i;
-        records.push({
-          gene: i,
-          expanded: false,
-          expr: null,
-        });
-      });
-      setSelectedClusterIndex(index);
-      setSelectedClusterSummary(records);
       setShowMarkerLoader(false);
     } else if (type === "marker_detection_START") {
       setSelectedCluster(null);
@@ -873,7 +837,7 @@ export function ExplorerMode() {
                         : "results-dims"
                     }
                   >
-                    {redDimsData && annotationObj[default_cluster] && (
+                    {redDimsData && (
                       <DimPlot
                         className={"effect-opacitygrayscale"}
                         redDimsData={redDimsData}
@@ -887,8 +851,6 @@ export function ExplorerMode() {
                         setSelectedClusterSummary={setSelectedClusterSummary}
                         selectedClusterIndex={selectedClusterIndex}
                         selectedCluster={selectedCluster}
-                        clusterColors={clusterColors}
-                        setClusterColors={setClusterColors}
                         savedPlot={savedPlot}
                         setSavedPlot={setSavedPlot}
                         customSelection={customSelection}
@@ -919,30 +881,29 @@ export function ExplorerMode() {
                         : "results-markers"
                     }
                   >
-                    {annotationObj[default_cluster] &&
-                      selectedClusterSummary && (
-                        <MarkerPlot
-                          selectedClusterSummary={selectedClusterSummary}
-                          setSelectedClusterSummary={setSelectedClusterSummary}
-                          selectedClusterIndex={selectedClusterIndex}
-                          selectedCluster={selectedCluster}
-                          setSelectedCluster={setSelectedCluster}
-                          selectedVSCluster={selectedVSCluster}
-                          setSelectedVSCluster={setSelectedVSCluster}
-                          setClusterRank={setClusterRank}
-                          customSelection={customSelection}
-                          setGene={setGene}
-                          gene={gene}
-                          setReqGene={setReqGene}
-                          clusterColors={clusterColors}
-                          modality={modality}
-                          selectedModality={selectedModality}
-                          setSelectedModality={setSelectedModality}
-                          setMarkersWidth={setMarkersWidth}
-                          markersWidth={markersWidth}
-                          windowWidth={windowWidth}
-                        />
-                      )}
+                    {annotationCols.length > 0 && selectedClusterSummary && (
+                      <MarkerPlot
+                        selectedClusterSummary={selectedClusterSummary}
+                        setSelectedClusterSummary={setSelectedClusterSummary}
+                        selectedClusterIndex={selectedClusterIndex}
+                        selectedCluster={selectedCluster}
+                        setSelectedCluster={setSelectedCluster}
+                        selectedVSCluster={selectedVSCluster}
+                        setSelectedVSCluster={setSelectedVSCluster}
+                        setClusterRank={setClusterRank}
+                        customSelection={customSelection}
+                        setGene={setGene}
+                        gene={gene}
+                        setReqGene={setReqGene}
+                        modality={modality}
+                        selectedModality={selectedModality}
+                        setSelectedModality={setSelectedModality}
+                        setMarkersWidth={setMarkersWidth}
+                        markersWidth={markersWidth}
+                        windowWidth={windowWidth}
+                        setReqAnnotation={setReqAnnotation}
+                      />
+                    )}
                   </div>
                 </SplitPane>
                 <div className="results-gallery" style={getGalleryStyles()}>
