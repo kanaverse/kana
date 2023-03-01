@@ -46,7 +46,7 @@ const DimPlot = (props) => {
   // first render ?
   const [renderCount, setRenderCount] = useState(true);
 
-  const { genesInfo, geneColSel, annotationCols, annotationObj } =
+  const { genesInfo, geneColSel, annotationCols, annotationObj, appMode } =
     useContext(AppContext);
 
   // set mode for plot
@@ -701,30 +701,32 @@ const DimPlot = (props) => {
         </Button> */}
       </ButtonGroup>
       <div className="dimplot-top-header">
-        <ControlGroup
-          fill={false}
-          vertical={false}
-          style={{
-            marginRight: "4px",
-          }}
-        >
-          <Tooltip2 content="Interactively visualize embeddings from each step">
-            <Button
-              icon="play"
-              onClick={() => {
-                props?.setShowAnimation(true);
-                props?.setTriggerAnimation(true);
-              }}
-            >
-              Animate
-            </Button>
-          </Tooltip2>
-          <Tooltip2 content="Save this embedding">
-            <Button icon="inheritance" onClick={handleSaveEmbedding}>
-              Save
-            </Button>
-          </Tooltip2>
-        </ControlGroup>
+        {appMode == "analysis" && (
+          <ControlGroup
+            fill={false}
+            vertical={false}
+            style={{
+              marginRight: "4px",
+            }}
+          >
+            <Tooltip2 content="Interactively visualize embeddings from each step">
+              <Button
+                icon="play"
+                onClick={() => {
+                  props?.setShowAnimation(true);
+                  props?.setTriggerAnimation(true);
+                }}
+              >
+                Animate
+              </Button>
+            </Tooltip2>
+            <Tooltip2 content="Save this embedding">
+              <Button icon="inheritance" onClick={handleSaveEmbedding}>
+                Save
+              </Button>
+            </Tooltip2>
+          </ControlGroup>
+        )}
         <ControlGroup fill={false} vertical={false}>
           <Tooltip2 content="Pan to move the plot">
             <Button
