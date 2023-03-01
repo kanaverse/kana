@@ -410,7 +410,7 @@ export function ExplorerMode() {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    console.log("ON MAIN::RCV::", payload);
+    console.log("ON EXPLORE MAIN::RCV::", payload);
 
     // process any error messages
     if (payload) {
@@ -471,6 +471,9 @@ export function ExplorerMode() {
       }
     } else if (type === "inputs_DATA") {
       var info = [];
+      if ("default" in resp.num_genes) {
+        info.push(`${resp.num_genes.default} features`);
+      }
       if ("RNA" in resp.num_genes) {
         info.push(`${resp.num_genes.RNA} genes`);
       }
@@ -486,163 +489,20 @@ export function ExplorerMode() {
       setInputData(resp);
 
       if (resp?.annotations) {
-        setAnnotationCols(resp.annotations);
+        setAnnotationCols([...resp.annotations, default_cluster]);
       }
 
       let pmods = Object.keys(resp.genes);
       setModality(pmods);
 
-      if (selectedModality === null) {
-        setSelectedModality(pmods[0]);
+      let tmodality = pmods[0];
+
+      // we don't know what the clusters are so everything is a single cluster
+      let tclusters = [];
+      for (let ic = 0; ic < resp.num_cells; ic++) {
+        tclusters.push(0);
       }
-    } else if (type === "rna_quality_control_DATA") {
-      if (!resp) {
-        setQcData(null);
-        setShowQCLoader(false);
-      } else {
-        var ranges = {},
-          data = resp["data"],
-          all = {};
-
-        let t_annots = [...annotationCols];
-
-        for (const [group, gvals] of Object.entries(data)) {
-          for (const [key, val] of Object.entries(gvals)) {
-            if (!all[key]) all[key] = [Infinity, -Infinity];
-            let [min, max] = getMinMax(val);
-            if (min < all[key][0]) all[key][0] = min;
-            if (max > all[key][1]) all[key][1] = max;
-
-            if (t_annots.indexOf(`${code}::QC::RNA_${key}`) == -1) {
-              t_annots.push(`${code}::QC::RNA_${key}`);
-            }
-          }
-          ranges[group] = all;
-        }
-
-        setAnnotationCols(t_annots);
-
-        resp["ranges"] = ranges;
-        setQcData(resp);
-        setShowQCLoader(false);
-      }
-    } else if (type === "adt_quality_control_DATA") {
-      if (resp) {
-        var ranges = {},
-          data = resp["data"],
-          all = {};
-
-        let t_annots = [...annotationCols];
-
-        for (const [group, gvals] of Object.entries(data)) {
-          for (const [key, val] of Object.entries(gvals)) {
-            if (!all[key]) all[key] = [Infinity, -Infinity];
-            let [min, max] = getMinMax(val);
-            if (min < all[key][0]) all[key][0] = min;
-            if (max > all[key][1]) all[key][1] = max;
-
-            if (t_annots.indexOf(`${code}::QC::ADT_${key}`) == -1) {
-              t_annots.push(`${code}::QC::ADT_${key}`);
-            }
-          }
-          ranges[group] = all;
-        }
-
-        setAnnotationCols(t_annots);
-
-        resp["ranges"] = ranges;
-
-        let prevQC = { ...qcData };
-        for (const key in data) {
-          prevQC["data"][`adt_${key}`] = data[key];
-          let tval = resp["thresholds"][key];
-          if (key === "sums") {
-            tval = null;
-          }
-          prevQC["thresholds"][`adt_${key}`] = tval;
-          prevQC["ranges"][`adt_${key}`] = ranges[key];
-        }
-
-        setQcData(prevQC);
-      }
-      setShowQCLoader(false);
-    } else if (type === "crispr_quality_control_DATA") {
-      if (resp) {
-        var ranges = {},
-          data = resp["data"],
-          all = {};
-
-        let t_annots = [...annotationCols];
-
-        for (const [group, gvals] of Object.entries(data)) {
-          for (const [key, val] of Object.entries(gvals)) {
-            if (!all[key]) all[key] = [Infinity, -Infinity];
-            let [min, max] = getMinMax(val);
-            if (min < all[key][0]) all[key][0] = min;
-            if (max > all[key][1]) all[key][1] = max;
-
-            if (t_annots.indexOf(`${code}::QC::CRISPR${key}`) == -1) {
-              t_annots.push(`${code}::QC::CRISPR_${key}`);
-            }
-          }
-          ranges[group] = all;
-        }
-
-        setAnnotationCols(t_annots);
-
-        resp["ranges"] = ranges;
-
-        let prevQC = { ...qcData };
-        for (const key in data) {
-          prevQC["data"][`crispr_${key}`] = data[key];
-          let tval = resp["thresholds"][key];
-          if (key === "sums") {
-            tval = null;
-          }
-          prevQC["thresholds"][`crispr_${key}`] = tval;
-          prevQC["ranges"][`crispr_${key}`] = ranges[key];
-        }
-
-        setQcData(prevQC);
-      }
-      setShowQCLoader(false);
-    } else if (type === "cell_filtering_DATA") {
-      setQcDims(`${resp.retained}`);
-      setCellSubsetData(resp.subset);
-
-      for (let key in annotationObj) {
-        if (
-          key.startsWith(code) &&
-          (key.indexOf("RNA") != -1 || key.indexOf("ADT") != -1)
-        ) {
-          annotationObj[key]["values"] = annotationObj[key]["values"].filter(
-            (_, i) => payload.resp.subset[i] == 0
-          );
-        }
-      }
-    } else if (type === "feature_selection_DATA") {
-      setFSelectionData(resp);
-    } else if (type === "rna_pca_DATA") {
-      setPcaVarExp({ ...pcaVarExp, RNA: resp["var_exp"] });
-      setShowPCALoader(false);
-    } else if (type === "adt_pca_DATA") {
-      setPcaVarExp({ ...pcaVarExp, ADT: resp["var_exp"] });
-      setShowPCALoader(false);
-    } else if (type === "crispr_pca_DATA") {
-      setPcaVarExp({ ...pcaVarExp, CRISPR: resp["var_exp"] });
-      setShowPCALoader(false);
-    } else if (type === "choose_clustering_DATA") {
-      let t_annots = [...annotationCols];
-      if (t_annots.indexOf(default_cluster) == -1) {
-        t_annots.push(default_cluster);
-      }
-
-      setAnnotationCols(t_annots);
-
-      let cluster_count = getMinMax(resp?.clusters)[1] + 1;
-      if (customSelection) {
-        cluster_count += Object.keys(customSelection).length;
-      }
+      let cluster_count = 1;
       let cluster_colors = null;
       if (cluster_count > Object.keys(palette).length) {
         cluster_colors = randomColor({
@@ -655,9 +515,31 @@ export function ExplorerMode() {
       setClusterColors(cluster_colors);
 
       let t_annoObj = { ...annotationObj };
-      t_annoObj[default_cluster] = resp.clusters;
+      t_annoObj[default_cluster] = tclusters;
       setAnnotationObj(t_annoObj);
+      setSelectedCluster(0);
       setShowNClusLoader(false);
+
+      if (selectedModality === null) {
+        setSelectedModality(tmodality);
+      }
+
+      // no markers yet just show a list of genes
+      let records = [];
+
+      let tmpFeatCol = Object.keys(resp.num_genes[tmodality])[0];
+      let index = Array(resp.num_genes[tmodality]);
+      resp.genes[tmodality].forEach((x, i) => {
+        index[i] = i;
+        records.push({
+          gene: i,
+          expanded: false,
+          expr: null,
+        });
+      });
+      setSelectedClusterIndex(index);
+      setSelectedClusterSummary(records);
+      setShowMarkerLoader(false);
     } else if (type === "marker_detection_START") {
       setSelectedCluster(null);
       setSelectedClusterIndex([]);
@@ -670,38 +552,18 @@ export function ExplorerMode() {
         }
         setSelectedCluster(0);
       }
-    } else if (type === "tsne_DATA") {
-      // once t-SNE is available, set this as the default display
+    } else if (type === "embedding_DATA") {
       if (selectedRedDim === null) {
-        setSelectedRedDim("TSNE");
+        setSelectedRedDim(Object.keys(resp)[0]);
       }
 
-      let tmpDims = { ...redDimsData };
-      tmpDims["TSNE"] = resp;
-      setRedDimsData(tmpDims);
+      setRedDimsData(resp);
 
       // hide game and all loaders
       // setShowGame(false);
       setShowAnimation(false);
       setTriggerAnimation(false);
       setShowDimPlotLoader(false);
-    } else if (type === "umap_DATA") {
-      // once UMAP is available, set this as the default display
-      if (selectedRedDim === null) {
-        setSelectedRedDim("UMAP");
-      }
-
-      let tmpDims = { ...redDimsData };
-      tmpDims["UMAP"] = resp;
-      setRedDimsData(tmpDims);
-
-      // hide game and all loaders
-      // setShowGame(false);
-      setShowAnimation(false);
-      setTriggerAnimation(false);
-      setShowDimPlotLoader(false);
-    } else if (payload.type === "tsne_iter" || payload.type === "umap_iter") {
-      setAnimateData(payload);
     } else if (
       type === "setMarkersForCluster" ||
       type === "setMarkersForCustomSelection" ||
@@ -738,22 +600,11 @@ export function ExplorerMode() {
       setAnnotationObj(tmp);
 
       setReqAnnotation(null);
-    } else if (type === "cell_labelling_DATA") {
-      setCellLabelData(resp);
-      setShowCellLabelLoader(false);
     } else if (payload.type === "custom_selections_DATA") {
-    } else if (payload.type === "tsne_CACHE" || payload.type === "umap_CACHE") {
-      setShowDimPlotLoader(false);
     } else if (payload.type === "marker_detection_CACHE") {
       setShowMarkerLoader(false);
-    } else if (payload.type === "quality_control_CACHE") {
-      setShowQCLoader(false);
-    } else if (payload.type === "pca_CACHE") {
-      setShowPCALoader(false);
     } else if (payload.type === "choose_clustering_CACHE") {
       setShowNClusLoader(false);
-    } else if (payload.type === "cell_labelling_CACHE") {
-      setShowCellLabelLoader(false);
     }
   };
 

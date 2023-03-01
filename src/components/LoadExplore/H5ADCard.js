@@ -26,6 +26,7 @@ import {
   FormGroup,
   InputGroup,
   EditableText,
+  Switch,
 } from "@blueprintjs/core";
 
 import "./index.css";
@@ -69,17 +70,16 @@ export function H5ADCard({
   // when options change
   useEffect(() => {
     if (options != {}) {
-      let tmpInputOpts = { ...inputOpts };
-      tmpInputOpts[index] = options;
+      let tmpInputOpts = { ...inputOpts, ...options };
       setInputOpts(tmpInputOpts);
     }
   }, [options]);
 
-  // const handleRemove = () => {
-  //   let tmpInputs = {...inputs};
-  //   tmpInputs.splice(index, 1);
-  //   setInputs(tmpInputs);
-  // };
+  const handleRemove = () => {
+    let tmpInputs = [...inputs];
+    tmpInputs.splice(index, 1);
+    setInputs(tmpInputs);
+  };
 
   return (
     <Callout className="section-input-item">
@@ -98,7 +98,7 @@ export function H5ADCard({
               setCollapse(!collapse);
             }}
           />
-          {/* <Button icon="cross" minimal={true} onClick={handleRemove} /> */}
+          <Button icon="cross" minimal={true} onClick={handleRemove} />
         </ButtonGroup>
       </div>
       <Divider />
@@ -116,6 +116,36 @@ export function H5ADCard({
         <Collapse isOpen={collapse}>
           {dsMeta && (
             <div>
+              <Label className="row-input">
+                <Text>
+                  <span>Primary Assay</span>
+                </Text>
+                <HTMLSelect
+                  defaultValue={dsMeta.all_assay_names[0]}
+                  onChange={(e) => {
+                    let tmpOptions = { ...options };
+                    tmpOptions["primaryMatrixName"] = e.target.value;
+                    setOptions(tmpOptions);
+                  }}
+                >
+                  {dsMeta.all_assay_names.map((x, i) => (
+                    <option key={i} value={x}>
+                      {x}
+                    </option>
+                  ))}
+                </HTMLSelect>
+              </Label>
+              <Label className="row-input">
+                <Switch
+                  checked={options["isPrimaryNormalized"]}
+                  label="Is Primary Assay Normalized?"
+                  onChange={(e) => {
+                    let tmpOptions = { ...options };
+                    tmpOptions["isPrimaryNormalized"] = e.target.checked;
+                    setOptions(tmpOptions);
+                  }}
+                />
+              </Label>
               <Label className="row-input">
                 <Text>
                   <span>Feature type column name</span>

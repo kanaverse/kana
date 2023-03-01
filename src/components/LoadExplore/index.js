@@ -57,17 +57,20 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
   // what tab was selected to identify format
   const [tabSelected, setTabSelected] = useState("H5AD");
 
+  // contains the full list of inputs
+  const [exploreInputs, setExploreInputs] = useState([]);
+
   // is eveyrthing good?
   const [tmpStatusValid, setTmpStatusValid] = useState(true);
 
   // contains the tmp list of inputs so we can discard if needed
   const [tmpLoadInputs, setTmpLoadInputs] = useState({
-    name: `load-dataset-1`,
+    name: `explore-dataset-1`,
     format: tabSelected,
   });
 
   // final inputs for confirmation with options
-  const [inputOptions, setInputOptions] = useState({});
+  const [inputOptions, setInputOptions] = useState([]);
 
   const handleExplore = () => {
     let mapFiles = {};
@@ -101,15 +104,27 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
       setTmpStatusValid(all_valid);
 
       if (all_valid) {
+        // currently only allow a single dataset
         tmpLoadInputs["uid"] = generateUID(tmpLoadInputs);
-        let mapFiles = {};
-        mapFiles[tmpLoadInputs.name] = tmpLoadInputs;
 
-        let fInputFiles = { files: mapFiles };
-        setPreInputFiles(fInputFiles);
+        setExploreInputs([tmpLoadInputs]);
       }
     }
   }, [tmpLoadInputs]);
+
+  // send a preflight req out everytime a new dataset is added
+  useEffect(() => {
+    if (Array.isArray(exploreInputs) && exploreInputs.length > 0) {
+      let mapFiles = {};
+      for (const f of exploreInputs) {
+        mapFiles[f.name] = f;
+      }
+
+      setPreInputFiles({
+        files: mapFiles,
+      });
+    }
+  }, [exploreInputs]);
 
   const render_inputs = () => {
     return (
@@ -246,7 +261,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
             </Collapse>
           </div>
           <div className="section-inputs">
-            {[tmpLoadInputs].map((x, i) => {
+            {exploreInputs.map((x, i) => {
               if (x.format == "H5AD" && x.h5 !== null && x.h5 !== undefined) {
                 return (
                   <H5ADCard
@@ -258,8 +273,8 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                     }
                     inputOpts={inputOptions}
                     setInputOpts={setInputOptions}
-                    inputs={tmpLoadInputs}
-                    setInputs={setTmpLoadInputs}
+                    inputs={exploreInputs}
+                    setInputs={setExploreInputs}
                   />
                 );
               } else if (
@@ -277,8 +292,8 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                     }
                     inputOpts={inputOptions}
                     setInputOpts={setInputOptions}
-                    inputs={tmpLoadInputs}
-                    setInputs={setTmpLoadInputs}
+                    inputs={exploreInputs}
+                    setInputs={setExploreInputs}
                   />
                 );
               }
