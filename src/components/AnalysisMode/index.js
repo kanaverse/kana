@@ -199,6 +199,10 @@ export function AnalysisMode(props) {
   // which cluster is selected
   const [selectedCluster, setSelectedCluster] = useState(null);
 
+  // which cluster is selected from markers table
+  const [selectedMarkerAnnotation, setSelectedMarkerAnnotation] =
+    useState(null);
+
   // which dimension is selected
   const [selectedRedDim, setSelectedRedDim] = useState(null);
 
@@ -787,6 +791,7 @@ export function AnalysisMode(props) {
       t_annoObj[default_cluster] = resp.clusters;
       setAnnotationObj(t_annoObj);
 
+      setSelectedMarkerAnnotation(default_cluster);
       setShowNClusLoader(false);
     } else if (type === "marker_detection_START") {
       setSelectedCluster(null);
@@ -1375,7 +1380,8 @@ export function AnalysisMode(props) {
                         : "results-markers"
                     }
                   >
-                    {annotationObj[default_cluster] &&
+                    {selectedMarkerAnnotation &&
+                      annotationObj[default_cluster] &&
                       selectedClusterSummary && (
                         <MarkerPlot
                           selectedClusterSummary={selectedClusterSummary}
@@ -1397,6 +1403,11 @@ export function AnalysisMode(props) {
                           setMarkersWidth={setMarkersWidth}
                           markersWidth={markersWidth}
                           windowWidth={windowWidth}
+                          setReqAnnotation={setReqAnnotation}
+                          selectedMarkerAnnotation={selectedMarkerAnnotation}
+                          setSelectedMarkerAnnotation={
+                            setSelectedMarkerAnnotation
+                          }
                         />
                       )}
                   </div>

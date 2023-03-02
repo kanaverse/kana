@@ -8,6 +8,7 @@ import {
   fetchStepSummary,
 } from "./helpers.js";
 import { code } from "../utils/utils.js";
+import { getMarkersForCluster } from "./markerUtils.js";
 /***************************************/
 
 let superstate = null;
@@ -321,50 +322,15 @@ onmessage = function (msg) {
         let modality = payload.modality;
         let annotation = payload.annotation;
 
+        let annotation_vec = dataset.cells.column(annotation);
+
         // are these already computed?
-        let raw_res = null;
-        if (
-          cluster_markers[annotation] !== null ||
-          cluster_markers[annotation] !== undefined
-        ) {
-          cluster_markers[annotation] = {};
-        } else {
-          if (
-            cluster_markers[annotation][cluster] !== null &&
-            cluster_markers[annotation][cluster] !== undefined
-          ) {
-            raw_res = cluster_markers[annotation][cluster];
-          }
-        }
-
-        if (raw_res == null) {
-          // figure out cluster indices
-          let vec = dataset.cells.column(annotation);
-
-          let uniq_vals = [];
-          let uniq_map = {};
-          // scran.free(cluster_indices);
-          cluster_indices = new Int32Array(vec.length);
-          vec.forEach((x, i) => {
-            if (!(x in uniq_map)) {
-              uniq_map[x] = uniq_vals.length;
-              uniq_vals.push(x);
-            }
-            cluster_indices[i] = uniq_map[x];
-          });
-
-          cluster_markers[annotation][cluster] = scran.scoreMarkers(
-            dataset.matrix.get(modality),
-            cluster_indices
-          );
-
-          cluster_uniq_map[annotation] = uniq_map;
-          raw_res = cluster_markers[annotation][cluster];
-        }
-        let resp = bakana.formatMarkerResults(
-          raw_res,
-          cluster_uniq_map[annotation][cluster],
-          rank_type
+        let resp = getMarkersForCluster(
+          dataset.matrix.get(modality),
+          cluster,
+          rank_type,
+          modality,
+          annotation_vec
         );
 
         var transferrable = [];

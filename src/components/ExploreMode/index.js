@@ -513,8 +513,16 @@ export function ExplorerMode() {
         setSelectedModality(tmodality);
       }
 
+      setSelectedMarkerAnnotation(resp.annotations[0]);
+      setReqAnnotation(resp.annotations[0]);
+      setSelectedCluster(resp.annotations[0]);
+
       setShowNClusLoader(false);
       setShowMarkerLoader(false);
+    } else if (type === "choose_clustering_DATA") {
+      setSelectedMarkerAnnotation(annotationCols[0]);
+      setReqAnnotation(annotationCols[0]);
+      setSelectedCluster(annotationCols[0]);
     } else if (type === "marker_detection_START") {
       setSelectedCluster(null);
       setSelectedClusterIndex([]);

@@ -482,7 +482,7 @@ onmessage = function (msg) {
         );
         let resp = bakana.formatMarkerResults(
           res["results"][payload.modality],
-          payload.left,
+          1,
           rank_type
         );
 

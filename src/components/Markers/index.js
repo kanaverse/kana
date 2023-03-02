@@ -30,7 +30,6 @@ import HeatmapCell from "../Plots/HeatmapCell";
 import { code, getMinMax, defaultColor } from "../../utils/utils";
 // import Histogram from '../Plots/Histogram';
 import "./markers.css";
-import { group } from "d3";
 
 const MarkerPlot = (props) => {
   const {
@@ -79,16 +78,6 @@ const MarkerPlot = (props) => {
   // .domain([0, 1])
   // .range(["red", "blue"])
   // .interpolate(d3.interpolateHcl);
-
-  useEffect(() => {
-    if (appMode === "explore") {
-      props?.setSelectedMarkerAnnotation(annotationCols[0]);
-      props?.setReqAnnotation(annotationCols[0]);
-      props?.setSelectedCluster(annotationCols[0]);
-    } else if (appMode === "analysis") {
-      props?.setSelectedMarkerAnnotation(default_cluster);
-    }
-  }, []);
 
   // if a cluster changes, its summary data is requested from the worker
   // pre-process results for UI
@@ -208,19 +197,7 @@ const MarkerPlot = (props) => {
 
   // update clusters when custom selection is made in the UI
   useEffect(() => {
-    if (appMode === "explore") {
-      if (!(props?.selectedMarkerAnnotation in annotationObj)) {
-        props?.setReqAnnotation(props?.selectedMarkerAnnotation);
-      } else {
-        let tmp = annotationObj[props?.selectedMarkerAnnotation];
-        if (tmp.type === "array") {
-          const uniqueTmp = [...new Set(tmp.values)];
-          setClusSel(uniqueTmp);
-        } else if (tmp.type === "factor") {
-          setClusSel(tmp.levels);
-        }
-      }
-    } else if (appMode === "analysis") {
+    if (default_cluster === props?.selectedMarkerAnnotation) {
       if (annotationObj[props?.selectedMarkerAnnotation]) {
         let max_clusters = getMinMax(
           annotationObj[props?.selectedMarkerAnnotation]
@@ -248,6 +225,20 @@ const MarkerPlot = (props) => {
         String(props?.selectedVSCluster).startsWith("cs")
       ) {
         props?.setSelectedVSCluster(null);
+      }
+
+      return;
+    } else {
+      if (!(props?.selectedMarkerAnnotation in annotationObj)) {
+        props?.setReqAnnotation(props?.selectedMarkerAnnotation);
+      } else {
+        let tmp = annotationObj[props?.selectedMarkerAnnotation];
+        if (tmp.type === "array") {
+          const uniqueTmp = [...new Set(tmp.values)];
+          setClusSel(uniqueTmp);
+        } else if (tmp.type === "factor") {
+          setClusSel(tmp.levels);
+        }
       }
     }
   }, [
@@ -333,15 +324,11 @@ const MarkerPlot = (props) => {
   };
 
   const getTableHeight = () => {
-    let defheight = 293;
+    let defheight = 333;
     if (showFilters) defheight = 530;
 
     if (props?.windowWidth < 1200) {
       defheight += 270;
-    }
-
-    if (appMode === "explore") {
-      defheight += 40;
     }
 
     return `35px calc(100vh - ${defheight}px)`;
@@ -599,38 +586,47 @@ const MarkerPlot = (props) => {
       ) : (
         ""
       )}
-      {appMode == "explore" && (
-        <Label style={{ marginBottom: "0" }}>
-          Choose annotation
-          <HTMLSelect
-            defaultValue={props?.selectedMarkerAnnotation}
-            onChange={(nval) => {
-              props?.setSelectedMarkerAnnotation(nval?.currentTarget?.value);
-            }}
-          >
-            <optgroup label="Supplied">
-              {annotationCols
-                .filter((x) => !x.startsWith(code) && x !== "__batch__")
-                .map((x) => (
-                  <option value={x} key={x}>
-                    {x}
-                  </option>
-                ))}
-            </optgroup>
-            <optgroup label="Computed">
-              {annotationCols
-                .filter((x) => x.startsWith(code) || x === "__batch__")
-                .map((x) => (
-                  <option value={x} key={x}>
-                    {x.replace(`${code}::`, "")}
-                  </option>
-                ))}
-            </optgroup>
-          </HTMLSelect>
+      <Label style={{ marginBottom: "0" }}>
+        Choose annotation
+        <HTMLSelect
+          defaultValue={props?.selectedMarkerAnnotation}
+          onChange={(nval) => {
+            props?.setSelectedMarkerAnnotation(nval?.currentTarget?.value);
+          }}
+        >
+          <optgroup label="Supplied">
+            {annotationCols
+              .filter((x) => !x.startsWith(code) && x !== "__batch__")
+              .map((x) => (
+                <option value={x} key={x}>
+                  {x}
+                </option>
+              ))}
+          </optgroup>
+          <optgroup label="Computed">
+            {annotationCols
+              .filter((x) => x.startsWith(code) || x === "__batch__")
+              .map((x) => (
+                <option value={x} key={x}>
+                  {x.replace(`${code}::`, "")}
+                </option>
+              ))}
+          </optgroup>
+        </HTMLSelect>
+      </Label>
+      <div
+        className="marker-cluster-header"
+        style={{
+          marginTop: "5px",
+        }}
+      >
+        <Label
+          style={{
+            marginBottom: "0",
+          }}
+        >
+          Select Cluster
         </Label>
-      )}
-      <div className="marker-cluster-header">
-        <Label style={{ marginBottom: "0" }}>Select Cluster</Label>
         <div className="marker-vsmode">
           <Popover2
             popoverClassName={Classes.POPOVER_CONTENT_SIZING}
@@ -684,46 +680,50 @@ const MarkerPlot = (props) => {
           />
         </div>
       </div>
-      {clusSel ? (
+      {clusSel && (
         <div className="marker-cluster-selection">
           <HTMLSelect
             className="marker-cluster-selection-width"
             onChange={(x) => {
               let tmpselection = x.currentTarget?.value;
 
-              if (appMode === "analysis") {
+              if (default_cluster === props?.selectedMarkerAnnotation) {
                 if (tmpselection.startsWith("Cluster")) {
                   tmpselection =
                     parseInt(tmpselection.replace("Cluster ", "")) - 1;
                 } else if (tmpselection.startsWith("Custom")) {
                   tmpselection = tmpselection.replace("Custom Selection ", "");
                 }
-                props?.setSelectedCluster(tmpselection);
-              } else if (appMode === "explore") {
-                if (tmpselection.startsWith("Cluster")) {
-                  tmpselection = tmpselection.replace("Cluster ", "");
-                }
-                props?.setSelectedCluster(tmpselection);
               }
+
+              props?.setSelectedCluster(tmpselection);
 
               setMarkerFilter({});
               props?.setGene(null);
               props?.setSelectedVSCluster(null);
             }}
           >
-            {clusSel.map((x, i) => (
-              <option
-                selected={
-                  String(props?.selectedCluster).startsWith("cs")
-                    ? x == props?.selectedCluster
-                    : parseInt(x) - 1 == parseInt(props?.selectedCluster)
-                }
-                key={i}
-              >
-                {String(x).startsWith("cs") ? "Custom Selection" : "Cluster"}{" "}
-                {x}
-              </option>
-            ))}
+            {default_cluster === props?.selectedMarkerAnnotation
+              ? clusSel.map((x, i) => (
+                  <option
+                    selected={
+                      String(props?.selectedCluster).startsWith("cs")
+                        ? x == props?.selectedCluster
+                        : parseInt(x) - 1 == parseInt(props?.selectedCluster)
+                    }
+                    key={i}
+                  >
+                    {String(x).startsWith("cs")
+                      ? "Custom Selection"
+                      : "Cluster"}{" "}
+                    {x}
+                  </option>
+                ))
+              : clusSel.map((x, i) => (
+                  <option selected={x == props?.selectedCluster} key={i}>
+                    {x}
+                  </option>
+                ))}
           </HTMLSelect>
           {vsmode && (
             <>
@@ -746,14 +746,16 @@ const MarkerPlot = (props) => {
                 className="marker-cluster-selection-width"
                 onChange={(x) => {
                   let tmpselection = x.currentTarget?.value;
-                  if (tmpselection.startsWith("Cluster")) {
-                    tmpselection =
-                      parseInt(tmpselection.replace("Cluster ", "")) - 1;
-                  } else if (tmpselection.startsWith("Custom")) {
-                    tmpselection = tmpselection.replace(
-                      "Custom Selection ",
-                      ""
-                    );
+                  if (default_cluster === props?.selectedMarkerAnnotation) {
+                    if (tmpselection.startsWith("Cluster")) {
+                      tmpselection =
+                        parseInt(tmpselection.replace("Cluster ", "")) - 1;
+                    } else if (tmpselection.startsWith("Custom")) {
+                      tmpselection = tmpselection.replace(
+                        "Custom Selection ",
+                        ""
+                      );
+                    }
                   }
                   props?.setSelectedVSCluster(tmpselection);
 
@@ -764,37 +766,43 @@ const MarkerPlot = (props) => {
                 {props?.selectedVSCluster == null && (
                   <option selected={true}>Choose a Cluster</option>
                 )}
-                {clusSel
-                  .filter((x, i) =>
-                    String(props?.selectedCluster).startsWith("cs")
-                      ? String(x).startsWith("cs") &&
-                        String(x) !== String(props?.selectedCluster)
-                      : !String(x).startsWith("cs") &&
-                        parseInt(x) - 1 !== parseInt(props?.selectedCluster)
-                  )
-                  // .filter((x,i) => String(props?.selectedCluster) == String(x) )
-                  .map((x, i) => (
-                    <option
-                      selected={
-                        String(props?.selectedVSCluster).startsWith("cs")
-                          ? x == props?.selectedVSCluster
-                          : parseInt(x) - 1 ==
-                            parseInt(props?.selectedVSCluster)
-                      }
-                      key={i}
-                    >
-                      {String(x).startsWith("cs")
-                        ? "Custom Selection"
-                        : "Cluster"}{" "}
-                      {x}
-                    </option>
-                  ))}
+                {default_cluster === props?.selectedMarkerAnnotation
+                  ? clusSel
+                      .filter((x, i) =>
+                        String(props?.selectedCluster).startsWith("cs")
+                          ? String(x).startsWith("cs") &&
+                            String(x) !== String(props?.selectedCluster)
+                          : !String(x).startsWith("cs") &&
+                            parseInt(x) - 1 !== parseInt(props?.selectedCluster)
+                      )
+                      // .filter((x,i) => String(props?.selectedCluster) == String(x) )
+                      .map((x, i) => (
+                        <option
+                          selected={
+                            String(props?.selectedVSCluster).startsWith("cs")
+                              ? x == props?.selectedVSCluster
+                              : parseInt(x) - 1 ==
+                                parseInt(props?.selectedVSCluster)
+                          }
+                          key={i}
+                        >
+                          {String(x).startsWith("cs")
+                            ? "Custom Selection"
+                            : "Cluster"}{" "}
+                          {x}
+                        </option>
+                      ))
+                  : clusSel
+                      .filter((x, i) => x != props?.selectedCluster)
+                      .map((x, i) => (
+                        <option selected={x == props?.selectedCluster} key={i}>
+                          {x}
+                        </option>
+                      ))}
               </HTMLSelect>
             </>
           )}
         </div>
-      ) : (
-        ""
       )}
       <Divider />
       {props?.selectedClusterSummary &&
