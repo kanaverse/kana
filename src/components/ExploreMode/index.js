@@ -315,7 +315,6 @@ export function ExplorerMode() {
     selectedVSCluster,
     clusterRank,
     selectedModality,
-    selectedMarkerAnnotation,
   ]);
 
   // compute markers in the worker

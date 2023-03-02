@@ -936,102 +936,96 @@ const DimPlot = (props) => {
                   <p>
                     <strong>Custom Selections</strong>
                   </p>
-                  {!(showToggleFactors && toggleFactorsGradient) && (
-                    <div
-                      style={{
-                        fontSize: "small",
-                      }}
-                    >
-                      <ul>
-                        {Object.keys(props?.customSelection)
-                          ?.slice(0, 100)
-                          .map((x, i) => {
-                            return (
-                              <li
-                                key={x}
-                                className={
-                                  props?.clusHighlight === x
-                                    ? "legend-highlight"
-                                    : ""
-                                }
+                  <div
+                    style={{
+                      fontSize: "small",
+                    }}
+                  >
+                    <ul>
+                      {Object.keys(props?.customSelection).map((x, i) => {
+                        return (
+                          <li
+                            key={x}
+                            className={
+                              props?.clusHighlight === x
+                                ? "legend-highlight"
+                                : ""
+                            }
+                            style={{
+                              color: props?.clusterColors
+                                ? props?.clusterColors[
+                                    getMinMax(
+                                      annotationObj[default_cluster]
+                                    )[1] +
+                                      1 +
+                                      i
+                                  ]
+                                : defaultColor,
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                flexDirection: "row",
+                              }}
+                            >
+                              <span
                                 style={{
-                                  color: props?.clusterColors
-                                    ? props?.clusterColors[
-                                        getMinMax(
-                                          annotationObj[default_cluster]
-                                        )[1] +
-                                          1 +
-                                          i
-                                      ]
-                                    : defaultColor,
+                                  alignSelf: "center",
+                                }}
+                                onClick={() => {
+                                  if (x === props?.clusHighlight) {
+                                    props?.setClusHighlight(null);
+                                    props?.setHighlightPoints(null);
+                                    props?.setClusHighlightLabel(null);
+                                  } else {
+                                    props?.setClusHighlight(x);
+                                    props?.setHighlightPoints(
+                                      props?.customSelection[x]
+                                    );
+                                    props?.setClusHighlightLabel(x);
+                                  }
                                 }}
                               >
-                                <div
-                                  style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    flexDirection: "row",
-                                  }}
-                                >
-                                  <span
-                                    style={{
-                                      alignSelf: "center",
-                                    }}
-                                    onClick={() => {
-                                      if (x === props?.clusHighlight) {
-                                        props?.setClusHighlight(null);
-                                        props?.setHighlightPoints(null);
-                                        props?.setClusHighlightLabel(null);
-                                      } else {
-                                        props?.setClusHighlight(x);
-                                        props?.setHighlightPoints(
-                                          props?.customSelection[x]
-                                        );
-                                        props?.setClusHighlightLabel(x);
-                                      }
-                                    }}
-                                  >
-                                    Selection {x.replace("cs", "")}
-                                  </span>
-                                  <Icon
-                                    size={10}
-                                    icon="trash"
-                                    style={{
-                                      paddingLeft: "2px",
-                                    }}
-                                    onClick={() => {
-                                      let tmpSel = {
-                                        ...props?.customSelection,
-                                      };
-                                      delete tmpSel[x];
-                                      props?.setCustomSelection(tmpSel);
+                                Selection {x.replace("cs", "")}
+                              </span>
+                              <Icon
+                                size={10}
+                                icon="trash"
+                                style={{
+                                  paddingLeft: "2px",
+                                }}
+                                onClick={() => {
+                                  let tmpSel = {
+                                    ...props?.customSelection,
+                                  };
+                                  delete tmpSel[x];
+                                  props?.setCustomSelection(tmpSel);
 
-                                      if (props?.clusterColors) {
-                                        let tmpcolors = [
-                                          ...props?.clusterColors,
-                                        ];
-                                        tmpcolors = tmpcolors.slice(
-                                          0,
-                                          tmpcolors.length - 1
-                                        );
-                                        props?.setClusterColors(tmpcolors);
-                                      }
+                                  if (props?.clusterColors) {
+                                    let tmpcolors = [...props?.clusterColors];
+                                    tmpcolors = tmpcolors.slice(
+                                      0,
+                                      tmpcolors.length - 1
+                                    );
+                                    props?.setClusterColors(tmpcolors);
+                                  }
 
-                                      props?.setDelCustomSelection(x);
+                                  props?.setDelCustomSelection(x);
 
-                                      if (props?.clusHighlight === x) {
-                                        props?.setClusHighlight(null);
-                                        props?.setClusHighlightLabel(null);
-                                      }
-                                    }}
-                                  ></Icon>
-                                </div>
-                              </li>
-                            );
-                          })}
-                      </ul>
-                    </div>
-                  )}
+                                  if (props?.clusHighlight === x) {
+                                    props?.setClusHighlight(null);
+                                    props?.setClusHighlightLabel(null);
+                                  }
+                                }}
+                              ></Icon>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
 
                   {props?.selectedPoints && props?.selectedPoints.length > 0 ? (
                     <div>

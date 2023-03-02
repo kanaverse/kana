@@ -8,7 +8,8 @@ import {
   fetchStepSummary,
 } from "./helpers.js";
 import { code } from "../utils/utils.js";
-import { getMarkersForCluster } from "./markerUtils.js";
+import * as mutils from "./markerUtils.js";
+import { rank } from "d3";
 /***************************************/
 
 let superstate = null;
@@ -250,68 +251,64 @@ onmessage = function (msg) {
       });
 
     /**************** VERSUS MODE *******************/
-    // } else if (type == "computeVersusClusters") {
-    //   loaded
-    //     .then((x) => {
-    //       let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
-    //       let res = superstate.marker_detection.computeVersus(
-    //         payload.left,
-    //         payload.right,
-    //         rank_type,
-    //         payload.modality
-    //       );
-    //       let resp = bakana.formatMarkerResults(
-    //         res["results"][payload.modality],
-    //         payload.left,
-    //         payload.rank_type
-    //       );
+  } else if (type == "computeVersusClusters") {
+    loaded
+      .then((x) => {
+        let rank_type = payload.rank_type;
+        let annotation_vec = dataset.cells.column(payload.annotation);
 
-    //       var transferrable = [];
-    //       extractBuffers(resp, transferrable);
-    //       postMessage(
-    //         {
-    //           type: "computeVersusClusters",
-    //           resp: resp,
-    //           msg: "Success: COMPUTE_VERSUS_CLUSTERS done",
-    //         },
-    //         transferrable
-    //       );
-    //     })
-    //     .catch((err) => {
-    //       console.error(err);
-    //       postError(type, err, fatal);
-    //     });
-    // } else if (type == "computeVersusSelections") {
-    //   loaded
-    //     .then((x) => {
-    //       let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
-    //       let res = superstate.custom_selections.computeVersus(
-    //         payload.left,
-    //         payload.right,
-    //         rank_type,
-    //         payload.modality
-    //       );
-    //       let resp = bakana.formatMarkerResults(
-    //         res["results"][payload.modality],
-    //         payload.left,
-    //         payload.rank_type
-    //       );
+        let resp = mutils.computeVersusClusters(
+          dataset.matrix,
+          rank_type,
+          payload.left,
+          payload.right,
+          payload.modality,
+          payload.annotation,
+          annotation_vec
+        );
 
-    //       var transferrable = [];
-    //       extractBuffers(resp, transferrable);
-    //       postMessage(
-    //         {
-    //           type: "computeVersusSelections",
-    //           resp: resp,
-    //           msg: "Success: COMPUTE_VERSUS_SELECTIONS done",
-    //         },
-    //         transferrable
-    //       );
-    //     })
-    //     .catch((err) => {
-    //       console.error(err);
-    //       postError(type, err, fatal);
-    //     });
+        var transferrable = [];
+        extractBuffers(resp, transferrable);
+        postMessage(
+          {
+            type: "computeVersusClusters",
+            resp: resp,
+            msg: "Success: COMPUTE_VERSUS_CLUSTERS done",
+          },
+          transferrable
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+        postError(type, err, fatal);
+      });
+  } else if (type == "computeVersusSelections") {
+    loaded
+      .then((x) => {
+        let rank_type = payload.rank_type;
+        let resp = mutils.computeVersusSelections(
+          dataset.matrix,
+          rank_type,
+          payload.left,
+          payload.right,
+          payload.modality
+        );
+
+        var transferrable = [];
+        extractBuffers(resp, transferrable);
+        postMessage(
+          {
+            type: "computeVersusSelections",
+            resp: resp,
+            msg: "Success: COMPUTE_VERSUS_SELECTIONS done",
+          },
+          transferrable
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+        postError(type, err, fatal);
+      });
 
     //   /**************** OTHER EVENTS FROM UI *******************/
   } else if (type == "getMarkersForCluster") {
@@ -324,9 +321,8 @@ onmessage = function (msg) {
 
         let annotation_vec = dataset.cells.column(annotation);
 
-        // are these already computed?
-        let resp = getMarkersForCluster(
-          dataset.matrix.get(modality),
+        let resp = mutils.getMarkersForCluster(
+          dataset.matrix,
           cluster,
           rank_type,
           modality,
@@ -372,56 +368,57 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-    // } else if (type == "computeCustomMarkers") {
-    //   loaded
-    //     .then((x) => {
-    //       superstate.custom_selections.addSelection(
-    //         payload.id,
-    //         payload.selection
-    //       );
-    //       postMessage({
-    //         type: "computeCustomMarkers",
-    //         msg: "Success: COMPUTE_CUSTOM_MARKERS done",
-    //       });
-    //     })
-    //     .catch((err) => {
-    //       console.error(err);
-    //       postError(type, err, fatal);
-    //     });
-    // } else if (type == "getMarkersForSelection") {
-    //   loaded
-    //     .then((x) => {
-    //       let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
+  } else if (type == "computeCustomMarkers") {
+    loaded
+      .then((x) => {
+        mutils.computeCustomMarkers(
+          dataset.matrix,
+          payload.id,
+          payload.selection
+        );
+        postMessage({
+          type: "computeCustomMarkers",
+          msg: "Success: COMPUTE_CUSTOM_MARKERS done",
+        });
+      })
+      .catch((err) => {
+        console.error(err);
+        postError(type, err, fatal);
+      });
+  } else if (type == "getMarkersForSelection") {
+    loaded
+      .then((x) => {
+        let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
 
-    //       let raw_res = superstate.custom_selections.fetchResults(
-    //         payload.cluster
-    //       )[payload.modality];
-    //       let resp = bakana.formatMarkerResults(raw_res, 1, rank_type);
-
-    //       var transferrable = [];
-    //       extractBuffers(resp, transferrable);
-    //       postMessage(
-    //         {
-    //           type: "setMarkersForCustomSelection",
-    //           resp: resp,
-    //           msg: "Success: GET_MARKER_GENE done",
-    //         },
-    //         transferrable
-    //       );
-    //     })
-    //     .catch((err) => {
-    //       console.error(err);
-    //       postError(type, err, fatal);
-    //     });
-    // } else if (type == "removeCustomMarkers") {
-    //   loaded
-    //     .then((x) => {
-    //       superstate.custom_selections.removeSelection(payload.id);
-    //     })
-    //     .catch((err) => {
-    //       console.error(err);
-    //       postError(type, err, fatal);
-    //     });
+        let resp = mutils.getMarkersForSelection(
+          payload.cluster,
+          payload.modality,
+          rank_type
+        );
+        var transferrable = [];
+        extractBuffers(resp, transferrable);
+        postMessage(
+          {
+            type: "setMarkersForCustomSelection",
+            resp: resp,
+            msg: "Success: GET_MARKER_GENE done",
+          },
+          transferrable
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+        postError(type, err, fatal);
+      });
+  } else if (type == "removeCustomMarkers") {
+    loaded
+      .then((x) => {
+        mutils.removeCustomMarkers(payload.id);
+      })
+      .catch((err) => {
+        console.error(err);
+        postError(type, err, fatal);
+      });
   } else if (type == "getAnnotation") {
     loaded
       .then((x) => {

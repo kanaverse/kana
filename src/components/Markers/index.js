@@ -42,6 +42,7 @@ const MarkerPlot = (props) => {
   } = useContext(AppContext);
 
   const default_cluster = `${code}::CLUSTERS`;
+  const default_selection = `${code}::SELECTION`;
 
   const [showSettings, setShowSettings] = useState(false);
   const [showLogFC, setShowLogFC] = useState(true);
@@ -208,15 +209,13 @@ const MarkerPlot = (props) => {
           clus.push(i + 1);
         }
 
-        clus = clus.concat(Object.keys(props?.customSelection));
+        // clus = clus.concat(Object.keys(props?.customSelection));
 
         setClusSel(clus);
-        if (props?.selectedCluster === null) {
-          props?.setSelectedCluster(0);
+        props?.setSelectedCluster(0);
 
-          if (String(props?.selectedVSCluster).startsWith("cs")) {
-            props?.setSelectedVSCluster(null);
-          }
+        if (String(props?.selectedVSCluster).startsWith("cs")) {
+          props?.setSelectedVSCluster(null);
         }
       }
 
@@ -228,6 +227,15 @@ const MarkerPlot = (props) => {
       }
 
       return;
+    } else if (default_selection === props?.selectedMarkerAnnotation) {
+      let clus = [];
+      clus = clus.concat(Object.keys(props?.customSelection));
+      props?.setSelectedCluster(Object.keys(props?.customSelection)[0]);
+
+      if (String(props?.selectedVSCluster).startsWith("cs")) {
+        props?.setSelectedVSCluster(null);
+      }
+      setClusSel(clus);
     } else {
       if (!(props?.selectedMarkerAnnotation in annotationObj)) {
         props?.setReqAnnotation(props?.selectedMarkerAnnotation);
@@ -611,6 +619,11 @@ const MarkerPlot = (props) => {
                   {x.replace(`${code}::`, "")}
                 </option>
               ))}
+            {Object.keys(props?.customSelection).length > 0 && (
+              <option value={default_selection} key={default_selection}>
+                CUSTOM SELECTIONS
+              </option>
+            )}
           </optgroup>
         </HTMLSelect>
       </Label>
@@ -703,7 +716,8 @@ const MarkerPlot = (props) => {
               props?.setSelectedVSCluster(null);
             }}
           >
-            {default_cluster === props?.selectedMarkerAnnotation
+            {default_cluster === props?.selectedMarkerAnnotation ||
+            default_selection === props?.selectedMarkerAnnotation
               ? clusSel.map((x, i) => (
                   <option
                     selected={
@@ -746,7 +760,10 @@ const MarkerPlot = (props) => {
                 className="marker-cluster-selection-width"
                 onChange={(x) => {
                   let tmpselection = x.currentTarget?.value;
-                  if (default_cluster === props?.selectedMarkerAnnotation) {
+                  if (
+                    default_cluster === props?.selectedMarkerAnnotation ||
+                    default_selection === props?.selectedMarkerAnnotation
+                  ) {
                     if (tmpselection.startsWith("Cluster")) {
                       tmpselection =
                         parseInt(tmpselection.replace("Cluster ", "")) - 1;
@@ -766,7 +783,8 @@ const MarkerPlot = (props) => {
                 {props?.selectedVSCluster == null && (
                   <option selected={true}>Choose a Cluster</option>
                 )}
-                {default_cluster === props?.selectedMarkerAnnotation
+                {default_cluster === props?.selectedMarkerAnnotation ||
+                default_selection === props?.selectedMarkerAnnotation
                   ? clusSel
                       .filter((x, i) =>
                         String(props?.selectedCluster).startsWith("cs")
