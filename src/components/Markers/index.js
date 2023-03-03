@@ -48,6 +48,7 @@ const MarkerPlot = (props) => {
   const [showLogFC, setShowLogFC] = useState(true);
   const [showDelta, setShowDelta] = useState(true);
   const [showExpr, setShowExpt] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const [showFilters, setShowFilters] = useState(false);
 
@@ -291,7 +292,7 @@ const MarkerPlot = (props) => {
             x === props?.selectedCluster ? clusArray.push(1) : clusArray.push(0)
           );
         } else {
-          let cindex = vec.levels[props?.selectedCluster];
+          let cindex = vec.levels.indexOf(props?.selectedCluster);
           vec.index.map((x) =>
             x === cindex ? clusArray.push(1) : clusArray.push(0)
           );
@@ -300,6 +301,12 @@ const MarkerPlot = (props) => {
     }
     setClusArrayStacked(clusArray);
   }, [props?.selectedCluster, annotationObj]);
+
+  useEffect(() => {
+    setShowLogFC(isExpanded);
+    setShowDelta(isExpanded);
+    setShowExpt(isExpanded);
+  }, [isExpanded]);
 
   const handleMarkerFilter = (val, key) => {
     let tmp = { ...markerFilter };
@@ -444,6 +451,15 @@ const MarkerPlot = (props) => {
               intent={showFilters ? "primary" : "none"}
             />
           </Tooltip2> */}
+          <Tooltip2 content={isExpanded ? "Show Metrics" : "Hide Metrics"}>
+            <Button
+              onClick={() => setIsExpanded(!isExpanded)}
+              minimal={true}
+              icon={isExpanded ? "one-column" : "two-columns"}
+              small={true}
+              intent={isExpanded ? "none" : "none"}
+            />
+          </Tooltip2>
           <Tooltip2 content={showSettings ? "Hide Settings" : "Show Settings"}>
             <Button
               onClick={() => setShowSettings(!showSettings)}
@@ -630,6 +646,8 @@ const MarkerPlot = (props) => {
         <HTMLSelect
           defaultValue={props?.selectedMarkerAnnotation}
           onChange={(nval) => {
+            props?.setGene(null);
+            props?.setSelectedVSCluster(null);
             props?.setSelectedCluster(null);
             props?.setSelectedMarkerAnnotation(nval?.currentTarget?.value);
           }}
@@ -1338,27 +1356,40 @@ const MarkerPlot = (props) => {
                         <StackedHistogram
                           data={rowExpr}
                           color={
-                            String(props?.selectedCluster).startsWith("cs")
-                              ? props?.clusterColors
-                                ? props?.clusterColors[
-                                    getMinMax(
-                                      annotationObj[default_cluster]
-                                    )[1] +
-                                      parseInt(
-                                        props?.selectedCluster.replace("cs", "")
-                                      )
-                                  ]
+                            default_cluster ===
+                              props?.selectedMarkerAnnotation ||
+                            default_selection ===
+                              props?.selectedMarkerAnnotation
+                              ? String(props?.selectedCluster).startsWith("cs")
+                                ? props?.clusterColors
+                                  ? props?.clusterColors[
+                                      getMinMax(
+                                        annotationObj[default_cluster]
+                                      )[1] +
+                                        parseInt(
+                                          props?.selectedCluster.replace(
+                                            "cs",
+                                            ""
+                                          )
+                                        )
+                                    ]
+                                  : defaultColor
+                                : props?.clusterColors
+                                ? props?.clusterColors[props?.selectedCluster]
                                 : defaultColor
-                              : props?.clusterColors
-                              ? props?.clusterColors[props?.selectedCluster]
                               : defaultColor
                           }
                           clusterlabel={
-                            String(props?.selectedCluster).startsWith("cs")
-                              ? `Custom Selection ${props?.selectedCluster}`
-                              : `Cluster ${parseInt(
-                                  props?.selectedCluster + 1
-                                )}`
+                            default_cluster ===
+                              props?.selectedMarkerAnnotation ||
+                            default_selection ===
+                              props?.selectedMarkerAnnotation
+                              ? String(props?.selectedCluster).startsWith("cs")
+                                ? `Custom Selection ${props?.selectedCluster}`
+                                : `Cluster ${parseInt(
+                                    props?.selectedCluster + 1
+                                  )}`
+                              : props?.selectedCluster
                           }
                           clusters={clusArrayStacked}
                         />

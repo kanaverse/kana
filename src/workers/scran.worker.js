@@ -528,15 +528,33 @@ onmessage = function (msg) {
     loaded
       .then((x) => {
         let rank_type = payload.rank_type;
-        let res = superstate.marker_detection.computeVersus(
-          payload.left,
-          payload.right
-        );
-        let resp = bakana.formatMarkerResults(
-          res["results"][payload.modality],
-          1,
-          rank_type
-        );
+        let modality = payload.modality;
+        let annotation = payload.annotation;
+
+        let resp;
+        if (default_cluster === annotation) {
+          let res = superstate.marker_detection.computeVersus(
+            payload.left,
+            payload.right
+          );
+          resp = bakana.formatMarkerResults(
+            res["results"][modality],
+            1,
+            rank_type
+          );
+        } else {
+          let annotation_vec = getAnnotation(annotation);
+
+          resp = mutils.computeVersusClusters(
+            getMatrix(modality),
+            rank_type,
+            payload.left,
+            payload.right,
+            modality,
+            annotation,
+            annotation_vec
+          );
+        }
 
         var transferrable = [];
         extractBuffers(resp, transferrable);
@@ -592,16 +610,12 @@ onmessage = function (msg) {
         let modality = payload.modality;
         let annotation = payload.annotation;
         let resp;
-        if (
-          default_cluster === annotation ||
-          default_selection === annotation
-        ) {
+        if (default_cluster === annotation) {
           var raw_res = superstate.marker_detection.fetchResults()[modality];
           resp = bakana.formatMarkerResults(raw_res, cluster, rank_type);
         } else {
           let annotation_vec = getAnnotation(annotation);
 
-          console.log("superstate", superstate);
           resp = mutils.getMarkersForCluster(
             getMatrix(modality),
             cluster,

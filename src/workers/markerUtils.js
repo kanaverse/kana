@@ -193,8 +193,8 @@ export const computeVersusClusters = (
   let res = getClusterIndices(annotation, vec);
 
   let markers = bakana.MarkerDetectionState.computeVersusCustom(
-    left,
-    right,
+    res.map[left],
+    res.map[right],
     matrix,
     res.indices,
     {
