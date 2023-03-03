@@ -181,9 +181,15 @@ const getMatrix = (modality) => {
         superstate.rna_normalization.fetchNormalizedMatrix()
       );
     } else if (modality === "ADT") {
-      cache_matrix.add(modality, superstate.adt_normalization);
+      cache_matrix.add(
+        modality,
+        superstate.adt_normalization.fetchNormalizedMatrix()
+      );
     } else if (modality === "CRISPR") {
-      cache_matrix.add(modality, superstate.crispr_normalization);
+      cache_matrix.add(
+        modality,
+        superstate.crispr_normalization.fetchNormalizedMatrix()
+      );
     } else {
       throw new Error("unknown feature type '" + modality + "'");
     }
@@ -624,16 +630,16 @@ onmessage = function (msg) {
     loaded
       .then((x) => {
         let row_idx = payload.gene;
-        let modality = payload.modality.toLowerCase();
+        let modality = payload.modality;
 
         const matrix = getMatrix(modality);
         let vec;
         if (modality === "RNA") {
-          vec = matrix.fetchNormalizedMatrix().row(row_idx);
+          vec = matrix.get(modality).row(row_idx);
         } else if (modality === "ADT") {
-          vec = matrix.fetchExpression(row_idx);
+          vec = matrix.get(modality).row(row_idx);
         } else if (modality === "CRISPR") {
-          vec = matrix.fetchExpression(row_idx);
+          vec = matrix.get(modality).row(row_idx);
         } else {
           throw new Error("unknown feature type '" + modality + "'");
         }

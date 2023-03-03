@@ -271,21 +271,35 @@ const MarkerPlot = (props) => {
   useEffect(() => {
     var clusArray = [];
     if (default_selection === props?.selectedMarkerAnnotation) {
-      annotationObj[default_cluster]?.forEach((x, i) =>
+      annotationObj[props?.selectedMarkerAnnotation]?.forEach((x, i) =>
         props?.customSelection[props?.selectedCluster].includes(i)
           ? clusArray.push(1)
           : clusArray.push(0)
       );
-    } else if (!(props?.selectedMarkerAnnotation in annotationObj)) {
-      props?.setReqAnnotation(props?.selectedMarkerAnnotation);
-    }
-     else {
-      annotationObj[props?.selectedMarkerAnnotation]?.forEach((x) =>
+    } else if (default_cluster === props?.selectedMarkerAnnotation) {
+      annotationObj[props?.selectedMarkerAnnotation]?.forEach((x, i) =>
         x === props?.selectedCluster ? clusArray.push(1) : clusArray.push(0)
       );
+    } else {
+      if (!(props?.selectedMarkerAnnotation in annotationObj)) {
+        props?.setReqAnnotation(props?.selectedMarkerAnnotation);
+      } else {
+        let vec = annotationObj[props?.selectedMarkerAnnotation];
+
+        if (vec.type === "array") {
+          annotationObj[props?.selectedMarkerAnnotation].values.map((x) =>
+            x === props?.selectedCluster ? clusArray.push(1) : clusArray.push(0)
+          );
+        } else {
+          let cindex = vec.levels[props?.selectedCluster];
+          vec.index.map((x) =>
+            x === cindex ? clusArray.push(1) : clusArray.push(0)
+          );
+        }
+      }
     }
     setClusArrayStacked(clusArray);
-  }, [props?.selectedCluster]);
+  }, [props?.selectedCluster, annotationObj]);
 
   const handleMarkerFilter = (val, key) => {
     let tmp = { ...markerFilter };
@@ -594,10 +608,11 @@ const MarkerPlot = (props) => {
           Select Modality
           <HTMLSelect
             onChange={(x) => {
+              props?.setGene(null);
+              props?.setSelectedVSCluster(null);
+              props?.setSelectedCluster(null);
               props?.setSelectedModality(x.currentTarget?.value);
               setMarkerFilter({});
-              // props?.setGene(null);
-              // props?.setSelectedVSCluster(null);
             }}
           >
             {props?.modality.map((x, i) => (
