@@ -331,6 +331,7 @@ export function AnalysisMode(props) {
             left: selectedCluster,
             right: selectedVSCluster,
             rank_type: clusterRank,
+            annotation: selectedMarkerAnnotation,
           },
         });
 
@@ -345,6 +346,7 @@ export function AnalysisMode(props) {
             modality: selectedModality,
             cluster: selectedCluster,
             rank_type: clusterRank,
+            annotation: selectedMarkerAnnotation,
           },
         });
 

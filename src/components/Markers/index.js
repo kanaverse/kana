@@ -212,10 +212,12 @@ const MarkerPlot = (props) => {
         // clus = clus.concat(Object.keys(props?.customSelection));
 
         setClusSel(clus);
-        props?.setSelectedCluster(0);
+        if (props?.selectedCluster === null) {
+          props?.setSelectedCluster(0);
 
-        if (String(props?.selectedVSCluster).startsWith("cs")) {
-          props?.setSelectedVSCluster(null);
+          if (String(props?.selectedVSCluster).startsWith("cs")) {
+            props?.setSelectedVSCluster(null);
+          }
         }
       }
 
@@ -230,22 +232,31 @@ const MarkerPlot = (props) => {
     } else if (default_selection === props?.selectedMarkerAnnotation) {
       let clus = [];
       clus = clus.concat(Object.keys(props?.customSelection));
-      props?.setSelectedCluster(Object.keys(props?.customSelection)[0]);
+      if (props?.selectedCluster === null) {
+        props?.setSelectedCluster(Object.keys(props?.customSelection)[0]);
 
-      if (String(props?.selectedVSCluster).startsWith("cs")) {
-        props?.setSelectedVSCluster(null);
+        if (String(props?.selectedVSCluster).startsWith("cs")) {
+          props?.setSelectedVSCluster(null);
+        }
       }
       setClusSel(clus);
     } else {
       if (!(props?.selectedMarkerAnnotation in annotationObj)) {
         props?.setReqAnnotation(props?.selectedMarkerAnnotation);
+        props?.setSelectedCluster(null);
       } else {
         let tmp = annotationObj[props?.selectedMarkerAnnotation];
         if (tmp.type === "array") {
           const uniqueTmp = [...new Set(tmp.values)];
           setClusSel(uniqueTmp);
+          if (props?.selectedCluster === null) {
+            props?.setSelectedCluster(uniqueTmp[0]);
+          }
         } else if (tmp.type === "factor") {
           setClusSel(tmp.levels);
+          if (props?.selectedCluster === null) {
+            props?.setSelectedCluster(tmp.levels[0]);
+          }
         }
       }
     }
@@ -259,14 +270,17 @@ const MarkerPlot = (props) => {
   // hook for figure out this vs other cells for stacked histograms
   useEffect(() => {
     var clusArray = [];
-    if (String(props?.selectedCluster).startsWith("cs")) {
+    if (default_selection === props?.selectedMarkerAnnotation) {
       annotationObj[default_cluster]?.forEach((x, i) =>
         props?.customSelection[props?.selectedCluster].includes(i)
           ? clusArray.push(1)
           : clusArray.push(0)
       );
-    } else {
-      annotationObj[default_cluster]?.forEach((x) =>
+    } else if (!(props?.selectedMarkerAnnotation in annotationObj)) {
+      props?.setReqAnnotation(props?.selectedMarkerAnnotation);
+    }
+     else {
+      annotationObj[props?.selectedMarkerAnnotation]?.forEach((x) =>
         x === props?.selectedCluster ? clusArray.push(1) : clusArray.push(0)
       );
     }
@@ -332,7 +346,7 @@ const MarkerPlot = (props) => {
   };
 
   const getTableHeight = () => {
-    let defheight = 333;
+    let defheight = 335;
     if (showFilters) defheight = 530;
 
     if (props?.windowWidth < 1200) {
@@ -587,7 +601,9 @@ const MarkerPlot = (props) => {
             }}
           >
             {props?.modality.map((x, i) => (
-              <option key={x}>{x}</option>
+              <option key={x} value={x}>
+                {x}
+              </option>
             ))}
           </HTMLSelect>
         </Label>
@@ -599,6 +615,7 @@ const MarkerPlot = (props) => {
         <HTMLSelect
           defaultValue={props?.selectedMarkerAnnotation}
           onChange={(nval) => {
+            props?.setSelectedCluster(null);
             props?.setSelectedMarkerAnnotation(nval?.currentTarget?.value);
           }}
         >
@@ -1263,12 +1280,7 @@ const MarkerPlot = (props) => {
                             fill={false}
                             className="row-action"
                             outlined={rowexp ? false : true}
-                            intent={
-                              rowexp
-                                ? "primary"
-                                : // String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
-                                  null
-                            }
+                            intent={rowexp ? "primary" : null}
                             onClick={() => {
                               let tmp = [...props?.selectedClusterSummary];
                               var gindex =
@@ -1288,12 +1300,7 @@ const MarkerPlot = (props) => {
                             small={true}
                             fill={false}
                             outlined={row.gene === props?.gene ? false : true}
-                            intent={
-                              row.gene === props?.gene
-                                ? "primary"
-                                : // String(props?.selectedCluster).startsWith("cs") ? props?.clusterColors[getMinMax(props?.clusterData.clusters)[1] + parseInt(props?.selectedCluster.replace("cs", ""))] : props?.clusterColors[props?.selectedCluster]
-                                  null
-                            }
+                            intent={row.gene === props?.gene ? "primary" : null}
                             className="row-action"
                             onClick={() => {
                               if (row.gene === props?.gene) {
@@ -1312,7 +1319,6 @@ const MarkerPlot = (props) => {
                       </div>
                     </div>
                     <Collapse isOpen={rowexp}>
-                      {/* <Histogram data={rowExpr} color={clusterColors[selectedCluster]} /> */}
                       {rowExpr && (
                         <StackedHistogram
                           data={rowExpr}

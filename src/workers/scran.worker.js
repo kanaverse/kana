@@ -1,8 +1,11 @@
 import * as bakana from "bakana";
+import * as scran from "scran.js";
+
 import * as kana_db from "./KanaDBHandler.js";
 import * as downloads from "./DownloadsDBHandler.js";
 import * as hashwasm from "hash-wasm";
 import * as translate from "./translate.js";
+import * as mutils from "./markerUtils";
 import {
   extractBuffers,
   postAttempt,
@@ -14,9 +17,13 @@ import * as remotes from "bakana-remotes";
 import { code } from "../utils/utils.js";
 /***************************************/
 
+const default_cluster = `${code}::CLUSTERS`;
+const default_selection = `${code}::SELECTION`;
+
 let superstate = null;
 let preflights = {};
 let preflights_summary = {};
+let cache_matrix = new scran.MultiMatrix();
 
 // Evade CORS problems and enable caching.
 const proxy = "https://cors-proxy.aaron-lun.workers.dev";
@@ -145,6 +152,45 @@ async function postStepSummary(step) {
     postError(step, err, true);
   }
 }
+
+const getAnnotation = (annotation, unfiltered = true) => {
+  let vec;
+  if (annotation.startsWith(`${code}::QC::`)) {
+    let splits = annotation.replace(`${code}::QC::`, "");
+    vec = superstate.cell_filtering.fetchFilteredQualityMetric(
+      splits.substring(4),
+      splits.substring(0, 3)
+    );
+    // Filter to match QC unless requested otherwise.
+  } else if (unfiltered !== false) {
+    vec = superstate.cell_filtering.applyFilter(
+      superstate.inputs.fetchCellAnnotations().column(annotation)
+    );
+  } else {
+    vec = superstate.inputs.fetchAnnotations(annotation);
+  }
+
+  return vec;
+};
+
+const getMatrix = (modality) => {
+  if (!cache_matrix.available().includes(modality)) {
+    if (modality === "RNA") {
+      cache_matrix.add(
+        modality,
+        superstate.rna_normalization.fetchNormalizedMatrix()
+      );
+    } else if (modality === "ADT") {
+      cache_matrix.add(modality, superstate.adt_normalization);
+    } else if (modality === "CRISPR") {
+      cache_matrix.add(modality, superstate.crispr_normalization);
+    } else {
+      throw new Error("unknown feature type '" + modality + "'");
+    }
+  }
+
+  return cache_matrix;
+};
 
 /***************************************/
 
@@ -538,8 +584,26 @@ onmessage = function (msg) {
         let cluster = payload.cluster;
         let rank_type = payload.rank_type;
         let modality = payload.modality;
-        var raw_res = superstate.marker_detection.fetchResults()[modality];
-        let resp = bakana.formatMarkerResults(raw_res, cluster, rank_type);
+        let annotation = payload.annotation;
+        let resp;
+        if (
+          default_cluster === annotation ||
+          default_selection === annotation
+        ) {
+          var raw_res = superstate.marker_detection.fetchResults()[modality];
+          resp = bakana.formatMarkerResults(raw_res, cluster, rank_type);
+        } else {
+          let annotation_vec = getAnnotation(annotation);
+
+          console.log("superstate", superstate);
+          resp = mutils.getMarkersForCluster(
+            getMatrix(modality),
+            cluster,
+            rank_type,
+            modality,
+            annotation_vec
+          );
+        }
 
         var transferrable = [];
         extractBuffers(resp, transferrable);
@@ -562,13 +626,14 @@ onmessage = function (msg) {
         let row_idx = payload.gene;
         let modality = payload.modality.toLowerCase();
 
-        var vec;
-        if (modality === "rna") {
-          vec = superstate.rna_normalization
-            .fetchNormalizedMatrix()
-            .row(row_idx);
-        } else if (modality === "adt") {
-          vec = superstate.adt_normalization.fetchExpression(row_idx);
+        const matrix = getMatrix(modality);
+        let vec;
+        if (modality === "RNA") {
+          vec = matrix.fetchNormalizedMatrix().row(row_idx);
+        } else if (modality === "ADT") {
+          vec = matrix.fetchExpression(row_idx);
+        } else if (modality === "CRISPR") {
+          vec = matrix.fetchExpression(row_idx);
         } else {
           throw new Error("unknown feature type '" + modality + "'");
         }
@@ -667,20 +732,7 @@ onmessage = function (msg) {
         let annot = payload.annotation;
         let vec, output;
 
-        if (annot.startsWith(`${code}::QC::`)) {
-          let splits = annot.replace(`${code}::QC::`, "");
-          vec = superstate.cell_filtering.fetchFilteredQualityMetric(
-            splits.substring(4),
-            splits.substring(0, 3)
-          );
-          // Filter to match QC unless requested otherwise.
-        } else if (payload.unfiltered !== false) {
-          vec = superstate.cell_filtering.applyFilter(
-            superstate.inputs.fetchCellAnnotations().column(annot)
-          );
-        } else {
-          vec = superstate.inputs.fetchAnnotations(annot);
-        }
+        vec = getAnnotation(annot, payload.unfiltered);
 
         if (ArrayBuffer.isView(vec)) {
           output = {
