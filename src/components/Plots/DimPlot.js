@@ -1058,7 +1058,7 @@ const DimPlot = (props) => {
             )}
           </div>
         }
-        {showGradient ? (
+        {showGradient && props?.gene !== null ? (
           <div className="dimplot-right-sidebar-slider">
             <Divider />
             <Callout style={{ fontSize: "x-small" }}>
