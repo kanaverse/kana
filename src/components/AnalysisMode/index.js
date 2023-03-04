@@ -546,12 +546,12 @@ export function AnalysisMode(props) {
 
   // compute feature set scores
   useEffect(() => {
-    if (selectedFsetUser !== null) {
+    if (selectedFsetCluster !== null && fsetClusterRank !== null) {
       scranWorker.postMessage({
         type: "computeFeatureScores",
         payload: {
-          collection: selectedFsetColl,
-          set: selectedFsetUser,
+          cluster: selectedFsetCluster,
+          rank_type: fsetClusterRank,
         },
       });
     }

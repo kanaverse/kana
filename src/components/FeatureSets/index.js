@@ -364,7 +364,7 @@ const FeatureSetEnrichment = (props) => {
                     parseInt(tmpselection.replace("Cluster ", "")) - 1;
                 }
               }
-              props?.selectedFsetCluster(tmpselection);
+              props?.setSelectedFsetCluster(tmpselection);
             }}
           >
             {default_cluster === props?.selectedFsetAnnotation &&

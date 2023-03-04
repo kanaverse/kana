@@ -832,21 +832,22 @@ onmessage = function (msg) {
         postError(type, err, fatal);
       });
   } else if (type == "computeFeatureScores") {
-    // loaded
-    //   .then((x) => {
-    //     superstate.feature_set_enrichment.fetchGroupSummary(
-    //       payload.id,
-    //       payload.selection
-    //     );
-    //     postMessage({
-    //       type: "computeFeatureScores",
-    //       msg: "Success: COMPUTE_FEATURE_SCORES done",
-    //     });
-    //   })
-    //   .catch((err) => {
-    //     console.error(err);
-    //     postError(type, err, fatal);
-    //   });
+    loaded
+      .then((x) => {
+        let rank_type = payload.rank_type;
+        let index = rank_type.indexOf("-");
+
+        let resp = superstate.feature_set_enrichment.fetchGroupResults(
+          payload.cluster,
+          rank_type.slice(0, index),
+          rank_type.slice(index + 1)
+        );
+        postSuccess("computeFeatureScores", resp);
+      })
+      .catch((err) => {
+        console.error(err);
+        postError(type, err, fatal);
+      });
   } else {
     postError(type, `Type: ${type} not defined`, fatal);
   }
