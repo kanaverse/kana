@@ -688,6 +688,7 @@ const DimPlot = (props) => {
           Object.keys(props?.redDimsData).map((x, i) => {
             return (
               <Button
+                key={i}
                 onClick={() => props?.setSelectedRedDim(x)}
                 intent={props?.selectedRedDim === x ? "primary" : ""}
                 text={x}

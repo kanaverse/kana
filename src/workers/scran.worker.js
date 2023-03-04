@@ -287,6 +287,23 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
+
+    try {
+      let collections = bakana.FeatureSetEnrichmentState.availableCollections;
+
+      postMessage({
+        type: "feature_set_enrichment_store",
+        resp: {
+          collections: collections,
+        },
+        msg: "Success: Feature set enrichment collections initialized",
+      });
+    } catch {
+      postMessage({
+        type: "feature_set_enrichment_ERROR",
+        msg: "Error: Cannot access Feature set enrichment collections",
+      });
+    }
     /**************** RUNNING AN ANALYSIS *******************/
   } else if (type == "RUN") {
     fatal = true;
@@ -325,6 +342,24 @@ onmessage = function (msg) {
             console.error(err);
             postError(type, err, fatal);
           });
+
+        // try {
+        //   let collections =
+        //     superstate.feature_set_enrichment.fetchCollectionDetails();
+
+        //   postMessage({
+        //     type: "FeatureSetEnrichDetails_DATA",
+        //     resp: {
+        //       collections: collections,
+        //     },
+        //     msg: "Success: Feature set enrichment details initialized",
+        //   });
+        // } catch {
+        //   postMessage({
+        //     type: "FeatureSetEnrichDetails_ERROR",
+        //     msg: "Error: Cannot access Feature set enrichment details",
+        //   });
+        // }
       })
       .catch((err) => {
         console.error(err);
@@ -796,8 +831,23 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
+  } else if (type == "computeFeatureScores") {
+    // loaded
+    //   .then((x) => {
+    //     superstate.feature_set_enrichment.fetchGroupSummary(
+    //       payload.id,
+    //       payload.selection
+    //     );
+    //     postMessage({
+    //       type: "computeFeatureScores",
+    //       msg: "Success: COMPUTE_FEATURE_SCORES done",
+    //     });
+    //   })
+    //   .catch((err) => {
+    //     console.error(err);
+    //     postError(type, err, fatal);
+    //   });
   } else {
-    console.error("MIM:::msg type incorrect");
-    postError(type, "Type not defined", fatal);
+    postError(type, `Type: ${type} not defined`, fatal);
   }
 };

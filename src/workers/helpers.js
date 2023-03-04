@@ -281,5 +281,7 @@ export async function fetchStepSummary(state, step) {
     return await state[step].fetchResults();
   } else if (step === "custom_selections") {
     return {};
+  } else if (step === "feature_set_enrichment") {
+    return { details: state.feature_set_enrichment.fetchCollectionDetails() };
   }
 }

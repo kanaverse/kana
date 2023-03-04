@@ -53,6 +53,7 @@ import pkgVersion from "../../../package.json";
 
 import logo from "../../assets/kana-cropped.png";
 import "../../App.css";
+import FeatureSetEnrichment from "../FeatureSets";
 
 const scranWorker = new Worker(
   new URL("../../workers/scran.worker.js", import.meta.url),
@@ -112,6 +113,7 @@ export function AnalysisMode(props) {
     loadParams,
     setLoadParams,
     setInputFiles,
+    setFsetEnrichCollections,
   } = useContext(AppContext);
 
   // modalities
@@ -157,6 +159,9 @@ export function AnalysisMode(props) {
   // STEP: CELL_LABELLING
   const [cellLabelData, setCellLabelData] = useState(null);
 
+  // STEP: FEATURE_SET_ENRICHMENT
+  const [fsetEnirchDetails, setFsetEnrichDetails] = useState(null);
+
   /*******
    * State to hold analysis specific results - END
    ******/
@@ -164,6 +169,7 @@ export function AnalysisMode(props) {
   // loaders for UI components
   const [showDimPlotLoader, setShowDimPlotLoader] = useState(true);
   const [showMarkerLoader, setShowMarkerLoader] = useState(true);
+  const [showFsetLoader, setShowFsetLoader] = useState(true);
   const [showQCLoader, setShowQCLoader] = useState(true);
   const [showPCALoader, setShowPCALoader] = useState(true);
   const [showNClusLoader, setShowNClusLoader] = useState(true);
@@ -176,6 +182,7 @@ export function AnalysisMode(props) {
     setShowPCALoader(true);
     setShowNClusLoader(true);
     setShowCellLabelLoader(true);
+    setShowFsetLoader(true);
   }
 
   const default_cluster = `${code}::CLUSTERS`;
@@ -196,7 +203,7 @@ export function AnalysisMode(props) {
   // request annotation column
   const [reqAnnotation, setReqAnnotation] = useState(null);
 
-  // which cluster is selected
+  // which marker cluster is selected
   const [selectedCluster, setSelectedCluster] = useState(null);
 
   // which cluster is selected from markers table
@@ -238,6 +245,21 @@ export function AnalysisMode(props) {
   // selected colorBy
   const [colorByAnnotation, setColorByAnnotation] = useState(default_cluster);
 
+  // are we showing markers or feature sets?
+  const [markersORFSets, setMarkersOrFsets] = useState("markers");
+  // set feature set rank-type
+  const [fsetClusterRank, setFsetClusterRank] = useState("cohen-min-rank");
+  // selected collection
+  const [selectedFsetColl, setSelectedFsetColl] = useState(null);
+  // user selected feature set
+  const [selectedFsetUser, setSelectedFsetUser] = useState(null);
+  // feature scores cache
+  const [featureScores, setFeatureScores] = useState({});
+  // which fset cluster is selected
+  const [selectedFsetCluster, setSelectedFsetCluster] = useState(null);
+  // which  fset annotation, currently we only support computed clusters
+  const [selectedFsetAnnotation, setSelectedFsetAnnotation] =
+    useState(default_cluster);
   /*******
    * USER REQUESTS - END
    ******/
@@ -522,6 +544,19 @@ export function AnalysisMode(props) {
     }
   }, [indexedDBState]);
 
+  // compute feature set scores
+  useEffect(() => {
+    if (selectedFsetUser !== null) {
+      scranWorker.postMessage({
+        type: "computeFeatureScores",
+        payload: {
+          collection: selectedFsetColl,
+          set: selectedFsetUser,
+        },
+      });
+    }
+  }, [selectedFsetColl, selectedFsetCluster, fsetClusterRank]);
+
   function add_to_logs(type, msg, status) {
     let tmp = [...logs];
     let d = new Date();
@@ -598,6 +633,10 @@ export function AnalysisMode(props) {
     } else if (type === "ExperimentHub_store") {
       if (resp !== undefined && Array.isArray(resp)) {
         setEhubDatasets(resp);
+      }
+    } else if (type === "feature_set_enrichment_store") {
+      if (resp !== undefined) {
+        setFsetEnrichCollections(resp.collections);
       }
     } else if (type === "PREFLIGHT_INPUT_DATA") {
       if (resp.details) {
@@ -931,6 +970,12 @@ export function AnalysisMode(props) {
       setExportState(false);
     } else if (payload.type === "KanaDB") {
       setIndexedDBState(false);
+    } else if (type == "feature_set_enrichment_DATA") {
+      setFsetEnrichDetails(resp.details);
+      setShowFsetLoader(false);
+      setSelectedFsetColl(Object.keys(resp.details)[0]);
+    } else {
+      console.log("unknown msg type", payload);
     }
   };
 
@@ -1375,44 +1420,76 @@ export function AnalysisMode(props) {
                       />
                     )}
                   </div>
-                  <div
-                    className={
-                      showMarkerLoader
-                        ? "results-markers effect-opacitygrayscale"
-                        : "results-markers"
-                    }
-                  >
-                    {selectedMarkerAnnotation &&
-                      annotationObj[default_cluster] &&
-                      selectedClusterSummary && (
-                        <MarkerPlot
-                          selectedClusterSummary={selectedClusterSummary}
-                          setSelectedClusterSummary={setSelectedClusterSummary}
-                          selectedClusterIndex={selectedClusterIndex}
-                          selectedCluster={selectedCluster}
-                          setSelectedCluster={setSelectedCluster}
-                          selectedVSCluster={selectedVSCluster}
-                          setSelectedVSCluster={setSelectedVSCluster}
-                          setClusterRank={setClusterRank}
-                          customSelection={customSelection}
-                          setGene={setGene}
-                          gene={gene}
-                          setReqGene={setReqGene}
-                          clusterColors={clusterColors}
-                          modality={modality}
-                          selectedModality={selectedModality}
-                          setSelectedModality={setSelectedModality}
-                          setMarkersWidth={setMarkersWidth}
-                          markersWidth={markersWidth}
-                          windowWidth={windowWidth}
-                          setReqAnnotation={setReqAnnotation}
-                          selectedMarkerAnnotation={selectedMarkerAnnotation}
-                          setSelectedMarkerAnnotation={
-                            setSelectedMarkerAnnotation
-                          }
+                  {markersORFSets === "markers" && (
+                    <div
+                      className={
+                        showMarkerLoader
+                          ? "results-markers effect-opacitygrayscale"
+                          : "results-markers"
+                      }
+                    >
+                      {selectedMarkerAnnotation &&
+                        annotationObj[default_cluster] &&
+                        selectedClusterSummary && (
+                          <MarkerPlot
+                            selectedClusterSummary={selectedClusterSummary}
+                            setSelectedClusterSummary={
+                              setSelectedClusterSummary
+                            }
+                            selectedClusterIndex={selectedClusterIndex}
+                            selectedCluster={selectedCluster}
+                            setSelectedCluster={setSelectedCluster}
+                            selectedVSCluster={selectedVSCluster}
+                            setSelectedVSCluster={setSelectedVSCluster}
+                            setClusterRank={setClusterRank}
+                            customSelection={customSelection}
+                            setGene={setGene}
+                            gene={gene}
+                            setReqGene={setReqGene}
+                            clusterColors={clusterColors}
+                            modality={modality}
+                            selectedModality={selectedModality}
+                            setSelectedModality={setSelectedModality}
+                            setMarkersWidth={setMarkersWidth}
+                            markersWidth={markersWidth}
+                            windowWidth={windowWidth}
+                            setReqAnnotation={setReqAnnotation}
+                            selectedMarkerAnnotation={selectedMarkerAnnotation}
+                            setSelectedMarkerAnnotation={
+                              setSelectedMarkerAnnotation
+                            }
+                            setMarkersOrFsets={setMarkersOrFsets}
+                          />
+                        )}
+                    </div>
+                  )}
+                  {markersORFSets === "featuresets" && (
+                    <div
+                      className={
+                        showFsetLoader
+                          ? "results-fsetenrich effect-opacitygrayscale"
+                          : "results-fsetenrich"
+                      }
+                    >
+                      {fsetEnirchDetails && (
+                        <FeatureSetEnrichment
+                          setMarkersOrFsets={setMarkersOrFsets}
+                          setFsetClusterRank={setFsetClusterRank}
+                          fsetEnirchDetails={fsetEnirchDetails}
+                          selectedFsetColl={selectedFsetColl}
+                          setSelectedFsetColl={setSelectedFsetColl}
+                          selectedFsetUser={selectedFsetUser}
+                          setSelectedFsetUser={setSelectedFsetUser}
+                          featureScores={featureScores}
+                          setFeatureScores={setFeatureScores}
+                          selectedFsetCluster={selectedFsetCluster}
+                          setSelectedFsetCluster={setSelectedFsetCluster}
+                          selectedFsetAnnotation={selectedFsetAnnotation}
+                          setSelectedFsetAnnotation={setSelectedFsetAnnotation}
                         />
                       )}
-                  </div>
+                    </div>
+                  )}
                 </SplitPane>
                 <div className="results-gallery" style={getGalleryStyles()}>
                   <Gallery

@@ -47,7 +47,7 @@ export function ParameterSelection({
   const [showCRISPR, setShowCRISPR] = useState(true);
 
   // access app context
-  const { params, setParams } = useContext(AppContext);
+  const { params, setParams, fsetEnrichCollections } = useContext(AppContext);
 
   // new params, so that they can be discarded later
   const [tmpParams, setTmpParams] = useState(params);
@@ -1277,6 +1277,140 @@ export function ParameterSelection({
     );
   };
 
+  const render_fsetenrich = () => {
+    return (
+      <div className="col">
+        <div>
+          <H5 className="param-section-title">
+            <span
+              className={
+                showStepHelper == "fsetenrich"
+                  ? "param-row-tooltip param-row-tooltip-highlight"
+                  : "param-row-tooltip"
+              }
+              onMouseEnter={() => setShowStepHelper("fsetenrich")}
+            >
+              Feature set enrichment
+            </span>
+          </H5>
+          <div className="param-row">
+            <Label className="param-row-input">
+              <Text className="param-text-100">
+                <span
+                  className={
+                    showStepHelper == "fsetenrich"
+                      ? "param-row-tooltip param-row-tooltip-highlight"
+                      : "param-row-tooltip"
+                  }
+                  onMouseEnter={() => setShowStepHelper("fsetenrich")}
+                >
+                  Number of top markers
+                </span>
+              </Text>
+              <NumericInput
+                placeholder="100"
+                value={tmpParams["feature_set_enrichment"]["top_markers"]}
+                onValueChange={(nval, val) => {
+                  setTmpParams({
+                    ...tmpParams,
+                    feature_set_enrichment: {
+                      ...tmpParams["feature_set_enrichment"],
+                      top_markers: nval,
+                    },
+                  });
+                }}
+              />
+            </Label>
+            {fsetEnrichCollections && (
+              <>
+                <Label className="param-row-input">
+                  <Text className="param-text-100">
+                    <span
+                      className={
+                        showStepHelper == "fsetenrich"
+                          ? "param-row-tooltip param-row-tooltip-highlight"
+                          : "param-row-tooltip"
+                      }
+                      onMouseEnter={() => setShowStepHelper("fsetenrich")}
+                    >
+                      Choose species
+                    </span>
+                  </Text>
+                  <HTMLSelect
+                    onChange={(e) => {
+                      setTmpParams({
+                        ...tmpParams,
+                        feature_set_enrichment: {
+                          ...tmpParams["feature_set_enrichment"],
+                          species: e.target.value,
+                        },
+                      });
+                    }}
+                    defaultValue={
+                      tmpParams["feature_set_enrichment"]["species"]
+                        ? tmpParams["feature_set_enrichment"]["species"]
+                        : "none"
+                    }
+                  >
+                    <option value="none">none</option>
+                    <option value="10090">Mouse</option>
+                    <option value="9606">Human</option>
+                    <option value="6239">Worm</option>
+                    <option value="10116">Rat</option>
+                    <option value="7227">Fly</option>
+                    <option value="7955">Zebrafish</option>
+                    <option value="9598">Chimp</option>
+                  </HTMLSelect>
+                </Label>
+                {tmpParams["feature_set_enrichment"]["species"] !== null &&
+                  tmpParams["feature_set_enrichment"]["species"] !== "none" && (
+                    <Label className="param-row-input">
+                      <Text className="param-text-100">
+                        <span
+                          className={
+                            showStepHelper == "fsetenrich"
+                              ? "param-row-tooltip param-row-tooltip-highlight"
+                              : "param-row-tooltip"
+                          }
+                          onMouseEnter={() => setShowStepHelper("fsetenrich")}
+                        >
+                          Choose species
+                        </span>
+                      </Text>
+                      <select
+                        multiple={true}
+                        onChange={(e) => {
+                          console.log(e);
+                          let new_coll = [];
+                          e.target.selectedOptions.forEach((x) => {
+                            new_coll.push(x.value);
+                          });
+                          setTmpParams({
+                            ...tmpParams,
+                            feature_set_enrichment: {
+                              ...tmpParams["feature_set_enrichment"],
+                              collections: new_coll,
+                            },
+                          });
+                        }}
+                      >
+                        {/* <option value="none">none</option> */}
+                        {fsetEnrichCollections[
+                          tmpParams["feature_set_enrichment"]["species"]
+                        ].map((x, i) => (
+                          <option value={x}>{x}</option>
+                        ))}
+                      </select>
+                    </Label>
+                  )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   function handleCheckbox(e, species, key) {
     let tmpAnnoCells = [...tmpParams["cell_labelling"]["references"]];
     if (e.target.checked) {
@@ -2192,6 +2326,8 @@ export function ParameterSelection({
           {render_cellann()}
           <Divider />
           {render_combweights()}
+          <Divider />
+          {render_fsetenrich()}
         </div>
         <div className="section-info">
           <div>

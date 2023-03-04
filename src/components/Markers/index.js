@@ -38,7 +38,6 @@ const MarkerPlot = (props) => {
     setGeneColSel,
     annotationObj,
     annotationCols,
-    appMode,
   } = useContext(AppContext);
 
   const default_cluster = `${code}::CLUSTERS`;
@@ -380,77 +379,58 @@ const MarkerPlot = (props) => {
   return (
     <div className="marker-container">
       <div className="marker-container-header">
-        <Popover2
-          popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-          hasBackdrop={false}
-          interactionKind="hover"
-          placement="left"
-          hoverOpenDelay={500}
-          modifiers={{
-            arrow: { enabled: true },
-            flip: { enabled: true },
-            preventOverflow: { enabled: true },
-          }}
-          content={
-            <Card
-              style={{
-                width: "450px",
-              }}
-              elevation={Elevation.ZERO}
-            >
-              <p>
-                This panel shows the marker genes that are upregulated in the
-                cluster of interest compared to some or all of the other
-                clusters. Hopefully, this allows us to assign some kind of
-                biological meaning to each cluster based on the functions of the
-                top markers. Several ranking schemes are available depending on
-                how we choose to quantify the strength of the upregulation.
-              </p>
-            </Card>
-          }
-        >
-          <H5
-            style={{
-              cursor: "help",
-            }}
-          >
-            Marker Genes
-          </H5>
-        </Popover2>
         <div>
-          {/* <Tooltip2
+          <Popover2
+            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+            hasBackdrop={false}
+            interactionKind="hover"
+            placement="left"
+            hoverOpenDelay={500}
+            modifiers={{
+              arrow: { enabled: true },
+              flip: { enabled: true },
+              preventOverflow: { enabled: true },
+            }}
             content={
-              <div style={{ width: "350px" }}>
+              <Card
+                style={{
+                  width: "450px",
+                }}
+                elevation={Elevation.ZERO}
+              >
                 <p>
-                  Filter the set of marker genes according to various
-                  statistics. For example, this can be used to apply a minimum
-                  threshold on the{" "}
-                  <strong>
-                    <em>log-fold change</em>
-                  </strong>{" "}
-                  or{" "}
-                  <strong>
-                    <em>Δ-detected</em>
-                  </strong>
-                  , to focus on genes with strong upregulation; or to apply a
-                  maximum threshold on the expression, to remove constitutively
-                  expressed genes.
+                  This panel shows the marker genes that are upregulated in the
+                  cluster of interest compared to some or all of the other
+                  clusters. Hopefully, this allows us to assign some kind of
+                  biological meaning to each cluster based on the functions of
+                  the top markers. Several ranking schemes are available
+                  depending on how we choose to quantify the strength of the
+                  upregulation.
                 </p>
-                <p>
-                  Note that this does not change the relative ordering in the
-                  table above.
-                </p>
-              </div>
+              </Card>
             }
           >
-            <Button
-              onClick={() => setShowFilters(!showFilters)}
-              minimal={true}
-              icon={"filter-list"}
-              small={true}
-              intent={showFilters ? "primary" : "none"}
-            />
-          </Tooltip2> */}
+            <H5
+              style={{
+                cursor: "help",
+              }}
+            >
+              Marker Genes
+            </H5>
+          </Popover2>
+          <span
+            style={{
+              marginTop: "5px",
+              marginLeft: "3px",
+              cursor: "pointer",
+              fontStyle: "italic",
+            }}
+            onClick={() => props?.setMarkersOrFsets("featuresets")}
+          >
+            switch to feature sets
+          </span>
+        </div>
+        <div>
           <Tooltip2 content={isExpanded ? "Show Metrics" : "Hide Metrics"}>
             <Button
               onClick={() => setIsExpanded(!isExpanded)}
@@ -619,7 +599,7 @@ const MarkerPlot = (props) => {
         </span>
       </Collapse>
       <Divider />
-      {props?.modality ? (
+      {props?.modality != null && (
         <Label style={{ textAlign: "left", marginBottom: "5px" }}>
           Select Modality
           <HTMLSelect
@@ -638,8 +618,6 @@ const MarkerPlot = (props) => {
             ))}
           </HTMLSelect>
         </Label>
-      ) : (
-        ""
       )}
       <Label style={{ marginBottom: "0" }}>
         Choose annotation

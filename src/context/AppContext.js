@@ -36,6 +36,9 @@ const AppContextProvider = ({ children }) => {
   // Ehub datasets
   const [ehubDatasets, setEhubDatasets] = useState(null);
 
+  // featureset enrichment collection
+  const [fsetEnrichCollections, setFsetEnrichCollections] = useState(null);
+
   // app import state - params loading first time ?
   const [initLoadState, setInitLoadState] = useState(false);
   // app export state - .kana file
@@ -167,7 +170,16 @@ const AppContextProvider = ({ children }) => {
       compute_auc: true,
     },
     feature_set_enrichment: {
-      collections: [],
+      collections: [
+        "mouse-GO",
+        "human-GO",
+        "worm-GO",
+        "rat-GO",
+        "fly-GO",
+        "zebrafish-GO",
+        "chimp-GO",
+      ],
+      species: null,
       automatic: true,
       gene_id_column: null,
       gene_id_type: "ENSEMBL",
@@ -216,6 +228,8 @@ const AppContextProvider = ({ children }) => {
         setExploreFiles,
         appMode,
         setAppMode,
+        fsetEnrichCollections,
+        setFsetEnrichCollections,
       }}
     >
       {children}
