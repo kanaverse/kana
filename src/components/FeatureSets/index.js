@@ -25,6 +25,7 @@ import * as d3 from "d3";
 import { AppContext } from "../../context/AppContext";
 
 import Cell from "../Plots/Cell.js";
+import HeatmapCell from "../Plots/HeatmapCell";
 
 import { code, getMinMax, defaultColor } from "../../utils/utils";
 import "./fsea.css";
@@ -45,7 +46,6 @@ const FeatureSetEnrichment = (props) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showCounts, setShowCounts] = useState(true);
   const [showPvalues, setShowPvalues] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(true);
 
   const [showFilters, setShowFilters] = useState(false);
 
@@ -69,6 +69,15 @@ const FeatureSetEnrichment = (props) => {
 
   // scale to use for gradients on expression bar
   const detectedScale = d3.interpolateRdYlBu; //d3.interpolateRdBu;
+
+  useEffect(() => {
+    let width = 350;
+
+    if (!showCounts) width -= 45;
+    if (!showPvalues) width -= 55;
+
+    props?.setFsetWidth(width);
+  }, [showCounts, showPvalues]);
 
   // update clusters when custom selection is made in the UI
   useEffect(() => {
@@ -101,6 +110,46 @@ const FeatureSetEnrichment = (props) => {
             `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
           ]
       ) {
+        let tcountMinMax = d3.extent(
+          props?.fsetEnirchSummary[
+            `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
+          ][props?.selectedFsetColl]["counts"]
+        );
+        let tcountval = tcountMinMax[1] === 0 ? 0.01 : tcountMinMax[1];
+        setCountsMinMax([
+          parseFloat(tcountMinMax[0].toFixed(2)),
+          parseFloat(tcountval.toFixed(2)),
+        ]);
+
+        let tpvalMinMax = d3.extent(
+          props?.fsetEnirchSummary[
+            `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
+          ][props?.selectedFsetColl]["pvalues"]
+        );
+        let tpvalval = tpvalMinMax[1] === 0 ? 0.01 : tpvalMinMax[1];
+        setPValMinMax([
+          parseFloat(tpvalMinMax[0].toFixed(2)),
+          parseFloat(tpvalval.toFixed(2)),
+        ]);
+
+        setMinMaxs({
+          count: [
+            parseFloat(tcountMinMax[0].toFixed(2)),
+            parseFloat(tcountval.toFixed(2)),
+          ],
+          pvalue: [
+            parseFloat(tpvalMinMax[0].toFixed(2)),
+            parseFloat(tpvalval.toFixed(2)),
+          ],
+        });
+
+        setFsetFilter({
+          count: fsetFilter?.count
+            ? fsetFilter?.count
+            : [0, parseFloat(tcountval.toFixed(2))],
+          pvalue: fsetFilter?.pvalue ? fsetFilter?.pvalue : [0, 0.05],
+        });
+
         let trecs = [];
 
         props?.fsetEnirchDetails[props?.selectedFsetColl].names.map((x, i) => {
@@ -120,7 +169,9 @@ const FeatureSetEnrichment = (props) => {
             expanded: false,
           });
         });
-        setProsRecords(trecs);
+
+        let sortedRows = trecs.sort((a, b) => a.pvalue - b.pvalue);
+        setProsRecords(sortedRows);
       }
     }
   }, [props?.fsetEnirchDetails, props?.fsetEnirchSummary]);
@@ -129,6 +180,18 @@ const FeatureSetEnrichment = (props) => {
     if (!prosRecords) return [];
 
     let sortedRows = prosRecords;
+    if (fsetFilter) {
+      for (let key in fsetFilter) {
+        let range = fsetFilter[key];
+        if (!range) continue;
+        if (range[0] === minMaxs[key][0] && range[1] === minMaxs[key][1])
+          continue;
+        sortedRows = sortedRows.filter(
+          (x) => x[key] >= range[0] && x[key] <= range[1]
+        );
+      }
+    }
+
     if (!searchInput || searchInput === "") return sortedRows;
 
     sortedRows = sortedRows.filter(
@@ -137,10 +200,26 @@ const FeatureSetEnrichment = (props) => {
         x.description.toLowerCase().indexOf(searchInput.toLowerCase()) !== -1
     );
     return sortedRows;
-  }, [prosRecords, searchInput]);
+  }, [prosRecords, searchInput, fsetFilter]);
+
+  const getRowWidths = () => {
+    let action = 52;
+    let rem_width = props?.fsetWidth - action - 35;
+    let widths = [];
+    if (showCounts) widths.push(Math.ceil(rem_width * 0.15));
+    if (showPvalues) widths.push(Math.ceil(rem_width * 0.15));
+
+    let current_total = widths.reduce((a, b) => a + b, 0);
+    let geneWidth = rem_width - current_total;
+
+    if (widths.length > 0)
+      return [geneWidth, widths.join("px "), `${action}px`].join("px ");
+
+    return [geneWidth, `${action}px`].join("px ");
+  };
 
   const getTableHeight = () => {
-    let defheight = 200;
+    let defheight = 335;
     if (showFilters) defheight = 530;
 
     if (props?.windowWidth < 1200) {
@@ -425,25 +504,99 @@ const FeatureSetEnrichment = (props) => {
                 </div>
               );
             },
-            // Header: () => {
-            //   return (
-            //     <div
-            //       className="row-container row-header"
-            //       style={{
-            //         gridTemplateColumns: "auto 55px",
-            //       }}
-            //     >
-            //       <span
-            //         style={{
-            //           textDecoration: "underline",
-            //           cursor: "help",
-            //         }}
-            //       >
-            //         Feature sets (click to expand)
-            //       </span>
-            //     </div>
-            //   );
-            // },
+            Header: () => {
+              return (
+                <div
+                  className="fsetenrich-row-container fsetenrich-row-header"
+                  style={{
+                    gridTemplateColumns: getRowWidths(),
+                  }}
+                >
+                  <span
+                    style={{
+                      textDecoration: "underline",
+                      cursor: "help",
+                    }}
+                  >
+                    Feature set
+                  </span>
+                  {showPvalues && (
+                    <Popover2
+                      popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                      hasBackdrop={false}
+                      interactionKind="hover"
+                      placement="auto"
+                      hoverOpenDelay={50}
+                      modifiers={{
+                        arrow: { enabled: true },
+                        flip: { enabled: true },
+                        preventOverflow: { enabled: true },
+                      }}
+                      content={
+                        <Card
+                          style={{
+                            width: "250px",
+                          }}
+                          elevation={Elevation.ZERO}
+                        >
+                          <p>pvalues</p>
+                          <p>
+                            Use the color scale below to apply a filter on this
+                            statistic.
+                          </p>
+                        </Card>
+                      }
+                    >
+                      <span
+                        style={{
+                          textDecoration: "underline",
+                          cursor: "help",
+                        }}
+                      >
+                        pvalue
+                      </span>
+                    </Popover2>
+                  )}
+                  {showCounts && (
+                    <Popover2
+                      popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                      hasBackdrop={false}
+                      interactionKind="hover"
+                      placement="auto"
+                      hoverOpenDelay={50}
+                      modifiers={{
+                        arrow: { enabled: true },
+                        flip: { enabled: true },
+                        preventOverflow: { enabled: true },
+                      }}
+                      content={
+                        <Card
+                          style={{
+                            width: "250px",
+                          }}
+                          elevation={Elevation.ZERO}
+                        >
+                          <p>counts</p>
+                          <p>
+                            Use the color scale below to apply a filter on this
+                            statistic.
+                          </p>
+                        </Card>
+                      }
+                    >
+                      <span
+                        style={{
+                          textDecoration: "underline",
+                          cursor: "help",
+                        }}
+                      >
+                        count
+                      </span>
+                    </Popover2>
+                  )}
+                </div>
+              );
+            },
           }}
           className="fsetenrich-list"
           totalCount={sortedRows.length}
@@ -454,9 +607,9 @@ const FeatureSetEnrichment = (props) => {
             return (
               <div>
                 <div
-                  className="row-container"
+                  className="fsetenrich-row-container"
                   style={{
-                    gridTemplateColumns: "auto 55px",
+                    gridTemplateColumns: getRowWidths(),
                   }}
                 >
                   <span
@@ -471,13 +624,111 @@ const FeatureSetEnrichment = (props) => {
                     </strong>
                     : {row.description} ({row.size} genes)
                   </span>
-                  <div className="row-action">
+                  {showPvalues && (
+                    <Popover2
+                      popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                      hasBackdrop={false}
+                      interactionKind="hover"
+                      placement="auto"
+                      hoverOpenDelay={500}
+                      modifiers={{
+                        arrow: { enabled: true },
+                        flip: { enabled: true },
+                        preventOverflow: { enabled: true },
+                      }}
+                      content={
+                        <Card elevation={Elevation.ZERO}>
+                          <table>
+                            <tr>
+                              <td></td>
+                              <th scope="col">
+                                {row.name}: {row.description} ({row.size} genes)
+                              </th>
+                              <th scope="col">This feature set</th>
+                            </tr>
+                            <tr>
+                              <th scope="row">Pvalue</th>
+                              <td>{row.pvalue.toFixed(2)}</td>
+                              <td style={{ fontStyle: "italic" }}>
+                                ∈ [{pvalMinMax[0].toFixed(2)},{" "}
+                                {pvalMinMax[1].toFixed(2)}]
+                              </td>
+                            </tr>
+                            <tr>
+                              <th scope="row">Count</th>
+                              <td>{row.count.toFixed(2)}</td>
+                              <td style={{ fontStyle: "italic" }}>
+                                ∈ [{countsMinMax[0].toFixed(2)},{" "}
+                                {countsMinMax[1].toFixed(2)}]
+                              </td>
+                            </tr>
+                          </table>
+                        </Card>
+                      }
+                    >
+                      <HeatmapCell
+                        minmax={pvalMinMax}
+                        colorscale={d3.interpolateRdBu}
+                        score={row.pvalue}
+                      />
+                    </Popover2>
+                  )}
+                  {showCounts && (
+                    <Popover2
+                      popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                      hasBackdrop={false}
+                      interactionKind="hover"
+                      placement="auto"
+                      hoverOpenDelay={500}
+                      modifiers={{
+                        arrow: { enabled: true },
+                        flip: { enabled: true },
+                        preventOverflow: { enabled: true },
+                      }}
+                      content={
+                        <Card elevation={Elevation.ZERO}>
+                          <table>
+                            <tr>
+                              <td></td>
+                              <th scope="col">
+                                {row.name}: {row.description} ({row.size} genes)
+                              </th>
+                              <th scope="col">This feature set</th>
+                            </tr>
+                            <tr>
+                              <th scope="row">Count</th>
+                              <td>{row.count.toFixed(2)}</td>
+                              <td style={{ fontStyle: "italic" }}>
+                                ∈ [{countsMinMax[0].toFixed(2)},{" "}
+                                {countsMinMax[1].toFixed(2)}]
+                              </td>
+                            </tr>
+                            <tr>
+                              <th scope="row">Pvalue</th>
+                              <td>{row.pvalue.toFixed(2)}</td>
+                              <td style={{ fontStyle: "italic" }}>
+                                ∈ [{pvalMinMax[0].toFixed(2)},{" "}
+                                {pvalMinMax[1].toFixed(2)}]
+                              </td>
+                            </tr>
+                          </table>
+                        </Card>
+                      }
+                    >
+                      <HeatmapCell
+                        minmax={countsMinMax}
+                        colorscale={d3.interpolateRdBu}
+                        score={row.count}
+                      />
+                    </Popover2>
+                  )}
+                  <div className="fsetenrich-row-action">
                     <Tooltip2 content="Compute feature set scores">
                       <Button
                         icon={rowexp ? "minus" : "plus"}
                         small={true}
                         fill={false}
-                        className="row-action"
+                        className="fsetenrich-row-action"
                         outlined={rowexp ? false : true}
                         intent={rowexp ? "primary" : null}
                         onClick={() => {

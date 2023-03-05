@@ -989,6 +989,9 @@ export function AnalysisMode(props) {
   // resize markers width
   const [markersWidth, setMarkersWidth] = useState(360);
 
+  // resize fset width
+  const [fsetWidth, setFsetWidth] = useState(360);
+
   const handleResize = () => {
     setWindowWidth(window.innerWidth);
   };
@@ -1492,6 +1495,9 @@ export function AnalysisMode(props) {
                           selectedFsetAnnotation={selectedFsetAnnotation}
                           setSelectedFsetAnnotation={setSelectedFsetAnnotation}
                           fsetEnirchSummary={fsetEnirchSummary}
+                          setFsetWidth={setFsetWidth}
+                          fsetWidth={fsetWidth}
+                          windowWidth={windowWidth}
                         />
                       )}
                     </div>
