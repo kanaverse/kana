@@ -119,6 +119,54 @@ const DimPlot = (props) => {
     props?.gene,
   ]);
 
+  // if feature set score gradient is enabled
+  useEffect(() => {
+    if (
+      props?.selectedFsetIndex === null ||
+      props?.selectedFsetIndex === undefined ||
+      props?.selectedFsetColl === null ||
+      props?.selectedFsetColl === undefined ||
+      props?.fsetEnirchDetails === null ||
+      props?.fsetEnirchDetails === undefined
+    ) {
+      setShowGradient(false);
+      setGradient(null);
+      return;
+    }
+
+    let scores = props?.featureScoreCache?.[props?.selectedFsetIndex]?.scores;
+
+    if (scores) {
+      let exprMinMax = getMinMax(scores);
+      let val = exprMinMax[1] === 0 ? 0.01 : exprMinMax[1];
+      let tmpgradient = new Rainbow();
+      tmpgradient.setSpectrum("#F5F8FA", "#2965CC");
+      tmpgradient.setNumberRange(0, val);
+      if (exprMinMax[0] !== exprMinMax[1]) {
+        setShowGradient(true);
+        setSliderMinMax([0, val]);
+        setExprMinMax([0, val]);
+      } else {
+        setShowGradient(false);
+        AppToaster.show({
+          icon: "warning-sign",
+          intent: "warning",
+          message: `${
+            props?.fsetEnirchDetails[props?.selectedFsetColl].names[
+              props?.selectedFsetIndex
+            ]
+          } has no scores`,
+        });
+      }
+      setGradient(tmpgradient);
+    }
+  }, [
+    props?.fsetEnirchDetails,
+    props?.selectedFsetIndex,
+    props?.selectedFsetColl,
+    props?.featureScoreCache?.[props?.selectedFsetIndex],
+  ]);
+
   // hook to also react when user changes the slider
   useEffect(() => {
     if (Array.isArray(sliderMinMax)) {
@@ -260,6 +308,19 @@ const DimPlot = (props) => {
               // });
 
               // return "#" + colorGradients[cluster_mappings[i]].colorAt(props?.selectedClusterSummary?.[gene]?.expr?.[i])
+            }
+          }
+
+          if (
+            props?.featureScoreCache?.[props?.selectedFsetIndex] !== null ||
+            props?.featureScoreCache?.[props?.selectedFsetIndex] !== undefined
+          ) {
+            let scores =
+              props?.featureScoreCache?.[props?.selectedFsetIndex]?.scores;
+
+            if (scores) {
+              plot_colors[i] = "#" + gradient.colorAt(scores[i]);
+              continue;
             }
           }
 
@@ -412,6 +473,7 @@ const DimPlot = (props) => {
     plotFactors,
     showToggleFactors,
     props?.selectedPoints,
+    props?.featureScoreCache?.[props?.selectedFsetIndex],
   ]);
 
   useEffect(() => {
@@ -1059,7 +1121,85 @@ const DimPlot = (props) => {
             )}
           </div>
         }
-        {showGradient && props?.gene !== null ? (
+        {showGradient && props?.selectedFsetIndex !== null && (
+          <div className="dimplot-right-sidebar-slider">
+            <Divider />
+            <Callout style={{ fontSize: "x-small" }}>
+              <span>
+                Gradient for{" "}
+                <Tag
+                  minimal={true}
+                  intent="warning"
+                  onRemove={() => {
+                    props?.setSelectedFsetIndex(null);
+                  }}
+                >
+                  {
+                    props?.fsetEnirchDetails[props?.selectedFsetColl].names[
+                      props?.selectedFsetIndex
+                    ]
+                  }
+                </Tag>
+                &nbsp;
+                <Tooltip2
+                  content="Use the slider to adjust the color gradient of the plot. Useful when data is skewed
+                                by either a few lowly or highly scores cells"
+                  openOnTargetFocus={false}
+                >
+                  <Icon icon="help" size={12}></Icon>
+                </Tooltip2>
+              </span>
+              <div className="dim-slider-container">
+                <div className="dim-slider-gradient">
+                  {/* <span>{Math.round(exprMinMax[0])}</span>&nbsp; */}
+                  <div
+                    style={{
+                      backgroundImage: `linear-gradient(to right, #F5F8FA ${
+                        ((sliderMinMax[0] - exprMinMax[0]) * 100) /
+                        (exprMinMax[1] - exprMinMax[0])
+                      }%, ${
+                        ((sliderMinMax[1] +
+                          sliderMinMax[0] -
+                          2 * exprMinMax[0]) *
+                          100) /
+                        (2 * (exprMinMax[1] - exprMinMax[0]))
+                      }%, #2965CC ${
+                        100 -
+                        ((exprMinMax[1] - sliderMinMax[1]) * 100) /
+                          (exprMinMax[1] - exprMinMax[0])
+                      }%)`,
+                      width: "145px",
+                      height: "15px",
+                      marginLeft: "4px",
+                    }}
+                  ></div>
+                  &nbsp;
+                  {/* <span>{Math.round(exprMinMax[1])}</span> */}
+                </div>
+                <div className="dim-range-slider">
+                  <RangeSlider
+                    min={Math.round(exprMinMax[0])}
+                    max={Math.round(exprMinMax[1])}
+                    stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 10}
+                    labelValues={[
+                      Math.round(exprMinMax[0]),
+                      Math.round(exprMinMax[1]),
+                    ]}
+                    onChange={(range) => {
+                      setSliderMinMax(range);
+                    }}
+                    value={[
+                      Math.round(sliderMinMax[0]),
+                      Math.round(sliderMinMax[1]),
+                    ]}
+                    vertical={false}
+                  />
+                </div>
+              </div>
+            </Callout>
+          </div>
+        )}
+        {showGradient && props?.gene !== null && (
           <div className="dimplot-right-sidebar-slider">
             <Divider />
             <Callout style={{ fontSize: "x-small" }}>
@@ -1132,8 +1272,6 @@ const DimPlot = (props) => {
               </div>
             </Callout>
           </div>
-        ) : (
-          ""
         )}
       </div>
     </div>

@@ -261,6 +261,12 @@ export function AnalysisMode(props) {
   // which  fset annotation, currently we only support computed clusters
   const [selectedFsetAnnotation, setSelectedFsetAnnotation] =
     useState(default_cluster);
+  // what feature name is selected
+  const [selectedFsetIndex, setSelectedFsetIndex] = useState(null);
+  // request feature set scores
+  const [reqFsetIndex, setReqFsetIndex] = useState(null);
+  // cache for scores
+  const [featureScoreCache, setFeatureScoreCache] = useState(null);
   /*******
    * USER REQUESTS - END
    ******/
@@ -559,6 +565,34 @@ export function AnalysisMode(props) {
       }
     }
   }, [selectedFsetColl, selectedFsetCluster, fsetClusterRank]);
+
+  // get feature scores for a set
+  useEffect(() => {
+    if (
+      reqFsetIndex != null &&
+      selectedFsetCluster != null &&
+      selectedFsetColl !== null
+    ) {
+      scranWorker.postMessage({
+        type: "getFeatureScores",
+        payload: {
+          index: reqFsetIndex,
+          collection: selectedFsetColl,
+          cluster: selectedFsetCluster,
+        },
+      });
+
+      add_to_logs(
+        "info",
+        `--- Request gene expression for gene:${reqGene} sent ---`
+      );
+    }
+  }, [reqFsetIndex, selectedFsetCluster, selectedFsetColl]);
+
+  useEffect(() => {
+    setGene(null);
+    setSelectedFsetIndex(null);
+  }, [markersORFSets]);
 
   function add_to_logs(type, msg, status) {
     let tmp = [...logs];
@@ -978,6 +1012,14 @@ export function AnalysisMode(props) {
       let tmpsumm = { ...fsetEnirchSummary };
       tmpsumm[`${selectedFsetCluster}-${fsetClusterRank}`] = resp;
       setFsetEnrichSummary(tmpsumm);
+
+      setFeatureScoreCache(new Array(resp[selectedFsetColl].counts.length));
+    } else if (type === "setFeatureScores_DATA") {
+      let tmp = [...featureScoreCache];
+      tmp[reqFsetIndex] = resp;
+
+      setFeatureScoreCache(tmp);
+      setReqFsetIndex(null);
     } else {
       console.log("unknown msg type", payload);
     }
@@ -1424,6 +1466,11 @@ export function AnalysisMode(props) {
                         colorByAnnotation={colorByAnnotation}
                         setColorByAnnotation={setColorByAnnotation}
                         selectedModality={selectedModality}
+                        selectedFsetIndex={selectedFsetIndex}
+                        setSelectedFsetIndex={setSelectedFsetIndex}
+                        featureScoreCache={featureScoreCache}
+                        fsetEnirchDetails={fsetEnirchDetails}
+                        selectedFsetColl={selectedFsetColl}
                       />
                     )}
                   </div>
@@ -1498,6 +1545,10 @@ export function AnalysisMode(props) {
                           setFsetWidth={setFsetWidth}
                           fsetWidth={fsetWidth}
                           windowWidth={windowWidth}
+                          selectedFsetIndex={selectedFsetIndex}
+                          setSelectedFsetIndex={setSelectedFsetIndex}
+                          setReqFsetIndex={setReqFsetIndex}
+                          featureScoreCache={featureScoreCache}
                         />
                       )}
                     </div>

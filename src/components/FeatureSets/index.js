@@ -152,6 +152,7 @@ const FeatureSetEnrichment = (props) => {
 
         props?.fsetEnirchDetails[props?.selectedFsetColl].names.map((x, i) => {
           trecs.push({
+            _index: i,
             name: x,
             description:
               props?.fsetEnirchDetails[props?.selectedFsetColl].descriptions[i],
@@ -164,6 +165,7 @@ const FeatureSetEnrichment = (props) => {
               props?.fsetEnirchSummary[
                 `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
               ][props?.selectedFsetColl]["pvalues"][i],
+            fscores: props?.featureScoreCache[i],
             expanded: false,
           });
         });
@@ -172,7 +174,11 @@ const FeatureSetEnrichment = (props) => {
         setProsRecords(sortedRows);
       }
     }
-  }, [props?.fsetEnirchDetails, props?.fsetEnirchSummary]);
+  }, [
+    props?.fsetEnirchDetails,
+    props?.fsetEnirchSummary,
+    props?.featureScoreCache,
+  ]);
 
   const sortedRows = useMemo(() => {
     if (!prosRecords) return [];
@@ -742,21 +748,21 @@ const FeatureSetEnrichment = (props) => {
                         small={true}
                         fill={false}
                         outlined={
-                          row.name === props?.selectedFsetName ? false : true
+                          row._index === props?.selectedFsetIndex ? false : true
                         }
                         intent={
-                          row.name === props?.selectedFsetName
+                          row._index === props?.selectedFsetIndex
                             ? "primary"
                             : null
                         }
                         className="row-action"
                         onClick={() => {
-                          if (row.name === props?.selectedFsetName) {
-                            props?.setSelectedFsetName(null);
+                          if (row._index === props?.selectedFsetIndex) {
+                            props?.setSelectedFsetIndex(null);
                           } else {
-                            props?.setSelectedFsetName(row.name);
+                            props?.setSelectedFsetIndex(row._index);
                             if (!rowScores) {
-                              props?.setReqFsetName(row.selectedFsetName);
+                              props?.setReqFsetIndex(row._index);
                             }
                           }
                         }}

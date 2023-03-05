@@ -848,6 +848,22 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
+  } else if (type === "getFeatureScores") {
+    loaded
+      .then((x) => {
+        let { collection, index } = payload;
+
+        let resp = superstate.feature_set_enrichment.fetchPerCellScores(
+          collection,
+          index
+        );
+        console.log(resp);
+        postSuccess("setFeatureScores", resp);
+      })
+      .catch((err) => {
+        console.error(err);
+        postError(type, err, fatal);
+      });
   } else {
     postError(type, `Type: ${type} not defined`, fatal);
   }
