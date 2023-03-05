@@ -831,7 +831,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "computeFeatureScores") {
+  } else if (type == "computeFeaturesetSummary") {
     loaded
       .then((x) => {
         let rank_type = payload.rank_type;
@@ -842,7 +842,7 @@ onmessage = function (msg) {
           rank_type.slice(0, index),
           rank_type.slice(index + 1)
         );
-        postSuccess("computeFeatureScores", resp);
+        postSuccess("computeFeaturesetSummary", resp);
       })
       .catch((err) => {
         console.error(err);

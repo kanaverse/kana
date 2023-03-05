@@ -160,7 +160,8 @@ export function AnalysisMode(props) {
   const [cellLabelData, setCellLabelData] = useState(null);
 
   // STEP: FEATURE_SET_ENRICHMENT
-  const [fsetEnirchDetails, setFsetEnrichDetails] = useState(null);
+  const [fsetEnirchDetails, setFsetEnrichDetails] = useState({});
+  const [fsetEnirchSummary, setFsetEnrichSummary] = useState({});
 
   /*******
    * State to hold analysis specific results - END
@@ -547,13 +548,15 @@ export function AnalysisMode(props) {
   // compute feature set scores
   useEffect(() => {
     if (selectedFsetCluster !== null && fsetClusterRank !== null) {
-      scranWorker.postMessage({
-        type: "computeFeatureScores",
-        payload: {
-          cluster: selectedFsetCluster,
-          rank_type: fsetClusterRank,
-        },
-      });
+      if (!(`${selectedFsetCluster}-${fsetClusterRank}` in fsetEnirchSummary)) {
+        scranWorker.postMessage({
+          type: "computeFeaturesetSummary",
+          payload: {
+            cluster: selectedFsetCluster,
+            rank_type: fsetClusterRank,
+          },
+        });
+      }
     }
   }, [selectedFsetColl, selectedFsetCluster, fsetClusterRank]);
 
@@ -876,7 +879,7 @@ export function AnalysisMode(props) {
       setShowAnimation(false);
       setTriggerAnimation(false);
       setShowDimPlotLoader(false);
-    } else if (payload.type === "tsne_iter" || payload.type === "umap_iter") {
+    } else if (type === "tsne_iter" || type === "umap_iter") {
       setAnimateData(payload);
     } else if (
       type === "setMarkersForCluster" ||
@@ -917,21 +920,20 @@ export function AnalysisMode(props) {
     } else if (type === "cell_labelling_DATA") {
       setCellLabelData(resp);
       setShowCellLabelLoader(false);
-    } else if (payload.type === "custom_selections_DATA") {
-    } else if (payload.type === "tsne_CACHE" || payload.type === "umap_CACHE") {
+    } else if (type === "custom_selections_DATA") {
+    } else if (type === "tsne_CACHE" || payload.type === "umap_CACHE") {
       setShowDimPlotLoader(false);
-    } else if (payload.type === "marker_detection_CACHE") {
+    } else if (type === "marker_detection_CACHE") {
       setShowMarkerLoader(false);
-    } else if (payload.type === "quality_control_CACHE") {
+    } else if (type === "quality_control_CACHE") {
       setShowQCLoader(false);
-    } else if (payload.type === "pca_CACHE") {
+    } else if (type === "pca_CACHE") {
       setShowPCALoader(false);
-    } else if (payload.type === "choose_clustering_CACHE") {
+    } else if (type === "choose_clustering_CACHE") {
       setShowNClusLoader(false);
-    } else if (payload.type === "cell_labelling_CACHE") {
+    } else if (type === "cell_labelling_CACHE") {
       setShowCellLabelLoader(false);
-    } else if (payload.type === "loadedParameters") {
-      const { resp } = payload;
+    } else if (type === "loadedParameters") {
       setParams(resp.parameters);
       setLoadParams(resp.parameters);
 
@@ -956,9 +958,7 @@ export function AnalysisMode(props) {
       setTimeout(() => {
         setInitLoadState(false);
       }, 1000);
-    } else if (payload.type === "exportState") {
-      const { resp } = payload;
-
+    } else if (type === "exportState") {
       let tmpLink = document.createElement("a");
       var fileNew = new Blob([resp], {
         type: "text/plain",
@@ -968,12 +968,16 @@ export function AnalysisMode(props) {
       tmpLink.click();
 
       setExportState(false);
-    } else if (payload.type === "KanaDB") {
+    } else if (type === "KanaDB") {
       setIndexedDBState(false);
     } else if (type == "feature_set_enrichment_DATA") {
       setFsetEnrichDetails(resp.details);
       setShowFsetLoader(false);
       setSelectedFsetColl(Object.keys(resp.details)[0]);
+    } else if (type === "computeFeaturesetSummary_DATA") {
+      let tmpsumm = { ...fsetEnirchSummary };
+      tmpsumm[`${selectedFsetCluster}-${fsetClusterRank}`] = resp;
+      setFsetEnrichSummary(tmpsumm);
     } else {
       console.log("unknown msg type", payload);
     }
@@ -1474,6 +1478,7 @@ export function AnalysisMode(props) {
                       {fsetEnirchDetails && (
                         <FeatureSetEnrichment
                           setMarkersOrFsets={setMarkersOrFsets}
+                          fsetClusterRank={fsetClusterRank}
                           setFsetClusterRank={setFsetClusterRank}
                           fsetEnirchDetails={fsetEnirchDetails}
                           selectedFsetColl={selectedFsetColl}
@@ -1486,6 +1491,7 @@ export function AnalysisMode(props) {
                           setSelectedFsetCluster={setSelectedFsetCluster}
                           selectedFsetAnnotation={selectedFsetAnnotation}
                           setSelectedFsetAnnotation={setSelectedFsetAnnotation}
+                          fsetEnirchSummary={fsetEnirchSummary}
                         />
                       )}
                     </div>

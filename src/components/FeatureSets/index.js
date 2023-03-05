@@ -92,21 +92,38 @@ const FeatureSetEnrichment = (props) => {
   }, [props?.selectedFsetAnnotation, annotationObj]);
 
   useEffect(() => {
-    if (props?.fsetEnirchDetails && props?.selectedFsetColl !== null) {
-      let trecs = [];
+    if (props?.fsetEnirchDetails !== null && props?.selectedFsetColl !== null) {
+      if (
+        `${props?.selectedFsetCluster}-${props?.fsetClusterRank}` in
+          props?.fsetEnirchSummary &&
+        props?.selectedFsetColl in
+          props?.fsetEnirchSummary[
+            `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
+          ]
+      ) {
+        let trecs = [];
 
-      props?.fsetEnirchDetails[props?.selectedFsetColl].names.map((x, i) => {
-        trecs.push({
-          name: x,
-          description:
-            props?.fsetEnirchDetails[props?.selectedFsetColl].descriptions[i],
-          size: props?.fsetEnirchDetails[props?.selectedFsetColl].sizes[i],
-          expanded: false,
+        props?.fsetEnirchDetails[props?.selectedFsetColl].names.map((x, i) => {
+          trecs.push({
+            name: x,
+            description:
+              props?.fsetEnirchDetails[props?.selectedFsetColl].descriptions[i],
+            size: props?.fsetEnirchDetails[props?.selectedFsetColl].sizes[i],
+            count:
+              props?.fsetEnirchSummary[
+                `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
+              ][props?.selectedFsetColl]["counts"][i],
+            pvalue:
+              props?.fsetEnirchSummary[
+                `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
+              ][props?.selectedFsetColl]["pvalues"][i],
+            expanded: false,
+          });
         });
-      });
-      setProsRecords(trecs);
+        setProsRecords(trecs);
+      }
     }
-  }, [props?.fsetEnirchDetails, props?.selectedFsetColl]);
+  }, [props?.fsetEnirchDetails, props?.fsetEnirchSummary]);
 
   const sortedRows = useMemo(() => {
     if (!prosRecords) return [];
