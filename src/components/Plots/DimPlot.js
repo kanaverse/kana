@@ -318,7 +318,7 @@ const DimPlot = (props) => {
             let scores =
               props?.featureScoreCache?.[props?.selectedFsetIndex]?.scores;
 
-            if (scores) {
+            if (scores && gradient) {
               plot_colors[i] = "#" + gradient.colorAt(scores[i]);
               continue;
             }
