@@ -24,8 +24,9 @@ import * as d3 from "d3";
 
 import { AppContext } from "../../context/AppContext";
 
-import Cell from "../Plots/Cell.js";
+import PvalCell from "../Plots/PValCell";
 import HeatmapCell from "../Plots/HeatmapCell";
+import Cell from "../Plots/Cell";
 
 import { code, getMinMax, defaultColor } from "../../utils/utils";
 import "./fsea.css";
@@ -137,17 +138,14 @@ const FeatureSetEnrichment = (props) => {
             parseFloat(tcountMinMax[0].toFixed(2)),
             parseFloat(tcountval.toFixed(2)),
           ],
-          pvalue: [
-            parseFloat(tpvalMinMax[0].toFixed(2)),
-            parseFloat(tpvalval.toFixed(2)),
-          ],
+          pvalue: [0, 1],
         });
 
         setFsetFilter({
           count: fsetFilter?.count
             ? fsetFilter?.count
             : [0, parseFloat(tcountval.toFixed(2))],
-          pvalue: fsetFilter?.pvalue ? fsetFilter?.pvalue : [0, 0.05],
+          pvalue: fsetFilter?.pvalue ? fsetFilter?.pvalue : [0, 1],
         });
 
         let trecs = [];
@@ -603,6 +601,7 @@ const FeatureSetEnrichment = (props) => {
           itemContent={(index) => {
             const row = sortedRows[index];
             const rowexp = row.expanded;
+            const rowScores = row.fscores;
 
             return (
               <div>
@@ -642,7 +641,7 @@ const FeatureSetEnrichment = (props) => {
                             <tr>
                               <td></td>
                               <th scope="col">
-                                {row.name}: {row.description} ({row.size} genes)
+                                {row.name}:({row.size} genes)
                               </th>
                               <th scope="col">This feature set</th>
                             </tr>
@@ -666,11 +665,7 @@ const FeatureSetEnrichment = (props) => {
                         </Card>
                       }
                     >
-                      <HeatmapCell
-                        minmax={pvalMinMax}
-                        colorscale={d3.interpolateRdBu}
-                        score={row.pvalue}
-                      />
+                      <PvalCell score={row.pvalue} />
                     </Popover2>
                   )}
                   {showCounts && (
@@ -691,7 +686,7 @@ const FeatureSetEnrichment = (props) => {
                             <tr>
                               <td></td>
                               <th scope="col">
-                                {row.name}: {row.description} ({row.size} genes)
+                                {row.name}: ({row.size} genes)
                               </th>
                               <th scope="col">This feature set</th>
                             </tr>
@@ -715,10 +710,11 @@ const FeatureSetEnrichment = (props) => {
                         </Card>
                       }
                     >
-                      <HeatmapCell
-                        minmax={countsMinMax}
-                        colorscale={d3.interpolateRdBu}
-                        score={row.count}
+                      <Cell
+                        minmax={[0, 1]}
+                        colorscale={detectedScale}
+                        score={row.count / row.size}
+                        colorscore={row.count / row.size}
                       />
                     </Popover2>
                   )}
@@ -740,6 +736,33 @@ const FeatureSetEnrichment = (props) => {
                           setProsRecords(tmprecs);
                         }}
                       ></Button>
+                    </Tooltip2>
+                    <Tooltip2 content="Visualize feature scores">
+                      <Button
+                        small={true}
+                        fill={false}
+                        outlined={
+                          row.name === props?.selectedFsetName ? false : true
+                        }
+                        intent={
+                          row.name === props?.selectedFsetName
+                            ? "primary"
+                            : null
+                        }
+                        className="row-action"
+                        onClick={() => {
+                          if (row.name === props?.selectedFsetName) {
+                            props?.setSelectedFsetName(null);
+                          } else {
+                            props?.setSelectedFsetName(row.name);
+                            if (!rowScores) {
+                              props?.setReqFsetName(row.selectedFsetName);
+                            }
+                          }
+                        }}
+                      >
+                        <Icon icon={"tint"}></Icon>
+                      </Button>
                     </Tooltip2>
                   </div>
                 </div>
