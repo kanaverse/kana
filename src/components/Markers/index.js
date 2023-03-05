@@ -367,7 +367,7 @@ const MarkerPlot = (props) => {
 
   const getTableHeight = () => {
     let defheight = 335;
-    if (showFilters) defheight = 530;
+    if (showFilters) defheight = 570;
 
     if (props?.windowWidth < 1200) {
       defheight += 270;
@@ -1139,7 +1139,7 @@ const MarkerPlot = (props) => {
                         >
                           <HeatmapCell
                             minmax={lfcMinMax}
-                            colorscale={d3.interpolateRdBu}
+                            colorscale={d3.interpolateRdYlBu}
                             score={row.lfc}
                           />
                         </Popover2>
@@ -1208,7 +1208,7 @@ const MarkerPlot = (props) => {
                         >
                           <HeatmapCell
                             minmax={deltaMinMax}
-                            colorscale={d3.interpolateRdBu}
+                            colorscale={d3.interpolateRdYlBu}
                             score={row.delta}
                           />
                         </Popover2>
