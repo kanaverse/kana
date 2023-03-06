@@ -864,6 +864,22 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
+  } else if (type === "getFeatureGeneIndices") {
+    loaded
+      .then((x) => {
+        let { collection, index } = payload;
+
+        let resp = superstate.feature_set_enrichment.fetchFeatureSetIndices(
+          collection,
+          index
+        );
+        console.log(resp);
+        postSuccess("setFeatureGeneIndices", resp);
+      })
+      .catch((err) => {
+        console.error(err);
+        postError(type, err, fatal);
+      });
   } else {
     postError(type, `Type: ${type} not defined`, fatal);
   }

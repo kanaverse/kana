@@ -252,8 +252,6 @@ export function AnalysisMode(props) {
   const [fsetClusterRank, setFsetClusterRank] = useState("cohen-min-rank");
   // selected collection
   const [selectedFsetColl, setSelectedFsetColl] = useState(null);
-  // user selected feature set
-  const [selectedFsetUser, setSelectedFsetUser] = useState(null);
   // feature scores cache
   const [featureScores, setFeatureScores] = useState({});
   // which fset cluster is selected
@@ -267,6 +265,15 @@ export function AnalysisMode(props) {
   const [reqFsetIndex, setReqFsetIndex] = useState(null);
   // cache for scores
   const [featureScoreCache, setFeatureScoreCache] = useState(null);
+  // gene index selected from a feature set
+  const [featureSetGeneIndex, setFeatureSetGeneIndex] = useState(null);
+  // request for scores
+  const [reqFsetGeneIndex, setReqFsetGeneIndex] = useState(null);
+  // fset gene indices cache
+  const [fsetGeneIndxCache, setFsetGeneIndxCache] = useState(null);
+  // contains the actual gene scores
+  const [fsetGeneExprCache, setFsetGeneExprCache] = useState({});
+
   /*******
    * USER REQUESTS - END
    ******/
@@ -584,10 +591,33 @@ export function AnalysisMode(props) {
 
       add_to_logs(
         "info",
-        `--- Request gene expression for gene:${reqGene} sent ---`
+        `--- Request feature set cell score for feature index:${reqFsetIndex} sent ---`
       );
     }
   }, [reqFsetIndex, selectedFsetCluster, selectedFsetColl]);
+
+  // get feature scores for a set
+  useEffect(() => {
+    if (
+      reqFsetGeneIndex != null &&
+      selectedFsetCluster != null &&
+      selectedFsetColl !== null
+    ) {
+      scranWorker.postMessage({
+        type: "getFeatureGeneIndices",
+        payload: {
+          index: reqFsetGeneIndex,
+          collection: selectedFsetColl,
+          cluster: selectedFsetCluster,
+        },
+      });
+
+      add_to_logs(
+        "info",
+        `--- Request feature set gene indices for feature index:${reqFsetGeneIndex} sent ---`
+      );
+    }
+  }, [reqFsetGeneIndex, selectedFsetCluster, selectedFsetColl]);
 
   useEffect(() => {
     setGene(null);
@@ -1014,12 +1044,19 @@ export function AnalysisMode(props) {
       setFsetEnrichSummary(tmpsumm);
 
       setFeatureScoreCache(new Array(resp[selectedFsetColl].counts.length));
+      setFsetGeneIndxCache(new Array(resp[selectedFsetColl].counts.length));
     } else if (type === "setFeatureScores_DATA") {
       let tmp = [...featureScoreCache];
       tmp[reqFsetIndex] = resp;
 
       setFeatureScoreCache(tmp);
       setReqFsetIndex(null);
+    } else if (type === "setFeatureGeneIndices_DATA") {
+      let tmp = [...fsetGeneIndxCache];
+      tmp[reqFsetGeneIndex] = resp;
+
+      setFsetGeneIndxCache(tmp);
+      setReqFsetGeneIndex(null);
     } else {
       console.log("unknown msg type", payload);
     }
@@ -1533,8 +1570,6 @@ export function AnalysisMode(props) {
                           fsetEnirchDetails={fsetEnirchDetails}
                           selectedFsetColl={selectedFsetColl}
                           setSelectedFsetColl={setSelectedFsetColl}
-                          selectedFsetUser={selectedFsetUser}
-                          setSelectedFsetUser={setSelectedFsetUser}
                           featureScores={featureScores}
                           setFeatureScores={setFeatureScores}
                           selectedFsetCluster={selectedFsetCluster}
@@ -1549,6 +1584,11 @@ export function AnalysisMode(props) {
                           setSelectedFsetIndex={setSelectedFsetIndex}
                           setReqFsetIndex={setReqFsetIndex}
                           featureScoreCache={featureScoreCache}
+                          reqFsetGeneIndex={reqFsetGeneIndex}
+                          setReqFsetGeneIndex={setReqFsetGeneIndex}
+                          featureSetGeneIndex={featureSetGeneIndex}
+                          setFeatureSetGeneIndex={setFeatureSetGeneIndex}
+                          fsetGeneIndxCache={fsetGeneIndxCache}
                         />
                       )}
                     </div>

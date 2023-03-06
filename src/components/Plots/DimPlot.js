@@ -312,8 +312,10 @@ const DimPlot = (props) => {
           }
 
           if (
-            props?.featureScoreCache?.[props?.selectedFsetIndex] !== null ||
-            props?.featureScoreCache?.[props?.selectedFsetIndex] !== undefined
+            props?.selectedFsetIndex !== null &&
+            (props?.featureScoreCache?.[props?.selectedFsetIndex] !== null ||
+              props?.featureScoreCache?.[props?.selectedFsetIndex] !==
+                undefined)
           ) {
             let scores =
               props?.featureScoreCache?.[props?.selectedFsetIndex]?.scores;

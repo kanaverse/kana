@@ -33,13 +33,7 @@ import "./fsea.css";
 import { Select2 } from "@blueprintjs/select";
 
 const FeatureSetEnrichment = (props) => {
-  const {
-    genesInfo,
-    geneColSel,
-    setGeneColSel,
-    annotationObj,
-    annotationCols,
-  } = useContext(AppContext);
+  const { genesInfo, geneColSel, annotationObj } = useContext(AppContext);
 
   const default_cluster = `${code}::CLUSTERS`;
   const default_selection = `${code}::SELECTION`;
@@ -166,6 +160,7 @@ const FeatureSetEnrichment = (props) => {
                 `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
               ][props?.selectedFsetColl]["pvalues"][i],
             fscores: props?.featureScoreCache[i],
+            geneIndices: props?.fsetGeneIndxCache[i],
             expanded: false,
           });
         });
@@ -608,6 +603,7 @@ const FeatureSetEnrichment = (props) => {
             const row = sortedRows[index];
             const rowexp = row.expanded;
             const rowScores = row.fscores;
+            const rowGeneIndices = row.geneIndices;
 
             return (
               <div>
@@ -734,12 +730,19 @@ const FeatureSetEnrichment = (props) => {
                         outlined={rowexp ? false : true}
                         intent={rowexp ? "primary" : null}
                         onClick={() => {
-                          // do something
-                          props?.setSelectedFsetUser(row.name);
-
                           let tmprecs = [...prosRecords];
                           tmprecs[index].expanded = !tmprecs[index].expanded;
                           setProsRecords(tmprecs);
+
+                          // do something
+                          if (!tmprecs[index].expanded) {
+                            props?.setFeatureSetGeneIndex(null);
+                          } else {
+                            props?.setFeatureSetGeneIndex(row._index);
+                            if (!rowGeneIndices) {
+                              props?.setReqFsetGeneIndex(row._index);
+                            }
+                          }
                         }}
                       ></Button>
                     </Tooltip2>
@@ -772,7 +775,33 @@ const FeatureSetEnrichment = (props) => {
                     </Tooltip2>
                   </div>
                 </div>
-                <Collapse isOpen={rowexp}>show computed list here</Collapse>
+                <Collapse isOpen={rowexp}>
+                  {rowGeneIndices !== null && rowGeneIndices !== undefined ? (
+                    <div
+                      style={{
+                        height: "100px",
+                      }}
+                    >
+                      <Virtuoso
+                        totalCount={rowGeneIndices.length}
+                        itemContent={(rgindex) => {
+                          const rgrow = rowGeneIndices[rgindex];
+
+                          return (
+                            <div>
+                              <span>{genesInfo[geneColSel["RNA"]][rgrow]}</span>
+                              <Button small={true} fill={false} outline={true}>
+                                <Icon icon={"tint"}></Icon>
+                              </Button>
+                            </div>
+                          );
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="bp4-skeleton"></div>
+                  )}
+                </Collapse>
               </div>
             );
           }}
