@@ -853,7 +853,8 @@ onmessage = function (msg) {
         let rank_type = payload.rank_type;
         let index = rank_type.indexOf("-");
 
-        let resp = superstate.feature_set_enrichment.fetchGroupResults(
+        let resp = superstate.feature_set_enrichment.computeEnrichment(
+          superstate.marker_detection.fetchResults()["RNA"],
           payload.cluster,
           rank_type.slice(0, index),
           rank_type.slice(index + 1)

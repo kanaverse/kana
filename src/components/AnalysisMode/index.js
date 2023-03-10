@@ -1589,6 +1589,9 @@ export function AnalysisMode(props) {
                           featureSetGeneIndex={featureSetGeneIndex}
                           setFeatureSetGeneIndex={setFeatureSetGeneIndex}
                           fsetGeneIndxCache={fsetGeneIndxCache}
+                          setGene={setGene}
+                          gene={gene}
+                          setReqGene={setReqGene}
                         />
                       )}
                     </div>

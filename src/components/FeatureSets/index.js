@@ -60,6 +60,7 @@ const FeatureSetEnrichment = (props) => {
   // records after collection selection
   // const [selectedCollectionRecs, setSelectedCollectionRecs] = useState(null);
   // records to show after filtering
+  const [preProsRecords, setPreProsRecords] = useState(null);
   const [prosRecords, setProsRecords] = useState(null);
 
   // scale to use for gradients on expression bar
@@ -159,46 +160,54 @@ const FeatureSetEnrichment = (props) => {
               props?.fsetEnirchSummary[
                 `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
               ][props?.selectedFsetColl]["pvalues"][i],
-            fscores: props?.featureScoreCache[i],
-            geneIndices: props?.fsetGeneIndxCache[i],
+            // fscores: props?.featureScoreCache[i],
+            // geneIndices: props?.fsetGeneIndxCache[i],
             expanded: false,
           });
         });
 
         let sortedRows = trecs.sort((a, b) => a.pvalue - b.pvalue);
-        setProsRecords(sortedRows);
+        setPreProsRecords(sortedRows);
       }
     }
-  }, [
-    props?.fsetEnirchDetails,
-    props?.fsetEnirchSummary,
-    props?.featureScoreCache,
-  ]);
+  }, [props?.fsetEnirchDetails, props?.fsetEnirchSummary]);
+
+  useEffect(() => {
+    if (preProsRecords !== null) {
+      let tmp = [...preProsRecords];
+      tmp.map((x, i) => {
+        x.fscores = props?.featureScoreCache[x._index];
+        x.geneIndices = props?.fsetGeneIndxCache[x._index];
+      });
+
+      setProsRecords(tmp);
+    }
+  }, [preProsRecords, props?.featureScoreCache, props?.fsetGeneIndxCache]);
 
   const sortedRows = useMemo(() => {
     if (!prosRecords) return [];
 
-    let sortedRows = prosRecords;
+    let tsortedRows = [...prosRecords];
     if (fsetFilter) {
       for (let key in fsetFilter) {
         let range = fsetFilter[key];
         if (!range) continue;
         if (range[0] === minMaxs[key][0] && range[1] === minMaxs[key][1])
           continue;
-        sortedRows = sortedRows.filter(
+        tsortedRows = tsortedRows.filter(
           (x) => x[key] >= range[0] && x[key] <= range[1]
         );
       }
     }
 
-    if (!searchInput || searchInput === "") return sortedRows;
+    if (!searchInput || searchInput === "") return tsortedRows;
 
-    sortedRows = sortedRows.filter(
+    tsortedRows = tsortedRows.filter(
       (x) =>
         x.name.toLowerCase().indexOf(searchInput.toLowerCase()) !== -1 ||
         x.description.toLowerCase().indexOf(searchInput.toLowerCase()) !== -1
     );
-    return sortedRows;
+    return tsortedRows;
   }, [prosRecords, searchInput, fsetFilter]);
 
   const getRowWidths = () => {
@@ -447,7 +456,8 @@ const FeatureSetEnrichment = (props) => {
         </Label>
       )}
       {clusSel && (
-        <div className="fsetenrich-cluster-selection">
+        <Label style={{ marginBottom: "3px" }}>
+          Choose Cluster
           <HTMLSelect
             className="fsetenrich-cluster-selection-width"
             onChange={(x) => {
@@ -477,7 +487,7 @@ const FeatureSetEnrichment = (props) => {
                 </option>
               ))}
           </HTMLSelect>
-        </div>
+        </Label>
       )}
       <div
         className="fsetenrich-table"
@@ -730,6 +740,7 @@ const FeatureSetEnrichment = (props) => {
                         outlined={rowexp ? false : true}
                         intent={rowexp ? "primary" : null}
                         onClick={() => {
+                          console.log(rowexp);
                           let tmprecs = [...prosRecords];
                           tmprecs[index].expanded = !tmprecs[index].expanded;
                           setProsRecords(tmprecs);
@@ -776,27 +787,44 @@ const FeatureSetEnrichment = (props) => {
                   </div>
                 </div>
                 <Collapse isOpen={rowexp}>
+                  <H5>Genes in this feature set</H5>
                   {rowGeneIndices !== null && rowGeneIndices !== undefined ? (
                     <div
                       style={{
                         height: "100px",
                       }}
                     >
+                      <Divider />
                       <Virtuoso
                         totalCount={rowGeneIndices.length}
                         itemContent={(rgindex) => {
                           const rgrow = rowGeneIndices[rgindex];
+                          const rgname = genesInfo[geneColSel["RNA"]][rgrow];
 
                           return (
-                            <div>
-                              <span>{genesInfo[geneColSel["RNA"]][rgrow]}</span>
-                              <Button small={true} fill={false} outline={true}>
-                                <Icon icon={"tint"}></Icon>
+                            <div className="fsetenrich-genelist-container">
+                              <span>{rgname}</span>
+                              <Button
+                                minimal={true}
+                                small={true}
+                                fill={false}
+                                outline={true}
+                                onClick={() => {
+                                  if (rgname === props?.gene) {
+                                    props?.setGene(null);
+                                  } else {
+                                    props?.setGene(rgname);
+                                    props?.setReqGene(rgname);
+                                  }
+                                }}
+                              >
+                                <Icon size={12} icon={"tint"}></Icon>
                               </Button>
                             </div>
                           );
                         }}
                       />
+                      <Divider />
                     </div>
                   ) : (
                     <div className="bp4-skeleton"></div>
