@@ -514,7 +514,7 @@ export function ExplorerMode() {
 
       setSelectedMarkerAnnotation(resp.annotations[0]);
       setReqAnnotation(resp.annotations[0]);
-      setSelectedCluster(resp.annotations[0]);
+      // setSelectedCluster(resp.annotations[0]);
 
       setShowNClusLoader(false);
       setShowMarkerLoader(false);

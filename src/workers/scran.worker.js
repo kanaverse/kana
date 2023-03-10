@@ -584,6 +584,8 @@ onmessage = function (msg) {
 
             // cluster = annotation_vec.levels.indexOf(cluster);
 
+            mds.computeAll();
+
             mds.computeVersus(payload.left, payload.right);
             raw_res = mds.fetchResults()[modality];
 

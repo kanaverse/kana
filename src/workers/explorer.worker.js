@@ -8,7 +8,6 @@ import {
   fetchStepSummary,
 } from "./helpers.js";
 import { code } from "../utils/utils.js";
-import * as mutils from "./markerUtils.js";
 import { rank } from "d3";
 /***************************************/
 
@@ -22,29 +21,9 @@ let cluster_markers = {};
 let cluster_versus_cache = {};
 let cluster_uniq_map = {};
 
-let custom_selections = {};
+let custom_selection_state = null;
 let selection_markers = {};
 let selection_versus_cache = {};
-
-function release_versus_cache(x) {
-  for (const [k, v] of Object.entries(x)) {
-    if (v.constructor.name === "Object") {
-      release_versus_cache(v);
-    } else {
-      scran.free(v);
-    }
-  }
-}
-
-function delete_custom_selection(id) {
-  if (custom_selections[id]) {
-    for (const obj of Object.values(custom_selections[id])) {
-      scran.free(obj);
-    }
-  }
-  delete custom_selections[id];
-  delete selection_markers[id];
-}
 
 function createDataset(args, setOpts = false) {
   if (args.format == "H5AD") {
@@ -189,17 +168,13 @@ onmessage = function (msg) {
 
             postSuccess(step_embed, step_embed_resp);
 
-            // Releasing all custom markers and versus mode results.
-            for (const id of Object.keys(custom_selections)) {
-              delete_custom_selection(id);
+            if (custom_selection_state) {
+              custom_selection_state.free();
             }
-            custom_selections = {};
-            selection_markers = {};
 
-            release_versus_cache(cluster_versus_cache);
-            cluster_versus_cache = {};
-            release_versus_cache(selection_versus_cache);
-            selection_versus_cache = {};
+            custom_selection_state = new bakana.CustomSelectionsStandalone(
+              dataset.matrix
+            );
           }
         }
       })
@@ -255,17 +230,23 @@ onmessage = function (msg) {
     loaded
       .then((x) => {
         let rank_type = payload.rank_type;
-        let annotation_vec = dataset.cells.column(payload.annotation);
+        let resp;
+        let mds;
+        try {
+          let annotation_vec = scran.factorize(dataset.cells.column(payload.annotation));
+          mds = new bakana.MarkerDetectionStandalone(
+            dataset.matrix,
+            annotation_vec.ids.slice()
+          );
 
-        let resp = mutils.computeVersusClusters(
-          dataset.matrix,
-          rank_type,
-          payload.left,
-          payload.right,
-          payload.modality,
-          payload.annotation,
-          annotation_vec
-        );
+          mds.computeAll();
+          mds.computeVersus(payload.left, payload.right);
+          let raw_res = mds.fetchResults()[payload.modality];
+
+          resp = bakana.formatMarkerResults(raw_res, 1, rank_type);
+        } finally {
+          mds.free();
+        }
 
         var transferrable = [];
         extractBuffers(resp, transferrable);
@@ -286,13 +267,12 @@ onmessage = function (msg) {
     loaded
       .then((x) => {
         let rank_type = payload.rank_type;
-        let resp = mutils.computeVersusSelections(
-          dataset.matrix,
-          rank_type,
+        let raw_res = custom_selection_state.computeVersus(
           payload.left,
-          payload.right,
-          payload.modality
+          payload.right
         );
+
+        let resp = bakana.formatMarkerResults(raw_res, 1, rank_type);
 
         var transferrable = [];
         extractBuffers(resp, transferrable);
@@ -319,15 +299,27 @@ onmessage = function (msg) {
         let modality = payload.modality;
         let annotation = payload.annotation;
 
-        let annotation_vec = dataset.cells.column(annotation);
+        let annotation_arr = dataset.cells.column(annotation);
 
-        let resp = mutils.getMarkersForCluster(
-          dataset.matrix,
-          cluster,
-          rank_type,
-          modality,
-          annotation_vec
-        );
+        let mds, resp;
+        try {
+          let annotation_vec = scran.factorize(annotation_arr);
+          mds = new bakana.MarkerDetectionStandalone(
+            dataset.matrix,
+            annotation_vec.ids.slice()
+          );
+
+          mds.computeAll();
+          let raw_res = mds.fetchResults()[modality];
+
+          resp = bakana.formatMarkerResults(
+            raw_res,
+            annotation_vec.levels.indexOf(cluster),
+            rank_type
+          );
+        } finally {
+          mds.free();
+        }
 
         var transferrable = [];
         extractBuffers(resp, transferrable);
@@ -371,11 +363,7 @@ onmessage = function (msg) {
   } else if (type == "computeCustomMarkers") {
     loaded
       .then((x) => {
-        mutils.computeCustomMarkers(
-          dataset.matrix,
-          payload.id,
-          payload.selection
-        );
+        custom_selection_state.addSelection(payload.id, payload.selection);
         postMessage({
           type: "computeCustomMarkers",
           msg: "Success: COMPUTE_CUSTOM_MARKERS done",
@@ -390,11 +378,11 @@ onmessage = function (msg) {
       .then((x) => {
         let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
 
-        let resp = mutils.getMarkersForSelection(
-          payload.cluster,
-          payload.modality,
-          rank_type
-        );
+        let raw_res = custom_selection_state.fetchResults(payload.cluster)[
+          payload.modality
+        ];
+        let resp = bakana.formatMarkerResults(raw_res, payload.cluster, rank_type);
+
         var transferrable = [];
         extractBuffers(resp, transferrable);
         postMessage(
@@ -413,7 +401,7 @@ onmessage = function (msg) {
   } else if (type == "removeCustomMarkers") {
     loaded
       .then((x) => {
-        mutils.removeCustomMarkers(payload.id);
+        custom_selection_state.removeSelection(payload.id);
       })
       .catch((err) => {
         console.error(err);
