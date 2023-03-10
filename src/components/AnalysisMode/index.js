@@ -971,9 +971,11 @@ export function AnalysisMode(props) {
       setSelectedClusterSummary(records);
       setShowMarkerLoader(false);
     } else if (type === "setGeneExpression") {
-      let tmp = [...selectedClusterSummary];
-      tmp[selectedClusterIndex[resp.gene]].expr = Object.values(resp.expr);
-      setSelectedClusterSummary(tmp);
+      if (selectedClusterSummary) {
+        let tmp = [...selectedClusterSummary];
+        tmp[selectedClusterIndex[resp.gene]].expr = Object.values(resp.expr);
+        setSelectedClusterSummary(tmp);
+      }
       setReqGene(null);
     } else if (type === "setAnnotation") {
       let tmp = { ...annotationObj };

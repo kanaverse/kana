@@ -810,11 +810,11 @@ const FeatureSetEnrichment = (props) => {
                                 fill={false}
                                 outline={true}
                                 onClick={() => {
-                                  if (rgname === props?.gene) {
+                                  if (rgrow === props?.gene) {
                                     props?.setGene(null);
                                   } else {
-                                    props?.setGene(rgname);
-                                    props?.setReqGene(rgname);
+                                    props?.setGene(rgrow);
+                                    props?.setReqGene(rgrow);
                                   }
                                 }}
                               >
