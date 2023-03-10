@@ -5,7 +5,6 @@ import * as kana_db from "./KanaDBHandler.js";
 import * as downloads from "./DownloadsDBHandler.js";
 import * as hashwasm from "hash-wasm";
 import * as translate from "./translate.js";
-import * as mutils from "./markerUtils";
 import {
   extractBuffers,
   postAttempt,
@@ -566,29 +565,32 @@ onmessage = function (msg) {
         let modality = payload.modality;
         let annotation = payload.annotation;
 
-        let resp;
+        let resp, raw_res;
         if (default_cluster === annotation) {
-          let res = superstate.marker_detection.computeVersus(
+          raw_res = superstate.marker_detection.computeVersus(
             payload.left,
             payload.right
           );
-          resp = bakana.formatMarkerResults(
-            res["results"][modality],
-            1,
-            rank_type
-          );
-        } else {
-          let annotation_vec = getAnnotation(annotation);
 
-          resp = mutils.computeVersusClusters(
-            getMatrix(modality),
-            rank_type,
-            payload.left,
-            payload.right,
-            modality,
-            annotation,
-            annotation_vec
-          );
+          resp = bakana.formatMarkerResults(raw_res, 1, rank_type);
+        } else {
+          let mds;
+          try {
+            let annotation_vec = scran.factorize(getAnnotation(annotation));
+            mds = new bakana.MarkerDetectionStandalone(
+              getMatrix(modality),
+              annotation_vec.ids.slice()
+            );
+
+            // cluster = annotation_vec.levels.indexOf(cluster);
+
+            mds.computeVersus(payload.left, payload.right);
+            raw_res = mds.fetchResults()[modality];
+
+            resp = bakana.formatMarkerResults(raw_res, 1, rank_type);
+          } finally {
+            mds.free();
+          }
         }
 
         var transferrable = [];
@@ -645,19 +647,31 @@ onmessage = function (msg) {
         let modality = payload.modality;
         let annotation = payload.annotation;
         let resp;
+        let raw_res;
         if (default_cluster === annotation) {
-          var raw_res = superstate.marker_detection.fetchResults()[modality];
+          raw_res = superstate.marker_detection.fetchResults()[modality];
+
           resp = bakana.formatMarkerResults(raw_res, cluster, rank_type);
         } else {
-          let annotation_vec = getAnnotation(annotation);
+          let mds;
+          try {
+            let annotation_vec = scran.factorize(getAnnotation(annotation));
+            mds = new bakana.MarkerDetectionStandalone(
+              getMatrix(modality),
+              annotation_vec.ids.slice()
+            );
 
-          resp = mutils.getMarkersForCluster(
-            getMatrix(modality),
-            cluster,
-            rank_type,
-            modality,
-            annotation_vec
-          );
+            mds.computeAll();
+            raw_res = mds.fetchResults()[modality];
+
+            resp = bakana.formatMarkerResults(
+              raw_res,
+              annotation_vec.levels.indexOf(cluster),
+              rank_type
+            );
+          } finally {
+            mds.free();
+          }
         }
 
         var transferrable = [];
