@@ -1504,7 +1504,9 @@ export function AnalysisMode(props) {
                 allowResize={false}
               >
                 <SplitPane
-                  defaultSize={markersWidth}
+                  defaultSize={
+                    markersORFSets === "markers" ? markersWidth : fsetWidth
+                  }
                   allowResize={false}
                   split="vertical"
                   primary="second"
