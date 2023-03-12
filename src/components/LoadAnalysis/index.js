@@ -87,7 +87,10 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
         if (
           tabSelected === "kana" &&
           x?.file != null &&
-          !x.file.name.toLowerCase().endsWith("kana")
+          !(
+            x.file.name.toLowerCase().endsWith("kana") ||
+            x.file.name.toLowerCase().endsWith("kana.gz")
+          )
         ) {
           setTmpStatusValid(false);
         } else if (tabSelected === "kanadb" && x?.file === null) {

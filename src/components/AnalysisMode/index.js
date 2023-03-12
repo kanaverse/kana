@@ -1030,7 +1030,7 @@ export function AnalysisMode(props) {
         type: "text/plain",
       });
       tmpLink.href = URL.createObjectURL(fileNew);
-      tmpLink.download = datasetName.split(" ").join("_") + ".kana";
+      tmpLink.download = datasetName.split(" ").join("_") + ".kana.gz";
       tmpLink.click();
 
       setExportState(false);

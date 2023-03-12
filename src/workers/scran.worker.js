@@ -4,6 +4,8 @@ import * as scran from "scran.js";
 import * as kana_db from "./KanaDBHandler.js";
 import * as downloads from "./DownloadsDBHandler.js";
 import * as hashwasm from "hash-wasm";
+import JSZip from "jszip";
+
 import * as translate from "./translate.js";
 import {
   extractBuffers,
@@ -374,15 +376,37 @@ onmessage = function (msg) {
       loaded
         .then(async (x) => {
           const reader = new FileReaderSync(); // eslint-disable-line
-          let res = reader.readAsArrayBuffer(f);
-          let params = await unserializeAllSteps(res);
+          const zipbuffer = reader.readAsArrayBuffer(f);
+          const unzipped = await JSZip.loadAsync(zipbuffer);
+          let config = JSON.parse(
+            await unzipped.file("config.json").async("string")
+          );
+
+          let buffers = {};
+          for (const x in unzipped.files) {
+            if (x.startsWith("datasets/")) {
+              let current = await unzipped.files[x].async("uint8array");
+              buffers[x.split("/")[1]] = current;
+            }
+          }
+
+          // This re-runs the entire analysis, so throw startFun/finishFun callbacks here.
+          superstate = await bakana.unserializeConfiguration(
+            config,
+            (id) => buffers[id],
+            {
+              state: superstate,
+              startFun: postAttempt,
+              finishFun: postStepSummary,
+            }
+          );
 
           var transferrable = [];
-          extractBuffers(params.other, transferrable);
+          extractBuffers(config.parameters, transferrable);
           postMessage(
             {
               type: "loadedParameters",
-              resp: params,
+              resp: config.parameters,
             },
             transferrable
           );
@@ -392,28 +416,33 @@ onmessage = function (msg) {
           postError(type, err, fatal);
         });
     } else if (fs[Object.keys(fs)[0]].format == "kanadb") {
-      var id = fs[Object.keys(fs)[0]].file;
-      kana_db
-        .loadAnalysis(id)
-        .then(async (res) => {
-          if (res == null) {
-            postMessage({
-              type: "KanaDB_ERROR",
-              msg: `Fail: cannot load analysis ID '${id}'`,
-            });
-          } else {
-            let params = await unserializeAllSteps(res);
+      loaded
+        .then(async (x) => {
+          var id = fs[Object.keys(fs)[0]].file;
 
-            var transferrable = [];
-            extractBuffers(params.other, transferrable);
-            postMessage(
-              {
-                type: "loadedParameters",
-                resp: params,
-              },
-              transferrable
-            );
+          const zipbuffer = await kana_db.loadFile(id);
+          const unzipped = await JSZip.loadAsync(zipbuffer);
+          let config = JSON.parse(
+            await unzipped.file("config.json").async("string")
+          );
+
+          let buffers = {};
+          for (const x in unzipped.files) {
+            if (x.startsWith("datasets/")) {
+              let current = await unzipped.files[x].async("uint8array");
+              buffers[x.split("/")[1]] = current;
+            }
           }
+
+          superstate = await bakana.unserializeConfiguration(
+            config,
+            kana_db.loadFile,
+            {
+              state: superstate,
+              startFun: postAttempt,
+              finishFun: postStepSummary,
+            }
+          );
         })
         .catch((err) => {
           console.error(err);
@@ -421,72 +450,81 @@ onmessage = function (msg) {
         });
     }
     /**************** SAVING EXISTING ANALYSES *******************/
-    // } else if (type == "EXPORT") {
-    //   loaded
-    //     .then(async (x) => {
-    //       const h5path = "serialized_in.h5";
-    //       try {
-    //         let collected = await bakana.saveAnalysis(superstate, h5path, {
-    //           embedded: true,
-    //         });
-    //         let arr = bakana.createKanaFile(h5path, collected.collected);
-    //         let contents = arr.buffer;
-    //         postMessage(
-    //           {
-    //             type: "exportState",
-    //             resp: contents,
-    //             msg: "Success: application state exported",
-    //           },
-    //           [contents]
-    //         );
-    //       } finally {
-    //         bakana.callScran((scran) => scran.removeFile(h5path));
-    //       }
-    //     })
-    //     .catch((err) => {
-    //       console.error(err);
-    //       postError(type, err, fatal);
-    //     });
-    // }
-    // else if (type == "SAVEKDB") {
-    //   // save analysis to inbrowser indexedDB
-    //   var title = payload.title;
-    //   loaded
-    //     .then(async (x) => {
-    //       let collected = [];
-    //       let old = bakana.setCreateLink(linkKanaDb(collected));
+  } else if (type == "EXPORT") {
+    loaded
+      .then(async (x) => {
+        let buffers = [];
+        let saver = (name, format, file) => {
+          let id = String(buffers.length);
+          buffers.push(file.buffer());
+          return id;
+        };
 
-    //       const h5path = "serialized_in.h5";
-    //       let id = null;
-    //       try {
-    //         await bakana.saveAnalysis(superstate, h5path, {
-    //           embedded: false,
-    //         });
-    //         let state = bakana.createKanaFile(h5path, null);
-    //         id = await kana_db.saveAnalysis(null, state, collected, title);
-    //       } finally {
-    //         bakana.callScran((scran) => scran.removeFile(h5path));
-    //         bakana.setCreateLink(old);
-    //       }
+        // Returns a configuration object.
+        let collected = await bakana.serializeConfiguration(superstate, saver);
 
-    //       if (id !== null) {
-    //         let recs = await kana_db.getRecords();
-    //         postMessage({
-    //           type: "KanaDB_store",
-    //           resp: recs,
-    //           msg: `Success: Saved analysis to cache (${id})`,
-    //         });
-    //       } else {
-    //         postMessage({
-    //           type: "KanaDB_ERROR",
-    //           msg: `Fail: Cannot save analysis to cache`,
-    //         });
-    //       }
-    //     })
-    //     .catch((err) => {
-    //       console.error(err);
-    //       postError(type, err, fatal);
-    //     });
+        // Let's zip it all up!
+        const zipper = new JSZip();
+        zipper.file("config.json", JSON.stringify(collected));
+        for (var i = 0; i < buffers.length; i++) {
+          zipper.file("datasets/" + String(i), buffers[i]);
+        }
+        let zipbuffer = await zipper.generateAsync({ type: "uint8array" });
+        postMessage(
+          {
+            type: "exportState",
+            resp: zipbuffer,
+            msg: "Success: application state exported",
+          },
+          [zipbuffer.buffer]
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+        postError(type, err, fatal);
+      });
+  } else if (type == "SAVEKDB") {
+    // save analysis to inbrowser indexedDB
+    var title = payload.title;
+    loaded
+      .then(async (x) => {
+        let buffers = [];
+        let saver = async (name, format, file) => {
+          // basically linkKanaDb with an extra arg.
+          let buffer = file.buffer();
+          var md5 = await hashwasm.md5(buffer);
+          var id = type + "_" + file.name() + "_" + buffer.length + "_" + md5;
+          var ok = await kana_db.saveFile(id, buffer);
+          if (!ok) {
+            throw "failed to save file '" + id + "' to KanaDB";
+          }
+          buffers.push(id);
+          return id;
+        };
+
+        let collected = await bakana.serializeConfiguration(superstate, saver);
+        const enc = new TextEncoder();
+        let config = enc.encode(JSON.stringify(collected));
+        let id = await kana_db.saveAnalysis(null, config, collected, title);
+
+        if (id !== null) {
+          let recs = await kana_db.getRecords();
+          postMessage({
+            type: "KanaDB_store",
+            resp: recs,
+            msg: `Success: Saved analysis to browser (${id})`,
+          });
+        } else {
+          postMessage({
+            type: "KanaDB_ERROR",
+            msg: `Fail: Cannot save analysis to browser`,
+          });
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        postError(type, err, fatal);
+      });
 
     /**************** KANADB EVENTS *******************/
   } else if (type == "REMOVEKDB") {
