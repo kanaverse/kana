@@ -79,6 +79,8 @@ export function AnalysisMode(props) {
   const [deletekdb, setDeletekdb] = useState(null);
   // app export state - .kana file
   const [exportState, setExportState] = useState(false);
+  // app export state - .RDS file
+  const [exportRDSState, setExportRDSState] = useState(false);
 
   // Logs
   const [logs, setLogs] = useState([]);
@@ -527,6 +529,33 @@ export function AnalysisMode(props) {
         });
     }
   }, [exportState]);
+
+  // export an analysis to file
+  useEffect(() => {
+    if (exportRDSState) {
+      scranWorker.postMessage({
+        type: "EXPORT_RDS",
+        payload: {
+          files: inputFiles,
+          params: params,
+        },
+      });
+
+      AppToaster.show({
+        icon: "download",
+        intent: "primary",
+        message: "Exporting analysis as RDS in the background",
+      });
+      add_to_logs("info", `--- Export analysis state (to RDS) initialized ---`);
+    } else {
+      inputFiles?.files &&
+        AppToaster.show({
+          icon: "download",
+          intent: "primary",
+          message: "Analysis saved. Please check your downloads directory!",
+        });
+    }
+  }, [exportRDSState]);
 
   // export an analysis to idxdb
   useEffect(() => {
@@ -1034,6 +1063,16 @@ export function AnalysisMode(props) {
       tmpLink.click();
 
       setExportState(false);
+    } else if (type === "exportRDSState") {
+      let tmpLink = document.createElement("a");
+      var fileNew = new Blob([resp], {
+        type: "text/plain",
+      });
+      tmpLink.href = URL.createObjectURL(fileNew);
+      tmpLink.download = datasetName.split(" ").join("_") + ".RDS";
+      tmpLink.click();
+
+      setExportState(false);
     } else if (type === "KanaDB") {
       setIndexedDBState(false);
     } else if (type == "feature_set_enrichment_DATA") {
@@ -1233,11 +1272,19 @@ export function AnalysisMode(props) {
                         />
                         <Divider />
                         <MenuItem
-                          text="Download analysis"
+                          text="Download analysis as Kana file"
                           icon="download"
                           disabled={selectedRedDim === null}
                           onClick={() => {
                             setExportState(true);
+                          }}
+                        />
+                        <MenuItem
+                          text="Download analysis as RDS (SCE)"
+                          icon="download"
+                          disabled={selectedRedDim === null}
+                          onClick={() => {
+                            setExportRDSState(true);
                           }}
                         />
                       </Menu>

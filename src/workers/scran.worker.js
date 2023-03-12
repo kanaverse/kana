@@ -343,24 +343,6 @@ onmessage = function (msg) {
             console.error(err);
             postError(type, err, fatal);
           });
-
-        // try {
-        //   let collections =
-        //     superstate.feature_set_enrichment.fetchCollectionDetails();
-
-        //   postMessage({
-        //     type: "FeatureSetEnrichDetails_DATA",
-        //     resp: {
-        //       collections: collections,
-        //     },
-        //     msg: "Success: Feature set enrichment details initialized",
-        //   });
-        // } catch {
-        //   postMessage({
-        //     type: "FeatureSetEnrichDetails_ERROR",
-        //     msg: "Error: Cannot access Feature set enrichment details",
-        //   });
-        // }
       })
       .catch((err) => {
         console.error(err);
@@ -473,6 +455,27 @@ onmessage = function (msg) {
         postMessage(
           {
             type: "exportState",
+            resp: zipbuffer,
+            msg: "Success: application state exported",
+          },
+          [zipbuffer.buffer]
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+        postError(type, err, fatal);
+      });
+  } else if (type == "EXPORT_RDS") {
+    loaded
+      .then(async (x) => {
+        let files = await bakana.saveSingleCellExperiment(superstate, "results", {
+          forceBuffer: true,
+        });
+        let zipbuffer = bakana.zipFiles(files);
+
+        postMessage(
+          {
+            type: "exportRDSState",
             resp: zipbuffer,
             msg: "Success: application state exported",
           },
