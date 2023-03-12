@@ -194,23 +194,21 @@ export async function fetchStepSummary(state, step) {
         default: {
           sums: state[step].fetchMetrics().sums(),
           detected: state[step].fetchMetrics().detected(),
-          proportion: state[step].fetchMetrics().subsetProportions(0),
+          proportion: state[step].fetchMetrics().maxProportions(),
         },
       };
     } else {
       let metrics = {
         sums: state[step].fetchMetrics().sums(),
         detected: state[step].fetchMetrics().detected(),
-        proportion: state[step].fetchMetrics().subsetProportions(0),
+        proportion: state[step].fetchMetrics().maxProportions(),
       };
       let bids = state["inputs"].fetchBlock();
       output.data = splitMetricsByBlock(metrics, blocks, bids);
     }
 
     let listed = {
-      sums: state[step].fetchFilters().thresholdsSums(),
-      detected: state[step].fetchFilters().thresholdsDetected(),
-      proportion: state[step].fetchFilters().thresholdsSubsetProportions(0),
+      count: state[step].fetchFilters().thresholdsMaxCount(0),
     };
     output.thresholds = splitThresholdsByBlock(listed, blocks);
 
