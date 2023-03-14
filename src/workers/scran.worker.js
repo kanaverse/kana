@@ -16,6 +16,7 @@ import {
 } from "./helpers.js";
 import * as remotes from "bakana-remotes";
 import { code } from "../utils/utils.js";
+import { json } from "d3";
 /***************************************/
 
 const default_cluster = `${code}::CLUSTERS`;
@@ -402,19 +403,9 @@ onmessage = function (msg) {
         .then(async (x) => {
           var id = fs[Object.keys(fs)[0]].file;
 
-          const zipbuffer = await kana_db.loadFile(id);
-          const unzipped = await JSZip.loadAsync(zipbuffer);
-          let config = JSON.parse(
-            await unzipped.file("config.json").async("string")
-          );
-
-          let buffers = {};
-          for (const x in unzipped.files) {
-            if (x.startsWith("datasets/")) {
-              let current = await unzipped.files[x].async("uint8array");
-              buffers[x.split("/")[1]] = current;
-            }
-          }
+          const jsonbuffer = await kana_db.loadAnalysis(id);
+          const dec = new TextDecoder;
+          let config = JSON.parse(dec.decode(jsonbuffer));
 
           superstate = await bakana.unserializeConfiguration(
             config,
