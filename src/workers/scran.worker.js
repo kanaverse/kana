@@ -462,7 +462,7 @@ onmessage = function (msg) {
         let files = await bakana.saveSingleCellExperiment(superstate, "results", {
           forceBuffer: true,
         });
-        let zipbuffer = bakana.zipFiles(files);
+        let zipbuffer = await bakana.zipFiles(files);
 
         postMessage(
           {
