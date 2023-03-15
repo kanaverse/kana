@@ -216,8 +216,8 @@ const FeatureSetEnrichment = (props) => {
           });
         });
 
-        let sortedRows = trecs.sort((a, b) => a.pvalue - b.pvalue);
-        setPreProsRecords(sortedRows);
+        // let sortedRows = trecs.sort((a, b) => a.pvalue - b.pvalue);
+        setPreProsRecords(trecs);
       }
     }
   }, [props?.fsetEnirchDetails, props?.fsetEnirchSummary]);
@@ -277,14 +277,44 @@ const FeatureSetEnrichment = (props) => {
   };
 
   const getTableHeight = () => {
-    let defheight = 335;
-    if (showFilters) defheight = 530;
+    let defheight = 323;
+    if (showFilters) defheight = 450;
 
     if (props?.windowWidth < 1200) {
       defheight += 270;
     }
 
     return `35px calc(100vh - ${defheight}px)`;
+  };
+
+  const handleFilter = (val, key) => {
+    let tmp = { ...fsetFilter };
+    tmp[key] = val;
+    setFsetFilter(tmp);
+  };
+
+  const createColorScale = (lower, upper) => {
+    if (lower > 0) {
+      return `linear-gradient(to right, yellow 0%, red 100%)`;
+    } else if (upper < 0) {
+      return `linear-gradient(to right, blue 0%, yellow 100%)`;
+    } else {
+      var limit = 0;
+      if (lower < 0) {
+        limit = -lower;
+      }
+      if (upper > 0 && upper > limit) {
+        limit = upper;
+      }
+      var scaler = d3
+        .scaleSequential(d3.interpolateRdYlBu)
+        .domain([limit, -limit]);
+
+      var leftcol = scaler(lower);
+      var rightcol = scaler(upper);
+      var midprop = Math.round((-lower / (upper - lower)) * 100);
+      return `linear-gradient(to right, ${leftcol} 0%, yellow ${midprop}%, ${rightcol} 100%)`;
+    }
   };
 
   return (
@@ -995,13 +1025,12 @@ const FeatureSetEnrichment = (props) => {
                         outlined={rowexp ? false : true}
                         intent={rowexp ? "primary" : null}
                         onClick={() => {
-                          console.log(rowexp);
-                          let tmprecs = [...prosRecords];
-                          tmprecs[index].expanded = !tmprecs[index].expanded;
-                          setProsRecords(tmprecs);
+                          let tmprecs = [...preProsRecords];
+                          tmprecs[row._index].expanded = !tmprecs[row._index].expanded;
+                          setPreProsRecords(tmprecs);
 
                           // do something
-                          if (!tmprecs[index].expanded) {
+                          if (!tmprecs[row._index].expanded) {
                             props?.setFeatureSetGeneIndex(null);
                           } else {
                             props?.setFeatureSetGeneIndex(row._index);
@@ -1026,6 +1055,7 @@ const FeatureSetEnrichment = (props) => {
                         }
                         className="row-action"
                         onClick={() => {
+                          props?.setGene(null);
                           if (row._index === props?.selectedFsetIndex) {
                             props?.setSelectedFsetIndex(null);
                           } else {
@@ -1047,6 +1077,7 @@ const FeatureSetEnrichment = (props) => {
                     <div
                       style={{
                         height: "100px",
+                        marginBottom: "5px"
                       }}
                     >
                       <Divider />
@@ -1060,11 +1091,16 @@ const FeatureSetEnrichment = (props) => {
                             <div className="fsetenrich-genelist-container">
                               <span>{rgname}</span>
                               <Button
-                                minimal={true}
                                 small={true}
                                 fill={false}
-                                outline={true}
+                                outlined={
+                                  rgrow === props?.gene ? false : true
+                                }
+                                intent={
+                                  rgrow === props?.gene ? "primary" : null
+                                }
                                 onClick={() => {
+                                  props?.setSelectedFsetIndex(null);
                                   if (rgrow === props?.gene) {
                                     props?.setGene(null);
                                   } else {
@@ -1090,6 +1126,128 @@ const FeatureSetEnrichment = (props) => {
           }}
         />
       </div>
+      <Popover2
+        popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+        hasBackdrop={false}
+        interactionKind="hover"
+        placement="top"
+        hoverOpenDelay={500}
+        modifiers={{
+          arrow: { enabled: true },
+          flip: { enabled: true },
+          preventOverflow: { enabled: true },
+        }}
+        content={
+          <Card
+            style={{
+              width: "450px",
+            }}
+            elevation={Elevation.ZERO}
+          >
+            <p>
+              Filter feature set summary according to various statistics. For
+              example, this can be used to apply a minimum threshold on the{" "}
+              <strong>
+                <em>count</em>
+              </strong>{" "}
+              or{" "}
+              <strong>
+                <em>p-value</em>
+              </strong>
+            </p>
+            <p>
+              Note that this does not change the relative ordering in the table
+              above.
+            </p>
+          </Card>
+        }
+      >
+        <Button
+          fill={true}
+          outlined={showFilters}
+          intent={"primary"}
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          Click to {showFilters ? "Hide filters" : "Filter feature sets"}
+        </Button>
+      </Popover2>
+      <Collapse isOpen={showFilters}>
+        <div className="fsetenrich-filter-container">
+          <Tag
+            className="fsetenrich-filter-container-tag"
+            minimal={true}
+            intent="primary"
+          >
+            count
+          </Tag>
+          {countsMinMax && (
+            <div className="fsetenrich-slider-container">
+              {/* <Histogram data={selectedClusterSummary} datakey={"lfc"} height={100} minmax={lfcMinMax}/> */}
+              <div className="fsetenrich-filter-gradient">
+                <div
+                  style={{
+                    backgroundImage: createColorScale(
+                      countsMinMax[0],
+                      countsMinMax[1]
+                    ),
+                    width: "100%",
+                    height: "5px",
+                  }}
+                ></div>
+                &nbsp;
+              </div>
+              <RangeSlider
+                className="fsetenrich-filter-slider"
+                min={countsMinMax[0]}
+                max={countsMinMax[1]}
+                labelValues={countsMinMax}
+                stepSize={1}
+                onChange={(val) => handleFilter(val, "count")}
+                value={fsetFilter?.["count"]}
+                vertical={false}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="fsetenrich-filter-container">
+          <Tag
+            className="fsetenrich-filter-container-tag"
+            minimal={true}
+            intent="primary"
+          >
+            p-value
+          </Tag>
+          {/* <Histogram data={deltas} height={35} color="#4580E6" minmax={deltaMinMax} /> */}
+          {pvalMinMax && (
+            <div className="fsetenrich-slider-container">
+              <div className="fsetenrich-filter-gradient">
+                <div
+                  style={{
+                    backgroundImage: createColorScale(
+                      pvalMinMax[0],
+                      pvalMinMax[1]
+                    ),
+                    width: "100%",
+                    height: "5px",
+                  }}
+                ></div>
+                &nbsp;
+              </div>
+              <RangeSlider
+                className="fsetenrich-filter-slider"
+                min={pvalMinMax[0]}
+                max={pvalMinMax[1]}
+                labelValues={pvalMinMax}
+                stepSize={0.01}
+                onChange={(val) => handleFilter(val, "pvalue")}
+                value={fsetFilter?.["pvalue"]}
+                vertical={false}
+              />
+            </div>
+          )}
+        </div>
+      </Collapse>
     </div>
   );
 };
