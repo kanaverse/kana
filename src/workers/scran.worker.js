@@ -908,13 +908,14 @@ onmessage = function (msg) {
           try {
             let sel_indices =
               superstate.custom_selections.fetchSelectionIndices(cluster);
-            let num_cells = superstate.inputs
-              .fetchCountMatrix()
+            let num_cells = superstate.cell_filtering
+              .fetchFilteredMatrix()
               .numberOfColumns();
-
+              
             let arr_sel_indices = new Uint8Array(num_cells);
             sel_indices.map((x) => arr_sel_indices.set([1], x));
             let annotation_vec = scran.factorize(arr_sel_indices);
+
             fse = new bakana.FeatureSetEnrichmentStandalone(
               superstate["inputs"].fetchFeatureAnnotations()["RNA"]
             );
