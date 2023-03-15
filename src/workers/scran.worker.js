@@ -624,27 +624,21 @@ onmessage = function (msg) {
             payload.right
           );
 
-          resp = bakana.formatMarkerResults(raw_res, 1, rank_type);
+          resp = bakana.formatMarkerResults(
+            raw_res.results[modality],
+            1,
+            rank_type
+          );
         } else {
-          let mds;
-          try {
-            let annotation_vec = scran.factorize(getAnnotation(annotation));
-            mds = new bakana.MarkerDetectionStandalone(
-              getMatrix(modality),
-              annotation_vec.ids.slice()
-            );
+          let annotation_vec = scran.factorize(getAnnotation(annotation));
 
-            // cluster = annotation_vec.levels.indexOf(cluster);
-
-            mds.computeAll();
-
-            mds.computeVersus(payload.left, payload.right);
-            raw_res = mds.fetchResults()[modality];
-
-            resp = bakana.formatMarkerResults(raw_res, 1, rank_type);
-          } finally {
-            mds.free();
-          }
+          let anno_markers = getMarkerForAnnot(
+            annotation,
+            annotation_vec,
+            "RNA"
+          );
+          raw_res = anno_markers[modality];
+          resp = bakana.formatMarkerResults(raw_res, 1, rank_type);
         }
 
         var transferrable = [];
