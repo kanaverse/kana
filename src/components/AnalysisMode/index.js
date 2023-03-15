@@ -275,7 +275,8 @@ export function AnalysisMode(props) {
   const [fsetGeneIndxCache, setFsetGeneIndxCache] = useState(null);
   // contains the actual gene scores
   const [fsetGeneExprCache, setFsetGeneExprCache] = useState({});
-
+  // which cluster is selected for vsmode
+  const [selectedFsetVSCluster, setSelectedFsetVSCluster] = useState(null);
   /*******
    * USER REQUESTS - END
    ******/
@@ -596,24 +597,33 @@ export function AnalysisMode(props) {
           payload: {
             cluster: selectedFsetCluster,
             rank_type: fsetClusterRank,
+            annotation: selectedFsetAnnotation,
+            collection: selectedFsetColl
           },
         });
       }
     }
-  }, [selectedFsetColl, selectedFsetCluster, fsetClusterRank]);
+  }, [
+    selectedFsetAnnotation,
+    selectedFsetColl,
+    selectedFsetCluster,
+    fsetClusterRank,
+  ]);
 
   // get feature scores for a set
   useEffect(() => {
     if (
       reqFsetIndex != null &&
       selectedFsetCluster != null &&
-      selectedFsetColl !== null
+      selectedFsetColl !== null &&
+      selectedFsetAnnotation !== null
     ) {
       scranWorker.postMessage({
         type: "getFeatureScores",
         payload: {
           index: reqFsetIndex,
           collection: selectedFsetColl,
+          annotation: selectedFsetAnnotation,
           cluster: selectedFsetCluster,
         },
       });
@@ -623,7 +633,12 @@ export function AnalysisMode(props) {
         `--- Request feature set cell score for feature index:${reqFsetIndex} sent ---`
       );
     }
-  }, [reqFsetIndex, selectedFsetCluster, selectedFsetColl]);
+  }, [
+    reqFsetIndex,
+    selectedFsetCluster,
+    selectedFsetColl,
+    selectedFsetAnnotation,
+  ]);
 
   // get feature scores for a set
   useEffect(() => {
@@ -1643,6 +1658,10 @@ export function AnalysisMode(props) {
                           setGene={setGene}
                           gene={gene}
                           setReqGene={setReqGene}
+                          selectedFsetVSCluster={selectedFsetVSCluster}
+                          setSelectedFsetVSCluster={setSelectedFsetVSCluster}
+                          customSelection={customSelection}
+                          setReqAnnotation={setReqAnnotation}
                         />
                       )}
                     </div>

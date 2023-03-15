@@ -252,7 +252,8 @@ const DimPlot = (props) => {
           ) {
             message.data.selection?.indices.length > 0 &&
               props?.setSelectedPoints(message.data.selection?.indices);
-            tmp_scatterplot.dataWorker.dataWorkerStream.push(message);
+            // tmp_scatterplot.dataWorker.dataWorkerStream.push(message);
+            tmp_scatterplot.dataWorkerStream.push(message);
           }
         };
 

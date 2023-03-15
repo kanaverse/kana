@@ -33,7 +33,8 @@ import "./fsea.css";
 import { Select2 } from "@blueprintjs/select";
 
 const FeatureSetEnrichment = (props) => {
-  const { genesInfo, geneColSel, annotationObj } = useContext(AppContext);
+  const { genesInfo, geneColSel, annotationObj, annotationCols } =
+    useContext(AppContext);
 
   const default_cluster = `${code}::CLUSTERS`;
   const default_selection = `${code}::SELECTION`;
@@ -91,10 +92,56 @@ const FeatureSetEnrichment = (props) => {
         setClusSel(clus);
         if (props?.selectedFsetCluster === null) {
           props?.setSelectedFsetCluster(0);
+
+          if (String(props?.selectedFsetVSCluster) !== null) {
+            props?.setSelectedFsetVSCluster(null);
+          }
+        }
+
+        if (
+          !String(props?.selectedFsetCluster).startsWith("cs") &&
+          String(props?.selectedFsetVSCluster).startsWith("cs")
+        ) {
+          props?.setSelectedFsetVSCluster(null);
+        }
+      }
+    } else if (default_selection === props?.selectedFsetAnnotation) {
+      let clus = [];
+      clus = clus.concat(Object.keys(props?.customSelection));
+      if (props?.setSelectedFsetCluster === null) {
+        props?.setSelectedFsetCluster(Object.keys(props?.customSelection)[0]);
+
+        if (String(props?.selectedVSCluster).startsWith("cs")) {
+          props?.setSelectedVSCluster(null);
+        }
+      }
+      setClusSel(clus);
+    } else {
+      if (!(props?.selectedFsetAnnotation in annotationObj)) {
+        props?.setReqAnnotation(props?.selectedFsetAnnotation);
+        props?.setSelectedFsetCluster(null);
+      } else {
+        let tmp = annotationObj[props?.selectedFsetAnnotation];
+        if (tmp.type === "array") {
+          const uniqueTmp = [...new Set(tmp.values)];
+          setClusSel(uniqueTmp);
+          if (props?.selectedFsetCluster === null) {
+            props?.setSelectedFsetCluster(uniqueTmp[0]);
+          }
+        } else if (tmp.type === "factor") {
+          setClusSel(tmp.levels);
+          if (props?.selectedFsetCluster === null) {
+            props?.setSelectedFsetCluster(tmp.levels[0]);
+          }
         }
       }
     }
-  }, [props?.selectedFsetAnnotation, annotationObj]);
+  }, [
+    props?.selectedFsetAnnotation,
+    annotationObj,
+    props?.customSelection,
+    props?.selectedFsetCluster,
+  ]);
 
   useEffect(() => {
     if (props?.fsetEnirchDetails !== null && props?.selectedFsetColl !== null) {
@@ -455,6 +502,44 @@ const FeatureSetEnrichment = (props) => {
           </HTMLSelect>
         </Label>
       )}
+      {annotationCols && (
+        <Label style={{ marginBottom: "0" }}>
+          Choose annotation
+          <HTMLSelect
+            defaultValue={props?.selectedFsetAnnotation}
+            onChange={(nval) => {
+              props?.setFeatureSetGeneIndex(null);
+              props?.setSelectedFsetVSCluster(null);
+              props?.setSelectedFsetCluster(null);
+              props?.setSelectedFsetAnnotation(nval?.currentTarget?.value);
+            }}
+          >
+            <optgroup label="Supplied">
+              {annotationCols
+                .filter((x) => !x.startsWith(code) && x !== "__batch__")
+                .map((x) => (
+                  <option value={x} key={x}>
+                    {x}
+                  </option>
+                ))}
+            </optgroup>
+            <optgroup label="Computed">
+              {annotationCols
+                .filter((x) => x.startsWith(code) || x === "__batch__")
+                .map((x) => (
+                  <option value={x} key={x}>
+                    {x.replace(`${code}::`, "")}
+                  </option>
+                ))}
+              {Object.keys(props?.customSelection).length > 0 && (
+                <option value={default_selection} key={default_selection}>
+                  CUSTOM SELECTIONS
+                </option>
+              )}
+            </optgroup>
+          </HTMLSelect>
+        </Label>
+      )}
       {clusSel && (
         <Label style={{ marginBottom: "3px" }}>
           Choose Cluster
@@ -467,25 +552,40 @@ const FeatureSetEnrichment = (props) => {
                 if (tmpselection.startsWith("Cluster")) {
                   tmpselection =
                     parseInt(tmpselection.replace("Cluster ", "")) - 1;
+                } else if (tmpselection.startsWith("Custom")) {
+                  tmpselection = tmpselection.replace("Custom Selection ", "");
                 }
               }
               props?.setSelectedFsetCluster(tmpselection);
+
+              setFsetFilter({});
+              props?.setGene(null);
+              props?.setSelectedFsetVSCluster(null);
             }}
           >
-            {default_cluster === props?.selectedFsetAnnotation &&
-              clusSel.map((x, i) => (
-                <option
-                  selected={
-                    String(props?.selectedFsetCluster).startsWith("cs")
-                      ? x == props?.selectedFsetCluster
-                      : parseInt(x) - 1 == parseInt(props?.selectedFsetCluster)
-                  }
-                  key={i}
-                >
-                  {String(x).startsWith("cs") ? "Custom Selection" : "Cluster"}{" "}
-                  {x}
-                </option>
-              ))}
+            {default_cluster === props?.selectedFsetAnnotation ||
+            default_selection === props?.selectedMarkerAnnotation
+              ? clusSel.map((x, i) => (
+                  <option
+                    selected={
+                      String(props?.selectedFsetCluster).startsWith("cs")
+                        ? x == props?.selectedFsetCluster
+                        : parseInt(x) - 1 ==
+                          parseInt(props?.selectedFsetCluster)
+                    }
+                    key={i}
+                  >
+                    {String(x).startsWith("cs")
+                      ? "Custom Selection"
+                      : "Cluster"}{" "}
+                    {x}
+                  </option>
+                ))
+              : clusSel.map((x, i) => (
+                  <option selected={x == props?.selectedFsetCluster} key={i}>
+                    {x}
+                  </option>
+                ))}
           </HTMLSelect>
         </Label>
       )}

@@ -404,7 +404,7 @@ onmessage = function (msg) {
           var id = fs[Object.keys(fs)[0]].file;
 
           const jsonbuffer = await kana_db.loadAnalysis(id);
-          const dec = new TextDecoder;
+          const dec = new TextDecoder();
           let config = JSON.parse(dec.decode(jsonbuffer));
 
           superstate = await bakana.unserializeConfiguration(
@@ -459,9 +459,13 @@ onmessage = function (msg) {
   } else if (type == "EXPORT_RDS") {
     loaded
       .then(async (x) => {
-        let files = await bakana.saveSingleCellExperiment(superstate, "results", {
-          forceBuffer: true,
-        });
+        let files = await bakana.saveSingleCellExperiment(
+          superstate,
+          "results",
+          {
+            forceBuffer: true,
+          }
+        );
         let zipbuffer = await bakana.zipFiles(files);
 
         postMessage(
@@ -684,7 +688,6 @@ onmessage = function (msg) {
         let raw_res;
         if (default_cluster === annotation) {
           raw_res = superstate.marker_detection.fetchResults()[modality];
-
           resp = bakana.formatMarkerResults(raw_res, cluster, rank_type);
         } else {
           let mds;
@@ -881,16 +884,40 @@ onmessage = function (msg) {
       });
   } else if (type == "computeFeaturesetSummary") {
     loaded
-      .then((x) => {
-        let rank_type = payload.rank_type;
+      .then(async (x) => {
+        let { annotation, rank_type, cluster, collection } = payload;
         let index = rank_type.indexOf("-");
+        let resp;
+        if (default_cluster === annotation) {
+          resp = superstate.feature_set_enrichment.computeEnrichment(
+            superstate.marker_detection.fetchResults()["RNA"],
+            cluster,
+            rank_type.slice(0, index),
+            rank_type.slice(index + 1)
+          );
+        } else {
+          let fse;
+          try {
+            let annotation_vec = scran.factorize(getAnnotation(annotation));
+            fse = new bakana.FeatureSetEnrichmentStandalone(
+              superstate["inputs"].fetchFeatureAnnotations()["RNA"]
+            );
 
-        let resp = superstate.feature_set_enrichment.computeEnrichment(
-          superstate.marker_detection.fetchResults()["RNA"],
-          payload.cluster,
-          rank_type.slice(0, index),
-          rank_type.slice(index + 1)
-        );
+            let defaults = bakana.FeatureSetEnrichmentState.defaults();
+            defaults.collections.push(collection);
+
+            await fse.setParameters(defaults);
+
+            resp = fse.computeEnrichment(
+              superstate.marker_detection.fetchResults()["RNA"],
+              annotation_vec.levels.indexOf(cluster),
+              rank_type.slice(0, index),
+              rank_type.slice(index + 1)
+            );
+          } finally {
+            fse.free();
+          }
+        }
         postSuccess("computeFeaturesetSummary", resp);
       })
       .catch((err) => {
