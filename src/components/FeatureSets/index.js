@@ -45,6 +45,9 @@ const FeatureSetEnrichment = (props) => {
 
   const [showFilters, setShowFilters] = useState(false);
 
+  // toggle for vs mode
+  const [vsmode, setVsmode] = useState(false);
+
   // what cluster is selected
   const [clusSel, setClusSel] = useState(null);
 
@@ -379,8 +382,8 @@ const FeatureSetEnrichment = (props) => {
               >
                 <p>
                   Choose the effect size and summary statistic to use for
-                  ranking markers. For each gene, effect sizes are computed by
-                  pairwise comparisons between clusters:
+                  ranking feature sets. For each gene, effect sizes are computed
+                  by pairwise comparisons between clusters:
                 </p>
                 <ul>
                   <li>
@@ -435,8 +438,8 @@ const FeatureSetEnrichment = (props) => {
                       <em>min</em>
                     </strong>{" "}
                     uses the minimum effect size from all pairwise comparisons.
-                    This promotes markers that are exclusively expressed in the
-                    chosen cluster, but will perform poorly if no such genes
+                    This promotes feature sets that are exclusively expressed in
+                    the chosen cluster, but will perform poorly if no such genes
                     exist.
                   </li>
                   <li>
@@ -460,7 +463,7 @@ const FeatureSetEnrichment = (props) => {
                 paddingRight: "5px",
               }}
             ></Icon> */}
-            <span> Rank markers by </span>
+            <span> Rank feature sets by </span>
           </Popover2>
           {"     "}
           <HTMLSelect
@@ -540,9 +543,74 @@ const FeatureSetEnrichment = (props) => {
           </HTMLSelect>
         </Label>
       )}
+      <div
+        className="fsetenrich-cluster-header"
+        style={{
+          marginTop: "5px",
+        }}
+      >
+        <Label
+          style={{
+            marginBottom: "0",
+          }}
+        >
+          Select Cluster
+        </Label>
+        <div className="fsetenrich-vsmode">
+          <Popover2
+            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+            hasBackdrop={false}
+            interactionKind="hover"
+            placement="left"
+            hoverOpenDelay={500}
+            modifiers={{
+              arrow: { enabled: true },
+              flip: { enabled: true },
+              preventOverflow: { enabled: true },
+            }}
+            content={
+              <Card
+                style={{
+                  width: "450px",
+                }}
+                elevation={Elevation.ZERO}
+              >
+                <p>
+                  By default, the <strong>general</strong> mode will rank
+                  feature sets for a cluster or custom selection based on the
+                  comparison to all other clusters or cells.
+                  <br />
+                  <br />
+                  Users can instead enable <strong>versus</strong> mode to
+                  compare feature sets between two clusters or between two
+                  custom selections. This is useful for identifying subtle
+                  differences between closely related groups of cells.
+                </p>
+              </Card>
+            }
+          >
+            <Icon
+              intent="warning"
+              icon="comparison"
+              style={{ paddingRight: "5px" }}
+            ></Icon>
+          </Popover2>
+          <Switch
+            large={false}
+            checked={vsmode}
+            innerLabelChecked="versus"
+            innerLabel="general"
+            onChange={(e) => {
+              if (e.target.checked === false) {
+                props?.setSelectedFsetVSCluster(null);
+              }
+              setVsmode(e.target.checked);
+            }}
+          />
+        </div>
+      </div>
       {clusSel && (
-        <Label style={{ marginBottom: "3px" }}>
-          Choose Cluster
+        <div className="fsetenrich-cluster-selection">
           <HTMLSelect
             className="fsetenrich-cluster-selection-width"
             onChange={(x) => {
@@ -564,7 +632,7 @@ const FeatureSetEnrichment = (props) => {
             }}
           >
             {default_cluster === props?.selectedFsetAnnotation ||
-            default_selection === props?.selectedMarkerAnnotation
+            default_selection === props?.selectedFsetAnnotation
               ? clusSel.map((x, i) => (
                   <option
                     selected={
@@ -587,7 +655,94 @@ const FeatureSetEnrichment = (props) => {
                   </option>
                 ))}
           </HTMLSelect>
-        </Label>
+          {vsmode && (
+            <>
+              <Button
+                style={{ margin: "0 3px" }}
+                onClick={() => {
+                  let mid = props?.selectedFsetVSCluster;
+                  props?.setSelectedFsetVSCluster(props?.selectedFsetCluster);
+                  props?.setSelectedFsetCluster(mid);
+
+                  setFsetFilter({});
+                  props?.setGene(null);
+                }}
+                icon="exchange"
+                disabled={props?.selectedFsetVSCluster == null}
+                outlined={true}
+                intent="primary"
+              ></Button>
+              <HTMLSelect
+                className="fsetenrich-cluster-selection-width"
+                onChange={(x) => {
+                  let tmpselection = x.currentTarget?.value;
+                  if (
+                    default_cluster === props?.selectedFsetAnnotation ||
+                    default_selection === props?.selectedFsetAnnotation
+                  ) {
+                    if (tmpselection.startsWith("Cluster")) {
+                      tmpselection =
+                        parseInt(tmpselection.replace("Cluster ", "")) - 1;
+                    } else if (tmpselection.startsWith("Custom")) {
+                      tmpselection = tmpselection.replace(
+                        "Custom Selection ",
+                        ""
+                      );
+                    }
+                  }
+                  props?.setSelectedFsetVSCluster(tmpselection);
+
+                  setFsetFilter({});
+                  props?.setGene(null);
+                }}
+              >
+                {props?.selectedFsetVSCluster == null && (
+                  <option selected={true}>Choose a Cluster</option>
+                )}
+                {default_cluster === props?.selectedFsetAnnotation ||
+                default_selection === props?.selectedFsetAnnotation
+                  ? clusSel
+                      .filter((x, i) =>
+                        String(props?.selectedFsetCluster).startsWith("cs")
+                          ? String(x).startsWith("cs") &&
+                            String(x) !== String(props?.selectedFsetCluster)
+                          : !String(x).startsWith("cs") &&
+                            parseInt(x) - 1 !==
+                              parseInt(props?.selectedFsetCluster)
+                      )
+                      // .filter((x,i) => String(props?.selectedCluster) == String(x) )
+                      .map((x, i) => (
+                        <option
+                          selected={
+                            String(props?.selectedFsetVSCluster).startsWith(
+                              "cs"
+                            )
+                              ? x == props?.selectedFsetVSCluster
+                              : parseInt(x) - 1 ==
+                                parseInt(props?.selectedFsetVSCluster)
+                          }
+                          key={i}
+                        >
+                          {String(x).startsWith("cs")
+                            ? "Custom Selection"
+                            : "Cluster"}{" "}
+                          {x}
+                        </option>
+                      ))
+                  : clusSel
+                      .filter((x, i) => x != props?.selectedFsetCluster)
+                      .map((x, i) => (
+                        <option
+                          selected={x == props?.selectedFsetCluster}
+                          key={i}
+                        >
+                          {x}
+                        </option>
+                      ))}
+              </HTMLSelect>
+            </>
+          )}
+        </div>
       )}
       <div
         className="fsetenrich-table"

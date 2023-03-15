@@ -591,16 +591,31 @@ export function AnalysisMode(props) {
   // compute feature set scores
   useEffect(() => {
     if (selectedFsetCluster !== null && fsetClusterRank !== null) {
-      if (!(`${selectedFsetCluster}-${fsetClusterRank}` in fsetEnirchSummary)) {
+      if (selectedFsetVSCluster !== null && selectedFsetCluster !== null) {
+        scranWorker.postMessage({
+          type: "computeFeaturesetVSSummary",
+          payload: {
+            left: selectedFsetCluster,
+            right: selectedFsetVSCluster,
+            rank_type: fsetClusterRank,
+            annotation: selectedFsetAnnotation,
+            collection: selectedFsetColl,
+          },
+        });
+        add_to_logs("info", `--- computeFeaturesetVSSummary sent ---`);
+      } else if (selectedFsetCluster !== null) {
+        // if (!(`${selectedFsetCluster}-${fsetClusterRank}` in fsetEnirchSummary)) {
         scranWorker.postMessage({
           type: "computeFeaturesetSummary",
           payload: {
             cluster: selectedFsetCluster,
             rank_type: fsetClusterRank,
             annotation: selectedFsetAnnotation,
-            collection: selectedFsetColl
+            collection: selectedFsetColl,
           },
         });
+        // }
+        add_to_logs("info", `--- computeFeaturesetSummary sent ---`);
       }
     }
   }, [
@@ -608,6 +623,7 @@ export function AnalysisMode(props) {
     selectedFsetColl,
     selectedFsetCluster,
     fsetClusterRank,
+    selectedFsetVSCluster,
   ]);
 
   // get feature scores for a set
@@ -1094,7 +1110,7 @@ export function AnalysisMode(props) {
       setFsetEnrichDetails(resp.details);
       setShowFsetLoader(false);
       setSelectedFsetColl(Object.keys(resp.details)[0]);
-    } else if (type === "computeFeaturesetSummary_DATA") {
+    } else if (type === "computeFeaturesetSummary_DATA" || type === "computeFeaturesetVSSummary_DATA") {
       let tmpsumm = { ...fsetEnirchSummary };
       tmpsumm[`${selectedFsetCluster}-${fsetClusterRank}`] = resp;
       setFsetEnrichSummary(tmpsumm);

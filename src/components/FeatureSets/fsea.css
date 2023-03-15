@@ -140,7 +140,8 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  height: 22px;
+  height: 15px;
+  padding-top:2px;
 }
 
 .fsetenrich-vsmode {
@@ -152,6 +153,7 @@
   display: flex;
   flex-direction: row;
   justify-content: stretch;
+  padding-top: 5px;
 }
 
 .fsetenrich-cluster-selection-width {

@@ -24,7 +24,7 @@ const default_selection = `${code}::SELECTION`;
 let superstate = null;
 let preflights = {};
 let preflights_summary = {};
-let cache_matrix = new scran.MultiMatrix();
+let cache_matrix = null;
 let cache_anno_markers = {};
 
 // Evade CORS problems and enable caching.
@@ -155,20 +155,19 @@ async function postStepSummary(step) {
   }
 }
 
-function getMarkerForAnnot(annotation, annotation_vec, modality) {
+function getMarkerStandAloneForAnnot(annotation, annotation_vec) {
   let mds;
-  const anno_key = `${annotation}-${modality}`;
-  if (!(anno_key in cache_anno_markers)) {
+  if (!(annotation in cache_anno_markers)) {
     mds = new bakana.MarkerDetectionStandalone(
-      getMatrix(modality),
+      getMatrix(),
       annotation_vec.ids.slice()
     );
 
     mds.computeAll();
-    cache_anno_markers[anno_key] = mds.fetchResults();
+    cache_anno_markers[annotation] = mds;
   }
 
-  return cache_anno_markers[anno_key];
+  return cache_anno_markers[annotation];
 }
 
 const getAnnotation = (annotation, unfiltered = true) => {
@@ -191,28 +190,21 @@ const getAnnotation = (annotation, unfiltered = true) => {
   return vec;
 };
 
-const getMatrix = (modality) => {
-  if (!cache_matrix.available().includes(modality)) {
-    if (modality === "RNA") {
-      cache_matrix.add(
-        modality,
-        superstate.rna_normalization.fetchNormalizedMatrix()
-      );
-    } else if (modality === "ADT") {
-      cache_matrix.add(
-        modality,
-        superstate.adt_normalization.fetchNormalizedMatrix()
-      );
-    } else if (modality === "CRISPR") {
-      cache_matrix.add(
-        modality,
-        superstate.crispr_normalization.fetchNormalizedMatrix()
-      );
-    } else {
-      throw new Error("unknown feature type '" + modality + "'");
+const getMatrix = () => {
+  if (cache_matrix === null) {
+    cache_matrix = new scran.MultiMatrix();
+    let mapping = {
+      RNA: "rna_normalization",
+      ADT: "adt_normalization",
+      CRISPR: "crispr_normalization",
+    };
+    for (const [k, v] of Object.entries(mapping)) {
+      let state = superstate[v];
+      if (state.valid()) {
+        cache_matrix.add(k, state.fetchNormalizedMatrix());
+      }
     }
   }
-
   return cache_matrix;
 };
 
@@ -626,19 +618,22 @@ onmessage = function (msg) {
 
           resp = bakana.formatMarkerResults(
             raw_res.results[modality],
-            1,
+            raw_res.left,
             rank_type
           );
         } else {
           let annotation_vec = scran.factorize(getAnnotation(annotation));
 
-          let anno_markers = getMarkerForAnnot(
-            annotation,
-            annotation_vec,
-            "RNA"
+          let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+          raw_res = mds.computeVersus(
+            annotation_vec.levels.indexOf(payload.left),
+            annotation_vec.levels.indexOf(payload.right)
           );
-          raw_res = anno_markers[modality];
-          resp = bakana.formatMarkerResults(raw_res, 1, rank_type);
+          resp = bakana.formatMarkerResults(
+            raw_res.results[modality],
+            raw_res.left,
+            rank_type
+          );
         }
 
         var transferrable = [];
@@ -701,9 +696,9 @@ onmessage = function (msg) {
           resp = bakana.formatMarkerResults(raw_res, cluster, rank_type);
         } else {
           let annotation_vec = scran.factorize(getAnnotation(annotation));
-          raw_res = getMarkerForAnnot(annotation, annotation_vec, modality)[
-            modality
-          ];
+          let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+
+          raw_res = mds.fetchResults()[modality];
           // cache_anno_markers[annotation][modality];
 
           resp = bakana.formatMarkerResults(
@@ -905,7 +900,7 @@ onmessage = function (msg) {
             let num_cells = superstate.cell_filtering
               .fetchFilteredMatrix()
               .numberOfColumns();
-              
+
             let arr_sel_indices = new Uint8Array(num_cells);
             sel_indices.map((x) => arr_sel_indices.set([1], x));
             let annotation_vec = scran.factorize(arr_sel_indices);
@@ -918,12 +913,8 @@ onmessage = function (msg) {
             defaults.collections.push(collection);
 
             await fse.setParameters(defaults);
-
-            let anno_markers = getMarkerForAnnot(
-              annotation,
-              annotation_vec,
-              "RNA"
-            )["RNA"];
+            let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+            let anno_markers = mds.fetchResults()["RNA"];
 
             resp = fse.computeEnrichment(
               anno_markers,
@@ -946,11 +937,9 @@ onmessage = function (msg) {
             defaults.collections.push(collection);
 
             await fse.setParameters(defaults);
-            let anno_markers = getMarkerForAnnot(
-              annotation,
-              annotation_vec,
-              "RNA"
-            )["RNA"];
+            let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+
+            let anno_markers = mds.fetchResults()["RNA"];
 
             resp = fse.computeEnrichment(
               anno_markers,
@@ -963,6 +952,81 @@ onmessage = function (msg) {
           }
         }
         postSuccess("computeFeaturesetSummary", resp);
+      })
+      .catch((err) => {
+        console.error(err);
+        postError(type, err, fatal);
+      });
+  } else if (type == "computeFeaturesetVSSummary") {
+    loaded
+      .then(async (x) => {
+        let { annotation, rank_type, left, right, collection } = payload;
+        let index = rank_type.indexOf("-");
+        let resp;
+        if (default_cluster === annotation) {
+          let raw_res = superstate.marker_detection.computeVersus(left, right);
+          resp = superstate.feature_set_enrichment.computeEnrichment(
+            raw_res.results["RNA"],
+            raw_res.left,
+            rank_type.slice(0, index),
+            rank_type.slice(index + 1)
+          );
+        } else if (default_selection === annotation) {
+          let fse;
+          try {
+            fse = new bakana.FeatureSetEnrichmentStandalone(
+              superstate["inputs"].fetchFeatureAnnotations()["RNA"]
+            );
+
+            let defaults = bakana.FeatureSetEnrichmentState.defaults();
+            defaults.collections.push(collection);
+
+            await fse.setParameters(defaults);
+
+            let anno_markers = superstate.custom_selections.computeVersus(
+              left,
+              right
+            );
+
+            resp = fse.computeEnrichment(
+              anno_markers.results["RNA"],
+              0,
+              rank_type.slice(0, index),
+              rank_type.slice(index + 1)
+            );
+          } finally {
+            fse.free();
+          }
+        } else {
+          let fse;
+          try {
+            let annotation_vec = scran.factorize(getAnnotation(annotation));
+            fse = new bakana.FeatureSetEnrichmentStandalone(
+              superstate["inputs"].fetchFeatureAnnotations()["RNA"]
+            );
+
+            let defaults = bakana.FeatureSetEnrichmentState.defaults();
+            defaults.collections.push(collection);
+
+            await fse.setParameters(defaults);
+            let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+
+            let raw_res = mds.computeVersus(
+              annotation_vec.levels.indexOf(payload.left),
+              annotation_vec.levels.indexOf(payload.right)
+            );
+
+            resp = fse.computeEnrichment(
+              raw_res.results["RNA"],
+              raw_res.left,
+              rank_type.slice(0, index),
+              rank_type.slice(index + 1)
+            );
+          } finally {
+            fse.free();
+          }
+        }
+        postSuccess("computeFeaturesetVSSummary", resp);
       })
       .catch((err) => {
         console.error(err);
