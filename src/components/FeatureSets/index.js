@@ -108,7 +108,7 @@ const FeatureSetEnrichment = (props) => {
     } else if (default_selection === props?.selectedFsetAnnotation) {
       let clus = [];
       clus = clus.concat(Object.keys(props?.customSelection));
-      if (props?.setSelectedFsetCluster === null) {
+      if (props?.selectedFsetCluster === null) {
         props?.setSelectedFsetCluster(Object.keys(props?.customSelection)[0]);
 
         if (String(props?.selectedVSCluster).startsWith("cs")) {

@@ -16,7 +16,6 @@ import {
 } from "./helpers.js";
 import * as remotes from "bakana-remotes";
 import { code } from "../utils/utils.js";
-import { json } from "d3";
 /***************************************/
 
 const default_cluster = `${code}::CLUSTERS`;
@@ -26,6 +25,7 @@ let superstate = null;
 let preflights = {};
 let preflights_summary = {};
 let cache_matrix = new scran.MultiMatrix();
+let cache_anno_markers = {};
 
 // Evade CORS problems and enable caching.
 const proxy = "https://cors-proxy.aaron-lun.workers.dev";
@@ -153,6 +153,22 @@ async function postStepSummary(step) {
   } catch (err) {
     postError(step, err, true);
   }
+}
+
+function getMarkerForAnnot(annotation, annotation_vec, modality) {
+  let mds;
+  const anno_key = `${annotation}-${modality}`;
+  if (!(anno_key in cache_anno_markers)) {
+    mds = new bakana.MarkerDetectionStandalone(
+      getMatrix(modality),
+      annotation_vec.ids.slice()
+    );
+
+    mds.computeAll();
+    cache_anno_markers[anno_key] = mds.fetchResults();
+  }
+
+  return cache_anno_markers[anno_key];
 }
 
 const getAnnotation = (annotation, unfiltered = true) => {
@@ -690,25 +706,17 @@ onmessage = function (msg) {
           raw_res = superstate.marker_detection.fetchResults()[modality];
           resp = bakana.formatMarkerResults(raw_res, cluster, rank_type);
         } else {
-          let mds;
-          try {
-            let annotation_vec = scran.factorize(getAnnotation(annotation));
-            mds = new bakana.MarkerDetectionStandalone(
-              getMatrix(modality),
-              annotation_vec.ids.slice()
-            );
+          let annotation_vec = scran.factorize(getAnnotation(annotation));
+          raw_res = getMarkerForAnnot(annotation, annotation_vec, modality)[
+            modality
+          ];
+          // cache_anno_markers[annotation][modality];
 
-            mds.computeAll();
-            raw_res = mds.fetchResults()[modality];
-
-            resp = bakana.formatMarkerResults(
-              raw_res,
-              annotation_vec.levels.indexOf(cluster),
-              rank_type
-            );
-          } finally {
-            mds.free();
-          }
+          resp = bakana.formatMarkerResults(
+            raw_res,
+            annotation_vec.levels.indexOf(cluster),
+            rank_type
+          );
         }
 
         var transferrable = [];
@@ -895,6 +903,42 @@ onmessage = function (msg) {
             rank_type.slice(0, index),
             rank_type.slice(index + 1)
           );
+        } else if (default_selection === annotation) {
+          let fse;
+          try {
+            let sel_indices =
+              superstate.custom_selections.fetchSelectionIndices(cluster);
+            let num_cells = superstate.inputs
+              .fetchCountMatrix()
+              .numberOfColumns();
+
+            let arr_sel_indices = new Uint8Array(num_cells);
+            sel_indices.map((x) => arr_sel_indices.set([1], x));
+            let annotation_vec = scran.factorize(arr_sel_indices);
+            fse = new bakana.FeatureSetEnrichmentStandalone(
+              superstate["inputs"].fetchFeatureAnnotations()["RNA"]
+            );
+
+            let defaults = bakana.FeatureSetEnrichmentState.defaults();
+            defaults.collections.push(collection);
+
+            await fse.setParameters(defaults);
+
+            let anno_markers = getMarkerForAnnot(
+              annotation,
+              annotation_vec,
+              "RNA"
+            )["RNA"];
+
+            resp = fse.computeEnrichment(
+              anno_markers,
+              annotation_vec.levels.indexOf(1),
+              rank_type.slice(0, index),
+              rank_type.slice(index + 1)
+            );
+          } finally {
+            fse.free();
+          }
         } else {
           let fse;
           try {
@@ -907,9 +951,14 @@ onmessage = function (msg) {
             defaults.collections.push(collection);
 
             await fse.setParameters(defaults);
+            let anno_markers = getMarkerForAnnot(
+              annotation,
+              annotation_vec,
+              "RNA"
+            )["RNA"];
 
             resp = fse.computeEnrichment(
-              superstate.marker_detection.fetchResults()["RNA"],
+              anno_markers,
               annotation_vec.levels.indexOf(cluster),
               rank_type.slice(0, index),
               rank_type.slice(index + 1)
@@ -949,7 +998,6 @@ onmessage = function (msg) {
           collection,
           index
         );
-        console.log(resp);
         postSuccess("setFeatureGeneIndices", resp);
       })
       .catch((err) => {
