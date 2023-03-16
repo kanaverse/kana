@@ -305,8 +305,8 @@ export function H5AD({
                               `featureType${
                                 mod.toLowerCase().charAt(0).toUpperCase() +
                                 mod.toLowerCase().slice(1)
-                              }Name` === "none"
-                            ]
+                              }Name`
+                            ] === "none"
                           }
                         >
                           <Label className="row-input">

@@ -73,7 +73,6 @@ function summarizeDataset(summary, args) {
   };
 
   if (args.format === "H5AD") {
-    tmp_meta["all_assay_names"] = summary.all_assay_names;
     tmp_meta["all_features"] = {};
     let tmod_summary = {};
     for (const k of summary["all_features"].columnNames()) {
@@ -85,6 +84,24 @@ function summarizeDataset(summary, args) {
       columns: tmod_summary,
       numberOfFeatures: summary["all_features"].numberOfRows(),
     };
+  } else if (args.format === "SummarizedExperiment") {
+    tmp_meta["modality_features"] = {};
+    if ("modality_features" in summary) {
+      for (const [k, v] of Object.entries(summary.modality_features)) {
+        let tmod_summary = {};
+        for (const k of v.columnNames()) {
+          // TODO: figure out a way to deal with these later
+          if (!Array.isArray(v.column(k))) {
+            continue;
+          }
+          tmod_summary[k] = bakana.summarizeArray(v.column(k));
+        }
+        tmp_meta["modality_features"][k] = {
+          columns: tmod_summary,
+          numberOfFeatures: v.numberOfRows(),
+        };
+      }
+    }
   } else {
     tmp_meta["modality_features"] = {};
     if ("modality_features" in summary) {
@@ -99,6 +116,12 @@ function summarizeDataset(summary, args) {
         };
       }
     }
+  }
+
+  if (args.format === "H5AD") {
+    tmp_meta["all_assay_names"] = summary.all_assay_names;
+  } else if (args.format === "SummarizedExperiment") {
+    tmp_meta["modality_assay_names"] = summary.modality_assay_names;
   }
   return tmp_meta;
 }

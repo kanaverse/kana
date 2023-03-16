@@ -36,6 +36,7 @@ import { TenxHDF5 } from "./TenxHDF5Card";
 
 import { code } from "../../utils/utils";
 import { H5AD } from "./H5ADCard";
+import { RDSSE } from "./RDSSECard";
 
 export function NewAnalysis({
   open,
@@ -917,6 +918,21 @@ export function NewAnalysis({
               } else if (x.format == "H5AD") {
                 return (
                   <H5AD
+                    key={i}
+                    resource={x}
+                    index={i}
+                    preflight={
+                      preInputFilesStatus && preInputFilesStatus[x.name]
+                    }
+                    inputOpts={inputOptions}
+                    setInputOpts={setInputOptions}
+                    inputs={newInputs}
+                    setInputs={setNewInputs}
+                  />
+                );
+              } else if (x.format == "SummarizedExperiment") {
+                return (
+                  <RDSSE
                     key={i}
                     resource={x}
                     index={i}
