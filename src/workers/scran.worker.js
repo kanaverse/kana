@@ -72,18 +72,34 @@ function summarizeDataset(summary, args) {
     },
   };
 
-  tmp_meta["modality_features"] = {};
-  for (const [k, v] of Object.entries(summary.modality_features)) {
+  if (args.format === "H5AD") {
+    tmp_meta["all_assay_names"] = summary.all_assay_names;
+    tmp_meta["all_features"] = {};
     let tmod_summary = {};
-    for (const k of v.columnNames()) {
-      tmod_summary[k] = bakana.summarizeArray(v.column(k));
+    for (const k of summary["all_features"].columnNames()) {
+      tmod_summary[k] = bakana.summarizeArray(
+        summary["all_features"].column(k)
+      );
     }
-    tmp_meta["modality_features"][k] = {
+    tmp_meta["all_features"] = {
       columns: tmod_summary,
-      numberOfFeatures: v.numberOfRows(),
+      numberOfFeatures: summary["all_features"].numberOfRows(),
     };
+  } else {
+    tmp_meta["modality_features"] = {};
+    if ("modality_features" in summary) {
+      for (const [k, v] of Object.entries(summary.modality_features)) {
+        let tmod_summary = {};
+        for (const k of v.columnNames()) {
+          tmod_summary[k] = bakana.summarizeArray(v.column(k));
+        }
+        tmp_meta["modality_features"][k] = {
+          columns: tmod_summary,
+          numberOfFeatures: v.numberOfRows(),
+        };
+      }
+    }
   }
-
   return tmp_meta;
 }
 
