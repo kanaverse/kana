@@ -33,7 +33,7 @@ import "./fsea.css";
 import { Select2 } from "@blueprintjs/select";
 
 const FeatureSetEnrichment = (props) => {
-  const { genesInfo, geneColSel, annotationObj, annotationCols } =
+  const { genesInfo, geneColSel, annotationObj, annotationCols, appMode } =
     useContext(AppContext);
 
   const default_cluster = `${code}::CLUSTERS`;
@@ -284,6 +284,10 @@ const FeatureSetEnrichment = (props) => {
       defheight += 270;
     }
 
+    if (appMode === "explore") {
+      defheight += 15
+    }
+
     return `35px calc(100vh - ${defheight}px)`;
   };
 
@@ -518,6 +522,28 @@ const FeatureSetEnrichment = (props) => {
         </span>
       </Collapse>
       <Divider />
+      {appMode === "explore" && props?.modality != null && (
+        <Label style={{ textAlign: "left", marginBottom: "5px" }}>
+          Select RNA-seq Modality
+          <HTMLSelect
+            onChange={(x) => {
+              props?.setGene(null);
+              props?.setFeatureSetGeneIndex(null);
+              props?.setSelectedFsetVSCluster(null);
+              props?.setSelectedFsetCluster(null);
+              props?.setSelectedFsetModality(x.currentTarget?.value);
+              setFsetFilter({});
+            }}
+            defaultValue={props?.selectedFsetModality}
+          >
+            {props?.modality.map((x, i) => (
+              <option key={x} value={x}>
+                {x}
+              </option>
+            ))}
+          </HTMLSelect>
+        </Label>
+      )}
       {props?.fsetEnirchDetails && (
         <Label style={{ marginBottom: "3px" }}>
           Choose Collection

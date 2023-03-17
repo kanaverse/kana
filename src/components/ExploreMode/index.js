@@ -51,6 +51,7 @@ import pkgVersion from "../../../package.json";
 
 import logo from "../../assets/kana-cropped.png";
 import "../../App.css";
+import FeatureSetEnrichment from "../FeatureSets";
 
 const scranWorker = new Worker(
   new URL("../../workers/explorer.worker.js", import.meta.url),
@@ -149,6 +150,9 @@ export function ExplorerMode() {
   // STEP: CELL_LABELLING
   const [cellLabelData, setCellLabelData] = useState(null);
 
+  // STEP: FEATURE_SET_ENRICHMENT
+  const [fsetEnirchDetails, setFsetEnrichDetails] = useState({});
+  const [fsetEnirchSummary, setFsetEnrichSummary] = useState({});
   /*******
    * State to hold analysis specific results - END
    ******/
@@ -160,6 +164,7 @@ export function ExplorerMode() {
   const [showPCALoader, setShowPCALoader] = useState(true);
   const [showNClusLoader, setShowNClusLoader] = useState(true);
   const [showCellLabelLoader, setShowCellLabelLoader] = useState(true);
+  const [showFsetLoader, setShowFsetLoader] = useState(true);
 
   function setAllLoaders() {
     setShowDimPlotLoader(true);
@@ -168,6 +173,7 @@ export function ExplorerMode() {
     setShowPCALoader(true);
     setShowNClusLoader(true);
     setShowCellLabelLoader(true);
+    setShowFsetLoader(true);
   }
 
   const default_cluster = `${code}::CLUSTERS`;
@@ -229,6 +235,38 @@ export function ExplorerMode() {
   const [clusHighlightLabel, setClusHighlightLabel] = useState(null);
   // selected colorBy
   const [colorByAnnotation, setColorByAnnotation] = useState(default_cluster);
+
+  // are we showing markers or feature sets?
+  const [markersORFSets, setMarkersOrFsets] = useState("markers");
+  // set feature set rank-type
+  const [fsetClusterRank, setFsetClusterRank] = useState("cohen-min-rank");
+  // selected collection
+  const [selectedFsetColl, setSelectedFsetColl] = useState(null);
+  // feature scores cache
+  const [featureScores, setFeatureScores] = useState({});
+  // which fset cluster is selected
+  const [selectedFsetCluster, setSelectedFsetCluster] = useState(null);
+  // which  fset annotation, currently we only support computed clusters
+  const [selectedFsetAnnotation, setSelectedFsetAnnotation] =
+    useState(default_cluster);
+  // what feature name is selected
+  const [selectedFsetIndex, setSelectedFsetIndex] = useState(null);
+  // request feature set scores
+  const [reqFsetIndex, setReqFsetIndex] = useState(null);
+  // cache for scores
+  const [featureScoreCache, setFeatureScoreCache] = useState(null);
+  // gene index selected from a feature set
+  const [featureSetGeneIndex, setFeatureSetGeneIndex] = useState(null);
+  // request for scores
+  const [reqFsetGeneIndex, setReqFsetGeneIndex] = useState(null);
+  // fset gene indices cache
+  const [fsetGeneIndxCache, setFsetGeneIndxCache] = useState(null);
+  // contains the actual gene scores
+  const [fsetGeneExprCache, setFsetGeneExprCache] = useState({});
+  // which cluster is selected for vsmode
+  const [selectedFsetVSCluster, setSelectedFsetVSCluster] = useState(null);
+  // modality in feature set
+  const [selectedFsetModality, setSelectedFsetModality] = useState(null);
 
   /*******
    * USER REQUESTS - END
@@ -310,12 +348,7 @@ export function ExplorerMode() {
         add_to_logs("info", `--- ${type} sent ---`);
       }
     }
-  }, [
-    selectedCluster,
-    selectedVSCluster,
-    clusterRank,
-    selectedModality,
-  ]);
+  }, [selectedCluster, selectedVSCluster, clusterRank, selectedModality]);
 
   // compute markers in the worker
   // when a new custom selection of cells is made through the UI
@@ -409,6 +442,118 @@ export function ExplorerMode() {
       }
     }
   }, [selectedModality]);
+
+  // compute feature set scores
+  useEffect(() => {
+    if (selectedFsetModality !== null) {
+      scranWorker.postMessage({
+        type: "initFeaturesetEnrich",
+        payload: {
+          modality: selectedFsetModality,
+        },
+      });
+      add_to_logs("info", `--- initFeaturesetEnrich sent ---`);
+    }
+  }, [selectedFsetModality]);
+
+  // compute feature set scores
+  useEffect(() => {
+    if (selectedFsetCluster !== null && fsetClusterRank !== null) {
+      if (selectedFsetVSCluster !== null && selectedFsetCluster !== null) {
+        scranWorker.postMessage({
+          type: "computeFeaturesetVSSummary",
+          payload: {
+            left: selectedFsetCluster,
+            right: selectedFsetVSCluster,
+            rank_type: fsetClusterRank,
+            annotation: selectedFsetAnnotation,
+            collection: selectedFsetColl,
+            modality: selectedFsetModality,
+          },
+        });
+        add_to_logs("info", `--- computeFeaturesetVSSummary sent ---`);
+      } else if (selectedFsetCluster !== null) {
+        // if (!(`${selectedFsetCluster}-${fsetClusterRank}` in fsetEnirchSummary)) {
+        scranWorker.postMessage({
+          type: "computeFeaturesetSummary",
+          payload: {
+            modality: selectedFsetModality,
+            cluster: selectedFsetCluster,
+            rank_type: fsetClusterRank,
+            annotation: selectedFsetAnnotation,
+            collection: selectedFsetColl,
+          },
+        });
+        // }
+        add_to_logs("info", `--- computeFeaturesetSummary sent ---`);
+      }
+    }
+  }, [
+    selectedFsetAnnotation,
+    selectedFsetColl,
+    selectedFsetCluster,
+    fsetClusterRank,
+    selectedFsetVSCluster,
+  ]);
+
+  // get feature scores for a set
+  useEffect(() => {
+    if (
+      reqFsetIndex != null &&
+      selectedFsetCluster != null &&
+      selectedFsetColl !== null &&
+      selectedFsetAnnotation !== null
+    ) {
+      scranWorker.postMessage({
+        type: "getFeatureScores",
+        payload: {
+          index: reqFsetIndex,
+          collection: selectedFsetColl,
+          annotation: selectedFsetAnnotation,
+          cluster: selectedFsetCluster,
+          modality: selectedFsetModality,
+        },
+      });
+
+      add_to_logs(
+        "info",
+        `--- Request feature set cell score for feature index:${reqFsetIndex} sent ---`
+      );
+    }
+  }, [
+    reqFsetIndex,
+    selectedFsetCluster,
+    selectedFsetColl,
+    selectedFsetAnnotation,
+  ]);
+
+  // get feature scores for a set
+  useEffect(() => {
+    if (
+      reqFsetGeneIndex != null &&
+      selectedFsetCluster != null &&
+      selectedFsetColl !== null
+    ) {
+      scranWorker.postMessage({
+        type: "getFeatureGeneIndices",
+        payload: {
+          index: reqFsetGeneIndex,
+          collection: selectedFsetColl,
+          cluster: selectedFsetCluster,
+        },
+      });
+
+      add_to_logs(
+        "info",
+        `--- Request feature set gene indices for feature index:${reqFsetGeneIndex} sent ---`
+      );
+    }
+  }, [reqFsetGeneIndex, selectedFsetCluster, selectedFsetColl]);
+
+  useEffect(() => {
+    setGene(null);
+    setSelectedFsetIndex(null);
+  }, [markersORFSets]);
 
   function add_to_logs(type, msg, status) {
     let tmp = [...logs];
@@ -515,6 +660,7 @@ export function ExplorerMode() {
       setSelectedMarkerAnnotation(resp.annotations[0]);
       setReqAnnotation(resp.annotations[0]);
       // setSelectedCluster(resp.annotations[0]);
+      setSelectedFsetModality(tmodality);
 
       setShowNClusLoader(false);
       setShowMarkerLoader(false);
@@ -587,6 +733,34 @@ export function ExplorerMode() {
       setShowMarkerLoader(false);
     } else if (payload.type === "choose_clustering_CACHE") {
       setShowNClusLoader(false);
+    } else if (type == "feature_set_enrichment_DATA") {
+      setFsetEnrichDetails(resp.details);
+      setShowFsetLoader(false);
+      setSelectedFsetColl(Object.keys(resp.details)[0]);
+    } else if (
+      type === "computeFeaturesetSummary_DATA" ||
+      type === "computeFeaturesetVSSummary_DATA"
+    ) {
+      let tmpsumm = { ...fsetEnirchSummary };
+      tmpsumm[`${selectedFsetCluster}-${fsetClusterRank}`] = resp;
+      setFsetEnrichSummary(tmpsumm);
+
+      setFeatureScoreCache(new Array(resp[selectedFsetColl].counts.length));
+      setFsetGeneIndxCache(new Array(resp[selectedFsetColl].counts.length));
+    } else if (type === "setFeatureScores_DATA") {
+      let tmp = [...featureScoreCache];
+      tmp[reqFsetIndex] = resp;
+
+      setFeatureScoreCache(tmp);
+      setReqFsetIndex(null);
+    } else if (type === "setFeatureGeneIndices_DATA") {
+      let tmp = [...fsetGeneIndxCache];
+      tmp[reqFsetGeneIndex] = resp;
+
+      setFsetGeneIndxCache(tmp);
+      setReqFsetGeneIndex(null);
+    } else {
+      console.log("unknown msg type", payload);
     }
   };
 
@@ -595,6 +769,9 @@ export function ExplorerMode() {
 
   // resize markers width
   const [markersWidth, setMarkersWidth] = useState(360);
+
+  // resize fset width
+  const [fsetWidth, setFsetWidth] = useState(360);
 
   const handleResize = () => {
     setWindowWidth(window.innerWidth);
@@ -843,7 +1020,9 @@ export function ExplorerMode() {
                 allowResize={false}
               >
                 <SplitPane
-                  defaultSize={markersWidth}
+                  defaultSize={
+                    markersORFSets === "markers" ? markersWidth : fsetWidth
+                  }
                   allowResize={false}
                   split="vertical"
                   primary="second"
@@ -892,41 +1071,93 @@ export function ExplorerMode() {
                       />
                     )}
                   </div>
-                  <div
-                    className={
-                      showMarkerLoader
-                        ? "results-markers effect-opacitygrayscale"
-                        : "results-markers"
-                    }
-                  >
-                    {annotationCols.length > 0 && selectedClusterSummary && (
-                      <MarkerPlot
-                        selectedClusterSummary={selectedClusterSummary}
-                        setSelectedClusterSummary={setSelectedClusterSummary}
-                        selectedClusterIndex={selectedClusterIndex}
-                        selectedCluster={selectedCluster}
-                        setSelectedCluster={setSelectedCluster}
-                        selectedVSCluster={selectedVSCluster}
-                        setSelectedVSCluster={setSelectedVSCluster}
-                        setClusterRank={setClusterRank}
-                        customSelection={customSelection}
-                        setGene={setGene}
-                        gene={gene}
-                        setReqGene={setReqGene}
-                        modality={modality}
-                        selectedModality={selectedModality}
-                        setSelectedModality={setSelectedModality}
-                        setMarkersWidth={setMarkersWidth}
-                        markersWidth={markersWidth}
-                        windowWidth={windowWidth}
-                        setReqAnnotation={setReqAnnotation}
-                        selectedMarkerAnnotation={selectedMarkerAnnotation}
-                        setSelectedMarkerAnnotation={
-                          setSelectedMarkerAnnotation
-                        }
-                      />
-                    )}
-                  </div>
+                  {markersORFSets === "markers" && (
+                    <div
+                      className={
+                        showMarkerLoader
+                          ? "results-markers effect-opacitygrayscale"
+                          : "results-markers"
+                      }
+                    >
+                      {annotationCols.length > 0 && selectedClusterSummary && (
+                        <MarkerPlot
+                          selectedClusterSummary={selectedClusterSummary}
+                          setSelectedClusterSummary={setSelectedClusterSummary}
+                          selectedClusterIndex={selectedClusterIndex}
+                          selectedCluster={selectedCluster}
+                          setSelectedCluster={setSelectedCluster}
+                          selectedVSCluster={selectedVSCluster}
+                          setSelectedVSCluster={setSelectedVSCluster}
+                          setClusterRank={setClusterRank}
+                          customSelection={customSelection}
+                          setGene={setGene}
+                          gene={gene}
+                          setReqGene={setReqGene}
+                          modality={modality}
+                          selectedModality={selectedModality}
+                          setSelectedModality={setSelectedModality}
+                          setMarkersWidth={setMarkersWidth}
+                          markersWidth={markersWidth}
+                          windowWidth={windowWidth}
+                          setReqAnnotation={setReqAnnotation}
+                          selectedMarkerAnnotation={selectedMarkerAnnotation}
+                          setSelectedMarkerAnnotation={
+                            setSelectedMarkerAnnotation
+                          }
+                          setMarkersOrFsets={setMarkersOrFsets}
+                        />
+                      )}
+                    </div>
+                  )}
+                  {markersORFSets === "featuresets" && (
+                    <div
+                      className={
+                        showFsetLoader
+                          ? "results-fsetenrich effect-opacitygrayscale"
+                          : "results-fsetenrich"
+                      }
+                    >
+                      {fsetEnirchDetails && (
+                        <FeatureSetEnrichment
+                          setMarkersOrFsets={setMarkersOrFsets}
+                          fsetClusterRank={fsetClusterRank}
+                          setFsetClusterRank={setFsetClusterRank}
+                          fsetEnirchDetails={fsetEnirchDetails}
+                          selectedFsetColl={selectedFsetColl}
+                          setSelectedFsetColl={setSelectedFsetColl}
+                          featureScores={featureScores}
+                          setFeatureScores={setFeatureScores}
+                          selectedFsetCluster={selectedFsetCluster}
+                          setSelectedFsetCluster={setSelectedFsetCluster}
+                          selectedFsetAnnotation={selectedFsetAnnotation}
+                          setSelectedFsetAnnotation={setSelectedFsetAnnotation}
+                          fsetEnirchSummary={fsetEnirchSummary}
+                          setFsetWidth={setFsetWidth}
+                          fsetWidth={fsetWidth}
+                          windowWidth={windowWidth}
+                          selectedFsetIndex={selectedFsetIndex}
+                          setSelectedFsetIndex={setSelectedFsetIndex}
+                          setReqFsetIndex={setReqFsetIndex}
+                          featureScoreCache={featureScoreCache}
+                          reqFsetGeneIndex={reqFsetGeneIndex}
+                          setReqFsetGeneIndex={setReqFsetGeneIndex}
+                          featureSetGeneIndex={featureSetGeneIndex}
+                          setFeatureSetGeneIndex={setFeatureSetGeneIndex}
+                          fsetGeneIndxCache={fsetGeneIndxCache}
+                          setGene={setGene}
+                          gene={gene}
+                          setReqGene={setReqGene}
+                          selectedFsetVSCluster={selectedFsetVSCluster}
+                          setSelectedFsetVSCluster={setSelectedFsetVSCluster}
+                          customSelection={customSelection}
+                          setReqAnnotation={setReqAnnotation}
+                          modality={modality}
+                          selectedFsetModality={selectedFsetModality}
+                          setSelectedFsetModality={setSelectedFsetModality}
+                        />
+                      )}
+                    </div>
+                  )}
                 </SplitPane>
                 <div className="results-gallery" style={getGalleryStyles()}>
                   <Gallery

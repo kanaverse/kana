@@ -148,6 +148,7 @@ export function toUI(params) {
       if (!(target[0] in reversed)) {
         reversed[target[0]] = {};
       }
+
       let currev = reversed[target[0]];
       if (target[1] in currev) {
         throw new Error(

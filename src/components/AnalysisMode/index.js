@@ -277,6 +277,9 @@ export function AnalysisMode(props) {
   const [fsetGeneExprCache, setFsetGeneExprCache] = useState({});
   // which cluster is selected for vsmode
   const [selectedFsetVSCluster, setSelectedFsetVSCluster] = useState(null);
+  // modality in feature set
+  const [selectedFsetModality, setSelectedFsetModality] = useState("RNA");
+
   /*******
    * USER REQUESTS - END
    ******/
