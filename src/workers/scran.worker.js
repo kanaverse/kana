@@ -1,5 +1,6 @@
 import * as bakana from "bakana";
 import * as scran from "scran.js";
+import * as gesel from "gesel";
 
 import * as kana_db from "./KanaDBHandler.js";
 import * as downloads from "./DownloadsDBHandler.js";
@@ -37,8 +38,24 @@ async function proxyAndCache(url) {
 remotes.ExperimentHubDataset.setDownloadFun(proxyAndCache);
 bakana.availableReaders["ExperimentHub"] = remotes.ExperimentHubDataset;
 bakana.CellLabellingState.setDownload(proxyAndCache);
-bakana.FeatureSetEnrichmentState.setDownload(proxyAndCache);
 bakana.RnaQualityControlState.setDownload(proxyAndCache);
+
+gesel.referenceDownload((file, start, end) => {
+  let url = gesel.referenceBaseUrl() + "/" + file;
+  let full = proxy + "/" + encodeURIComponent(url);
+  if (start == null && end == null) {
+    let buffer = await downloads.get(full);
+    return new Response(buffer);
+  } else {
+    return fetch(full + "?start=" + String(start) + "&end=" + String(end));
+  }
+});
+
+gesel.geneDownload(file => {
+  let url = gesel.geneBaseUrl() + "/" + file;
+  let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
+  return new Response(buffer);
+});
 
 function createDataset(args) {
   if (args.format == "10X") {
@@ -337,22 +354,6 @@ onmessage = function (msg) {
         postError(type, err, fatal);
       });
 
-    try {
-      let collections = bakana.FeatureSetEnrichmentState.availableCollections;
-
-      postMessage({
-        type: "feature_set_enrichment_store",
-        resp: {
-          collections: collections,
-        },
-        msg: "Success: Feature set enrichment collections initialized",
-      });
-    } catch {
-      postMessage({
-        type: "feature_set_enrichment_ERROR",
-        msg: "Error: Cannot access Feature set enrichment collections",
-      });
-    }
     /**************** RUNNING AN ANALYSIS *******************/
   } else if (type == "RUN") {
     fatal = true;
