@@ -20,11 +20,13 @@ import {
   Card,
   Elevation,
   H5,
+  H3,
   NonIdealState,
   NonIdealStateIconSize,
   Alert,
   ResizeEntry,
   ResizeSensor,
+  Callout,
 } from "@blueprintjs/core";
 
 import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
@@ -1113,7 +1115,10 @@ export function AnalysisMode(props) {
       setFsetEnrichDetails(resp.details);
       setShowFsetLoader(false);
       setSelectedFsetColl(Object.keys(resp.details)[0]);
-    } else if (type === "computeFeaturesetSummary_DATA" || type === "computeFeaturesetVSSummary_DATA") {
+    } else if (
+      type === "computeFeaturesetSummary_DATA" ||
+      type === "computeFeaturesetVSSummary_DATA"
+    ) {
       let tmpsumm = { ...fsetEnirchSummary };
       tmpsumm[`${selectedFsetCluster}-${fsetClusterRank}`] = resp;
       setFsetEnrichSummary(tmpsumm);
@@ -1717,99 +1722,73 @@ export function AnalysisMode(props) {
             </ResizeSensor>
           )}
           {(showPanel === null || showPanel === undefined) && (
-            <NonIdealState
-              icon={"control"}
-              iconSize={NonIdealStateIconSize.STANDARD}
-              title={"Lost all the windows eh?"}
-              description={
+            <div className="frontpage">
+              <div style={{ textAlign: "left", alignItems: "flex-start" }}>
+                <H3>Lost all the windows eh?</H3>
                 <p>
                   My boss told me I can't start an app with an empty screen. So
                   here goes nothing...
                 </p>
-              }
-              children={
-                <Card
-                  style={{
-                    textAlign: "left",
-                    width: "70%",
-                  }}
-                  elevation={Elevation.ZERO}
+              </div>
+              <div className="frontpage-row">
+                <Callout
+                  title="Start a New Analysis"
+                  onClick={() => setShowPanel("new")}
+                  className="frontpage-rowitem"
+                  icon="plus"
+                  intent="primary"
                 >
                   <p>
-                    <strong>kana</strong> performs a standard single-cell data
-                    analysis directly inside the browser.
+                    In this mode, <strong>kana</strong> performs a standard
+                    single-cell data analysis directly inside the browser.
                   </p>
                   <p>
                     With just a few clicks, you can get a UMAP/t-SNE, clusters
                     and their marker genes in an intuitive interface for further
                     exploration. No need to transfer data, no need to install
                     software, no need to configure a backend server - just point
-                    to a Matrix Market file and we'll analyze <em>your</em> data
-                    on <em>your</em> computer, no questions asked.
+                    to one of our supported file formats and we'll analyze{" "}
+                    <strong>
+                      <em>your</em>
+                    </strong>{" "}
+                    data on{" "}
+                    <strong>
+                      <em>your</em>
+                    </strong>{" "}
+                    computer, no questions asked.
                   </p>
-                  <p>
-                    Check out our{" "}
-                    <a href="https://github.com/kanaverse" target="_blank">
-                      GitHub page
-                    </a>{" "}
-                    for more details.
-                  </p>
-                  <H5>Authors</H5>
-                  Jayaram Kancherla (
-                  <a href="https://github.com/jkanche" target="_blank">
-                    <strong>@jkanche</strong>
-                  </a>
-                  ), Aaron Lun (
-                  <a href="https://github.com/LTLA" target="_blank">
-                    <strong>@LTLA</strong>
-                  </a>
-                  )
-                </Card>
-              }
-              action={
-                <ButtonGroup>
-                  <Button
-                    outlined={true}
-                    text="Start a New Analysis"
-                    icon="plus"
-                    intent="primary"
-                    onClick={() => setShowPanel("new")}
-                  />
-                  <Tooltip2
-                    className={popclass.TOOLTIP2_INDICATOR}
-                    content="Analyze the zeisel dataset from ExperimentHub to checkout how Kana works!"
-                    minimal={false}
-                    placement={"right"}
-                    intent="primary"
-                  >
-                    <Button
-                      outlined={true}
-                      text="Try out Kana!!"
-                      icon="random"
-                      intent="warning"
-                      onClick={() => {
-                        setInputFiles({
-                          batch: null,
-                          subset: null,
-                          files: {
-                            "dataset-1": {
-                              name: "dataset-1",
-                              format: "ExperimentHub",
-                              id: "zeisel-brain",
-                              options: {
-                                primaryRNAFeatureColumn: "id",
-                              },
-                            },
+                </Callout>
+                <Callout
+                  title="Wanna tryout Kana?"
+                  onClick={() => {
+                    setInputFiles({
+                      batch: null,
+                      subset: null,
+                      files: {
+                        "dataset-1": {
+                          name: "dataset-1",
+                          format: "ExperimentHub",
+                          id: "zeisel-brain",
+                          options: {
+                            primaryRNAFeatureColumn: "id",
                           },
-                        });
+                        },
+                      },
+                    });
 
-                        setShowPanel("results");
-                      }}
-                    />
-                  </Tooltip2>
-                </ButtonGroup>
-              }
-            />
+                    setShowPanel("results");
+                  }}
+                  className="frontpage-rowitem"
+                  icon="random"
+                  intent="warning"
+                >
+                  <p>
+                    Analyze the zeisel dataset from ExperimentHub to checkout
+                    how Kana works!
+                  </p>
+                </Callout>
+              </div>
+            </div>
           )}
           {showPanel === "load" && (
             <LoadAnalysis

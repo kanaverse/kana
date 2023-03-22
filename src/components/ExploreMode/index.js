@@ -25,6 +25,7 @@ import {
   Alert,
   ResizeEntry,
   ResizeSensor,
+  H3, Callout
 } from "@blueprintjs/core";
 
 import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
@@ -1190,65 +1191,25 @@ export function ExplorerMode() {
             </ResizeSensor>
           )}
           {(showPanel === null || showPanel === undefined) && (
-            <NonIdealState
-              icon={"control"}
-              iconSize={NonIdealStateIconSize.STANDARD}
-              title={"Lost all the windows eh?"}
-              description={
-                <p>
-                  My boss told me I can't start an app with an empty screen. So
-                  here goes nothing...
-                </p>
-              }
-              children={
-                <Card
-                  style={{
-                    textAlign: "left",
-                    width: "70%",
-                  }}
-                  elevation={Elevation.ZERO}
-                >
-                  <p>
-                    <strong>kana</strong> performs a standard single-cell data
-                    analysis directly inside the browser.
-                  </p>
-                  <p>
-                    With just a few clicks, you can get a UMAP/t-SNE, clusters
-                    and their marker genes in an intuitive interface for further
-                    exploration. No need to transfer data, no need to install
-                    software, no need to configure a backend server - just point
-                    to a Matrix Market file and we'll analyze <em>your</em> data
-                    on <em>your</em> computer, no questions asked.
-                  </p>
-                  <p>
-                    Check out our{" "}
-                    <a href="https://github.com/kanaverse" target="_blank">
-                      GitHub page
-                    </a>{" "}
-                    for more details.
-                  </p>
-                  <H5>Authors</H5>
-                  Jayaram Kancherla (
-                  <a href="https://github.com/jkanche" target="_blank">
-                    <strong>@jkanche</strong>
-                  </a>
-                  ), Aaron Lun (
-                  <a href="https://github.com/LTLA" target="_blank">
-                    <strong>@LTLA</strong>
-                  </a>
-                  )
-                </Card>
-              }
-              action={
-                <Button
-                  outlined={true}
-                  text="Explore a dataset"
+            <div className="frontpage">
+              <div style={{ textAlign: "left", alignItems: "flex-start" }}>
+                <H3>Are you new here?</H3>
+              </div>
+              <div className="frontpage-row">
+                <Callout
+                  title="Explore a pre-saved analysis"
+                  onClick={() => setShowPanel("explore-import")}
+                  className="frontpage-rowitem"
                   icon="plus"
                   intent="primary"
-                  onClick={() => setShowPanel("explore-import")}
-                />
-              }
-            />
+                >
+                  <p>
+                    In this mode, <strong>kana</strong> retrieves results from 
+                    single-cell datasets stored as RDS or H5AD files.
+                  </p>
+                </Callout>
+              </div>
+            </div>
           )}
           {showPanel === "explore-import" && (
             <LoadExplore setShowPanel={setShowPanel} />

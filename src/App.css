@@ -36,7 +36,7 @@
   text-align: center;
   font-style: italic;
   font-weight: 700;
-  font-size: small;
+  font-size: x-small;
 }
 
 .left-sidebar-content-flex-top,
@@ -124,7 +124,8 @@
   height: 100%;
 }
 
-.results-markers, .results-fsetenrich {
+.results-markers,
+.results-fsetenrich {
   height: 100%;
 }
 
@@ -132,4 +133,28 @@
   padding: 2px;
   height: 100%;
   /* overflow-y: auto; */
+}
+
+.frontpage {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* height: 100%; */
+  padding: 5% 15%;
+  justify-content: center;
+}
+
+.frontpage-row {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  justify-content: center;
+}
+
+.frontpage-rowitem {
+  cursor: pointer;
+}
+
+.frontpage-rowitem:hover {
+  box-shadow: 0 0 11px rgba(33, 33, 33, 0.2);
 }
