@@ -55,6 +55,8 @@
 .item-button-group {
   display: flex;
   flex-direction: column;
+  align-content: center;
+  justify-content: center;
 }
 
 .left-sidebar-content-flex-top .Resizer.disabled {

@@ -1242,7 +1242,13 @@ export function AnalysisMode(props) {
                     intent={showPanel === "new" ? "primary" : "none"}
                   ></Button>
                   <span
+                    onClick={() =>
+                      showPanel !== "new"
+                        ? setShowPanel("new")
+                        : setShowPanel(null)
+                    }
                     style={{
+                      cursor: "pointer",
                       color: showPanel === "new" ? "#184A90" : "black",
                     }}
                   >
@@ -1279,7 +1285,13 @@ export function AnalysisMode(props) {
                     intent={showPanel === "load" ? "primary" : "none"}
                   ></Button>
                   <span
+                    onClick={() =>
+                      showPanel !== "load"
+                        ? setShowPanel("load")
+                        : setShowPanel(null)
+                    }
                     style={{
+                      cursor: "pointer",
                       color: showPanel === "load" ? "#184A90" : "black",
                     }}
                   >
@@ -1330,22 +1342,25 @@ export function AnalysisMode(props) {
                     }
                     placement="right"
                   >
-                    <Button
-                      outlined={false}
-                      large={false}
-                      minimal={true}
-                      fill={true}
-                      icon={"floppy-disk"}
-                      intent={showPanel === "save" ? "primary" : "none"}
-                    ></Button>
+                    <div className="item-button-group">
+                      <Button
+                        outlined={false}
+                        large={false}
+                        minimal={true}
+                        fill={true}
+                        icon={"floppy-disk"}
+                        intent={showPanel === "save" ? "primary" : "none"}
+                      ></Button>
+                      <span
+                        style={{
+                          cursor: "pointer",
+                          color: showPanel === "save" ? "#184A90" : "black",
+                        }}
+                      >
+                        SAVE
+                      </span>
+                    </div>
                   </Popover2>
-                  <span
-                    style={{
-                      color: showPanel === "save" ? "#184A90" : "black",
-                    }}
-                  >
-                    SAVE
-                  </span>
                 </div>
               </Tooltip2>
             </div>
@@ -1355,7 +1370,6 @@ export function AnalysisMode(props) {
                 showPanel === "params" ? "item-sidebar-intent" : "item-sidebar"
               }
             >
-              {" "}
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
                 content="Update or modify analysis parameters!"
@@ -1378,7 +1392,13 @@ export function AnalysisMode(props) {
                     intent={showPanel === "params" ? "primary" : "none"}
                   ></Button>
                   <span
+                    onClick={() =>
+                      showPanel !== "params"
+                        ? setShowPanel("params")
+                        : setShowPanel(null)
+                    }
                     style={{
+                      cursor: "pointer",
                       color: showPanel === "params" ? "#184A90" : "black",
                     }}
                   >
@@ -1388,48 +1408,60 @@ export function AnalysisMode(props) {
               </Tooltip2>
             </div>
             <Divider />
-            <div
-              className={
-                showPanel === "results" ? "item-sidebar-intent" : "item-sidebar"
-              }
-            >
-              <Tooltip2
-                className={popclass.TOOLTIP2_INDICATOR}
-                content={
-                  selectedRedDim === null
-                    ? "Start or load an analysis to explore results"
-                    : "Explore results!"
-                }
-                minimal={false}
-                placement={"right"}
-                intent={showPanel === "results" ? "primary" : ""}
-              >
-                <div className="item-button-group">
-                  <Button
-                    outlined={false}
-                    large={false}
-                    minimal={true}
-                    fill={true}
-                    icon={"rocket-slant"}
-                    disabled={selectedRedDim === null}
-                    onClick={() =>
-                      showPanel !== "results"
-                        ? setShowPanel("results")
-                        : setShowPanel(null)
+            {selectedRedDim !== null && (
+              <>
+                <div
+                  className={
+                    showPanel === "results"
+                      ? "item-sidebar-intent"
+                      : "item-sidebar"
+                  }
+                >
+                  <Tooltip2
+                    className={popclass.TOOLTIP2_INDICATOR}
+                    content={
+                      selectedRedDim === null
+                        ? "Start or load an analysis to explore results"
+                        : "Explore results!"
                     }
-                    intent={showPanel === "results" ? "primary" : "none"}
-                  ></Button>
-                  <span
-                    style={{
-                      color: showPanel === "results" ? "#184A90" : "black",
-                    }}
+                    minimal={false}
+                    placement={"right"}
+                    intent={showPanel === "results" ? "primary" : ""}
                   >
-                    RESULTS
-                  </span>
+                    <div className="item-button-group">
+                      <Button
+                        outlined={false}
+                        large={false}
+                        minimal={true}
+                        fill={true}
+                        icon={"rocket-slant"}
+                        disabled={selectedRedDim === null}
+                        onClick={() =>
+                          showPanel !== "results"
+                            ? setShowPanel("results")
+                            : setShowPanel(null)
+                        }
+                        intent={showPanel === "results" ? "primary" : "none"}
+                      ></Button>
+                      <span
+                        onClick={() =>
+                          showPanel !== "results"
+                            ? setShowPanel("results")
+                            : setShowPanel(null)
+                        }
+                        style={{
+                          cursor: "pointer",
+                          color: showPanel === "results" ? "#184A90" : "black",
+                        }}
+                      >
+                        RESULTS
+                      </span>
+                    </div>
+                  </Tooltip2>
                 </div>
-              </Tooltip2>
-            </div>
-            <Divider />
+                <Divider />
+              </>
+            )}
             <div
               className={
                 showPanel === "logs" ? "item-sidebar-intent" : "item-sidebar"
@@ -1454,7 +1486,9 @@ export function AnalysisMode(props) {
                     intent={showPanel === "logs" ? "primary" : "none"}
                   ></Button>
                   <span
+                    onClick={() => setShowLogs(true)}
                     style={{
+                      cursor: "pointer",
                       color: showPanel === "logs" ? "#184A90" : "black",
                     }}
                   >
@@ -1467,7 +1501,7 @@ export function AnalysisMode(props) {
           </div>
           <div className="left-sidebar-content-flex-bottom">
             <Divider />
-            <div
+            {/* <div
               className={
                 showPanel === "info" ? "item-sidebar-intent" : "item-sidebar"
               }
@@ -1498,7 +1532,7 @@ export function AnalysisMode(props) {
                 </div>
               </Tooltip2>
             </div>
-            <Divider />
+            <Divider /> */}
             <div className="item-sidebar">
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
@@ -1513,6 +1547,9 @@ export function AnalysisMode(props) {
                     minimal={true}
                     fill={true}
                     icon={"git-repo"}
+                    onClick={() =>
+                      window.open("https://github.com/kanaverse", "_blank")
+                    }
                   ></Button>
                   <span>GITHUB</span>
                 </div>

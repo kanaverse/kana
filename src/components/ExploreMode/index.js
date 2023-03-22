@@ -25,7 +25,8 @@ import {
   Alert,
   ResizeEntry,
   ResizeSensor,
-  H3, Callout
+  H3,
+  Callout,
 } from "@blueprintjs/core";
 
 import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
@@ -867,7 +868,13 @@ export function ExplorerMode() {
                     intent={showPanel === "explore-import" ? "primary" : "none"}
                   ></Button>
                   <span
+                    onClick={() =>
+                      showPanel !== "explore-import"
+                        ? setShowPanel("explore-import")
+                        : setShowPanel(null)
+                    }
                     style={{
+                      cursor: "pointer",
                       color:
                         showPanel === "explore-import" ? "#184A90" : "black",
                     }}
@@ -878,54 +885,64 @@ export function ExplorerMode() {
               </Tooltip2>
             </div>
             <Divider />
-            <div
-              className={
-                showPanel === "explore" ? "item-sidebar-intent" : "item-sidebar"
-              }
-            >
-              <Tooltip2
-                className={popclass.TOOLTIP2_INDICATOR}
-                content={
-                  selectedRedDim === null
-                    ? "Start or load an analysis to explore results"
-                    : "Explore results!"
-                }
-                minimal={false}
-                placement={"right"}
-                intent={showPanel === "explore" ? "primary" : ""}
-              >
-                <div className="item-button-group">
-                  <Button
-                    outlined={false}
-                    large={false}
-                    minimal={true}
-                    fill={true}
-                    icon={"rocket-slant"}
-                    disabled={selectedRedDim === null}
-                    onClick={() =>
-                      showPanel !== "explore"
-                        ? setShowPanel("explore")
-                        : setShowPanel(null)
+            {selectedRedDim !== null && (
+              <>
+                <div
+                  className={
+                    showPanel === "explore"
+                      ? "item-sidebar-intent"
+                      : "item-sidebar"
+                  }
+                >
+                  <Tooltip2
+                    className={popclass.TOOLTIP2_INDICATOR}
+                    content={
+                      selectedRedDim === null
+                        ? "Start or load an analysis to explore results"
+                        : "Explore results!"
                     }
-                    intent={showPanel === "explore" ? "primary" : "none"}
-                  ></Button>
-                  <span
-                    style={{
-                      color: showPanel === "explore" ? "#184A90" : "black",
-                    }}
+                    minimal={false}
+                    placement={"right"}
+                    intent={showPanel === "explore" ? "primary" : ""}
                   >
-                    EXPLORE
-                  </span>
+                    <div className="item-button-group">
+                      <Button
+                        outlined={false}
+                        large={false}
+                        minimal={true}
+                        fill={true}
+                        icon={"rocket-slant"}
+                        onClick={() =>
+                          showPanel !== "explore"
+                            ? setShowPanel("explore")
+                            : setShowPanel(null)
+                        }
+                        intent={showPanel === "explore" ? "primary" : "none"}
+                      ></Button>
+                      <span
+                        onClick={() =>
+                          showPanel !== "explore"
+                            ? setShowPanel("explore")
+                            : setShowPanel(null)
+                        }
+                        style={{
+                          cursor: "pointer",
+                          color: showPanel === "explore" ? "#184A90" : "black",
+                        }}
+                      >
+                        EXPLORE
+                      </span>
+                    </div>
+                  </Tooltip2>
                 </div>
-              </Tooltip2>
-            </div>
-            <Divider />
+                <Divider />
+              </>
+            )}
             <div
               className={
                 showPanel === "logs" ? "item-sidebar-intent" : "item-sidebar"
               }
             >
-              {" "}
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
                 content="What's happening under the hood? See the blow-by-blow logs as the analysis runs!"
@@ -957,12 +974,11 @@ export function ExplorerMode() {
           </div>
           <div className="left-sidebar-content-flex-bottom">
             <Divider />
-            <div
+            {/* <div
               className={
                 showPanel === "info" ? "item-sidebar-intent" : "item-sidebar"
               }
             >
-              {" "}
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
                 content="Wanna know more about Kana?"
@@ -988,7 +1004,7 @@ export function ExplorerMode() {
                 </div>
               </Tooltip2>
             </div>
-            <Divider />
+            <Divider /> */}
             <div className="item-sidebar">
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
@@ -1003,6 +1019,9 @@ export function ExplorerMode() {
                     minimal={true}
                     fill={true}
                     icon={"git-repo"}
+                    onClick={() =>
+                      window.open("https://github.com/kanaverse", "_blank")
+                    }
                   ></Button>
                   <span>GITHUB</span>
                 </div>
@@ -1204,7 +1223,7 @@ export function ExplorerMode() {
                   intent="primary"
                 >
                   <p>
-                    In this mode, <strong>kana</strong> retrieves results from 
+                    In this mode, <strong>kana</strong> retrieves results from
                     single-cell datasets stored as RDS or H5AD files.
                   </p>
                 </Callout>
