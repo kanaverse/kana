@@ -961,7 +961,9 @@ export function ExplorerMode() {
                     intent={showPanel === "logs" ? "primary" : "none"}
                   ></Button>
                   <span
+                    onClick={() => setShowLogs(true)}
                     style={{
+                      cursor: "pointer",
                       color: showPanel === "logs" ? "#184A90" : "black",
                     }}
                   >
@@ -1023,7 +1025,16 @@ export function ExplorerMode() {
                       window.open("https://github.com/kanaverse", "_blank")
                     }
                   ></Button>
-                  <span>GITHUB</span>
+                  <span
+                    onClick={() =>
+                      window.open("https://github.com/kanaverse", "_blank")
+                    }
+                    style={{
+                      cursor: "pointer",
+                    }}
+                  >
+                    GITHUB
+                  </span>
                 </div>
               </Tooltip2>
             </div>

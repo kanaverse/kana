@@ -1551,7 +1551,16 @@ export function AnalysisMode(props) {
                       window.open("https://github.com/kanaverse", "_blank")
                     }
                   ></Button>
-                  <span>GITHUB</span>
+                  <span
+                    onClick={() =>
+                      window.open("https://github.com/kanaverse", "_blank")
+                    }
+                    style={{
+                      cursor: "pointer",
+                    }}
+                  >
+                    GITHUB
+                  </span>
                 </div>
               </Tooltip2>
             </div>
