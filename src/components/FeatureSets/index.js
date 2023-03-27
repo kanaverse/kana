@@ -285,7 +285,7 @@ const FeatureSetEnrichment = (props) => {
     }
 
     if (appMode === "explore") {
-      defheight += 15
+      defheight += 15;
     }
 
     return `35px calc(100vh - ${defheight}px)`;
@@ -585,6 +585,7 @@ const FeatureSetEnrichment = (props) => {
             <optgroup label="Computed">
               {annotationCols
                 .filter((x) => x.startsWith(code) || x === "__batch__")
+                .filter((x) => !x.replace(`${code}::`, "").startsWith("QC"))
                 .map((x) => (
                   <option value={x} key={x}>
                     {x.replace(`${code}::`, "")}
@@ -1052,7 +1053,8 @@ const FeatureSetEnrichment = (props) => {
                         intent={rowexp ? "primary" : null}
                         onClick={() => {
                           let tmprecs = [...preProsRecords];
-                          tmprecs[row._index].expanded = !tmprecs[row._index].expanded;
+                          tmprecs[row._index].expanded =
+                            !tmprecs[row._index].expanded;
                           setPreProsRecords(tmprecs);
 
                           // do something
@@ -1103,7 +1105,7 @@ const FeatureSetEnrichment = (props) => {
                     <div
                       style={{
                         height: "100px",
-                        marginBottom: "5px"
+                        marginBottom: "5px",
                       }}
                     >
                       <Divider />
@@ -1119,9 +1121,7 @@ const FeatureSetEnrichment = (props) => {
                               <Button
                                 small={true}
                                 fill={false}
-                                outlined={
-                                  rgrow === props?.gene ? false : true
-                                }
+                                outlined={rgrow === props?.gene ? false : true}
                                 intent={
                                   rgrow === props?.gene ? "primary" : null
                                 }
