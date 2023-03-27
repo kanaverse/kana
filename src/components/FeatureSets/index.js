@@ -197,7 +197,7 @@ const FeatureSetEnrichment = (props) => {
 
         props?.fsetEnirchDetails[props?.selectedFsetColl].names.map((x, i) => {
           trecs.push({
-            _index: i,
+            // _index: i,
             name: x,
             description:
               props?.fsetEnirchDetails[props?.selectedFsetColl].descriptions[i],
@@ -216,8 +216,12 @@ const FeatureSetEnrichment = (props) => {
           });
         });
 
-        // let sortedRows = trecs.sort((a, b) => a.pvalue - b.pvalue);
-        setPreProsRecords(trecs);
+        let sortedRows = trecs.sort((a, b) => a.pvalue - b.pvalue);
+
+        sortedRows.forEach((x, i) => {
+          x._index = i;
+        });
+        setPreProsRecords(sortedRows);
       }
     }
   }, [props?.fsetEnirchDetails, props?.fsetEnirchSummary]);
