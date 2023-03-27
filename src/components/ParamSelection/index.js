@@ -2375,7 +2375,7 @@ export function ParameterSelection({
             intent={"primary"}
             large={true}
           >
-            Set parameters
+            Analyze
           </Button>
         </Tooltip2>
       </div>

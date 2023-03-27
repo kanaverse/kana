@@ -971,7 +971,6 @@ export function NewAnalysis({
           <Button
             icon="arrow-right"
             onClick={handleRunAndParams}
-            intent={"primary"}
             large={true}
             disabled={newInputs.length == 0}
           >
