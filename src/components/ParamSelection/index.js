@@ -1380,7 +1380,6 @@ export function ParameterSelection({
                       <select
                         multiple={true}
                         onChange={(e) => {
-                          console.log(e);
                           let new_coll = [];
                           e.target.selectedOptions.forEach((x) => {
                             new_coll.push(x.value);

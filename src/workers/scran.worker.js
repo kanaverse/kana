@@ -1080,7 +1080,6 @@ onmessage = function (msg) {
           collection,
           index
         );
-        console.log(resp);
         postSuccess("setFeatureScores", resp);
       })
       .catch((err) => {

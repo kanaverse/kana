@@ -161,8 +161,6 @@ onmessage = function (msg) {
 
             let finput = files[k];
 
-            console.log(dataset);
-
             let step_inputs = "inputs";
             postAttempt(step_inputs);
             let step_inputs_resp = {
@@ -629,7 +627,6 @@ onmessage = function (msg) {
           collection,
           index
         );
-        console.log(resp);
         postSuccess("setFeatureScores", resp);
       })
       .catch((err) => {

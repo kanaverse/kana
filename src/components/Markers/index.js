@@ -639,7 +639,6 @@ const MarkerPlot = (props) => {
                 </option>
               ))}
           </optgroup>
-          {console.log(annotationCols)}
           <optgroup label="Computed">
             {annotationCols
               .filter((x) => x.startsWith(code) || x === "__batch__")
