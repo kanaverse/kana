@@ -499,15 +499,6 @@ export function NewAnalysis({
         title="Optional Parameters"
         icon="issue"
       >
-        <div
-          className={
-            preInputFilesStatus &&
-            newInputs.length > 0 &&
-            preInputFilesStatus[newInputs[0].name]
-              ? ""
-              : "bp4-skeleton"
-          }
-        ></div>
         <Label className="row-input">
           <Switch
             checked={showBatch}
@@ -982,6 +973,7 @@ export function NewAnalysis({
             onClick={handleRunAndParams}
             intent={"primary"}
             large={true}
+            disabled={newInputs.length == 0}
           >
             Modify analysis parameters
           </Button>

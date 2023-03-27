@@ -1,7 +1,7 @@
 export function guessModalities(preflight) {
   let tmpOptions = {};
   for (const [k, v] of Object.entries(preflight.modality_features)) {
-    if (k.toLowerCase().indexOf("gene") > -1) {
+    if (k.toLowerCase() == "" || k.toLowerCase().indexOf("gene") > -1) {
       tmpOptions["featureTypeRnaName"] = k;
       tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
     } else if (
