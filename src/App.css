@@ -154,7 +154,9 @@
 }
 
 .frontpage-rowitem {
+  max-width: 50%;
   cursor: pointer;
+  font-size: larger;
 }
 
 .frontpage-rowitem:hover {
