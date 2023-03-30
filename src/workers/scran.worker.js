@@ -1089,13 +1089,54 @@ onmessage = function (msg) {
   } else if (type === "getFeatureGeneIndices") {
     loaded
       .then((x) => {
-        let { collection, index } = payload;
+        let { collection, index, cluster, annotation, modality, rank_type } =
+          payload;
 
         let resp = superstate.feature_set_enrichment.fetchFeatureSetIndices(
           collection,
           index
         );
-        postSuccess("setFeatureGeneIndices", resp);
+
+        let raw_res, marker_resp;
+
+        if (default_cluster === annotation) {
+          raw_res = superstate.marker_detection.fetchResults()[modality];
+          marker_resp = bakana.formatMarkerResults(raw_res, cluster, rank_type);
+        } else if (default_selection === annotation) {
+          raw_res = superstate.custom_selections.fetchResults(payload.cluster)[
+            payload.modality
+          ];
+          marker_resp = bakana.formatMarkerResults(
+            raw_res,
+            payload.cluster,
+            payload.rank_type
+          );
+        } else {
+          let annotation_vec = scran.factorize(getAnnotation(annotation));
+          let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+
+          raw_res = mds.fetchResults()[modality];
+          // cache_anno_markers[annotation][modality];
+
+          marker_resp = bakana.formatMarkerResults(
+            raw_res,
+            annotation_vec.levels.indexOf(cluster),
+            rank_type
+          );
+        }
+
+        let indices = marker_resp.ordering
+          .map((x, i) => (resp.includes(x) ? i : -100))
+          .filter((x) => x !== -100);
+
+        let filtered_marker_resp = {};
+        for (const [k, v] of Object.entries(marker_resp)) {
+          filtered_marker_resp[k] = v
+            .map((x, i) => (indices.includes(i) ? x : -100))
+            .filter((x) => x !== -100);
+        }
+
+        postSuccess("setFeatureGeneIndices", filtered_marker_resp);
       })
       .catch((err) => {
         console.error(err);

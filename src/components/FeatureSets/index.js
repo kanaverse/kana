@@ -1104,7 +1104,7 @@ const FeatureSetEnrichment = (props) => {
                   </div>
                 </div>
                 <Collapse isOpen={rowexp}>
-                  <H5>Genes in this feature set</H5>
+                  <span>Genes in this feature set</span>
                   {rowGeneIndices !== null && rowGeneIndices !== undefined ? (
                     <div
                       style={{
@@ -1114,33 +1114,292 @@ const FeatureSetEnrichment = (props) => {
                     >
                       <Divider />
                       <Virtuoso
-                        totalCount={rowGeneIndices.length}
+                        components={{
+                          Header: () => {
+                            return (
+                              <div
+                                className="fsetenrich-genelist-container"
+                                style={{ fontSize: "xx-small" }}
+                              >
+                                <span style={{ width: "40px" }}>
+                                  Gene Symbol
+                                </span>
+                                <div
+                                  style={{
+                                    width: "200px",
+                                    display: "flex",
+                                    flexDirection: "row",
+                                    justifyContent: "center",
+                                    alignContent: "center",
+                                    alignItems: "center",
+                                    gap: "5px",
+                                    textAlign: "center"
+                                  }}
+                                >
+                                  <span style={{ width: "55px" }}>Log-FC</span>
+                                  <span style={{ width: "55px" }}>
+                                    Δ-detected
+                                  </span>
+                                  <span style={{ width: "55px" }}>
+                                    Expression
+                                  </span>
+                                  <span style={{ width: "24px" }}></span>
+                                </div>
+                              </div>
+                            );
+                          },
+                        }}
+                        totalCount={rowGeneIndices.ordering.length}
                         itemContent={(rgindex) => {
-                          const rgrow = rowGeneIndices[rgindex];
-                          const rgname = genesInfo[geneColSel["RNA"]][rgrow];
+                          // const rgrow = rowGeneIndices[rgindex];
+                          const delta_detected =
+                              rowGeneIndices.delta_detected[rgindex],
+                            detected = rowGeneIndices.detected[rgindex],
+                            lfc = rowGeneIndices.lfc[rgindex],
+                            mean = rowGeneIndices.means[rgindex],
+                            order = rowGeneIndices.ordering[rgindex];
+
+                          const deltaMinMax = getMinMax(
+                              rowGeneIndices.delta_detected
+                            ),
+                            detectedMinMax = getMinMax(rowGeneIndices.detected),
+                            lfcMinMax = getMinMax(rowGeneIndices.lfc),
+                            meanMinMax = getMinMax(rowGeneIndices.means);
+
+                          const rgname = genesInfo[geneColSel["RNA"]][order];
 
                           return (
                             <div className="fsetenrich-genelist-container">
-                              <span>{rgname}</span>
-                              <Button
-                                small={true}
-                                fill={false}
-                                outlined={rgrow === props?.gene ? false : true}
-                                intent={
-                                  rgrow === props?.gene ? "primary" : null
-                                }
-                                onClick={() => {
-                                  props?.setSelectedFsetIndex(null);
-                                  if (rgrow === props?.gene) {
-                                    props?.setGene(null);
-                                  } else {
-                                    props?.setGene(rgrow);
-                                    props?.setReqGene(rgrow);
-                                  }
+                              <span style={{ width: "40px" }}>{rgname}</span>
+                              <div
+                                style={{
+                                  width: "200px",
+                                  display: "flex",
+                                  flexDirection: "row",
+                                  justifyContent: "center",
+                                  alignContent: "center",
+                                  alignItems: "center",
+                                  gap: "5px",
                                 }}
                               >
-                                <Icon size={12} icon={"tint"}></Icon>
-                              </Button>
+                                <Popover2
+                                  popoverClassName={
+                                    Classes.POPOVER_CONTENT_SIZING
+                                  }
+                                  hasBackdrop={false}
+                                  interactionKind="hover"
+                                  placement="auto"
+                                  hoverOpenDelay={500}
+                                  modifiers={{
+                                    arrow: { enabled: true },
+                                    flip: { enabled: true },
+                                    preventOverflow: { enabled: true },
+                                  }}
+                                  content={
+                                    <Card elevation={Elevation.ZERO}>
+                                      <table>
+                                        <tr>
+                                          <td></td>
+                                          <th scope="col">{rgname}</th>
+                                          <th scope="col">This cluster</th>
+                                        </tr>
+                                        <tr>
+                                          <th scope="row">Log-FC</th>
+                                          <td>{lfc.toFixed(2)}</td>
+                                          <td style={{ fontStyle: "italic" }}>
+                                            ∈ [{lfcMinMax[0].toFixed(2)},{" "}
+                                            {lfcMinMax[1].toFixed(2)}]
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <th scope="row">Δ-detected</th>
+                                          <td>{delta_detected.toFixed(2)}</td>
+                                          <td style={{ fontStyle: "italic" }}>
+                                            ∈ [{deltaMinMax[0].toFixed(2)},{" "}
+                                            {deltaMinMax[1].toFixed(2)}]
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <th scope="row">Detected</th>
+                                          <td>{detected.toFixed(2)}</td>
+                                          <td style={{ fontStyle: "italic" }}>
+                                            ∈ [{detectedMinMax[0].toFixed(2)},{" "}
+                                            {detectedMinMax[1].toFixed(2)}]
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <th scope="row">Expression</th>
+                                          <td>{mean.toFixed(2)}</td>
+                                          <td style={{ fontStyle: "italic" }}>
+                                            ∈ [{meanMinMax[0].toFixed(2)},{" "}
+                                            {meanMinMax[1].toFixed(2)}]
+                                          </td>
+                                        </tr>
+                                      </table>
+                                    </Card>
+                                  }
+                                >
+                                  <HeatmapCell
+                                    width={55}
+                                    minmax={lfcMinMax}
+                                    colorscale={d3.interpolateRdYlBu}
+                                    score={lfc}
+                                  />
+                                </Popover2>
+
+                                <Popover2
+                                  popoverClassName={
+                                    Classes.POPOVER_CONTENT_SIZING
+                                  }
+                                  hasBackdrop={false}
+                                  interactionKind="hover"
+                                  placement="auto"
+                                  hoverOpenDelay={500}
+                                  modifiers={{
+                                    arrow: { enabled: true },
+                                    flip: { enabled: true },
+                                    preventOverflow: { enabled: true },
+                                  }}
+                                  content={
+                                    <Card elevation={Elevation.ZERO}>
+                                      <table>
+                                        <tr>
+                                          <td></td>
+                                          <th scope="col">{rgname}</th>
+                                          <th scope="col">This cluster</th>
+                                        </tr>
+                                        <tr>
+                                          <th scope="row">Log-FC</th>
+                                          <td>{lfc.toFixed(2)}</td>
+                                          <td style={{ fontStyle: "italic" }}>
+                                            ∈ [{lfcMinMax[0].toFixed(2)},{" "}
+                                            {lfcMinMax[1].toFixed(2)}]
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <th scope="row">Δ-detected</th>
+                                          <td>{delta_detected.toFixed(2)}</td>
+                                          <td style={{ fontStyle: "italic" }}>
+                                            ∈ [{deltaMinMax[0].toFixed(2)},{" "}
+                                            {deltaMinMax[1].toFixed(2)}]
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <th scope="row">Detected</th>
+                                          <td>{detected.toFixed(2)}</td>
+                                          <td style={{ fontStyle: "italic" }}>
+                                            ∈ [{detectedMinMax[0].toFixed(2)},{" "}
+                                            {detectedMinMax[1].toFixed(2)}]
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <th scope="row">Expression</th>
+                                          <td>{mean.toFixed(2)}</td>
+                                          <td style={{ fontStyle: "italic" }}>
+                                            ∈ [{meanMinMax[0].toFixed(2)},{" "}
+                                            {meanMinMax[1].toFixed(2)}]
+                                          </td>
+                                        </tr>
+                                      </table>
+                                    </Card>
+                                  }
+                                >
+                                  <HeatmapCell
+                                    width={55}
+                                    minmax={deltaMinMax}
+                                    colorscale={d3.interpolateRdYlBu}
+                                    score={delta_detected}
+                                  />
+                                </Popover2>
+
+                                <Popover2
+                                  popoverClassName={
+                                    Classes.POPOVER_CONTENT_SIZING
+                                  }
+                                  hasBackdrop={false}
+                                  interactionKind="hover"
+                                  placement="auto"
+                                  hoverOpenDelay={500}
+                                  modifiers={{
+                                    arrow: { enabled: true },
+                                    flip: { enabled: true },
+                                    preventOverflow: { enabled: true },
+                                  }}
+                                  content={
+                                    <Card elevation={Elevation.ZERO}>
+                                      <table>
+                                        <tr>
+                                          <td></td>
+                                          <th scope="col">{rgname}</th>
+                                          <th scope="col">This cluster</th>
+                                        </tr>
+                                        <tr>
+                                          <th scope="row">Log-FC</th>
+                                          <td>{lfc.toFixed(2)}</td>
+                                          <td style={{ fontStyle: "italic" }}>
+                                            ∈ [{lfcMinMax[0].toFixed(2)},{" "}
+                                            {lfcMinMax[1].toFixed(2)}]
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <th scope="row">Δ-detected</th>
+                                          <td>{delta_detected.toFixed(2)}</td>
+                                          <td style={{ fontStyle: "italic" }}>
+                                            ∈ [{deltaMinMax[0].toFixed(2)},{" "}
+                                            {deltaMinMax[1].toFixed(2)}]
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <th scope="row">Detected</th>
+                                          <td>{detected.toFixed(2)}</td>
+                                          <td style={{ fontStyle: "italic" }}>
+                                            ∈ [{detectedMinMax[0].toFixed(2)},{" "}
+                                            {detectedMinMax[1].toFixed(2)}]
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <th scope="row">Expression</th>
+                                          <td>{mean.toFixed(2)}</td>
+                                          <td style={{ fontStyle: "italic" }}>
+                                            ∈ [{meanMinMax[0].toFixed(2)},{" "}
+                                            {meanMinMax[1].toFixed(2)}]
+                                          </td>
+                                        </tr>
+                                      </table>
+                                    </Card>
+                                  }
+                                >
+                                  <Cell
+                                    width={55}
+                                    minmax={meanMinMax}
+                                    colorscale={d3.interpolateRdYlBu}
+                                    score={mean}
+                                    colorscore={detected}
+                                  />
+                                </Popover2>
+
+                                <Button
+                                  small={true}
+                                  fill={false}
+                                  outlined={
+                                    order === props?.gene ? false : true
+                                  }
+                                  intent={
+                                    order === props?.gene ? "primary" : null
+                                  }
+                                  onClick={() => {
+                                    props?.setSelectedFsetIndex(null);
+                                    if (order === props?.gene) {
+                                      props?.setGene(null);
+                                    } else {
+                                      props?.setGene(order);
+                                      props?.setReqGene(order);
+                                    }
+                                  }}
+                                >
+                                  <Icon size={16} icon={"tint"}></Icon>
+                                </Button>
+                              </div>
                             </div>
                           );
                         }}
