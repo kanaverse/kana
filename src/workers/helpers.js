@@ -283,12 +283,12 @@ export async function fetchStepSummary(state, step) {
     let collections = state.feature_set_enrichment.fetchCollectionDetails();
     let sets = state.feature_set_enrichment.fetchSetDetails();
     return { 
-        collections: collections.names,
+        collections: collections.descriptions,
         sets: {
             names: sets.names,
             descriptions: sets.descriptions,
             sizes: sets.sizes.slice(),
-            collections: sets.collections.slice();
+            collections: sets.collections.slice()
         }
     }
   }

@@ -40,7 +40,7 @@ bakana.availableReaders["ExperimentHub"] = remotes.ExperimentHubDataset;
 bakana.CellLabellingState.setDownload(proxyAndCache);
 bakana.RnaQualityControlState.setDownload(proxyAndCache);
 
-gesel.referenceDownload((file, start, end) => {
+gesel.referenceDownload(async (file, start, end) => {
   let url = gesel.referenceBaseUrl() + "/" + file;
   let full = proxy + "/" + encodeURIComponent(url);
   if (start == null && end == null) {
@@ -51,7 +51,7 @@ gesel.referenceDownload((file, start, end) => {
   }
 });
 
-gesel.geneDownload(file => {
+gesel.geneDownload(async (file) => {
   let url = gesel.geneBaseUrl() + "/" + file;
   let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
   return new Response(buffer);
