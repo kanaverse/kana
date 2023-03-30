@@ -26,6 +26,7 @@ import {
   FormGroup,
   InputGroup,
   EditableText,
+  Switch,
 } from "@blueprintjs/core";
 
 import "./index.css";
@@ -55,12 +56,13 @@ export function SECard({
 
       // set some defaults
       let tmpOptions = {};
-      for (const [k, v] of Object.entries(preflight.modality_features)) {
-        if (k.toLowerCase().indexOf("rna") > -1) {
-          tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
-        }
+      tmpOptions["primaryAssay"] = {};
+      tmpOptions["isPrimaryNormalized"] = {};
+      for (const [k, v] of Object.entries(preflight.modality_assay_names)) {
+        tmpOptions["primaryAssay"][k] = v[0];
+        tmpOptions["isPrimaryNormalized"][k] = true;
       }
-
+      tmpOptions["reducedDimensionNames"] = null;
       setOptions(tmpOptions);
     }
   }, [preflight]);
@@ -68,7 +70,7 @@ export function SECard({
   // when options change
   useEffect(() => {
     if (options != {}) {
-      let tmpInputOpts = {...inputOpts};
+      let tmpInputOpts = { ...inputOpts };
       tmpInputOpts[index] = options;
       setInputOpts(tmpInputOpts);
     }
@@ -117,26 +119,59 @@ export function SECard({
             <div>
               <Label className="row-input">
                 <Text>
-                  <span>Primary RNA Feature ID</span>
+                  <span>Choose a primary assay across modalities</span>
                 </Text>
-                <HTMLSelect
-                  defaultValue={
-                    Object.keys(dsMeta.modality_features["RNA"]["columns"])[0]
-                  }
-                  onChange={(e) => {
-                    let tmpOptions = { ...options };
-                    tmpOptions["primaryRnaFeatureIdColumn"] = e.target.value;
-                    setOptions(tmpOptions);
-                  }}
-                >
-                  {Object.keys(dsMeta.modality_features["RNA"]["columns"]).map(
-                    (x, i) => (
-                      <option key={i} value={x}>
-                        {x}
-                      </option>
-                    )
-                  )}
-                </HTMLSelect>
+                {Object.keys(dsMeta.modality_assay_names).map((x, i) => {
+                  return (
+                    <div key={i}>
+                      <Label className="row-input">
+                        <Text>
+                          <span>
+                            Modality:{" "}
+                            {x === "" ? <em>"Unknown Modality"</em> : x}
+                          </span>
+                        </Text>
+                        <HTMLSelect
+                          defaultValue={options["primaryAssay"][x]}
+                          onChange={(e) => {
+                            let tmpOptions = { ...options };
+                            if (e.target.value === "none") {
+                              delete tmpOptions["primaryAssay"][x];
+                            } else {
+                              tmpOptions["primaryAssay"][x] = e.target.value;
+                            }
+                            setOptions(tmpOptions);
+                          }}
+                        >
+                          <option key={i} value="none">
+                            None
+                          </option>
+                          {dsMeta.modality_assay_names[x].map((ax, i) => (
+                            <option key={i} value={ax}>
+                              {ax}
+                            </option>
+                          ))}
+                        </HTMLSelect>
+                      </Label>
+                      {options["primaryAssay"][x] &&
+                        options["primaryAssay"][x] !== "none" && (
+                          <Label className="row-input">
+                            <Switch
+                              checked={options["isPrimaryNormalized"]}
+                              label="Is this assay normalized?"
+                              onChange={(e) => {
+                                let tmpOptions = { ...options };
+                                tmpOptions["isPrimaryNormalized"] =
+                                  e.target.checked;
+                                setOptions(tmpOptions);
+                              }}
+                            />
+                          </Label>
+                        )}
+                      <Divider />
+                    </div>
+                  );
+                })}
               </Label>
             </div>
           )}
