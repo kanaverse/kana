@@ -22,6 +22,8 @@ import {
 import pkgVersion from "../package.json";
 
 import logo from "./assets/kana-cropped.png";
+import gif from "./assets/logo.gif";
+
 import "./App.css";
 
 import { AnalysisMode } from "./components/AnalysisMode";
@@ -54,75 +56,71 @@ function App() {
             </NavbarGroup>
           </Navbar>
           <div className="frontpage">
-            <div style={{ textAlign: "left", alignItems: "flex-start" }}>
-              <H2>Kana supports multiple modes</H2>
+            <div className="frontpage-logo">
+              <img
+                src={gif}
+                style={{ border: "5px solid #eeeeee" }}
+                width={245}
+                height={245}
+              />
             </div>
-            <div className="frontpage-row">
+            <div className="frontpage-content">
+              <H2>Analyze single-cell datasets in the browser</H2>
+              <p>
+                <strong>kana</strong> uses WebAssembly and other technologies to
+                efficiently analyze large single-cell datasets in the browser.
+              </p>
+              <ul>
+                <li>Always free. It's your analysis running on your device.</li>
+                <li>
+                  Always available. Because science can't wait for server
+                  outages.
+                </li>
+                <li>Always private. Data never, ever leaves your computer.</li>
+              </ul>
+              <p>
+                Check out our{" "}
+                <a href="https://github.com/kanaverse" target="_blank">
+                  GitHub page
+                </a>{" "}
+                or our{" "}
+                <a
+                  href="https://doi.org/10.1101/2022.03.02.482701"
+                  target="_blank"
+                >
+                  bioRxiv manuscript
+                </a>{" "}
+                for more details.
+              </p>
+            </div>
+            <div className="frontpage-actions">
               <Callout
-                title="Analysis Mode"
+                title="I want to analyze a new dataset"
                 onClick={() => setAppMode("analysis")}
                 className="frontpage-rowitem"
                 icon="function"
                 intent="primary"
               >
                 <p>
-                  In this mode, <strong>kana</strong> performs a standard
-                  single-cell data analysis directly inside the browser.
-                </p>
-                <p>
-                  With just a few clicks, you can get a UMAP/t-SNE, clusters and
-                  their marker genes in an intuitive interface for further
-                  exploration. No need to transfer data, no need to install
-                  software, no need to configure a backend server - just point
-                  to one of our supported file formats and we'll analyze{" "}
-                  <strong>
-                    <em>your</em>
-                  </strong>{" "}
-                  data on{" "}
-                  <strong>
-                    <em>your</em>
-                  </strong>{" "}
-                  computer, no questions asked.
+                  Provide a single-cell dataset in one of the accepted formats
+                  and <strong>kana</strong> will perform a standard single-cell
+                  data analysis. Get your UMAPs, t-SNEs, clusters and marker
+                  genes with a click of a button.
                 </p>
               </Callout>
               <Callout
-                title="Explore Mode"
+                title="I want to explore existing analysis results"
                 onClick={() => setAppMode("explore")}
                 className="frontpage-rowitem"
                 icon="geosearch"
-                intent="warning"
+                intent="success"
               >
                 <p>
-                  Choose this if you want to load a pre-saved dataset with
-                  results. In explore mode, only the marker detection step is
-                  computed.
+                  Provide a pre-analyzed single-cell dataset in one of the
+                  accepted formats and <strong>kana</strong> will load the
+                  existing results into the browser for further exploration.
                 </p>
               </Callout>
-            </div>
-            <div className="frontpage-row">
-              <Card elevation={Elevation.ZERO}>
-                <p>
-                  Check out our{" "}
-                  <a href="https://github.com/kanaverse" target="_blank">
-                    GitHub page
-                  </a>{" "}
-                  for more details.
-                </p>
-                <p>
-                  If you are paper-savvy, read our manuscript on{" "}
-                  <a href="Checkout our preprint on bioRxiv">bioRxiv</a>.
-                </p>
-                <H5>Authors</H5>
-                Jayaram Kancherla (
-                <a href="https://github.com/jkanche" target="_blank">
-                  <strong>@jkanche</strong>
-                </a>
-                ), Aaron Lun (
-                <a href="https://github.com/LTLA" target="_blank">
-                  <strong>@LTLA</strong>
-                </a>
-                )
-              </Card>
             </div>
           </div>
         </div>
