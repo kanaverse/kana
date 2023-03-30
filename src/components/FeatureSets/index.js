@@ -197,7 +197,7 @@ const FeatureSetEnrichment = (props) => {
 
         props?.fsetEnirchDetails[props?.selectedFsetColl].names.map((x, i) => {
           trecs.push({
-            // _index: i,
+            orig_index: i,
             name: x,
             description:
               props?.fsetEnirchDetails[props?.selectedFsetColl].descriptions[i],
@@ -230,8 +230,8 @@ const FeatureSetEnrichment = (props) => {
     if (preProsRecords !== null) {
       let tmp = [...preProsRecords];
       tmp.map((x, i) => {
-        x.fscores = props?.featureScoreCache[x._index];
-        x.geneIndices = props?.fsetGeneIndxCache[x._index];
+        x.fscores = props?.featureScoreCache[x.orig_index];
+        x.geneIndices = props?.fsetGeneIndxCache[x.orig_index];
       });
 
       setProsRecords(tmp);
@@ -1065,9 +1065,9 @@ const FeatureSetEnrichment = (props) => {
                           if (!tmprecs[row._index].expanded) {
                             props?.setFeatureSetGeneIndex(null);
                           } else {
-                            props?.setFeatureSetGeneIndex(row._index);
+                            props?.setFeatureSetGeneIndex(row.orig_index);
                             if (!rowGeneIndices) {
-                              props?.setReqFsetGeneIndex(row._index);
+                              props?.setReqFsetGeneIndex(row.orig_index);
                             }
                           }
                         }}
@@ -1078,22 +1078,24 @@ const FeatureSetEnrichment = (props) => {
                         small={true}
                         fill={false}
                         outlined={
-                          row._index === props?.selectedFsetIndex ? false : true
+                          row.orig_index === props?.selectedFsetIndex
+                            ? false
+                            : true
                         }
                         intent={
-                          row._index === props?.selectedFsetIndex
+                          row.orig_index === props?.selectedFsetIndex
                             ? "primary"
                             : null
                         }
                         className="row-action"
                         onClick={() => {
                           props?.setGene(null);
-                          if (row._index === props?.selectedFsetIndex) {
+                          if (row.orig_index === props?.selectedFsetIndex) {
                             props?.setSelectedFsetIndex(null);
                           } else {
-                            props?.setSelectedFsetIndex(row._index);
+                            props?.setSelectedFsetIndex(row.orig_index);
                             if (!rowScores) {
-                              props?.setReqFsetIndex(row._index);
+                              props?.setReqFsetIndex(row.orig_index);
                             }
                           }
                         }}
@@ -1133,7 +1135,7 @@ const FeatureSetEnrichment = (props) => {
                                     alignContent: "center",
                                     alignItems: "center",
                                     gap: "5px",
-                                    textAlign: "center"
+                                    textAlign: "center",
                                   }}
                                 >
                                   <span style={{ width: "55px" }}>Log-FC</span>
