@@ -542,6 +542,9 @@ export function ExplorerMode() {
           index: reqFsetGeneIndex,
           collection: selectedFsetColl,
           cluster: selectedFsetCluster,
+          annotation: selectedFsetAnnotation,
+          modality: selectedFsetModality,
+          rank_type: fsetClusterRank,
         },
       });
 
