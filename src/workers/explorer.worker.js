@@ -59,19 +59,43 @@ function summarizeResult(summary, args) {
     },
   };
 
-  tmp_meta["all_features"] = {};
-  let tmod_summary = {};
-  for (const k of summary["all_features"].columnNames()) {
-    tmod_summary[k] = bakana.summarizeArray(summary["all_features"].column(k));
+  if (args.format === "SummarizedExperiment") {
+    tmp_meta["modality_features"] = {};
+    if ("modality_features" in summary) {
+      for (const [k, v] of Object.entries(summary.modality_features)) {
+        let tmod_summary = {};
+        for (const k of v.columnNames()) {
+          // TODO: figure out a way to deal with these later
+          if (!Array.isArray(v.column(k))) {
+            continue;
+          }
+          tmod_summary[k] = bakana.summarizeArray(v.column(k));
+        }
+        tmp_meta["modality_features"][k] = {
+          columns: tmod_summary,
+          numberOfFeatures: v.numberOfRows(),
+        };
+      }
+    }
+  } else {
+    tmp_meta["all_features"] = {};
+    let tmod_summary = {};
+    for (const k of summary["all_features"].columnNames()) {
+      tmod_summary[k] = bakana.summarizeArray(
+        summary["all_features"].column(k)
+      );
+    }
+    tmp_meta["all_features"] = {
+      columns: tmod_summary,
+      numberOfFeatures: summary["all_features"].numberOfRows(),
+    };
   }
-  tmp_meta["all_features"] = {
-    columns: tmod_summary,
-    numberOfFeatures: summary["all_features"].numberOfRows(),
-  };
 
-  tmp_meta["all_assay_names"] = summary["all_assay_names"];
-  tmp_meta["reduced_dimension_names"] = summary["reduced_dimension_names"];
-
+  if (args.format === "H5AD") {
+    tmp_meta["all_assay_names"] = summary.all_assay_names;
+  } else if (args.format === "SummarizedExperiment") {
+    tmp_meta["modality_assay_names"] = summary.modality_assay_names;
+  }
   return tmp_meta;
 }
 
@@ -160,8 +184,6 @@ onmessage = function (msg) {
             dataset = v.load();
 
             let finput = files[k];
-
-            console.log(dataset);
 
             let step_inputs = "inputs";
             postAttempt(step_inputs);
@@ -629,7 +651,6 @@ onmessage = function (msg) {
           collection,
           index
         );
-        console.log(resp);
         postSuccess("setFeatureScores", resp);
       })
       .catch((err) => {
@@ -639,13 +660,51 @@ onmessage = function (msg) {
   } else if (type === "getFeatureGeneIndices") {
     loaded
       .then((x) => {
-        let { collection, index } = payload;
+        let { collection, index, cluster, annotation, modality, rank_type } =
+          payload;
 
-        let resp = feature_set_enrich_state.fetchFeatureSetIndices(
+        let resp = superstate.feature_set_enrichment.fetchFeatureSetIndices(
           collection,
           index
         );
-        postSuccess("setFeatureGeneIndices", resp);
+
+        let raw_res, marker_resp;
+
+        if (default_selection === annotation) {
+          raw_res = custom_selection_state.fetchResults(payload.cluster)[
+            payload.modality
+          ];
+          marker_resp = bakana.formatMarkerResults(
+            raw_res,
+            payload.cluster,
+            payload.rank_type
+          );
+        } else {
+          let annotation_vec = scran.factorize(getAnnotation(annotation));
+          let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+
+          raw_res = mds.fetchResults()[modality];
+          // cache_anno_markers[annotation][modality];
+
+          marker_resp = bakana.formatMarkerResults(
+            raw_res,
+            annotation_vec.levels.indexOf(cluster),
+            rank_type
+          );
+        }
+
+        let indices = marker_resp.ordering
+          .map((x, i) => (resp.includes(x) ? i : -100))
+          .filter((x) => x !== -100);
+
+        let filtered_marker_resp = {};
+        for (const [k, v] of Object.entries(marker_resp)) {
+          filtered_marker_resp[k] = v
+            .map((x, i) => (indices.includes(i) ? x : -100))
+            .filter((x) => x !== -100);
+        }
+
+        postSuccess("setFeatureGeneIndices", filtered_marker_resp);
       })
       .catch((err) => {
         console.error(err);

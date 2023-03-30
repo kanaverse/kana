@@ -88,13 +88,18 @@ export function MatrixMarket({
     );
 
     let list = [
-      curr_mod_sel,
       ...Object.keys(dsMeta.modality_features).filter(
         (x) => x !== curr_mod_sel
       ),
     ].filter((x) => !remaining_modalities.includes(x));
 
-    return list.filter((x) => !!x);
+    const flist = list.filter((x) => x !== undefined || x !== null);
+    let fflist = flist;
+    if (curr_mod_sel !== undefined && curr_mod_sel !== null) {
+      fflist = [curr_mod_sel, ...flist];
+    }
+
+    return fflist;
   };
 
   const handleRemove = () => {
@@ -155,7 +160,7 @@ export function MatrixMarket({
                               mod.toLowerCase().charAt(0).toUpperCase() +
                               mod.toLowerCase().slice(1)
                             }Name`
-                          ]
+                          ] !== null
                             ? options[
                                 `featureType${
                                   mod.toLowerCase().charAt(0).toUpperCase() +
@@ -189,7 +194,7 @@ export function MatrixMarket({
                         <option value="none">None</option>
                         {getAvailableModalities(mod).map((x, i) => (
                           <option key={i} value={x}>
-                            {x}
+                            {x === "" ? "Unknown Modality" : x}
                           </option>
                         ))}
                       </HTMLSelect>

@@ -1380,7 +1380,6 @@ export function ParameterSelection({
                       <select
                         multiple={true}
                         onChange={(e) => {
-                          console.log(e);
                           let new_coll = [];
                           e.target.selectedOptions.forEach((x) => {
                             new_coll.push(x.value);
@@ -2375,7 +2374,7 @@ export function ParameterSelection({
             intent={"primary"}
             large={true}
           >
-            Set parameters
+            Analyze
           </Button>
         </Tooltip2>
       </div>

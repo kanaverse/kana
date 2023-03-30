@@ -162,11 +162,11 @@
 }
 
 .fsetenrich-genelist-container {
-  width: 75px;
-  margin-left: 20px;
+  margin: 0 20px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   border-bottom: solid gainsboro 1px;
   align-items: center;
+  font-size: x-small;
 }

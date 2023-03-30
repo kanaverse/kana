@@ -185,7 +185,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                         marginTop: "5px",
                       }}
                       text={
-                        tmpLoadInputs?.rds ? tmpLoadInputs?.rds.name : ".H5AD"
+                        tmpLoadInputs?.rds ? tmpLoadInputs?.rds.name : ".RDS"
                       }
                       onInputChange={(msg) => {
                         if (msg.target.files) {

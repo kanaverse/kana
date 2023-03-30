@@ -499,15 +499,6 @@ export function NewAnalysis({
         title="Optional Parameters"
         icon="issue"
       >
-        <div
-          className={
-            preInputFilesStatus &&
-            newInputs.length > 0 &&
-            preInputFilesStatus[newInputs[0].name]
-              ? ""
-              : "bp4-skeleton"
-          }
-        ></div>
         <Label className="row-input">
           <Switch
             checked={showBatch}
@@ -648,7 +639,6 @@ export function NewAnalysis({
                     <div className="subset-section">
                       <div className="subset-range-field">
                         <H5>from</H5>
-                        {console.log(subset)}
                         <NumericInput
                           min={
                             isFinite(subset.minmax[0])
@@ -962,30 +952,34 @@ export function NewAnalysis({
             Cancel
           </Button>
         </Tooltip2>
-        <Tooltip2 content="Run Analysis" placement="top">
-          <Button
-            icon="flame"
-            onClick={handleRunAnalysis}
-            intent={"warning"}
-            large={true}
-            disabled={newInputs.length == 0}
+        {newInputs.length > 0 && (
+          <Tooltip2 content="Run Analysis" placement="top">
+            <Button
+              icon="flame"
+              onClick={handleRunAnalysis}
+              intent={"warning"}
+              large={true}
+              disabled={newInputs.length == 0}
+            >
+              Analyze
+            </Button>
+          </Tooltip2>
+        )}
+        {newInputs.length > 0 && (
+          <Tooltip2
+            content="Update or modify default analysis parameters"
+            placement="right"
           >
-            Analyze
-          </Button>
-        </Tooltip2>
-        <Tooltip2
-          content="Update or modify default analysis parameters"
-          placement="right"
-        >
-          <Button
-            icon="arrow-right"
-            onClick={handleRunAndParams}
-            intent={"primary"}
-            large={true}
-          >
-            Modify analysis parameters
-          </Button>
-        </Tooltip2>
+            <Button
+              icon="arrow-right"
+              onClick={handleRunAndParams}
+              large={true}
+              disabled={newInputs.length == 0}
+            >
+              Modify analysis parameters
+            </Button>
+          </Tooltip2>
+        )}
       </div>
     </Card>
   );

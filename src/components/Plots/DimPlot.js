@@ -1183,7 +1183,7 @@ const DimPlot = (props) => {
                   <RangeSlider
                     min={Math.round(exprMinMax[0])}
                     max={Math.round(exprMinMax[1])}
-                    stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 10}
+                    stepSize={Math.max(Math.round(exprMinMax[1] - exprMinMax[0]) / 10, 0.01)}
                     labelValues={[
                       Math.round(exprMinMax[0]),
                       Math.round(exprMinMax[1]),

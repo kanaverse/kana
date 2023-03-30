@@ -239,7 +239,7 @@ export function H5AD({
                                   mod.toLowerCase().charAt(0).toUpperCase() +
                                   mod.toLowerCase().slice(1)
                                 }Name`
-                              ]
+                              ] !== null
                                 ? options[
                                     `featureType${
                                       mod
@@ -282,7 +282,7 @@ export function H5AD({
                             <option value="none">None</option>
                             {getAvailableModalities(mod).map((x, i) => (
                               <option key={i} value={x}>
-                                {x}
+                                {x === "" ? "Unknown Modality" : x}
                               </option>
                             ))}
                           </HTMLSelect>

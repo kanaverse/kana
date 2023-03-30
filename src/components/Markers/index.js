@@ -642,6 +642,7 @@ const MarkerPlot = (props) => {
           <optgroup label="Computed">
             {annotationCols
               .filter((x) => x.startsWith(code) || x === "__batch__")
+              .filter((x) => !x.replace(`${code}::`, "").startsWith("QC"))
               .map((x) => (
                 <option value={x} key={x}>
                   {x.replace(`${code}::`, "")}

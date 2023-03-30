@@ -144,13 +144,12 @@ export function RDSSE({
       ),
     ].filter((x) => !remaining_modalities.includes(x));
 
-    const flist = list.filter((x) => !!x);
+    const flist = list.filter((x) => x !== undefined || x !== null);
     let fflist = flist;
     if (curr_mod_sel !== undefined && curr_mod_sel !== null) {
       fflist = [curr_mod_sel, ...flist];
     }
 
-    console.log("fflist", modality, fflist);
     return fflist;
   };
 
@@ -230,8 +229,7 @@ export function RDSSE({
                       </Text>
                       <HTMLSelect
                         defaultValue={
-                          options[`${mod.toLowerCase()}Experiment`] === "" ||
-                          options[`${mod.toLowerCase()}Experiment`]
+                          options[`${mod.toLowerCase()}Experiment`] !== null
                             ? options[`${mod.toLowerCase()}Experiment`]
                             : "none"
                         }
@@ -252,7 +250,7 @@ export function RDSSE({
                         <option value="none">None</option>
                         {getAvailableModalities(mod).map((x, i) => (
                           <option key={i} value={x}>
-                            {x}
+                            {x === "" ? "Unknown Modality" : x}
                           </option>
                         ))}
                       </HTMLSelect>

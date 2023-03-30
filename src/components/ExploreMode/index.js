@@ -25,6 +25,8 @@ import {
   Alert,
   ResizeEntry,
   ResizeSensor,
+  H3,
+  Callout,
 } from "@blueprintjs/core";
 
 import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
@@ -540,6 +542,9 @@ export function ExplorerMode() {
           index: reqFsetGeneIndex,
           collection: selectedFsetColl,
           cluster: selectedFsetCluster,
+          annotation: selectedFsetAnnotation,
+          modality: selectedFsetModality,
+          rank_type: fsetClusterRank,
         },
       });
 
@@ -866,7 +871,13 @@ export function ExplorerMode() {
                     intent={showPanel === "explore-import" ? "primary" : "none"}
                   ></Button>
                   <span
+                    onClick={() =>
+                      showPanel !== "explore-import"
+                        ? setShowPanel("explore-import")
+                        : setShowPanel(null)
+                    }
                     style={{
+                      cursor: "pointer",
                       color:
                         showPanel === "explore-import" ? "#184A90" : "black",
                     }}
@@ -877,54 +888,64 @@ export function ExplorerMode() {
               </Tooltip2>
             </div>
             <Divider />
-            <div
-              className={
-                showPanel === "explore" ? "item-sidebar-intent" : "item-sidebar"
-              }
-            >
-              <Tooltip2
-                className={popclass.TOOLTIP2_INDICATOR}
-                content={
-                  selectedRedDim === null
-                    ? "Start or load an analysis to explore results"
-                    : "Explore results!"
-                }
-                minimal={false}
-                placement={"right"}
-                intent={showPanel === "explore" ? "primary" : ""}
-              >
-                <div className="item-button-group">
-                  <Button
-                    outlined={false}
-                    large={false}
-                    minimal={true}
-                    fill={true}
-                    icon={"rocket-slant"}
-                    disabled={selectedRedDim === null}
-                    onClick={() =>
-                      showPanel !== "explore"
-                        ? setShowPanel("explore")
-                        : setShowPanel(null)
+            {selectedRedDim !== null && (
+              <>
+                <div
+                  className={
+                    showPanel === "explore"
+                      ? "item-sidebar-intent"
+                      : "item-sidebar"
+                  }
+                >
+                  <Tooltip2
+                    className={popclass.TOOLTIP2_INDICATOR}
+                    content={
+                      selectedRedDim === null
+                        ? "Start or load an analysis to explore results"
+                        : "Explore results!"
                     }
-                    intent={showPanel === "explore" ? "primary" : "none"}
-                  ></Button>
-                  <span
-                    style={{
-                      color: showPanel === "explore" ? "#184A90" : "black",
-                    }}
+                    minimal={false}
+                    placement={"right"}
+                    intent={showPanel === "explore" ? "primary" : ""}
                   >
-                    EXPLORE
-                  </span>
+                    <div className="item-button-group">
+                      <Button
+                        outlined={false}
+                        large={false}
+                        minimal={true}
+                        fill={true}
+                        icon={"rocket-slant"}
+                        onClick={() =>
+                          showPanel !== "explore"
+                            ? setShowPanel("explore")
+                            : setShowPanel(null)
+                        }
+                        intent={showPanel === "explore" ? "primary" : "none"}
+                      ></Button>
+                      <span
+                        onClick={() =>
+                          showPanel !== "explore"
+                            ? setShowPanel("explore")
+                            : setShowPanel(null)
+                        }
+                        style={{
+                          cursor: "pointer",
+                          color: showPanel === "explore" ? "#184A90" : "black",
+                        }}
+                      >
+                        EXPLORE
+                      </span>
+                    </div>
+                  </Tooltip2>
                 </div>
-              </Tooltip2>
-            </div>
-            <Divider />
+                <Divider />
+              </>
+            )}
             <div
               className={
                 showPanel === "logs" ? "item-sidebar-intent" : "item-sidebar"
               }
             >
-              {" "}
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
                 content="What's happening under the hood? See the blow-by-blow logs as the analysis runs!"
@@ -943,7 +964,9 @@ export function ExplorerMode() {
                     intent={showPanel === "logs" ? "primary" : "none"}
                   ></Button>
                   <span
+                    onClick={() => setShowLogs(true)}
                     style={{
+                      cursor: "pointer",
                       color: showPanel === "logs" ? "#184A90" : "black",
                     }}
                   >
@@ -956,12 +979,11 @@ export function ExplorerMode() {
           </div>
           <div className="left-sidebar-content-flex-bottom">
             <Divider />
-            <div
+            {/* <div
               className={
                 showPanel === "info" ? "item-sidebar-intent" : "item-sidebar"
               }
             >
-              {" "}
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
                 content="Wanna know more about Kana?"
@@ -987,7 +1009,7 @@ export function ExplorerMode() {
                 </div>
               </Tooltip2>
             </div>
-            <Divider />
+            <Divider /> */}
             <div className="item-sidebar">
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
@@ -1002,8 +1024,20 @@ export function ExplorerMode() {
                     minimal={true}
                     fill={true}
                     icon={"git-repo"}
+                    onClick={() =>
+                      window.open("https://github.com/kanaverse", "_blank")
+                    }
                   ></Button>
-                  <span>GITHUB</span>
+                  <span
+                    onClick={() =>
+                      window.open("https://github.com/kanaverse", "_blank")
+                    }
+                    style={{
+                      cursor: "pointer",
+                    }}
+                  >
+                    GITHUB
+                  </span>
                 </div>
               </Tooltip2>
             </div>
@@ -1190,65 +1224,25 @@ export function ExplorerMode() {
             </ResizeSensor>
           )}
           {(showPanel === null || showPanel === undefined) && (
-            <NonIdealState
-              icon={"control"}
-              iconSize={NonIdealStateIconSize.STANDARD}
-              title={"Lost all the windows eh?"}
-              description={
-                <p>
-                  My boss told me I can't start an app with an empty screen. So
-                  here goes nothing...
-                </p>
-              }
-              children={
-                <Card
-                  style={{
-                    textAlign: "left",
-                    width: "70%",
-                  }}
-                  elevation={Elevation.ZERO}
-                >
-                  <p>
-                    <strong>kana</strong> performs a standard single-cell data
-                    analysis directly inside the browser.
-                  </p>
-                  <p>
-                    With just a few clicks, you can get a UMAP/t-SNE, clusters
-                    and their marker genes in an intuitive interface for further
-                    exploration. No need to transfer data, no need to install
-                    software, no need to configure a backend server - just point
-                    to a Matrix Market file and we'll analyze <em>your</em> data
-                    on <em>your</em> computer, no questions asked.
-                  </p>
-                  <p>
-                    Check out our{" "}
-                    <a href="https://github.com/kanaverse" target="_blank">
-                      GitHub page
-                    </a>{" "}
-                    for more details.
-                  </p>
-                  <H5>Authors</H5>
-                  Jayaram Kancherla (
-                  <a href="https://github.com/jkanche" target="_blank">
-                    <strong>@jkanche</strong>
-                  </a>
-                  ), Aaron Lun (
-                  <a href="https://github.com/LTLA" target="_blank">
-                    <strong>@LTLA</strong>
-                  </a>
-                  )
-                </Card>
-              }
-              action={
-                <Button
-                  outlined={true}
-                  text="Explore a dataset"
+            <div className="frontpage">
+              <div style={{ textAlign: "left", alignItems: "flex-start" }}>
+                <H3>Are you new here?</H3>
+              </div>
+              <div className="frontpage-row">
+                <Callout
+                  title="Explore a pre-saved analysis"
+                  onClick={() => setShowPanel("explore-import")}
+                  className="frontpage-rowitem"
                   icon="plus"
                   intent="primary"
-                  onClick={() => setShowPanel("explore-import")}
-                />
-              }
-            />
+                >
+                  <p>
+                    In this mode, <strong>kana</strong> retrieves results from
+                    single-cell datasets stored as RDS or H5AD files.
+                  </p>
+                </Callout>
+              </div>
+            </div>
           )}
           {showPanel === "explore-import" && (
             <LoadExplore setShowPanel={setShowPanel} />
