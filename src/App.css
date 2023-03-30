@@ -138,25 +138,31 @@
 }
 
 .frontpage {
+  display: grid;
+  grid-template-columns: 250px auto;
+  grid-template-rows: 250px auto;
+  gap: 15px;
+  padding: 5% 20%;
+}
+
+.frontpage-logo {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.frontpage-content {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: medium;
+}
+
+.frontpage-actions {
+  grid-column: 1 / -1;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  /* height: 100%; */
-  padding: 5% 15%;
-  justify-content: center;
-}
-
-.frontpage-row {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-  justify-content: center;
-}
-
-.frontpage-rowitem {
-  max-width: 50%;
-  cursor: pointer;
-  font-size: larger;
+  gap: 5px;
+  font-size: medium;
 }
 
 .frontpage-rowitem:hover {
