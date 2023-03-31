@@ -124,8 +124,6 @@ const DimPlot = (props) => {
     if (
       props?.selectedFsetIndex === null ||
       props?.selectedFsetIndex === undefined ||
-      props?.selectedFsetColl === null ||
-      props?.selectedFsetColl === undefined ||
       props?.fsetEnirchDetails === null ||
       props?.fsetEnirchDetails === undefined
     ) {
@@ -148,22 +146,21 @@ const DimPlot = (props) => {
         setExprMinMax([0, val]);
       } else {
         setShowGradient(false);
-        AppToaster.show({
-          icon: "warning-sign",
-          intent: "warning",
-          message: `${
-            props?.fsetEnirchDetails[props?.selectedFsetColl].names[
-              props?.selectedFsetIndex
-            ]
-          } has no scores`,
-        });
+        // AppToaster.show({
+        //   icon: "warning-sign",
+        //   intent: "warning",
+        //   message: `${
+        //     props?.fsetEnirchDetails[props?.selectedFsetColl].names[
+        //       props?.selectedFsetIndex
+        //     ]
+        //   } has no scores`,
+        // });
       }
       setGradient(tmpgradient);
     }
   }, [
     props?.fsetEnirchDetails,
     props?.selectedFsetIndex,
-    props?.selectedFsetColl,
     props?.featureScoreCache?.[props?.selectedFsetIndex],
   ]);
 
@@ -1138,7 +1135,7 @@ const DimPlot = (props) => {
                   }}
                 >
                   {
-                    props?.fsetEnirchDetails[props?.selectedFsetColl].names[
+                    props?.fsetEnirchDetails.sets.names[
                       props?.selectedFsetIndex
                     ]
                   }
