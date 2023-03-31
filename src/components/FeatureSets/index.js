@@ -100,7 +100,7 @@ const FeatureSetEnrichment = (props) => {
   };
 
   const getTableHeight = () => {
-    let defheight = 323;
+    let defheight = 273;
     if (showFilters) defheight = 450;
 
     if (props?.windowWidth < 1200) {
