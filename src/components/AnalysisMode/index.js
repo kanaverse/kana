@@ -1781,30 +1781,16 @@ export function AnalysisMode(props) {
               </div>
               <div className="frontpage-row">
                 <Callout
-                  title="Start a New Analysis"
+                  title="Start a new analysis"
                   onClick={() => setShowPanel("new")}
                   className="frontpage-rowitem"
                   icon="plus"
                   intent="primary"
+                  style={{cursor:"pointer"}}
                 >
                   <p>
-                    In this mode, <strong>kana</strong> performs a standard
-                    single-cell data analysis directly inside the browser.
-                  </p>
-                  <p>
-                    With just a few clicks, you can get a UMAP/t-SNE, clusters
-                    and their marker genes in an intuitive interface for further
-                    exploration. No need to transfer data, no need to install
-                    software, no need to configure a backend server - just point
-                    to one of our supported file formats and we'll analyze{" "}
-                    <strong>
-                      <em>your</em>
-                    </strong>{" "}
-                    data on{" "}
-                    <strong>
-                      <em>your</em>
-                    </strong>{" "}
-                    computer, no questions asked.
+                    Analyze one or more datasets in a variety of supported formats (Matrix Market, H5AD, RDS).
+                    Get started now!
                   </p>
                 </Callout>
                 <Callout
