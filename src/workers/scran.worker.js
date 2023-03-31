@@ -932,6 +932,7 @@ onmessage = function (msg) {
             rank_type.slice(0, index),
             rank_type.slice(index + 1)
           );
+          postSuccess("computeFeaturesetSummary", resp);
         } else if (default_selection === annotation) {
           let fse;
           try {
@@ -953,12 +954,26 @@ onmessage = function (msg) {
             let anno_markers = mds.fetchResults()["RNA"];
 
             fse.ready().then((x) => {
+              let collections = fse.fetchCollectionDetails();
+              let sets = fse.fetchSetDetails();
+              resp = {
+                collections: collections,
+                sets: {
+                  names: sets.names,
+                  descriptions: sets.descriptions,
+                  sizes: sets.sizes.slice(),
+                  collections: sets.collections.slice(),
+                },
+              };
+              postSuccess("feature_set_enrichment", resp);
+
               resp = fse.computeEnrichment(
                 anno_markers,
                 annotation_vec.levels.indexOf(1),
                 rank_type.slice(0, index),
                 rank_type.slice(index + 1)
               );
+              postSuccess("computeFeaturesetSummary", resp);
             });
           } finally {
             fse.free();
@@ -975,18 +990,31 @@ onmessage = function (msg) {
             let anno_markers = mds.fetchResults()["RNA"];
 
             fse.ready().then((x) => {
+              let collections = fse.fetchCollectionDetails();
+              let sets = fse.fetchSetDetails();
+              resp = {
+                collections: collections,
+                sets: {
+                  names: sets.names,
+                  descriptions: sets.descriptions,
+                  sizes: sets.sizes.slice(),
+                  collections: sets.collections.slice(),
+                },
+              };
+              postSuccess("feature_set_enrichment", resp);
+
               resp = fse.computeEnrichment(
                 anno_markers,
                 annotation_vec.levels.indexOf(cluster),
                 rank_type.slice(0, index),
                 rank_type.slice(index + 1)
               );
+              postSuccess("computeFeaturesetSummary", resp);
             });
           } finally {
             fse.free();
           }
         }
-        postSuccess("computeFeaturesetSummary", resp);
       })
       .catch((err) => {
         console.error(err);
@@ -1006,6 +1034,7 @@ onmessage = function (msg) {
             rank_type.slice(0, index),
             rank_type.slice(index + 1)
           );
+          postSuccess("computeFeaturesetVSSummary", resp);
         } else if (default_selection === annotation) {
           let fse;
           try {
@@ -1019,12 +1048,26 @@ onmessage = function (msg) {
             );
 
             fse.ready().then((x) => {
+              let collections = fse.fetchCollectionDetails();
+              let sets = fse.fetchSetDetails();
+              resp = {
+                collections: collections,
+                sets: {
+                  names: sets.names,
+                  descriptions: sets.descriptions,
+                  sizes: sets.sizes.slice(),
+                  collections: sets.collections.slice(),
+                },
+              };
+              postSuccess("feature_set_enrichment", resp);
+
               resp = fse.computeEnrichment(
                 anno_markers.results["RNA"],
                 0,
                 rank_type.slice(0, index),
                 rank_type.slice(index + 1)
               );
+              postSuccess("computeFeaturesetVSSummary", resp);
             });
           } finally {
             fse.free();
@@ -1045,18 +1088,31 @@ onmessage = function (msg) {
             );
 
             fse.ready().then((x) => {
+              let collections = fse.fetchCollectionDetails();
+              let sets = fse.fetchSetDetails();
+              resp = {
+                collections: collections,
+                sets: {
+                  names: sets.names,
+                  descriptions: sets.descriptions,
+                  sizes: sets.sizes.slice(),
+                  collections: sets.collections.slice(),
+                },
+              };
+              postSuccess("feature_set_enrichment", resp);
+
               resp = fse.computeEnrichment(
                 raw_res.results["RNA"],
                 raw_res.left,
                 rank_type.slice(0, index),
                 rank_type.slice(index + 1)
               );
+              postSuccess("computeFeaturesetVSSummary", resp);
             });
           } finally {
             fse.free();
           }
         }
-        postSuccess("computeFeaturesetVSSummary", resp);
       })
       .catch((err) => {
         console.error(err);
@@ -1067,9 +1123,8 @@ onmessage = function (msg) {
       .then((x) => {
         let { index } = payload;
 
-        let resp = superstate.feature_set_enrichment.computePerCellScores(
-          index
-        );
+        let resp =
+          superstate.feature_set_enrichment.computePerCellScores(index);
         postSuccess("setFeatureScores", resp);
       })
       .catch((err) => {
@@ -1079,12 +1134,10 @@ onmessage = function (msg) {
   } else if (type === "getFeatureGeneIndices") {
     loaded
       .then((x) => {
-        let { index, cluster, annotation, modality, rank_type } =
-          payload;
+        let { index, cluster, annotation, modality, rank_type } = payload;
 
-        let resp = superstate.feature_set_enrichment.fetchFeatureSetIndices(
-          index
-        );
+        let resp =
+          superstate.feature_set_enrichment.fetchFeatureSetIndices(index);
 
         let raw_res, marker_resp;
 
