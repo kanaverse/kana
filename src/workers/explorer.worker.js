@@ -1,5 +1,6 @@
 import * as bakana from "bakana";
 import * as scran from "scran.js";
+import * as gesel from "gesel";
 import * as downloads from "./DownloadsDBHandler.js";
 import {
   extractBuffers,
@@ -22,6 +23,23 @@ async function proxyAndCache(url) {
 bakana.CellLabellingState.setDownload(proxyAndCache);
 bakana.FeatureSetEnrichmentState.setDownload(proxyAndCache);
 bakana.RnaQualityControlState.setDownload(proxyAndCache);
+
+gesel.referenceDownload(async (file, start, end) => {
+  let url = gesel.referenceBaseUrl() + "/" + file;
+  let full = proxy + "/" + encodeURIComponent(url);
+  if (start == null && end == null) {
+    let buffer = await downloads.get(full);
+    return new Response(buffer);
+  } else {
+    return fetch(full + "?start=" + String(start) + "&end=" + String(end));
+  }
+});
+
+gesel.geneDownload(async (file) => {
+  let url = gesel.geneBaseUrl() + "/" + file;
+  let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
+  return new Response(buffer);
+});
 
 const default_cluster = `${code}::CLUSTERS`;
 const default_selection = `${code}::SELECTION`;
@@ -96,6 +114,8 @@ function summarizeResult(summary, args) {
   } else if (args.format === "SummarizedExperiment") {
     tmp_meta["modality_assay_names"] = summary.modality_assay_names;
   }
+
+  tmp_meta.reduced_dimension_names = summary.reduced_dimension_names;
   return tmp_meta;
 }
 
@@ -512,84 +532,66 @@ onmessage = function (msg) {
         let index = rank_type.indexOf("-");
         let resp;
         if (default_selection === annotation) {
-          let fse;
-          try {
-            let sel_indices =
-              custom_selection_state.fetchSelectionIndices(cluster);
-            let num_cells = dataset.cells.numberOfRows();
+          let sel_indices =
+            custom_selection_state.fetchSelectionIndices(cluster);
+          let num_cells = dataset.cells.numberOfRows();
 
-            let arr_sel_indices = new Uint8Array(num_cells);
-            sel_indices.map((x) => arr_sel_indices.set([1], x));
-            let annotation_vec = scran.factorize(arr_sel_indices);
+          let arr_sel_indices = new Uint8Array(num_cells);
+          sel_indices.map((x) => arr_sel_indices.set([1], x));
+          let annotation_vec = scran.factorize(arr_sel_indices);
 
-            fse = new bakana.FeatureSetEnrichmentStandalone(
-              dataset.features[modality]
+          let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+          let anno_markers = mds.fetchResults()[modality];
+
+          feature_set_enrich_state.ready().then((x) => {
+            let collections = feature_set_enrich_state.fetchCollectionDetails();
+            let sets = feature_set_enrich_state.fetchSetDetails();
+            resp = {
+              collections: collections,
+              sets: {
+                names: sets.names,
+                descriptions: sets.descriptions,
+                sizes: sets.sizes.slice(),
+                collections: sets.collections.slice(),
+              },
+            };
+            postSuccess("feature_set_enrichment", resp);
+
+            resp = feature_set_enrich_state.computeEnrichment(
+              anno_markers,
+              annotation_vec.levels.indexOf(1),
+              rank_type.slice(0, index),
+              rank_type.slice(index + 1)
             );
-
-            let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
-            let anno_markers = mds.fetchResults()[modality];
-
-            fse.ready().then((x) => {
-              let collections = fse.fetchCollectionDetails();
-              let sets = fse.fetchSetDetails();
-              resp = {
-                collections: collections,
-                sets: {
-                  names: sets.names,
-                  descriptions: sets.descriptions,
-                  sizes: sets.sizes.slice(),
-                  collections: sets.collections.slice(),
-                },
-              };
-              postSuccess("feature_set_enrichment", resp);
-
-              resp = fse.computeEnrichment(
-                anno_markers,
-                annotation_vec.levels.indexOf(1),
-                rank_type.slice(0, index),
-                rank_type.slice(index + 1)
-              );
-              postSuccess("computeFeaturesetSummary", resp);
-            });
-          } finally {
-            fse.free();
-          }
+            postSuccess("computeFeaturesetSummary", resp);
+          });
         } else {
-          let fse;
-          try {
-            let annotation_vec = scran.factorize(getAnnotation(annotation));
-            fse = new bakana.FeatureSetEnrichmentStandalone(
-              dataset.features[modality]
+          let annotation_vec = scran.factorize(getAnnotation(annotation));
+          let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+          let anno_markers = mds.fetchResults()[modality];
+
+          feature_set_enrich_state.ready().then((x) => {
+            let collections = feature_set_enrich_state.fetchCollectionDetails();
+            let sets = feature_set_enrich_state.fetchSetDetails();
+            resp = {
+              collections: collections,
+              sets: {
+                names: sets.names,
+                descriptions: sets.descriptions,
+                sizes: sets.sizes.slice(),
+                collections: sets.collections.slice(),
+              },
+            };
+            postSuccess("feature_set_enrichment", resp);
+
+            resp = feature_set_enrich_state.computeEnrichment(
+              anno_markers,
+              annotation_vec.levels.indexOf(cluster),
+              rank_type.slice(0, index),
+              rank_type.slice(index + 1)
             );
-
-            let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
-            let anno_markers = mds.fetchResults()[modality];
-
-            fse.ready().then((x) => {
-              let collections = fse.fetchCollectionDetails();
-              let sets = fse.fetchSetDetails();
-              resp = {
-                collections: collections,
-                sets: {
-                  names: sets.names,
-                  descriptions: sets.descriptions,
-                  sizes: sets.sizes.slice(),
-                  collections: sets.collections.slice(),
-                },
-              };
-              postSuccess("feature_set_enrichment", resp);
-
-              resp = fse.computeEnrichment(
-                anno_markers,
-                annotation_vec.levels.indexOf(cluster),
-                rank_type.slice(0, index),
-                rank_type.slice(index + 1)
-              );
-              postSuccess("computeFeaturesetSummary", resp);
-            });
-          } finally {
-            fse.free();
-          }
+            postSuccess("computeFeaturesetSummary", resp);
+          });
         }
       })
       .catch((err) => {
@@ -603,82 +605,61 @@ onmessage = function (msg) {
         let index = rank_type.indexOf("-");
         let resp;
         if (default_selection === annotation) {
-          let fse;
-          try {
-            fse = new bakana.FeatureSetEnrichmentStandalone(
-              dataset.features[modality]
+          let anno_markers = custom_selection_state.computeVersus(left, right);
+
+          feature_set_enrich_state.ready().then((x) => {
+            let collections = feature_set_enrich_state.fetchCollectionDetails();
+            let sets = feature_set_enrich_state.fetchSetDetails();
+            resp = {
+              collections: collections,
+              sets: {
+                names: sets.names,
+                descriptions: sets.descriptions,
+                sizes: sets.sizes.slice(),
+                collections: sets.collections.slice(),
+              },
+            };
+            postSuccess("feature_set_enrichment", resp);
+
+            resp = feature_set_enrich_state.computeEnrichment(
+              anno_markers.results[modality],
+              0,
+              rank_type.slice(0, index),
+              rank_type.slice(index + 1)
             );
-
-            let anno_markers = custom_selection_state.computeVersus(
-              left,
-              right
-            );
-
-            fse.ready().then((x) => {
-              let collections = fse.fetchCollectionDetails();
-              let sets = fse.fetchSetDetails();
-              resp = {
-                collections: collections,
-                sets: {
-                  names: sets.names,
-                  descriptions: sets.descriptions,
-                  sizes: sets.sizes.slice(),
-                  collections: sets.collections.slice(),
-                },
-              };
-              postSuccess("feature_set_enrichment", resp);
-
-              resp = fse.computeEnrichment(
-                anno_markers.results[modality],
-                0,
-                rank_type.slice(0, index),
-                rank_type.slice(index + 1)
-              );
-              postSuccess("computeFeaturesetVSSummary", resp);
-            });
-          } finally {
-            fse.free();
-          }
+            postSuccess("computeFeaturesetVSSummary", resp);
+          });
         } else {
-          let fse;
-          try {
-            let annotation_vec = scran.factorize(getAnnotation(annotation));
-            fse = new bakana.FeatureSetEnrichmentStandalone(
-              dataset.features[modality]
+          let annotation_vec = scran.factorize(getAnnotation(annotation));
+          let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+
+          let raw_res = mds.computeVersus(
+            annotation_vec.levels.indexOf(payload.left),
+            annotation_vec.levels.indexOf(payload.right)
+          );
+
+          feature_set_enrich_state.ready().then((x) => {
+            let collections = feature_set_enrich_state.fetchCollectionDetails();
+            let sets = feature_set_enrich_state.fetchSetDetails();
+            resp = {
+              collections: collections,
+              sets: {
+                names: sets.names,
+                descriptions: sets.descriptions,
+                sizes: sets.sizes.slice(),
+                collections: sets.collections.slice(),
+              },
+            };
+            postSuccess("feature_set_enrichment", resp);
+
+            resp = feature_set_enrich_state.computeEnrichment(
+              raw_res.results[modality],
+              raw_res.left,
+              rank_type.slice(0, index),
+              rank_type.slice(index + 1)
             );
-
-            let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
-
-            let raw_res = mds.computeVersus(
-              annotation_vec.levels.indexOf(payload.left),
-              annotation_vec.levels.indexOf(payload.right)
-            );
-
-            fse.ready().then((x) => {
-              let collections = fse.fetchCollectionDetails();
-              let sets = fse.fetchSetDetails();
-              resp = {
-                collections: collections,
-                sets: {
-                  names: sets.names,
-                  descriptions: sets.descriptions,
-                  sizes: sets.sizes.slice(),
-                  collections: sets.collections.slice(),
-                },
-              };
-              postSuccess("feature_set_enrichment", resp);
-
-              resp = fse.computeEnrichment(
-                raw_res.results[modality],
-                raw_res.left,
-                rank_type.slice(0, index),
-                rank_type.slice(index + 1)
-              );
-              postSuccess("computeFeaturesetVSSummary", resp);
-            });
-          } finally {
-            fse.free();
-          }
+            postSuccess("computeFeaturesetVSSummary", resp);
+          });
         }
       })
       .catch((err) => {
@@ -703,13 +684,9 @@ onmessage = function (msg) {
   } else if (type === "getFeatureGeneIndices") {
     loaded
       .then((x) => {
-        let { collection, index, cluster, annotation, modality, rank_type } =
-          payload;
+        let { index, cluster, annotation, modality, rank_type } = payload;
 
-        let resp = superstate.feature_set_enrichment.fetchFeatureSetIndices(
-          collection,
-          index
-        );
+        let resp = feature_set_enrich_state.fetchFeatureSetIndices(index);
 
         let raw_res, marker_resp;
 
@@ -765,11 +742,20 @@ onmessage = function (msg) {
         dataset.features[modality]
       );
 
-      let defaults = bakana.FeatureSetEnrichmentState.defaults();
-      await feature_set_enrich_state.setParameters(defaults);
-      let resp = { details: feature_set_enrich_state.fetchCollectionDetails() };
-
-      postSuccess("feature_set_enrichment", resp);
+      feature_set_enrich_state.ready().then((x) => {
+        let collections = feature_set_enrich_state.fetchCollectionDetails();
+        let sets = feature_set_enrich_state.fetchSetDetails();
+        let resp = {
+          collections: collections,
+          sets: {
+            names: sets.names,
+            descriptions: sets.descriptions,
+            sizes: sets.sizes.slice(),
+            collections: sets.collections.slice(),
+          },
+        };
+        postSuccess("feature_set_enrichment", resp);
+      });
     });
   } else {
     console.error("MIM:::msg type incorrect");
