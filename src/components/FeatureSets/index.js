@@ -145,7 +145,9 @@ const FeatureSetEnrichment = (props) => {
   };
 
   useEffect(() => {
-    setFsetCollFilter(props?.fsetEnirchDetails?.collections.names);
+    if ("collections" in props?.fsetEnirchDetails) {
+      setFsetCollFilter(props?.fsetEnirchDetails?.collections.names);
+    }
   }, [props?.fsetEnirchDetails]);
 
   // update clusters when custom selection is made in the UI
@@ -542,46 +544,47 @@ const FeatureSetEnrichment = (props) => {
           </HTMLSelect>
         </span>
         <Divider />
-        {props?.fsetEnirchDetails && (
-          <Label style={{ marginBottom: "3px" }}>
-            <H5>Filter collections</H5>
-            {props?.fsetEnirchDetails?.collections.names?.map((x, i) => {
-              return (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    gap: "5px",
-                  }}
-                >
-                  <span>{x}</span>
-                  <Switch
-                    key={i}
-                    large={false}
-                    checked={fsetCollFilter.includes(x)}
-                    innerLabelChecked="hide"
-                    innerLabel="select"
-                    onChange={(e) => {
-                      let tmp = [...fsetCollFilter];
-                      if (e.target.checked === false) {
-                        if (tmp.includes(x)) {
-                          let idx = tmp.indexOf(x);
-                          tmp.splice(idx, 1);
-                        }
-                      } else {
-                        if (!tmp.includes(x)) {
-                          tmp.push(x);
-                        }
-                      }
-
-                      setFsetCollFilter(tmp);
+        {"collections" in props?.fsetEnirchDetails &&
+          "sets" in props?.fsetEnirchDetails && (
+            <Label style={{ marginBottom: "3px" }}>
+              <H5>Filter collections</H5>
+              {props?.fsetEnirchDetails?.collections.names?.map((x, i) => {
+                return (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      gap: "5px",
                     }}
-                  />
-                </div>
-              );
-            })}
-          </Label>
-        )}
+                  >
+                    <span>{x}</span>
+                    <Switch
+                      key={i}
+                      large={false}
+                      checked={fsetCollFilter.includes(x)}
+                      innerLabelChecked="hide"
+                      innerLabel="select"
+                      onChange={(e) => {
+                        let tmp = [...fsetCollFilter];
+                        if (e.target.checked === false) {
+                          if (tmp.includes(x)) {
+                            let idx = tmp.indexOf(x);
+                            tmp.splice(idx, 1);
+                          }
+                        } else {
+                          if (!tmp.includes(x)) {
+                            tmp.push(x);
+                          }
+                        }
+
+                        setFsetCollFilter(tmp);
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </Label>
+          )}
       </Collapse>
       <Divider />
       {appMode === "explore" && props?.modality != null && (
