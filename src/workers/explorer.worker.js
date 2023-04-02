@@ -168,7 +168,24 @@ onmessage = function (msg) {
       });
     });
 
-    loaded = Promise.all([back_init, state_init]);
+    let down_init = downloads.initialize();
+    down_init
+      .then((output) => {
+        postMessage({
+          type: "DownloadsDB_store",
+          resp: output,
+          msg: "Success: DownloadsDB initialized",
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+        postMessage({
+          type: "DownloadsDB_ERROR",
+          msg: "Error: Cannot initialize DownloadsDB",
+        });
+      });
+
+    loaded = Promise.all([back_init, state_init, down_init]);
 
     loaded
       .then(() => {
@@ -406,7 +423,7 @@ onmessage = function (msg) {
         let row_idx = payload.gene;
         let modality = payload.modality.toLowerCase();
 
-        var vec = dataset.features[modality].row(row_idx);
+        var vec = dataset.matrix.get(modality).row(row_idx)
 
         postMessage(
           {
@@ -544,19 +561,6 @@ onmessage = function (msg) {
           let anno_markers = mds.fetchResults()[modality];
 
           feature_set_enrich_state.ready().then((x) => {
-            let collections = feature_set_enrich_state.fetchCollectionDetails();
-            let sets = feature_set_enrich_state.fetchSetDetails();
-            resp = {
-              collections: collections,
-              sets: {
-                names: sets.names,
-                descriptions: sets.descriptions,
-                sizes: sets.sizes.slice(),
-                collections: sets.collections.slice(),
-              },
-            };
-            postSuccess("feature_set_enrichment", resp);
-
             resp = feature_set_enrich_state.computeEnrichment(
               anno_markers,
               annotation_vec.levels.indexOf(1),
@@ -571,19 +575,6 @@ onmessage = function (msg) {
           let anno_markers = mds.fetchResults()[modality];
 
           feature_set_enrich_state.ready().then((x) => {
-            let collections = feature_set_enrich_state.fetchCollectionDetails();
-            let sets = feature_set_enrich_state.fetchSetDetails();
-            resp = {
-              collections: collections,
-              sets: {
-                names: sets.names,
-                descriptions: sets.descriptions,
-                sizes: sets.sizes.slice(),
-                collections: sets.collections.slice(),
-              },
-            };
-            postSuccess("feature_set_enrichment", resp);
-
             resp = feature_set_enrich_state.computeEnrichment(
               anno_markers,
               annotation_vec.levels.indexOf(cluster),
@@ -608,19 +599,6 @@ onmessage = function (msg) {
           let anno_markers = custom_selection_state.computeVersus(left, right);
 
           feature_set_enrich_state.ready().then((x) => {
-            let collections = feature_set_enrich_state.fetchCollectionDetails();
-            let sets = feature_set_enrich_state.fetchSetDetails();
-            resp = {
-              collections: collections,
-              sets: {
-                names: sets.names,
-                descriptions: sets.descriptions,
-                sizes: sets.sizes.slice(),
-                collections: sets.collections.slice(),
-              },
-            };
-            postSuccess("feature_set_enrichment", resp);
-
             resp = feature_set_enrich_state.computeEnrichment(
               anno_markers.results[modality],
               0,
@@ -639,19 +617,6 @@ onmessage = function (msg) {
           );
 
           feature_set_enrich_state.ready().then((x) => {
-            let collections = feature_set_enrich_state.fetchCollectionDetails();
-            let sets = feature_set_enrich_state.fetchSetDetails();
-            resp = {
-              collections: collections,
-              sets: {
-                names: sets.names,
-                descriptions: sets.descriptions,
-                sizes: sets.sizes.slice(),
-                collections: sets.collections.slice(),
-              },
-            };
-            postSuccess("feature_set_enrichment", resp);
-
             resp = feature_set_enrich_state.computeEnrichment(
               raw_res.results[modality],
               raw_res.left,
@@ -671,10 +636,7 @@ onmessage = function (msg) {
       .then((x) => {
         let { collection, index } = payload;
 
-        let resp = feature_set_enrich_state.fetchPerCellScores(
-          collection,
-          index
-        );
+        let resp = feature_set_enrich_state.computePerCellScores(index);
         postSuccess("setFeatureScores", resp);
       })
       .catch((err) => {

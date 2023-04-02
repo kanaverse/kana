@@ -1213,7 +1213,12 @@ const FeatureSetEnrichment = (props) => {
                             lfcMinMax = getMinMax(rowGeneIndices.lfc),
                             meanMinMax = getMinMax(rowGeneIndices.means);
 
-                          const rgname = genesInfo[geneColSel["RNA"]][order];
+                          const rgname =
+                            appMode === "explore"
+                              ? genesInfo[
+                                  geneColSel[props?.selectedFsetModality]
+                                ][order]
+                              : genesInfo[geneColSel["RNA"]][order];
 
                           return (
                             <div className="fsetenrich-genelist-container">
