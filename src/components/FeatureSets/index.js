@@ -991,9 +991,33 @@ const FeatureSetEnrichment = (props) => {
                     }
                   >
                     <strong style={{ color: "#147EB3", fontSize: "x-small" }}>
-                      {row.name}
+                      {row.name.match("^GO:[0-9]+$") ? (
+                        <a
+                          style={{ textDecoration: "underline dotted" }}
+                          href={
+                            "http://amigo.geneontology.org/amigo/term/" +
+                            row.name
+                          }
+                          target="_blank"
+                        >
+                          {row.name}
+                        </a>
+                      ) : (
+                        row.name
+                      )}
                     </strong>
-                    : ({row.size} genes)
+                    : {" "}
+                    {row.description.match("^http[^ ]+$") ? (
+                      <a
+                        style={{ textDecoration: "underline dotted" }}
+                        href={row.description}
+                        target="_blank"
+                      >
+                        link to description
+                      </a>
+                    ) : (
+                      row.description
+                    )}
                   </span>
                   {showPvalues && (
                     <Popover2
