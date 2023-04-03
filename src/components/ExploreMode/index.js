@@ -242,15 +242,13 @@ export function ExplorerMode() {
   const [markersORFSets, setMarkersOrFsets] = useState("markers");
   // set feature set rank-type
   const [fsetClusterRank, setFsetClusterRank] = useState("cohen-min-rank");
-  // selected collection
-  const [selectedFsetColl, setSelectedFsetColl] = useState(null);
   // feature scores cache
   const [featureScores, setFeatureScores] = useState({});
   // which fset cluster is selected
   const [selectedFsetCluster, setSelectedFsetCluster] = useState(null);
   // which  fset annotation, currently we only support computed clusters
   const [selectedFsetAnnotation, setSelectedFsetAnnotation] =
-    useState(default_cluster);
+    useState(null);
   // what feature name is selected
   const [selectedFsetIndex, setSelectedFsetIndex] = useState(null);
   // request feature set scores
@@ -433,7 +431,7 @@ export function ExplorerMode() {
 
   // if modality changes, show the new markers list
   useEffect(() => {
-    if (selectedModality) {
+    if (selectedModality !== null && selectedModality !== undefined) {
       setGenesInfo(inputData.genes[selectedModality]);
       if (geneColSel[selectedModality] == null) {
         let tmp = geneColSel;
@@ -469,7 +467,6 @@ export function ExplorerMode() {
             right: selectedFsetVSCluster,
             rank_type: fsetClusterRank,
             annotation: selectedFsetAnnotation,
-            collection: selectedFsetColl,
             modality: selectedFsetModality,
           },
         });
@@ -483,7 +480,6 @@ export function ExplorerMode() {
             cluster: selectedFsetCluster,
             rank_type: fsetClusterRank,
             annotation: selectedFsetAnnotation,
-            collection: selectedFsetColl,
           },
         });
         // }
@@ -492,7 +488,6 @@ export function ExplorerMode() {
     }
   }, [
     selectedFsetAnnotation,
-    selectedFsetColl,
     selectedFsetCluster,
     fsetClusterRank,
     selectedFsetVSCluster,
@@ -503,14 +498,12 @@ export function ExplorerMode() {
     if (
       reqFsetIndex != null &&
       selectedFsetCluster != null &&
-      selectedFsetColl !== null &&
       selectedFsetAnnotation !== null
     ) {
       scranWorker.postMessage({
         type: "getFeatureScores",
         payload: {
           index: reqFsetIndex,
-          collection: selectedFsetColl,
           annotation: selectedFsetAnnotation,
           cluster: selectedFsetCluster,
           modality: selectedFsetModality,
@@ -525,7 +518,6 @@ export function ExplorerMode() {
   }, [
     reqFsetIndex,
     selectedFsetCluster,
-    selectedFsetColl,
     selectedFsetAnnotation,
   ]);
 
@@ -533,14 +525,12 @@ export function ExplorerMode() {
   useEffect(() => {
     if (
       reqFsetGeneIndex != null &&
-      selectedFsetCluster != null &&
-      selectedFsetColl !== null
+      selectedFsetCluster != null
     ) {
       scranWorker.postMessage({
         type: "getFeatureGeneIndices",
         payload: {
           index: reqFsetGeneIndex,
-          collection: selectedFsetColl,
           cluster: selectedFsetCluster,
           annotation: selectedFsetAnnotation,
           modality: selectedFsetModality,
@@ -553,7 +543,7 @@ export function ExplorerMode() {
         `--- Request feature set gene indices for feature index:${reqFsetGeneIndex} sent ---`
       );
     }
-  }, [reqFsetGeneIndex, selectedFsetCluster, selectedFsetColl]);
+  }, [reqFsetGeneIndex, selectedFsetCluster]);
 
   useEffect(() => {
     setGene(null);
@@ -652,6 +642,7 @@ export function ExplorerMode() {
       if (resp?.annotations) {
         setAnnotationCols(resp.annotations);
         setColorByAnnotation(resp.annotations[0]);
+        setSelectedFsetAnnotation(resp.annotations[0]);
       }
 
       let pmods = Object.keys(resp.genes);
@@ -739,19 +730,19 @@ export function ExplorerMode() {
     } else if (payload.type === "choose_clustering_CACHE") {
       setShowNClusLoader(false);
     } else if (type == "feature_set_enrichment_DATA") {
-      setFsetEnrichDetails(resp.details);
+      setFsetEnrichDetails(resp);
       setShowFsetLoader(false);
-      setSelectedFsetColl(Object.keys(resp.details)[0]);
     } else if (
       type === "computeFeaturesetSummary_DATA" ||
       type === "computeFeaturesetVSSummary_DATA"
     ) {
       let tmpsumm = { ...fsetEnirchSummary };
-      tmpsumm[`${selectedFsetCluster}-${fsetClusterRank}`] = resp;
+      tmpsumm[`${selectedFsetAnnotation}-${selectedFsetCluster}-${fsetClusterRank}`] = resp;
       setFsetEnrichSummary(tmpsumm);
 
-      setFeatureScoreCache(new Array(resp[selectedFsetColl].counts.length));
-      setFsetGeneIndxCache(new Array(resp[selectedFsetColl].counts.length));
+      let idMax = getMinMax(resp.set_ids);
+      setFeatureScoreCache(new Array(idMax[1]));
+      setFsetGeneIndxCache(new Array(idMax[1]));
     } else if (type === "setFeatureScores_DATA") {
       let tmp = [...featureScoreCache];
       tmp[reqFsetIndex] = resp;
@@ -1102,6 +1093,10 @@ export function ExplorerMode() {
                         colorByAnnotation={colorByAnnotation}
                         setColorByAnnotation={setColorByAnnotation}
                         selectedModality={selectedModality}
+                        selectedFsetIndex={selectedFsetIndex}
+                        setSelectedFsetIndex={setSelectedFsetIndex}
+                        featureScoreCache={featureScoreCache}
+                        fsetEnirchDetails={fsetEnirchDetails}
                       />
                     )}
                   </div>
@@ -1157,8 +1152,6 @@ export function ExplorerMode() {
                           fsetClusterRank={fsetClusterRank}
                           setFsetClusterRank={setFsetClusterRank}
                           fsetEnirchDetails={fsetEnirchDetails}
-                          selectedFsetColl={selectedFsetColl}
-                          setSelectedFsetColl={setSelectedFsetColl}
                           featureScores={featureScores}
                           setFeatureScores={setFeatureScores}
                           selectedFsetCluster={selectedFsetCluster}

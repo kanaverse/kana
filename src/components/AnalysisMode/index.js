@@ -254,8 +254,6 @@ export function AnalysisMode(props) {
   const [markersORFSets, setMarkersOrFsets] = useState("markers");
   // set feature set rank-type
   const [fsetClusterRank, setFsetClusterRank] = useState("cohen-min-rank");
-  // selected collection
-  const [selectedFsetColl, setSelectedFsetColl] = useState(null);
   // feature scores cache
   const [featureScores, setFeatureScores] = useState({});
   // which fset cluster is selected
@@ -604,46 +602,39 @@ export function AnalysisMode(props) {
             right: selectedFsetVSCluster,
             rank_type: fsetClusterRank,
             annotation: selectedFsetAnnotation,
-            collection: selectedFsetColl,
           },
         });
         add_to_logs("info", `--- computeFeaturesetVSSummary sent ---`);
       } else if (selectedFsetCluster !== null) {
-        // if (!(`${selectedFsetCluster}-${fsetClusterRank}` in fsetEnirchSummary)) {
         scranWorker.postMessage({
           type: "computeFeaturesetSummary",
           payload: {
             cluster: selectedFsetCluster,
             rank_type: fsetClusterRank,
             annotation: selectedFsetAnnotation,
-            collection: selectedFsetColl,
           },
         });
-        // }
         add_to_logs("info", `--- computeFeaturesetSummary sent ---`);
       }
     }
   }, [
     selectedFsetAnnotation,
-    selectedFsetColl,
     selectedFsetCluster,
     fsetClusterRank,
     selectedFsetVSCluster,
   ]);
 
-  // get feature scores for a set
+  // get feature score for a set
   useEffect(() => {
     if (
       reqFsetIndex != null &&
       selectedFsetCluster != null &&
-      selectedFsetColl !== null &&
       selectedFsetAnnotation !== null
     ) {
       scranWorker.postMessage({
         type: "getFeatureScores",
         payload: {
           index: reqFsetIndex,
-          collection: selectedFsetColl,
           annotation: selectedFsetAnnotation,
           cluster: selectedFsetCluster,
         },
@@ -657,22 +648,19 @@ export function AnalysisMode(props) {
   }, [
     reqFsetIndex,
     selectedFsetCluster,
-    selectedFsetColl,
     selectedFsetAnnotation,
   ]);
 
-  // get feature scores for a set
+  // get feature gene indices for a set
   useEffect(() => {
     if (
       reqFsetGeneIndex != null &&
-      selectedFsetCluster != null &&
-      selectedFsetColl !== null
+      selectedFsetCluster != null
     ) {
       scranWorker.postMessage({
         type: "getFeatureGeneIndices",
         payload: {
           index: reqFsetGeneIndex,
-          collection: selectedFsetColl,
           cluster: selectedFsetCluster,
           annotation: selectedFsetAnnotation,
           modality: selectedFsetModality,
@@ -685,7 +673,7 @@ export function AnalysisMode(props) {
         `--- Request feature set gene indices for feature index:${reqFsetGeneIndex} sent ---`
       );
     }
-  }, [reqFsetGeneIndex, selectedFsetCluster, selectedFsetColl]);
+  }, [reqFsetGeneIndex, selectedFsetCluster]);
 
   useEffect(() => {
     setGene(null);
@@ -1115,19 +1103,19 @@ export function AnalysisMode(props) {
     } else if (type === "KanaDB") {
       setIndexedDBState(false);
     } else if (type == "feature_set_enrichment_DATA") {
-      setFsetEnrichDetails(resp.details);
+      setFsetEnrichDetails(resp);
       setShowFsetLoader(false);
-      setSelectedFsetColl(Object.keys(resp.details)[0]);
     } else if (
       type === "computeFeaturesetSummary_DATA" ||
       type === "computeFeaturesetVSSummary_DATA"
     ) {
       let tmpsumm = { ...fsetEnirchSummary };
-      tmpsumm[`${selectedFsetCluster}-${fsetClusterRank}`] = resp;
+      tmpsumm[`${selectedFsetAnnotation}-${selectedFsetCluster}-${fsetClusterRank}`] = resp;
       setFsetEnrichSummary(tmpsumm);
 
-      setFeatureScoreCache(new Array(resp[selectedFsetColl].counts.length));
-      setFsetGeneIndxCache(new Array(resp[selectedFsetColl].counts.length));
+      let idMax = getMinMax(resp.set_ids);
+      setFeatureScoreCache(new Array(idMax[1]));
+      setFsetGeneIndxCache(new Array(idMax[1]));
     } else if (type === "setFeatureScores_DATA") {
       let tmp = [...featureScoreCache];
       tmp[reqFsetIndex] = resp;
@@ -1646,7 +1634,6 @@ export function AnalysisMode(props) {
                         setSelectedFsetIndex={setSelectedFsetIndex}
                         featureScoreCache={featureScoreCache}
                         fsetEnirchDetails={fsetEnirchDetails}
-                        selectedFsetColl={selectedFsetColl}
                       />
                     )}
                   </div>
@@ -1707,8 +1694,6 @@ export function AnalysisMode(props) {
                           fsetClusterRank={fsetClusterRank}
                           setFsetClusterRank={setFsetClusterRank}
                           fsetEnirchDetails={fsetEnirchDetails}
-                          selectedFsetColl={selectedFsetColl}
-                          setSelectedFsetColl={setSelectedFsetColl}
                           featureScores={featureScores}
                           setFeatureScores={setFeatureScores}
                           selectedFsetCluster={selectedFsetCluster}

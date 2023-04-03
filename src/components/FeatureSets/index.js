@@ -61,6 +61,10 @@ const FeatureSetEnrichment = (props) => {
 
   // stores range filters from UI
   const [fsetFilter, setFsetFilter] = useState({});
+
+  // collections selected
+  const [fsetCollFilter, setFsetCollFilter] = useState([]);
+
   // records after collection selection
   // const [selectedCollectionRecs, setSelectedCollectionRecs] = useState(null);
   // records to show after filtering
@@ -78,6 +82,73 @@ const FeatureSetEnrichment = (props) => {
 
     props?.setFsetWidth(width);
   }, [showCounts, showPvalues]);
+
+  const getRowWidths = () => {
+    let action = 52;
+    let rem_width = props?.fsetWidth - action - 35;
+    let widths = [];
+    if (showCounts) widths.push(Math.ceil(rem_width * 0.15));
+    if (showPvalues) widths.push(Math.ceil(rem_width * 0.15));
+
+    let current_total = widths.reduce((a, b) => a + b, 0);
+    let geneWidth = rem_width - current_total;
+
+    if (widths.length > 0)
+      return [geneWidth, widths.join("px "), `${action}px`].join("px ");
+
+    return [geneWidth, `${action}px`].join("px ");
+  };
+
+  const getTableHeight = () => {
+    let defheight = 273;
+    if (showFilters) defheight = 450;
+
+    if (props?.windowWidth < 1200) {
+      defheight += 270;
+    }
+
+    if (appMode === "explore") {
+      defheight += 15;
+    }
+
+    return `35px calc(100vh - ${defheight}px)`;
+  };
+
+  const handleFilter = (val, key) => {
+    let tmp = { ...fsetFilter };
+    tmp[key] = val;
+    setFsetFilter(tmp);
+  };
+
+  const createColorScale = (lower, upper) => {
+    if (lower > 0) {
+      return `linear-gradient(to right, yellow 0%, red 100%)`;
+    } else if (upper < 0) {
+      return `linear-gradient(to right, blue 0%, yellow 100%)`;
+    } else {
+      var limit = 0;
+      if (lower < 0) {
+        limit = -lower;
+      }
+      if (upper > 0 && upper > limit) {
+        limit = upper;
+      }
+      var scaler = d3
+        .scaleSequential(d3.interpolateRdYlBu)
+        .domain([limit, -limit]);
+
+      var leftcol = scaler(lower);
+      var rightcol = scaler(upper);
+      var midprop = Math.round((-lower / (upper - lower)) * 100);
+      return `linear-gradient(to right, ${leftcol} 0%, yellow ${midprop}%, ${rightcol} 100%)`;
+    }
+  };
+
+  useEffect(() => {
+    if ("collections" in props?.fsetEnirchDetails) {
+      setFsetCollFilter(props?.fsetEnirchDetails?.collections.names);
+    }
+  }, [props?.fsetEnirchDetails]);
 
   // update clusters when custom selection is made in the UI
   useEffect(() => {
@@ -147,19 +218,15 @@ const FeatureSetEnrichment = (props) => {
   ]);
 
   useEffect(() => {
-    if (props?.fsetEnirchDetails !== null && props?.selectedFsetColl !== null) {
+    if (props?.fsetEnirchDetails !== null) {
       if (
-        `${props?.selectedFsetCluster}-${props?.fsetClusterRank}` in
-          props?.fsetEnirchSummary &&
-        props?.selectedFsetColl in
-          props?.fsetEnirchSummary[
-            `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
-          ]
+        `${props?.selectedFsetAnnotation}-${props?.selectedFsetCluster}-${props?.fsetClusterRank}` in
+        props?.fsetEnirchSummary
       ) {
         let tcountMinMax = d3.extent(
           props?.fsetEnirchSummary[
-            `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
-          ][props?.selectedFsetColl]["counts"]
+            `${props?.selectedFsetAnnotation}-${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
+          ]["counts"]
         );
         let tcountval = tcountMinMax[1] === 0 ? 0.01 : tcountMinMax[1];
         setCountsMinMax([
@@ -169,8 +236,8 @@ const FeatureSetEnrichment = (props) => {
 
         let tpvalMinMax = d3.extent(
           props?.fsetEnirchSummary[
-            `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
-          ][props?.selectedFsetColl]["pvalues"]
+            `${props?.selectedFsetAnnotation}-${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
+          ]["pvalues"]
         );
         let tpvalval = tpvalMinMax[1] === 0 ? 0.01 : tpvalMinMax[1];
         setPValMinMax([
@@ -194,44 +261,58 @@ const FeatureSetEnrichment = (props) => {
         });
 
         let trecs = [];
+        let index_count = 0;
+        props?.fsetEnirchSummary[
+          `${props?.selectedFsetAnnotation}-${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
+        ].set_ids.map((x, i) => {
+          let skip = false;
 
-        props?.fsetEnirchDetails[props?.selectedFsetColl].names.map((x, i) => {
-          trecs.push({
-            orig_index: i,
-            name: x,
-            description:
-              props?.fsetEnirchDetails[props?.selectedFsetColl].descriptions[i],
-            size: props?.fsetEnirchDetails[props?.selectedFsetColl].sizes[i],
-            count:
-              props?.fsetEnirchSummary[
-                `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
-              ][props?.selectedFsetColl]["counts"][i],
-            pvalue:
-              props?.fsetEnirchSummary[
-                `${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
-              ][props?.selectedFsetColl]["pvalues"][i],
-            // fscores: props?.featureScoreCache[i],
-            // geneIndices: props?.fsetGeneIndxCache[i],
-            expanded: false,
-          });
+          if (
+            Array.isArray(fsetCollFilter) &&
+            !fsetCollFilter.includes(
+              props?.fsetEnirchDetails?.collections.names[
+                props?.fsetEnirchDetails?.sets?.collections[x]
+              ]
+            )
+          ) {
+            skip = true;
+          }
+
+          if (!skip) {
+            trecs.push({
+              set_id: x,
+              _index: index_count,
+              name: props?.fsetEnirchDetails?.sets?.names[x],
+              description: props?.fsetEnirchDetails?.sets?.descriptions[x],
+              size: props?.fsetEnirchDetails?.sets?.sizes[x],
+              count:
+                props?.fsetEnirchSummary[
+                  `${props?.selectedFsetAnnotation}-${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
+                ]["counts"][i],
+              pvalue:
+                props?.fsetEnirchSummary[
+                  `${props?.selectedFsetAnnotation}-${props?.selectedFsetCluster}-${props?.fsetClusterRank}`
+                ]["pvalues"][i],
+              // fscores: props?.featureScoreCache[i],
+              // geneIndices: props?.fsetGeneIndxCache[i],
+              expanded: false,
+            });
+
+            index_count += 1;
+          }
         });
 
-        let sortedRows = trecs.sort((a, b) => a.pvalue - b.pvalue);
-
-        sortedRows.forEach((x, i) => {
-          x._index = i;
-        });
-        setPreProsRecords(sortedRows);
+        setPreProsRecords(trecs);
       }
     }
-  }, [props?.fsetEnirchDetails, props?.fsetEnirchSummary]);
+  }, [props?.fsetEnirchDetails, props?.fsetEnirchSummary, fsetCollFilter]);
 
   useEffect(() => {
     if (preProsRecords !== null) {
       let tmp = [...preProsRecords];
       tmp.map((x, i) => {
-        x.fscores = props?.featureScoreCache[x.orig_index];
-        x.geneIndices = props?.fsetGeneIndxCache[x.orig_index];
+        x.fscores = props?.featureScoreCache[x.set_id];
+        x.geneIndices = props?.fsetGeneIndxCache[x.set_id];
       });
 
       setProsRecords(tmp);
@@ -263,67 +344,6 @@ const FeatureSetEnrichment = (props) => {
     );
     return tsortedRows;
   }, [prosRecords, searchInput, fsetFilter]);
-
-  const getRowWidths = () => {
-    let action = 52;
-    let rem_width = props?.fsetWidth - action - 35;
-    let widths = [];
-    if (showCounts) widths.push(Math.ceil(rem_width * 0.15));
-    if (showPvalues) widths.push(Math.ceil(rem_width * 0.15));
-
-    let current_total = widths.reduce((a, b) => a + b, 0);
-    let geneWidth = rem_width - current_total;
-
-    if (widths.length > 0)
-      return [geneWidth, widths.join("px "), `${action}px`].join("px ");
-
-    return [geneWidth, `${action}px`].join("px ");
-  };
-
-  const getTableHeight = () => {
-    let defheight = 323;
-    if (showFilters) defheight = 450;
-
-    if (props?.windowWidth < 1200) {
-      defheight += 270;
-    }
-
-    if (appMode === "explore") {
-      defheight += 15;
-    }
-
-    return `35px calc(100vh - ${defheight}px)`;
-  };
-
-  const handleFilter = (val, key) => {
-    let tmp = { ...fsetFilter };
-    tmp[key] = val;
-    setFsetFilter(tmp);
-  };
-
-  const createColorScale = (lower, upper) => {
-    if (lower > 0) {
-      return `linear-gradient(to right, yellow 0%, red 100%)`;
-    } else if (upper < 0) {
-      return `linear-gradient(to right, blue 0%, yellow 100%)`;
-    } else {
-      var limit = 0;
-      if (lower < 0) {
-        limit = -lower;
-      }
-      if (upper > 0 && upper > limit) {
-        limit = upper;
-      }
-      var scaler = d3
-        .scaleSequential(d3.interpolateRdYlBu)
-        .domain([limit, -limit]);
-
-      var leftcol = scaler(lower);
-      var rightcol = scaler(upper);
-      var midprop = Math.round((-lower / (upper - lower)) * 100);
-      return `linear-gradient(to right, ${leftcol} 0%, yellow ${midprop}%, ${rightcol} 100%)`;
-    }
-  };
 
   return (
     <div className="fsetenrich-container">
@@ -427,7 +447,7 @@ const FeatureSetEnrichment = (props) => {
                   <li>
                     <strong>
                       <em>Cohen's d</em>
-                    </strong>{" "}
+                    </strong>
                     is the ratio of the log-fold change to the average standard
                     deviation between two clusters.
                   </li>
@@ -449,10 +469,10 @@ const FeatureSetEnrichment = (props) => {
                     clusters.
                   </li>
                   <li>
-                    The{" "}
+                    The
                     <strong>
                       <em>Δ-detected</em>
-                    </strong>{" "}
+                    </strong>
                     is the difference in the detected proportions between two
                     clusters.
                   </li>
@@ -466,7 +486,7 @@ const FeatureSetEnrichment = (props) => {
                   <li>
                     <strong>
                       <em>mean</em>
-                    </strong>{" "}
+                    </strong>
                     uses the mean effect sizes from all pairwise comparisons.
                     This generally provides a good compromise between
                     exclusitivity and robustness.
@@ -474,7 +494,7 @@ const FeatureSetEnrichment = (props) => {
                   <li>
                     <strong>
                       <em>min</em>
-                    </strong>{" "}
+                    </strong>
                     uses the minimum effect size from all pairwise comparisons.
                     This promotes feature sets that are exclusively expressed in
                     the chosen cluster, but will perform poorly if no such genes
@@ -483,7 +503,7 @@ const FeatureSetEnrichment = (props) => {
                   <li>
                     <strong>
                       <em>min-rank</em>
-                    </strong>{" "}
+                    </strong>
                     ranks genes according to their best rank in each of the
                     individual pairwise comparisons. This is the most robust as
                     the combination of top-ranked genes will always be able to
@@ -503,7 +523,6 @@ const FeatureSetEnrichment = (props) => {
             ></Icon> */}
             <span> Rank feature sets by </span>
           </Popover2>
-          {"     "}
           <HTMLSelect
             onChange={(x) => {
               props?.setFsetClusterRank(x.currentTarget.value);
@@ -524,6 +543,48 @@ const FeatureSetEnrichment = (props) => {
             <option>delta-d-min-rank</option>
           </HTMLSelect>
         </span>
+        <Divider />
+        {"collections" in props?.fsetEnirchDetails &&
+          "sets" in props?.fsetEnirchDetails && (
+            <Label style={{ marginBottom: "3px" }}>
+              <H5>Filter collections</H5>
+              {props?.fsetEnirchDetails?.collections.names?.map((x, i) => {
+                return (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      gap: "5px",
+                    }}
+                  >
+                    <span>{x}</span>
+                    <Switch
+                      key={i}
+                      large={false}
+                      checked={fsetCollFilter.includes(x)}
+                      innerLabelChecked="hide"
+                      innerLabel="select"
+                      onChange={(e) => {
+                        let tmp = [...fsetCollFilter];
+                        if (e.target.checked === false) {
+                          if (tmp.includes(x)) {
+                            let idx = tmp.indexOf(x);
+                            tmp.splice(idx, 1);
+                          }
+                        } else {
+                          if (!tmp.includes(x)) {
+                            tmp.push(x);
+                          }
+                        }
+
+                        setFsetCollFilter(tmp);
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </Label>
+          )}
       </Collapse>
       <Divider />
       {appMode === "explore" && props?.modality != null && (
@@ -542,23 +603,6 @@ const FeatureSetEnrichment = (props) => {
           >
             {props?.modality.map((x, i) => (
               <option key={x} value={x}>
-                {x}
-              </option>
-            ))}
-          </HTMLSelect>
-        </Label>
-      )}
-      {props?.fsetEnirchDetails && (
-        <Label style={{ marginBottom: "3px" }}>
-          Choose Collection
-          <HTMLSelect
-            defaultValue={props?.selectedFsetColl}
-            onChange={(nval) => {
-              props?.setSelectedFsetColl(nval?.currentTarget?.value);
-            }}
-          >
-            {Object.keys(props?.fsetEnirchDetails).map((x, i) => (
-              <option value={x} key={i}>
                 {x}
               </option>
             ))}
@@ -947,9 +991,33 @@ const FeatureSetEnrichment = (props) => {
                     }
                   >
                     <strong style={{ color: "#147EB3", fontSize: "x-small" }}>
-                      {row.name}
+                      {row.name.match("^GO:[0-9]+$") ? (
+                        <a
+                          style={{ textDecoration: "underline dotted" }}
+                          href={
+                            "http://amigo.geneontology.org/amigo/term/" +
+                            row.name
+                          }
+                          target="_blank"
+                        >
+                          {row.name}
+                        </a>
+                      ) : (
+                        row.name
+                      )}
                     </strong>
-                    : {row.description} ({row.size} genes)
+                    : {" "}
+                    {row.description.match("^http[^ ]+$") ? (
+                      <a
+                        style={{ textDecoration: "underline dotted" }}
+                        href={row.description}
+                        target="_blank"
+                      >
+                        link to description
+                      </a>
+                    ) : (
+                      row.description
+                    )}
                   </span>
                   {showPvalues && (
                     <Popover2
@@ -1038,12 +1106,15 @@ const FeatureSetEnrichment = (props) => {
                         </Card>
                       }
                     >
-                      <Cell
-                        minmax={[0, 1]}
-                        colorscale={detectedScale}
-                        score={row.count / row.size}
-                        colorscore={row.count / row.size}
-                      />
+                      <div
+                        style={{
+                          textAlign: "center",
+                        }}
+                      >
+                        <span>
+                          {row.count}/{row.size}
+                        </span>
+                      </div>
                     </Popover2>
                   )}
                   <div className="fsetenrich-row-action">
@@ -1065,9 +1136,9 @@ const FeatureSetEnrichment = (props) => {
                           if (!tmprecs[row._index].expanded) {
                             props?.setFeatureSetGeneIndex(null);
                           } else {
-                            props?.setFeatureSetGeneIndex(row.orig_index);
+                            props?.setFeatureSetGeneIndex(row.set_id);
                             if (!rowGeneIndices) {
-                              props?.setReqFsetGeneIndex(row.orig_index);
+                              props?.setReqFsetGeneIndex(row.set_id);
                             }
                           }
                         }}
@@ -1078,29 +1149,27 @@ const FeatureSetEnrichment = (props) => {
                         small={true}
                         fill={false}
                         outlined={
-                          row.orig_index === props?.selectedFsetIndex
-                            ? false
-                            : true
+                          row.set_id === props?.selectedFsetIndex ? false : true
                         }
                         intent={
-                          row.orig_index === props?.selectedFsetIndex
+                          row.set_id === props?.selectedFsetIndex
                             ? "primary"
                             : null
                         }
                         className="row-action"
                         onClick={() => {
                           props?.setGene(null);
-                          if (row.orig_index === props?.selectedFsetIndex) {
+                          if (row.set_id === props?.selectedFsetIndex) {
                             props?.setSelectedFsetIndex(null);
                           } else {
-                            props?.setSelectedFsetIndex(row.orig_index);
+                            props?.setSelectedFsetIndex(row.set_id);
                             if (!rowScores) {
-                              props?.setReqFsetIndex(row.orig_index);
+                              props?.setReqFsetIndex(row.set_id);
                             }
                           }
                         }}
                       >
-                        <Icon icon={"tint"}></Icon>
+                        <Icon icon={"heatmap"}></Icon>
                       </Button>
                     </Tooltip2>
                   </div>
@@ -1168,7 +1237,12 @@ const FeatureSetEnrichment = (props) => {
                             lfcMinMax = getMinMax(rowGeneIndices.lfc),
                             meanMinMax = getMinMax(rowGeneIndices.means);
 
-                          const rgname = genesInfo[geneColSel["RNA"]][order];
+                          const rgname =
+                            appMode === "explore"
+                              ? genesInfo[
+                                  geneColSel[props?.selectedFsetModality]
+                                ][order]
+                              : genesInfo[geneColSel["RNA"]][order];
 
                           return (
                             <div className="fsetenrich-genelist-container">

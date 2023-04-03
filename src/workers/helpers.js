@@ -280,6 +280,16 @@ export async function fetchStepSummary(state, step) {
   } else if (step === "custom_selections") {
     return {};
   } else if (step === "feature_set_enrichment") {
-    return { details: state.feature_set_enrichment.fetchCollectionDetails() };
+    let collections = state.feature_set_enrichment.fetchCollectionDetails();
+    let sets = state.feature_set_enrichment.fetchSetDetails();
+    return { 
+        collections: collections,
+        sets: {
+            names: sets.names,
+            descriptions: sets.descriptions,
+            sizes: sets.sizes.slice(),
+            collections: sets.collections.slice()
+        }
+    }
   }
 }

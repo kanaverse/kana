@@ -1,5 +1,6 @@
 import * as bakana from "bakana";
 import * as scran from "scran.js";
+import * as gesel from "gesel";
 
 import * as kana_db from "./KanaDBHandler.js";
 import * as downloads from "./DownloadsDBHandler.js";
@@ -37,8 +38,24 @@ async function proxyAndCache(url) {
 remotes.ExperimentHubDataset.setDownloadFun(proxyAndCache);
 bakana.availableReaders["ExperimentHub"] = remotes.ExperimentHubDataset;
 bakana.CellLabellingState.setDownload(proxyAndCache);
-bakana.FeatureSetEnrichmentState.setDownload(proxyAndCache);
 bakana.RnaQualityControlState.setDownload(proxyAndCache);
+
+gesel.referenceDownload(async (file, start, end) => {
+  let url = gesel.referenceBaseUrl() + "/" + file;
+  let full = proxy + "/" + encodeURIComponent(url);
+  if (start == null && end == null) {
+    let buffer = await downloads.get(full);
+    return new Response(buffer);
+  } else {
+    return fetch(full + "?start=" + String(start) + "&end=" + String(end));
+  }
+});
+
+gesel.geneDownload(async (file) => {
+  let url = gesel.geneBaseUrl() + "/" + file;
+  let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
+  return new Response(buffer);
+});
 
 function createDataset(args) {
   if (args.format == "10X") {
@@ -337,22 +354,6 @@ onmessage = function (msg) {
         postError(type, err, fatal);
       });
 
-    try {
-      let collections = bakana.FeatureSetEnrichmentState.availableCollections;
-
-      postMessage({
-        type: "feature_set_enrichment_store",
-        resp: {
-          collections: collections,
-        },
-        msg: "Success: Feature set enrichment collections initialized",
-      });
-    } catch {
-      postMessage({
-        type: "feature_set_enrichment_ERROR",
-        msg: "Error: Cannot access Feature set enrichment collections",
-      });
-    }
     /**************** RUNNING AN ANALYSIS *******************/
   } else if (type == "RUN") {
     fatal = true;
@@ -921,7 +922,7 @@ onmessage = function (msg) {
   } else if (type == "computeFeaturesetSummary") {
     loaded
       .then(async (x) => {
-        let { annotation, rank_type, cluster, collection } = payload;
+        let { annotation, rank_type, cluster } = payload;
         let index = rank_type.indexOf("-");
         let resp;
         if (default_cluster === annotation) {
@@ -931,66 +932,42 @@ onmessage = function (msg) {
             rank_type.slice(0, index),
             rank_type.slice(index + 1)
           );
+          postSuccess("computeFeaturesetSummary", resp);
         } else if (default_selection === annotation) {
-          let fse;
-          try {
-            let sel_indices =
-              superstate.custom_selections.fetchSelectionIndices(cluster);
-            let num_cells = superstate.cell_filtering
-              .fetchFilteredMatrix()
-              .numberOfColumns();
+          let sel_indices =
+            superstate.custom_selections.fetchSelectionIndices(cluster);
+          let num_cells = superstate.cell_filtering
+            .fetchFilteredMatrix()
+            .numberOfColumns();
 
-            let arr_sel_indices = new Uint8Array(num_cells);
-            sel_indices.map((x) => arr_sel_indices.set([1], x));
-            let annotation_vec = scran.factorize(arr_sel_indices);
+          let arr_sel_indices = new Uint8Array(num_cells);
+          sel_indices.map((x) => arr_sel_indices.set([1], x));
+          let annotation_vec = scran.factorize(arr_sel_indices);
 
-            fse = new bakana.FeatureSetEnrichmentStandalone(
-              superstate["inputs"].fetchFeatureAnnotations()["RNA"]
-            );
+          let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+          let anno_markers = mds.fetchResults()["RNA"];
 
-            let defaults = bakana.FeatureSetEnrichmentState.defaults();
-            defaults.collections.push(collection);
-
-            await fse.setParameters(defaults);
-            let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
-            let anno_markers = mds.fetchResults()["RNA"];
-
-            resp = fse.computeEnrichment(
-              anno_markers,
-              annotation_vec.levels.indexOf(1),
-              rank_type.slice(0, index),
-              rank_type.slice(index + 1)
-            );
-          } finally {
-            fse.free();
-          }
+          resp = superstate.feature_set_enrichment.computeEnrichment(
+            anno_markers,
+            annotation_vec.levels.indexOf(1),
+            rank_type.slice(0, index),
+            rank_type.slice(index + 1)
+          );
+          postSuccess("computeFeaturesetSummary", resp);
         } else {
-          let fse;
-          try {
-            let annotation_vec = scran.factorize(getAnnotation(annotation));
-            fse = new bakana.FeatureSetEnrichmentStandalone(
-              superstate["inputs"].fetchFeatureAnnotations()["RNA"]
-            );
+          let annotation_vec = scran.factorize(getAnnotation(annotation));
 
-            let defaults = bakana.FeatureSetEnrichmentState.defaults();
-            defaults.collections.push(collection);
+          let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+          let anno_markers = mds.fetchResults()["RNA"];
 
-            await fse.setParameters(defaults);
-            let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
-
-            let anno_markers = mds.fetchResults()["RNA"];
-
-            resp = fse.computeEnrichment(
-              anno_markers,
-              annotation_vec.levels.indexOf(cluster),
-              rank_type.slice(0, index),
-              rank_type.slice(index + 1)
-            );
-          } finally {
-            fse.free();
-          }
+          resp = superstate.feature_set_enrichment.computeEnrichment(
+            anno_markers,
+            annotation_vec.levels.indexOf(cluster),
+            rank_type.slice(0, index),
+            rank_type.slice(index + 1)
+          );
+          postSuccess("computeFeaturesetSummary", resp);
         }
-        postSuccess("computeFeaturesetSummary", resp);
       })
       .catch((err) => {
         console.error(err);
@@ -999,7 +976,7 @@ onmessage = function (msg) {
   } else if (type == "computeFeaturesetVSSummary") {
     loaded
       .then(async (x) => {
-        let { annotation, rank_type, left, right, collection } = payload;
+        let { annotation, rank_type, left, right } = payload;
         let index = rank_type.indexOf("-");
         let resp;
         if (default_cluster === annotation) {
@@ -1010,62 +987,37 @@ onmessage = function (msg) {
             rank_type.slice(0, index),
             rank_type.slice(index + 1)
           );
+          postSuccess("computeFeaturesetVSSummary", resp);
         } else if (default_selection === annotation) {
-          let fse;
-          try {
-            fse = new bakana.FeatureSetEnrichmentStandalone(
-              superstate["inputs"].fetchFeatureAnnotations()["RNA"]
-            );
-
-            let defaults = bakana.FeatureSetEnrichmentState.defaults();
-            defaults.collections.push(collection);
-
-            await fse.setParameters(defaults);
-
-            let anno_markers = superstate.custom_selections.computeVersus(
-              left,
-              right
-            );
-
-            resp = fse.computeEnrichment(
-              anno_markers.results["RNA"],
-              0,
-              rank_type.slice(0, index),
-              rank_type.slice(index + 1)
-            );
-          } finally {
-            fse.free();
-          }
+          let anno_markers = superstate.custom_selections.computeVersus(
+            left,
+            right
+          );
+          resp = superstate.feature_set_enrichment.computeEnrichment(
+            anno_markers.results["RNA"],
+            0,
+            rank_type.slice(0, index),
+            rank_type.slice(index + 1)
+          );
+          postSuccess("computeFeaturesetVSSummary", resp);
         } else {
-          let fse;
-          try {
-            let annotation_vec = scran.factorize(getAnnotation(annotation));
-            fse = new bakana.FeatureSetEnrichmentStandalone(
-              superstate["inputs"].fetchFeatureAnnotations()["RNA"]
-            );
+          let annotation_vec = scran.factorize(getAnnotation(annotation));
 
-            let defaults = bakana.FeatureSetEnrichmentState.defaults();
-            defaults.collections.push(collection);
+          let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
 
-            await fse.setParameters(defaults);
-            let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+          let raw_res = mds.computeVersus(
+            annotation_vec.levels.indexOf(payload.left),
+            annotation_vec.levels.indexOf(payload.right)
+          );
 
-            let raw_res = mds.computeVersus(
-              annotation_vec.levels.indexOf(payload.left),
-              annotation_vec.levels.indexOf(payload.right)
-            );
-
-            resp = fse.computeEnrichment(
-              raw_res.results["RNA"],
-              raw_res.left,
-              rank_type.slice(0, index),
-              rank_type.slice(index + 1)
-            );
-          } finally {
-            fse.free();
-          }
+          resp = superstate.feature_set_enrichment.computeEnrichment(
+            raw_res.results["RNA"],
+            raw_res.left,
+            rank_type.slice(0, index),
+            rank_type.slice(index + 1)
+          );
+          postSuccess("computeFeaturesetVSSummary", resp);
         }
-        postSuccess("computeFeaturesetVSSummary", resp);
       })
       .catch((err) => {
         console.error(err);
@@ -1074,12 +1026,10 @@ onmessage = function (msg) {
   } else if (type === "getFeatureScores") {
     loaded
       .then((x) => {
-        let { collection, index } = payload;
+        let { index } = payload;
 
-        let resp = superstate.feature_set_enrichment.fetchPerCellScores(
-          collection,
-          index
-        );
+        let resp =
+          superstate.feature_set_enrichment.computePerCellScores(index);
         postSuccess("setFeatureScores", resp);
       })
       .catch((err) => {
@@ -1089,13 +1039,10 @@ onmessage = function (msg) {
   } else if (type === "getFeatureGeneIndices") {
     loaded
       .then((x) => {
-        let { collection, index, cluster, annotation, modality, rank_type } =
-          payload;
+        let { index, cluster, annotation, modality, rank_type } = payload;
 
-        let resp = superstate.feature_set_enrichment.fetchFeatureSetIndices(
-          collection,
-          index
-        );
+        let resp =
+          superstate.feature_set_enrichment.fetchFeatureSetIndices(index);
 
         let raw_res, marker_resp;
 
