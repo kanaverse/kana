@@ -32,7 +32,7 @@ import { ExplorerMode } from "./components/ExploreMode";
 import { AppContext } from "./context/AppContext";
 
 function App() {
-  const { appMode, setAppMode } = useContext(AppContext);
+  const { appMode, setAppMode, setLoadZiesel } = useContext(AppContext);
 
   return (
     <>
@@ -100,6 +100,7 @@ function App() {
                 className="frontpage-rowitem"
                 icon="function"
                 intent="primary"
+                style={{cursor:'pointer'}}
               >
                 <p>
                   Provide a single-cell dataset in one of the accepted formats
@@ -114,11 +115,28 @@ function App() {
                 className="frontpage-rowitem"
                 icon="geosearch"
                 intent="success"
+                style={{cursor:'pointer'}}
               >
                 <p>
                   Provide a pre-analyzed single-cell dataset in one of the
                   accepted formats and <strong>kana</strong> will load the
                   existing results into the browser for further exploration.
+                </p>
+              </Callout>
+              <Callout
+                title="I just want to try it out"
+                onClick={() => {
+                  setAppMode("analysis");
+                  setLoadZiesel(true);
+                }}
+                className="frontpage-rowitem"
+                icon="clean"
+                intent="warning"
+                style={{cursor:'pointer'}}
+              >
+                <p>
+                  Try out <strong>kana</strong> using the Zeisel mouse brain dataset from Bioconductor's ExperimentHub.
+                  No lock-in contract, no credit check required.
                 </p>
               </Callout>
             </div>

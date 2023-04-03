@@ -67,7 +67,7 @@ export function AnalysisMode(props) {
   const [loading, setLoading] = useState(true);
 
   // show various components, reacts to left side bar clicks
-  const [showPanel, setShowPanel] = useState(null);
+  const [showPanel, setShowPanel] = useState("new");
 
   // if a user is transitioning from inputs to params, the state is indeterminate,
   // let the user finish setting the params so we can finally run the analysis.
@@ -118,6 +118,8 @@ export function AnalysisMode(props) {
     setLoadParams,
     setInputFiles,
     setFsetEnrichCollections,
+    loadZiesel,
+    setLoadZiesel,
   } = useContext(AppContext);
 
   // modalities
@@ -645,18 +647,11 @@ export function AnalysisMode(props) {
         `--- Request feature set cell score for feature index:${reqFsetIndex} sent ---`
       );
     }
-  }, [
-    reqFsetIndex,
-    selectedFsetCluster,
-    selectedFsetAnnotation,
-  ]);
+  }, [reqFsetIndex, selectedFsetCluster, selectedFsetAnnotation]);
 
   // get feature gene indices for a set
   useEffect(() => {
-    if (
-      reqFsetGeneIndex != null &&
-      selectedFsetCluster != null
-    ) {
+    if (reqFsetGeneIndex != null && selectedFsetCluster != null) {
       scranWorker.postMessage({
         type: "getFeatureGeneIndices",
         payload: {
@@ -679,6 +674,28 @@ export function AnalysisMode(props) {
     setGene(null);
     setSelectedFsetIndex(null);
   }, [markersORFSets]);
+
+  // autoload an example dataset
+  useEffect(() => {
+    if (loadZiesel === true) {
+      setInputFiles({
+        batch: null,
+        subset: null,
+        files: {
+          "dataset-1": {
+            name: "dataset-1",
+            format: "ExperimentHub",
+            id: "zeisel-brain",
+            options: {
+              primaryRNAFeatureColumn: "id",
+            },
+          },
+        },
+      });
+
+      setShowPanel("results");
+    }
+  }, [loadZiesel]);
 
   function add_to_logs(type, msg, status) {
     let tmp = [...logs];
@@ -1110,7 +1127,9 @@ export function AnalysisMode(props) {
       type === "computeFeaturesetVSSummary_DATA"
     ) {
       let tmpsumm = { ...fsetEnirchSummary };
-      tmpsumm[`${selectedFsetAnnotation}-${selectedFsetCluster}-${fsetClusterRank}`] = resp;
+      tmpsumm[
+        `${selectedFsetAnnotation}-${selectedFsetCluster}-${fsetClusterRank}`
+      ] = resp;
       setFsetEnrichSummary(tmpsumm);
 
       let idMax = getMinMax(resp.set_ids);
@@ -1766,51 +1785,22 @@ export function AnalysisMode(props) {
               </div>
               <div className="frontpage-row">
                 <Callout
-                  title="Start a New Analysis"
+                  title="Start a new analysis"
                   onClick={() => setShowPanel("new")}
                   className="frontpage-rowitem"
                   icon="plus"
                   intent="primary"
+                  style={{ cursor: "pointer" }}
                 >
                   <p>
-                    In this mode, <strong>kana</strong> performs a standard
-                    single-cell data analysis directly inside the browser.
-                  </p>
-                  <p>
-                    With just a few clicks, you can get a UMAP/t-SNE, clusters
-                    and their marker genes in an intuitive interface for further
-                    exploration. No need to transfer data, no need to install
-                    software, no need to configure a backend server - just point
-                    to one of our supported file formats and we'll analyze{" "}
-                    <strong>
-                      <em>your</em>
-                    </strong>{" "}
-                    data on{" "}
-                    <strong>
-                      <em>your</em>
-                    </strong>{" "}
-                    computer, no questions asked.
+                    Analyze one or more datasets in a variety of supported
+                    formats (Matrix Market, H5AD, RDS). Get started now!
                   </p>
                 </Callout>
                 <Callout
                   title="Wanna tryout Kana?"
                   onClick={() => {
-                    setInputFiles({
-                      batch: null,
-                      subset: null,
-                      files: {
-                        "dataset-1": {
-                          name: "dataset-1",
-                          format: "ExperimentHub",
-                          id: "zeisel-brain",
-                          options: {
-                            primaryRNAFeatureColumn: "id",
-                          },
-                        },
-                      },
-                    });
-
-                    setShowPanel("results");
+                    setLoadZiesel(true);
                   }}
                   className="frontpage-rowitem"
                   icon="random"

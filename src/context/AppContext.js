@@ -191,6 +191,9 @@ const AppContextProvider = ({ children }) => {
   // params from worker for stored analysis (kana file)
   const [loadParams, setLoadParams] = useState(null);
 
+  // auto load the ziesel dataset
+  const [loadZiesel, setLoadZiesel] = useState(false);
+
   return (
     <AppContext.Provider
       value={{
@@ -230,6 +233,8 @@ const AppContextProvider = ({ children }) => {
         setAppMode,
         fsetEnrichCollections,
         setFsetEnrichCollections,
+        loadZiesel,
+        setLoadZiesel,
       }}
     >
       {children}
