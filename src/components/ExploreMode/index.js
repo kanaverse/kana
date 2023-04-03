@@ -1093,6 +1093,10 @@ export function ExplorerMode() {
                         colorByAnnotation={colorByAnnotation}
                         setColorByAnnotation={setColorByAnnotation}
                         selectedModality={selectedModality}
+                        selectedFsetIndex={selectedFsetIndex}
+                        setSelectedFsetIndex={setSelectedFsetIndex}
+                        featureScoreCache={featureScoreCache}
+                        fsetEnirchDetails={fsetEnirchDetails}
                       />
                     )}
                   </div>

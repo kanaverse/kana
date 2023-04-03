@@ -222,6 +222,14 @@ onmessage = function (msg) {
 
             let finput = files[k];
 
+            if (!finput.options.normalized) {
+              for (const k of dataset.matrix.available()) {
+                let mat = dataset.matrix.get(k);
+                let lnorm = scran.logNormCounts(mat, {allowZeros: true});
+                dataset.matrix.add(k, lnorm);
+              }
+            }
+
             let step_inputs = "inputs";
             postAttempt(step_inputs);
             let step_inputs_resp = {
@@ -423,7 +431,7 @@ onmessage = function (msg) {
         let row_idx = payload.gene;
         let modality = payload.modality.toLowerCase();
 
-        var vec = dataset.matrix.get(modality).row(row_idx)
+        var vec = dataset.matrix.get(modality).row(row_idx);
 
         postMessage(
           {
@@ -701,7 +709,8 @@ onmessage = function (msg) {
       }
 
       feature_set_enrich_state = new bakana.FeatureSetEnrichmentStandalone(
-        dataset.features[modality]
+        dataset.features[modality],
+        { normalized: dataset.matrix.get(modality) }
       );
 
       feature_set_enrich_state.ready().then((x) => {
