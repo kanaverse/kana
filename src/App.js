@@ -32,7 +32,7 @@ import { ExplorerMode } from "./components/ExploreMode";
 import { AppContext } from "./context/AppContext";
 
 function App() {
-  const { appMode, setAppMode } = useContext(AppContext);
+  const { appMode, setAppMode, setLoadZiesel } = useContext(AppContext);
 
   return (
     <>
@@ -125,7 +125,10 @@ function App() {
               </Callout>
               <Callout
                 title="I just want to try it out"
-                onClick={() => {}}
+                onClick={() => {
+                  setAppMode("analysis");
+                  setLoadZiesel(true);
+                }}
                 className="frontpage-rowitem"
                 icon="clean"
                 intent="warning"

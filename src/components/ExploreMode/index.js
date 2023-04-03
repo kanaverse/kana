@@ -65,7 +65,7 @@ export function ExplorerMode() {
   const [loading, setLoading] = useState(true);
 
   // show various components, reacts to left side bar clicks
-  const [showPanel, setShowPanel] = useState(null);
+  const [showPanel, setShowPanel] = useState("explore-import");
 
   // if a user is transitioning from inputs to params, the state is indeterminate,
   // let the user finish setting the params so we can finally run the analysis.
