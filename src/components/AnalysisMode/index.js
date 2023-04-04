@@ -27,6 +27,7 @@ import {
   ResizeEntry,
   ResizeSensor,
   Callout,
+  Spinner,
 } from "@blueprintjs/core";
 
 import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
@@ -1486,15 +1487,36 @@ export function AnalysisMode(props) {
                 intent={showPanel === "logs" ? "primary" : "none"}
               >
                 <div className="item-button-group">
-                  <Button
-                    outlined={false}
-                    large={false}
-                    minimal={true}
-                    fill={true}
-                    icon={"console"}
-                    onClick={() => setShowLogs(true)}
-                    intent={showPanel === "logs" ? "primary" : "none"}
-                  ></Button>
+                  {!showQCLoader &&
+                  !showPCALoader &&
+                  !showNClusLoader &&
+                  !showCellLabelLoader &&
+                  !showMarkerLoader &&
+                  !showDimPlotLoader ? (
+                    <Button
+                      outlined={false}
+                      large={false}
+                      minimal={true}
+                      fill={true}
+                      icon={"console"}
+                      onClick={() => setShowLogs(true)}
+                      intent={showPanel === "logs" ? "primary" : "none"}
+                    ></Button>
+                  ) : (
+                    <Button
+                      outlined={false}
+                      large={false}
+                      minimal={true}
+                      fill={true}
+                      onClick={() => setShowLogs(true)}
+                      intent={showPanel === "logs" ? "primary" : "none"}
+                    >
+                      <div style={{ display: "flex" }}>
+                        <Spinner size={20} intent="warning" />
+                      </div>
+                    </Button>
+                  )}
+
                   <span
                     onClick={() => setShowLogs(true)}
                     style={{

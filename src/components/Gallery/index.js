@@ -364,8 +364,7 @@ const Gallery = (props) => {
           data: x,
           content: (
             <UDimPlot
-              tsneData={props?.tsneData}
-              umapData={props?.umapData}
+              embeddata={props?.redDimsData[x.config.embedding]}
               selectedPoints={props?.selectedPoints}
               setSelectedPoints={props?.setSelectedPoints}
               highlightPoints={props?.highlightPoints}

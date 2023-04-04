@@ -100,7 +100,7 @@ function App() {
                 className="frontpage-rowitem"
                 icon="function"
                 intent="primary"
-                style={{cursor:'pointer'}}
+                style={{ cursor: "pointer" }}
               >
                 <p>
                   Provide a single-cell dataset in one of the accepted formats
@@ -115,7 +115,7 @@ function App() {
                 className="frontpage-rowitem"
                 icon="geosearch"
                 intent="success"
-                style={{cursor:'pointer'}}
+                style={{ cursor: "pointer" }}
               >
                 <p>
                   Provide a pre-analyzed single-cell dataset in one of the
@@ -132,11 +132,21 @@ function App() {
                 className="frontpage-rowitem"
                 icon="clean"
                 intent="warning"
-                style={{cursor:'pointer'}}
+                style={{ cursor: "pointer" }}
               >
                 <p>
-                  Try out <strong>kana</strong> using the Zeisel mouse brain dataset from Bioconductor's ExperimentHub.
-                  No lock-in contract, no credit check required.
+                  Try out <strong>kana</strong> using the Zeisel mouse brain
+                  dataset from Bioconductor's ExperimentHub. No lock-in
+                  contract, no credit check required.
+                </p>
+                <p>
+                  or download one of our test datasets{" "}
+                  <a
+                    target="_blank"
+                    href="https://github.com/kanaverse/random-test-files/releases"
+                  >
+                    from here.
+                  </a>
                 </p>
               </Callout>
             </div>

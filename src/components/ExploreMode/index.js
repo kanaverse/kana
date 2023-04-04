@@ -27,6 +27,7 @@ import {
   ResizeSensor,
   H3,
   Callout,
+  Spinner,
 } from "@blueprintjs/core";
 
 import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
@@ -247,8 +248,7 @@ export function ExplorerMode() {
   // which fset cluster is selected
   const [selectedFsetCluster, setSelectedFsetCluster] = useState(null);
   // which  fset annotation, currently we only support computed clusters
-  const [selectedFsetAnnotation, setSelectedFsetAnnotation] =
-    useState(null);
+  const [selectedFsetAnnotation, setSelectedFsetAnnotation] = useState(null);
   // what feature name is selected
   const [selectedFsetIndex, setSelectedFsetIndex] = useState(null);
   // request feature set scores
@@ -515,18 +515,11 @@ export function ExplorerMode() {
         `--- Request feature set cell score for feature index:${reqFsetIndex} sent ---`
       );
     }
-  }, [
-    reqFsetIndex,
-    selectedFsetCluster,
-    selectedFsetAnnotation,
-  ]);
+  }, [reqFsetIndex, selectedFsetCluster, selectedFsetAnnotation]);
 
   // get feature scores for a set
   useEffect(() => {
-    if (
-      reqFsetGeneIndex != null &&
-      selectedFsetCluster != null
-    ) {
+    if (reqFsetGeneIndex != null && selectedFsetCluster != null) {
       scranWorker.postMessage({
         type: "getFeatureGeneIndices",
         payload: {
@@ -737,7 +730,9 @@ export function ExplorerMode() {
       type === "computeFeaturesetVSSummary_DATA"
     ) {
       let tmpsumm = { ...fsetEnirchSummary };
-      tmpsumm[`${selectedFsetAnnotation}-${selectedFsetCluster}-${fsetClusterRank}`] = resp;
+      tmpsumm[
+        `${selectedFsetAnnotation}-${selectedFsetCluster}-${fsetClusterRank}`
+      ] = resp;
       setFsetEnrichSummary(tmpsumm);
 
       let idMax = getMinMax(resp.set_ids);
@@ -945,15 +940,30 @@ export function ExplorerMode() {
                 intent={showPanel === "logs" ? "primary" : "none"}
               >
                 <div className="item-button-group">
-                  <Button
-                    outlined={false}
-                    large={false}
-                    minimal={true}
-                    fill={true}
-                    icon={"console"}
-                    onClick={() => setShowLogs(true)}
-                    intent={showPanel === "logs" ? "primary" : "none"}
-                  ></Button>
+                  {!showMarkerLoader && !showDimPlotLoader ? (
+                    <Button
+                      outlined={false}
+                      large={false}
+                      minimal={true}
+                      fill={true}
+                      icon={"console"}
+                      onClick={() => setShowLogs(true)}
+                      intent={showPanel === "logs" ? "primary" : "none"}
+                    ></Button>
+                  ) : (
+                    <Button
+                      outlined={false}
+                      large={false}
+                      minimal={true}
+                      fill={true}
+                      onClick={() => setShowLogs(true)}
+                      intent={showPanel === "logs" ? "primary" : "none"}
+                    >
+                      <div style={{ display: "flex" }}>
+                        <Spinner size={20} intent="warning" />
+                      </div>
+                    </Button>
+                  )}
                   <span
                     onClick={() => setShowLogs(true)}
                     style={{
