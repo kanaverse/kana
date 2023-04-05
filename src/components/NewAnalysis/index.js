@@ -38,18 +38,12 @@ import { code } from "../../utils/utils";
 import { H5AD } from "./H5ADCard";
 import { RDSSE } from "./RDSSECard";
 
-export function NewAnalysis({
-  open,
-  setOpen,
-  setShowPanel,
-  setStateIndeterminate,
-  ...props
-}) {
+export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   // close the entire panel
   const handleClose = () => {
     setNewInputs([]);
     setInputOptions([]);
-    setOpen(false);
+    setOpenInfo(true);
   };
 
   const initTmpFile = () => {
@@ -942,14 +936,14 @@ export function NewAnalysis({
       </div>
       <Divider />
       <div className="section-footer">
-        <Tooltip2 content="Cancel Analysis" placement="left">
+        <Tooltip2 content="Clear loaded datasets" placement="left">
           <Button
             icon="cross"
             intent={"danger"}
             large={true}
             onClick={handleClose}
           >
-            Cancel
+            Clear
           </Button>
         </Tooltip2>
         {newInputs.length > 0 && (
