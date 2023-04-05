@@ -59,19 +59,29 @@ gesel.geneDownload(async (file) => {
 
 function createDataset(args) {
   if (args.format == "10X") {
-    return new bakana.TenxHdf5Dataset(args.h5);
+    return new bakana.TenxHdf5Dataset(
+      args.h5,
+      args.options ? args.options : {}
+    );
   } else if (args.format == "MatrixMarket") {
     return new bakana.TenxMatrixMarketDataset(
       args.mtx,
       args.genes || null,
-      args.annotations || null
+      args.annotations || null,
+      args.options ? args.options : {}
     );
   } else if (args.format == "H5AD") {
-    return new bakana.H5adDataset(args.h5);
+    return new bakana.H5adDataset(args.h5, args.options ? args.options : {});
   } else if (args.format == "SummarizedExperiment") {
-    return new bakana.SummarizedExperimentDataset(args.rds);
+    return new bakana.SummarizedExperimentDataset(
+      args.rds,
+      args.options ? args.options : {}
+    );
   } else if (args.format == "ExperimentHub") {
-    return new remotes.ExperimentHubDataset(args.id);
+    return new remotes.ExperimentHubDataset(
+      args.id,
+      args.options ? args.options : {}
+    );
   } else {
     throw new Error("unknown format '" + args.format + "'");
   }
@@ -96,6 +106,7 @@ function summarizeDataset(summary, args) {
       tmod_summary[k] = bakana.summarizeArray(
         summary["all_features"].column(k)
       );
+      tmod_summary[k]["_all_"] = summary["all_features"].column(k);
     }
     tmp_meta["all_features"] = {
       columns: tmod_summary,
@@ -112,6 +123,7 @@ function summarizeDataset(summary, args) {
             continue;
           }
           tmod_summary[k] = bakana.summarizeArray(v.column(k));
+          tmod_summary[k]["_all_"] = v.column(k);
         }
         tmp_meta["modality_features"][k] = {
           columns: tmod_summary,
@@ -126,6 +138,7 @@ function summarizeDataset(summary, args) {
         let tmod_summary = {};
         for (const k of v.columnNames()) {
           tmod_summary[k] = bakana.summarizeArray(v.column(k));
+          tmod_summary[k]["_all_"] = v.column(k);
         }
         tmp_meta["modality_features"][k] = {
           columns: tmod_summary,

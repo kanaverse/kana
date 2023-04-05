@@ -47,6 +47,7 @@ export function RDSSE({
   const [dsMeta, setDsMeta] = useState(null);
   const [options, setOptions] = useState({});
   const [collapse, setCollapse] = useState(true);
+  const [init2, setInit2] = useState(true);
 
   // when preflight is available
   useEffect(() => {
@@ -54,8 +55,11 @@ export function RDSSE({
       setDsMeta(preflight);
 
       // set some defaults
-      let tmpOptions = guessModalities(preflight);
-      setOptions(tmpOptions);
+      if (init2) {
+        let tmpOptions = guessModalities(preflight);
+        setOptions(tmpOptions);
+        setInit2(false);
+      }
     }
   }, [preflight]);
 
@@ -315,15 +319,7 @@ export function RDSSE({
                           <strong>{mod} Feature ID</strong>
                         </Text>
                         <HTMLSelect
-                          defaultValue={
-                            options?.[`${mod.toLowerCase()}Experiment`]
-                              ? Object.keys(
-                                  dsMeta.modality_features[
-                                    options?.[`${mod.toLowerCase()}Experiment`]
-                                  ]?.["columns"]
-                                )[0]
-                              : null
-                          }
+                          defaultValue="none"
                           onChange={(e) => {
                             if (e.target.value) {
                               let tmpOptions = { ...options };
@@ -346,6 +342,7 @@ export function RDSSE({
                             }
                           }}
                         >
+                          <option value="none">rownames</option>
                           {dsMeta.modality_features[
                             options?.[`${mod.toLowerCase()}Experiment`]
                           ]?.["columns"] &&

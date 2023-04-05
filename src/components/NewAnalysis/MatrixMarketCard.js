@@ -48,6 +48,7 @@ export function MatrixMarket({
   const [dsMeta, setDsMeta] = useState(null);
   const [options, setOptions] = useState({});
   const [collapse, setCollapse] = useState(true);
+  const [init2, setInit2] = useState(true);
 
   // when preflight is available
   useEffect(() => {
@@ -55,8 +56,11 @@ export function MatrixMarket({
       setDsMeta(preflight);
 
       // set some defaults
-      let tmpOptions = guessModalities(preflight);
-      setOptions(tmpOptions);
+      if (init2) {
+        let tmpOptions = guessModalities(preflight);
+        setOptions(tmpOptions);
+        setInit2(false);
+      }
     }
   }, [preflight]);
 
@@ -226,28 +230,7 @@ export function MatrixMarket({
                           <strong>{mod} Feature ID</strong>
                         </Text>
                         <HTMLSelect
-                          defaultValue={
-                            options?.[
-                              `featureType${
-                                mod.toLowerCase().charAt(0).toUpperCase() +
-                                mod.toLowerCase().slice(1)
-                              }Name`
-                            ]
-                              ? Object.keys(
-                                  dsMeta.modality_features[
-                                    options?.[
-                                      `featureType${
-                                        mod
-                                          .toLowerCase()
-                                          .charAt(0)
-                                          .toUpperCase() +
-                                        mod.toLowerCase().slice(1)
-                                      }Name`
-                                    ]
-                                  ]?.["columns"]
-                                )[0]
-                              : null
-                          }
+                          defaultValue="none"
                           onChange={(e) => {
                             if (e.target.value) {
                               let tmpOptions = { ...options };
@@ -270,6 +253,7 @@ export function MatrixMarket({
                             }
                           }}
                         >
+                          <option value="none">rownames</option>
                           {dsMeta.modality_features[
                             options?.[
                               `featureType${

@@ -47,6 +47,7 @@ export function H5AD({
   const [dsMeta, setDsMeta] = useState(null);
   const [options, setOptions] = useState({});
   const [collapse, setCollapse] = useState(true);
+  const [init2, setInit2] = useState(true);
 
   // when preflight is available
   useEffect(() => {
@@ -54,10 +55,12 @@ export function H5AD({
       setDsMeta(preflight);
 
       // set some defaults
-      // set some defaults
-      let tmpOptions = {};
-      tmpOptions["countMatrixName"] = preflight.all_assay_names[0];
-      setOptions(tmpOptions);
+      if (init2) {
+        let tmpOptions = {};
+        tmpOptions["countMatrixName"] = preflight.all_assay_names[0];
+        setOptions(tmpOptions);
+        setInit2(false);
+      }
     }
   }, [preflight]);
 
@@ -314,14 +317,7 @@ export function H5AD({
                               <strong>{mod} Feature ID</strong>
                             </Text>
                             <HTMLSelect
-                              defaultValue={
-                                options?.[
-                                  `primaryRna${
-                                    mod.toLowerCase().charAt(0).toUpperCase() +
-                                    mod.toLowerCase().slice(1)
-                                  }FeatureIdColumn`
-                                ]
-                              }
+                              defaultValue="none"
                               onChange={(e) => {
                                 if (e.target.value) {
                                   let tmpOptions = { ...options };
@@ -350,6 +346,7 @@ export function H5AD({
                                 }
                               }}
                             >
+                              <option value="none">rownames</option>
                               {dsMeta.all_features &&
                                 Object.keys(dsMeta.all_features["columns"]).map(
                                   (x, i) => (

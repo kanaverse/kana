@@ -47,6 +47,7 @@ export function ExperimentHub({
   const [dsMeta, setDsMeta] = useState(null);
   const [options, setOptions] = useState({});
   const [collapse, setCollapse] = useState(true);
+  const [init2, setInit2] = useState(true);
 
   // when preflight is available
   useEffect(() => {
@@ -54,14 +55,17 @@ export function ExperimentHub({
       setDsMeta(preflight);
 
       // set some defaults
-      let tmpOptions = {};
-      for (const [k, v] of Object.entries(preflight.modality_features)) {
-        if (k.toLowerCase().indexOf("rna") > -1) {
-          tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
+      if (init2) {
+        let tmpOptions = {};
+        for (const [k, v] of Object.entries(preflight.modality_features)) {
+          if (k.toLowerCase().indexOf("rna") > -1) {
+            tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
+          }
         }
-      }
 
-      setOptions(tmpOptions);
+        setOptions(tmpOptions);
+        setInit2(false);
+      }
     }
   }, [preflight]);
 
@@ -120,15 +124,14 @@ export function ExperimentHub({
                   <span>Primary RNA Feature ID</span>
                 </Text>
                 <HTMLSelect
-                  defaultValue={
-                    Object.keys(dsMeta.modality_features["RNA"]["columns"])[0]
-                  }
+                  defaultValue="none"
                   onChange={(e) => {
                     let tmpOptions = { ...options };
                     tmpOptions["primaryRnaFeatureIdColumn"] = e.target.value;
                     setOptions(tmpOptions);
                   }}
                 >
+                  <option value="none">rownames</option>
                   {Object.keys(dsMeta.modality_features["RNA"]["columns"]).map(
                     (x, i) => (
                       <option key={i} value={x}>
