@@ -17,6 +17,8 @@ import {
   NumericInput,
   Checkbox,
   ButtonGroup,
+  Tabs,
+  Tab,
 } from "@blueprintjs/core";
 
 import "./index.css";
@@ -39,7 +41,7 @@ export function ParameterSelection({
   const [openInfo, setOpenInfo] = useState(true);
 
   // which helper to show? (on the right info box)
-  const [showStepHelper, setShowStepHelper] = useState(null);
+  const [showStepHelper, setShowStepHelper] = useState("rnaqc");
 
   // expand RNA section?
   const [showRNA, setShowRNA] = useState(true);
@@ -47,7 +49,7 @@ export function ParameterSelection({
   const [showCRISPR, setShowCRISPR] = useState(true);
 
   // access app context
-  const { params, setParams, fsetEnrichCollections } = useContext(AppContext);
+  const { params, setParams, fsetEnrichCollections, inputFiles, preInputFiles, preInputOptionsStatus } = useContext(AppContext);
 
   // new params, so that they can be discarded later
   const [tmpParams, setTmpParams] = useState(params);
@@ -56,6 +58,24 @@ export function ParameterSelection({
     setStateIndeterminate(false);
     setParams(tmpParams);
     setShowPanel("results");
+  };
+
+  const hasMultipleBatches = () => {
+    return (!!inputFiles.files) ?
+      (
+        Object.keys(inputFiles.files).length == 1 &&
+        typeof inputFiles.batch !== "string"
+      )
+      :
+      (
+        !!preInputFiles &&
+        Object.keys(preInputFiles.files).length == 1 &&
+        typeof preInputFiles.batch !== "string"
+      )
+  };
+
+  const missingModality = (x) => {
+      return !!preInputOptionsStatus && !(x in preInputOptionsStatus);
   };
 
   const render_stepinfo = () => {
@@ -80,6 +100,13 @@ export function ParameterSelection({
               that most cells in the dataset are of acceptable quality.
             </p>
             <p>
+              <strong>Filter cells</strong>: 
+              Skip all quality control on the RNA count
+              matrix. This is occasionally desirable if the input data has
+              already been subjected to QC (e.g., as part of a published paper),
+              in which case no further filtering should be applied.
+            </p>
+            <p>
               <strong>Number of MADs</strong>: Number of median absolute
               deviations (MADs) from the median, used to define a filter
               threshold in the appropriate direction for each QC metric.
@@ -90,26 +117,19 @@ export function ParameterSelection({
               identify mitochondrial genes in the dataset based on the{" "}
               <a
                 target="_blank"
-                href="https://github.com/kanaverse/bakana/blob/master/src/steps/mito.js"
+                href="https://github.com/kanaverse/kana-special-features"
               >
                 <strong>
-                  in-built list of Ensembl identifiers and gene symbols for
-                  mitochondrial genes in human and mouse genomes?
+                  in-built lists
                 </strong>
               </a>{" "}
-              This assumes that the dataset contains feature annotation with
-              Ensembl identifiers or gene symbols.
+              of Ensembl/Entrez identifiers and gene symbols for
+              mitochondrial genes in various species?
             </p>
             <p>
               <strong>Mitochondrial gene prefix</strong>: Prefix to use to
               identify the mitochondrial genes from the feature annotation. Only
               used if we choose to not use the default mitochondrial list.
-            </p>
-            <p>
-              <strong>Skip</strong>: Skip all quality control on the RNA count
-              matrix. This is occasionally desirable if the input data has
-              already been subjected to QC (e.g., as part of a published paper),
-              in which case no further filtering should be applied.
             </p>
           </Callout>
         )}
@@ -117,11 +137,11 @@ export function ParameterSelection({
           <Callout intent="primary">
             <p>
               Identify highly variable genes (HVGs) while accounting for the
-              mean-variance relationship. We do so by fitting a mean-dependent
+              mean-variance relationship of count-based data. We do so by fitting a mean-dependent
               trend to the variances computed from the log-transformed
               normalized expression values. HVGs are defined as those genes with
               the largest positive residuals from the trend, as these are more
-              variable than expected from the trend. The aim is to only use the
+              variable than the majority of genes at the same abundance. The aim is to only use the
               HVGs in some downstream steps like the principal components
               analysis, thereby improving computational efficiency and reducing
               uninteresting technical noise.
@@ -137,7 +157,7 @@ export function ParameterSelection({
         {showStepHelper === "rnapca" && (
           <Callout intent="primary">
             <p>
-              Perform a principal components analysis (PCA) to obtain per-cell
+              Perform a principal components analysis (PCA) on the log-normalized RNA expresssion values to obtain per-cell
               coordinates in a low-dimensional space. Specifically, we obtain a
               compact representation of the dataset by only taking the top
               principal components (PCs) that explain the largest variance. This
@@ -176,39 +196,52 @@ export function ParameterSelection({
             </p>
             <p>
               <strong>Method</strong>: Clustering algorithm to use. Currently,
-              we support k-means clustering with kmeans++ initialization and
-              Hartigon-Wong refinement; or multi-level community detection on an
+              we support k-means clustering with initialization by PCA partitioning 
+              and Hartigon-Wong refinement; or multi-level community detection on an
               shared nearest neighbor (SNN) graph, where the cells are the nodes
               and edges are created between neighboring cells.
             </p>
+            <p>For k-means clustering, we can set the additional parameter:</p>
             <p>
-              <strong>Number of clusters (k-means)</strong>: Number of clusters
+              <strong>Number of clusters</strong>: Number of clusters
               to create in k-means clustering. This is capped at 40 for
               performance purposes.
             </p>
+            <p>For SNN-based clustering, we can set the additional parameters:</p>
             <p>
-              <strong>Number of neighbors (SNN)</strong>: Number of neighbors to
+              <strong>Number of neighbors</strong>: Number of neighbors to
               use to construct the SNN graph. Larger values result in broader
               clusters.
             </p>
             <p>
-              <strong>Use ANN (SNN)</strong>: Use an approximate method to speed
-              up the nearest neighbor search. This sacrifices some accuracy for
-              speed in larger datasets.
-            </p>
-            <p>
-              <strong>Weighting scheme (SNN)</strong>: Weighting scheme to use
+              <strong>Weighting scheme</strong>: Weighting scheme to use
               for the edges of the SNN graph. The <em>Rank</em> approach derives
               a weight from the rank of the closest shared neighbor; the{" "}
               <em>Number</em> approach uses the number of shared neighbors; and
-              the Jaccard approach uses the <em>Jaccard</em> index of the
+              the <em>Jaccard</em> approach uses the Jaccard index of the
               neighbor sets.
             </p>
             <p>
-              <strong>Resolution (SNN)</strong>: Resolution parameter for the
+              <strong>Community detection</strong>: Algorithm to use to detect
+              communities (i.e., clusters) from the SNN graph. Each algorithm 
+              has its own parameters that determine the granularity of the resulting
+              clusters.
+            </p>
+            <p>
+              <strong>Multilevel resolution</strong>: Resolution parameter for the
               multi-level clustering, used to adjust the modularity calculation
               during community optimization. Larger values yield more
               fine-grained clusters.
+            </p>
+            <p>
+              <strong>Leiden resolution</strong>: Resolution parameter for the
+              Leiden clustering, used to adjust the modularity calculation
+              during community optimization. Larger values yield more
+              fine-grained clusters.
+            </p>
+            <p>
+              <strong>Walktrap steps</strong>: Number of steps for the
+              walktrap algorithm.  Larger values generally yield broader clusters.
             </p>
           </Callout>
         )}
@@ -228,7 +261,7 @@ export function ParameterSelection({
               embedding.
             </p>
             <p>
-              <strong>Iterations</strong>: Number of t-SNE iterations. Doesn't
+              <strong>Number of iterations</strong>: Number of t-SNE iterations. Doesn't
               usually have much of an effect if you leave it as it is.
             </p>
           </Callout>
@@ -252,7 +285,7 @@ export function ParameterSelection({
               and favor local structure.
             </p>
             <p>
-              <strong>Epochs</strong>: Number of epochs to use for convergence.
+              <strong>Number of epochs</strong>: Number of epochs to use for convergence.
               This doesn't really change all too much in the results.
             </p>
           </Callout>
@@ -275,7 +308,7 @@ export function ParameterSelection({
               improve resolution between closely related labels.
             </p>
             <p>
-              <strong>Reference Datasets</strong>: A selection of references are
+              <strong>Reference datasets</strong>: A selection of references are
               available from the{" "}
               <a
                 target="_blank"
@@ -294,11 +327,11 @@ export function ParameterSelection({
           <Callout intent="primary">
             <p>
               Build the index for the nearest neighbor search. This is used for
-              a variety of steps including the graph-based clustering, t-SNE and
+              a variety of steps including the SNN graph-based clustering, t-SNE and
               UMAP.
             </p>
             <p>
-              <strong>Approximate</strong>: Use an approximate neighbor search
+              <strong>Use approximate search</strong>: Use an approximate neighbor search
               algorithm - in this case, the{" "}
               <a href="https://github.com/spotify/Annoy">Annoy</a> method. This
               sacrifices some search accuracy for speed, which is usually
@@ -310,12 +343,12 @@ export function ParameterSelection({
         {showStepHelper === "batch" && (
           <Callout intent="primary">
             <p>
-              Remove batch effects between cells from different samples. This
+              Remove uninteresting differences between cells from different batches. This
               places all cells in a common coordinate space for consistent
               clustering and visualization. Otherwise, the interpretation of
               downstream analysis results may be complicated by large
-              sample-sample differences, obscuring the heterogeneity within
-              samples that is usually of interest.
+              batch effects, obscuring the heterogeneity within
+              batches that is usually of interest.
             </p>
             <p>
               <strong>Correction method</strong>: Which correction method to use
@@ -324,8 +357,10 @@ export function ParameterSelection({
               situations with differences in cell type composition across
               samples. Linear regression is simpler but assumes that all samples
               have the same proportions of cell types, with a consistent batch
-              effect in each cell type. Users may also choose not to correct if,
-              e.g., the sample-sample differences are interesting.
+              effect in each cell type. Users may also choose not to correct for
+              faster analyses, if the batch effect is known to be negligible; or if
+              the differences between batches are interesting, e.g., because
+              each "batch" corresponds to a different biological condition.
             </p>
             <p>
               <strong>Number of neighbors</strong>: Number of neighbors to use
@@ -341,10 +376,14 @@ export function ParameterSelection({
               Remove low-quality cells based on the ADT counts. This uses the
               number of detected features and, if available, the total count for
               isotype (IgG) controls. Cells with few detected features or high
-              isotype counts are filtered out; this is combined with the
-              RNA-based filters to ensure that cells are only retained if they
-              are informative in both modalities. We again use an outlier-based
+              isotype counts are filtered out. We use an outlier-based
               approach to define the filter threshold for each metric.
+            </p>
+            <p>
+              <strong>Filter cells</strong>: Skip all quality control on the ADT count
+              matrix. This is occasionally desirable if the input data has
+              already been subjected to QC (e.g., as part of a published paper),
+              in which case no further filtering should be applied.
             </p>
             <p>
               <strong>Number of MADs</strong>: Number of median absolute
@@ -353,15 +392,17 @@ export function ParameterSelection({
               Increasing this value will reduce the stringency of the filtering.
             </p>
             <p>
-              <strong>Isotype prefix</strong>: Prefix to use to identify
-              features in the dataset that are isotype controls. This is not
-              case-sensitive.
+              <strong>Minimum detected drop</strong>: Minimum relative drop in the
+              number of detected tags required to define an outlier.
+              The default value of 0.1 corresponds to a 10% drop, i.e., 
+              a cell must have fewer than 90% of the median number of detected tags
+              to be considered a low outlier. Increasing this value will reduce 
+              the number of outliers and thus the stringency of the filtering.
             </p>
             <p>
-              <strong>Skip</strong>: Skip all quality control on the ADT count
-              matrix. This is occasionally desirable if the input data has
-              already been subjected to QC (e.g., as part of a published paper),
-              in which case no further filtering should be applied.
+              <strong>Isotype control prefix</strong>: Prefix to use to identify
+              features in the dataset that are isotype controls. This is not
+              case-sensitive.
             </p>
           </Callout>
         )}
@@ -373,8 +414,8 @@ export function ParameterSelection({
               stronger in ADT data. We use a simple approach where we cluster
               cells based on their ADT counts, normalize for composition biases
               between clusters using an median-based method, normalize for
-              library size differences between cells within clusters, and then
-              combine both to obtain per-cell factors.
+              library size differences between cells within each cluster, and then
+              combine both of these normalizations to obtain per-cell factors.
             </p>
             <p>
               <strong>Number of clusters</strong>: Number of clusters to use in
@@ -384,7 +425,7 @@ export function ParameterSelection({
               should not be necessary to spend much time fine-tuning this
               parameter. Overclustering is acceptable - and possibly even
               desirable - provided that each cluster still contains enough cells
-              for stable median calculations.
+              for stable normalization between clusters.
             </p>
             <p>
               <strong>Number of PCs</strong>: Number of principal components to
@@ -394,7 +435,7 @@ export function ParameterSelection({
               obtained, it should not be necessary to spend much time
               fine-tuning this parameter. In fact, if the requested number of
               PCs is greater than the number of ADTs, this parameter will have
-              no effect.
+              no effect and the ADT log-abundances are used directly for clustering.
             </p>
           </Callout>
         )}
@@ -413,24 +454,28 @@ export function ParameterSelection({
               with the highest variance to retain in downstream analyses. Larger
               values will capture more biological signal at the cost of
               increasing noise and computational work. If more PCs are requested
-              than ADTs are available, the latter is used instead.
+              than the number of ADTs, the latter is used instead.
             </p>
           </Callout>
         )}
         {showStepHelper === "crisprqc" && (
           <Callout intent="primary">
-            <p>Remove low-quality cells based on the Crispr counts.</p>
+            <p>Remove low-quality cells based on the CRISPR guide counts. This uses the
+              count of the most abundant guide for filtering, where cells with 
+              low maximum counts are filtered out. We use an outlier-based
+              approach to define the filter threshold for this metric.
+            </p>
+            <p>
+              <strong>Filter cells</strong>: Skip all quality control on the CRISPR count
+              matrix. This is occasionally desirable if the input data has
+              already been subjected to QC (e.g., as part of a published paper),
+              in which case no further filtering should be applied.
+            </p>
             <p>
               <strong>Number of MADs</strong>: Number of median absolute
               deviations (MADs) from the median, used to define a filter
               threshold in the appropriate direction for each QC metric.
               Increasing this value will reduce the stringency of the filtering.
-            </p>
-            <p>
-              <strong>Skip</strong>: Skip all quality control on the ADT count
-              matrix. This is occasionally desirable if the input data has
-              already been subjected to QC (e.g., as part of a published paper),
-              in which case no further filtering should be applied.
             </p>
           </Callout>
         )}
@@ -438,7 +483,11 @@ export function ParameterSelection({
           <Callout intent="primary">
             <p>
               Perform a principal components analysis (PCA) on the
-              log-normalized CRISPR matrix.
+              log-normalized CRISPR abundance matrix. As for RNA, the PCA is used for
+              compression and denoising prior to downstream steps like
+              clustering and visualization. However, unlike RNA, no feature
+              selection is performed here as there are relatively few CRISPR guides in
+              the first place.
             </p>
             <p>
               <strong>Number of PCs</strong>: Number of principal components
@@ -454,26 +503,71 @@ export function ParameterSelection({
               Combine PC embeddings from multiple modalities. This yields a
               single matrix that can be used in downstream analyses like
               clustering, allowing us to incorporate information from multiple
-              modalities. By default, each modality is given equal weight in the
-              combined matrix.
+              modalities. The PCs from each modality are scaled to equalize
+              their intra-cluster variance, ensuring that modalities with
+              more features or higher baseline variability do not dominate the
+              combined embedding. This process can be customized by explicitly 
+              setting the weights for each modality; a larger value indicates
+              that the modality will contribute more to the combined population
+              heterogeneity, while A value of zero indicates that the modality 
+              should not be used in teh combined embedding at all.
             </p>
             <p>
-              <strong>Modality weights</strong>: Weight for each modality. A
-              larger value indicates that the corresponding modality will
-              contribute more to the population heterogeneity in the combined
-              embedding. A value of zero indicates that the corresponding
-              modality should be ignored in downstream analysis.
+              <strong>RNA weight</strong>: Weight for the RNA modality.
+              Only used if RNA data is available.
+            </p>
+            <p>
+              <strong>ADT weight</strong>: Weight for the ADT modality.
+              By default, this is equal to the RNA modality.
+              Only used if ADT data is available.
+            </p>
+            <p>
+              <strong>CRISPR weight</strong>: Weight for the CRISPR modality.
+              By default, this is set to zero as the tag counts are not usually used for clustering.
+              Only used if CRISPR data is available.
             </p>
           </Callout>
         )}
         {showStepHelper === "markdet" && (
           <Callout intent="primary">
-            <p>Marker Detection</p>
             <p>
-              <strong>Compute AUC</strong>:
+              Detect upregulated marker genes between clusters. This is achieved
+              by performing pairwise comparisons between clusters based on their
+              log-expression values. For each comparison, we compute
+              a battery of different effect sizes, including the area under the
+              curve (AUC), Cohen's d, the log<sub>2</sub>-fold change between
+              cluster means, and the difference in the proportion of cells with
+              detectable expression. Effect sizes from all pairwise comparisons
+              are then aggregated together to obtain a single ranking per cluster.
+              The same approach is used for computing markers between groups of cels
+              defined by existing annotation columns.
             </p>
             <p>
-              <strong>Log-FC threshold</strong>:
+              <strong>Compute AUC</strong>: Should the AUC be computed for each pairwise comparison between clusters?
+              The AUC is more robust to outliers than Cohen's d, but is
+              also more time- and memory-intensive to compute.
+              Users may wish to disable this for large datasets.
+            </p>
+            <p>
+              <strong>Log-FC threshold</strong>: threshold to use for computing the
+              Cohen's d. If this is non-zero, Cohen's d is redefined as the number of 
+              standard deviations between the group means after shifting the higher
+              mean downwards by the threshold. Increasing this value will force 
+              Cohen's d to focus on genes with larger log-fold changes at the expense
+              of small variances.
+            </p>
+          </Callout>
+        )}
+        {showStepHelper === "fsetenrich" && (
+          <Callout intent="primary">
+            <p>
+              Test for gene set enrichment among the top set of upregulated markers.
+              We perform a hypergeometric test for enrichment using a 
+              variety of gene sets from the Gene Ontology and MSigDB.
+            </p>
+            <p>
+              <strong>Top markers</strong>: Number of top markers to use for the hypergeometric test.
+              Larger values will identify more overlaps at the cost of specificity.
             </p>
           </Callout>
         )}
@@ -486,30 +580,12 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <H5 className="param-section-title">
-            <span
-              className={
-                showStepHelper == "rnaqc"
-                  ? "param-row-tooltip param-row-tooltip-highlight"
-                  : "param-row-tooltip"
-              }
-              onMouseEnter={() => setShowStepHelper("rnaqc")}
-            >
-              Quality control (RNA)
-            </span>
+            Quality control (RNA)
           </H5>
           <div className="param-row">
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "rnaqc"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("rnaqc")}
-                >
-                  Filter cells?
-                </span>
+                Filter cells?
               </Text>
               <Switch
                 style={{ marginTop: "10px" }}
@@ -532,16 +608,7 @@ export function ParameterSelection({
               <>
                 <Label className="param-row-input">
                   <Text className="param-text-100">
-                    <span
-                      className={
-                        showStepHelper == "rnaqc"
-                          ? "param-row-tooltip param-row-tooltip-highlight"
-                          : "param-row-tooltip"
-                      }
-                      onMouseEnter={() => setShowStepHelper("rnaqc")}
-                    >
-                      Number of MADs
-                    </span>
+                    Number of MADs
                   </Text>
                   <NumericInput
                     placeholder="3"
@@ -559,16 +626,7 @@ export function ParameterSelection({
                 </Label>
                 <Label className="param-row-input">
                   <Text className="param-text-100">
-                    <span
-                      className={
-                        showStepHelper == "rnaqc"
-                          ? "param-row-tooltip param-row-tooltip-highlight"
-                          : "param-row-tooltip"
-                      }
-                      onMouseEnter={() => setShowStepHelper("rnaqc")}
-                    >
-                      Use default mitochondrial prefix ?
-                    </span>
+                    Use default mitochondrial list?
                   </Text>
                   <Switch
                     style={{ marginTop: "10px" }}
@@ -592,16 +650,7 @@ export function ParameterSelection({
                 {!tmpParams["rna_quality_control"]["use_reference_mito"] && (
                   <Label className="param-row-input">
                     <Text className="param-text-100">
-                      <span
-                        className={
-                          showStepHelper == "rnaqc"
-                            ? "param-row-tooltip param-row-tooltip-highlight"
-                            : "param-row-tooltip"
-                        }
-                        onMouseEnter={() => setShowStepHelper("rnaqc")}
-                      >
-                        Mitochondrial gene prefix
-                      </span>
+                      Mitochondrial gene prefix
                     </Text>
                     <InputGroup
                       leftIcon="filter"
@@ -632,30 +681,12 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <H5 className="param-section-title">
-            <span
-              className={
-                showStepHelper == "fs"
-                  ? "param-row-tooltip param-row-tooltip-highlight"
-                  : "param-row-tooltip"
-              }
-              onMouseEnter={() => setShowStepHelper("fs")}
-            >
-              Feature selection (RNA)
-            </span>
+            Feature selection (RNA)
           </H5>
           <div className="param-row">
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "fs"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("fs")}
-                >
-                  Lowess span
-                </span>
+                Lowess span
               </Text>
               <NumericInput
                 placeholder="0.3"
@@ -684,30 +715,12 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <H5 className="param-section-title">
-            <span
-              className={
-                showStepHelper == "rnapca"
-                  ? "param-row-tooltip param-row-tooltip-highlight"
-                  : "param-row-tooltip"
-              }
-              onMouseEnter={() => setShowStepHelper("rnapca")}
-            >
-              Principal components analysis (RNA)
-            </span>
+            Principal components analysis (RNA)
           </H5>
           <div className="param-row">
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "rnapca"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("rnapca")}
-                >
-                  Number of HVGs
-                </span>
+                Number of HVGs
               </Text>
               <NumericInput
                 placeholder="2500"
@@ -722,16 +735,7 @@ export function ParameterSelection({
             </Label>
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "rnapca"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("rnapca")}
-                >
-                  Number of PCs
-                </span>
+                Number of PCs
               </Text>
               <NumericInput
                 placeholder="25"
@@ -755,30 +759,12 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <H5 className="param-section-title">
-            <span
-              className={
-                showStepHelper == "clus"
-                  ? "param-row-tooltip param-row-tooltip-highlight"
-                  : "param-row-tooltip"
-              }
-              onMouseEnter={() => setShowStepHelper("clus")}
-            >
-              Clustering
-            </span>
+            Clustering
           </H5>
           <div className="param-row">
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "clus"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("clus")}
-                >
-                  Method
-                </span>
+                Method
               </Text>
               <HTMLSelect
                 onChange={(e) => {
@@ -799,16 +785,7 @@ export function ParameterSelection({
             {tmpParams["choose_clustering"]["method"] == "kmeans" && (
               <Label className="param-row-input">
                 <Text className="param-text-100">
-                  <span
-                    className={
-                      showStepHelper == "clus"
-                        ? "param-row-tooltip param-row-tooltip-highlight"
-                        : "param-row-tooltip"
-                    }
-                    onMouseEnter={() => setShowStepHelper("clus")}
-                  >
-                    Number of clusters (k)
-                  </span>
+                  Number of clusters
                 </Text>
                 <NumericInput
                   placeholder="10"
@@ -830,16 +807,7 @@ export function ParameterSelection({
               <>
                 <Label className="param-row-input">
                   <Text className="param-text-100">
-                    <span
-                      className={
-                        showStepHelper == "clus"
-                          ? "param-row-tooltip param-row-tooltip-highlight"
-                          : "param-row-tooltip"
-                      }
-                      onMouseEnter={() => setShowStepHelper("clus")}
-                    >
-                      Number of neighbors (k)
-                    </span>
+                    Number of neighbors
                   </Text>
                   <NumericInput
                     placeholder="10"
@@ -857,16 +825,7 @@ export function ParameterSelection({
                 </Label>
                 <Label className="param-row-input">
                   <Text className="param-text-100">
-                    <span
-                      className={
-                        showStepHelper == "clus"
-                          ? "param-row-tooltip param-row-tooltip-highlight"
-                          : "param-row-tooltip"
-                      }
-                      onMouseEnter={() => setShowStepHelper("clus")}
-                    >
-                      Weighting scheme
-                    </span>
+                    Weighting scheme
                   </Text>
                   <HTMLSelect
                     onChange={(e) => {
@@ -887,16 +846,7 @@ export function ParameterSelection({
                 </Label>
                 <Label className="param-row-input">
                   <Text className="param-text-100">
-                    <span
-                      className={
-                        showStepHelper == "clus"
-                          ? "param-row-tooltip param-row-tooltip-highlight"
-                          : "param-row-tooltip"
-                      }
-                      onMouseEnter={() => setShowStepHelper("clus")}
-                    >
-                      Choose SNN graph clustering algorithm
-                    </span>
+                    Community detection
                   </Text>
                   <HTMLSelect
                     onChange={(e) => {
@@ -920,16 +870,7 @@ export function ParameterSelection({
                   <>
                     <Label className="param-row-input">
                       <Text className="param-text-100">
-                        <span
-                          className={
-                            showStepHelper == "clus"
-                              ? "param-row-tooltip param-row-tooltip-highlight"
-                              : "param-row-tooltip"
-                          }
-                          onMouseEnter={() => setShowStepHelper("clus")}
-                        >
-                          Multilevel Resolution
-                        </span>
+                        Multilevel resolution
                       </Text>
                       <NumericInput
                         placeholder="0.5"
@@ -957,16 +898,7 @@ export function ParameterSelection({
                   <>
                     <Label className="param-row-input">
                       <Text className="param-text-100">
-                        <span
-                          className={
-                            showStepHelper == "clus"
-                              ? "param-row-tooltip param-row-tooltip-highlight"
-                              : "param-row-tooltip"
-                          }
-                          onMouseEnter={() => setShowStepHelper("clus")}
-                        >
-                          Leiden Resolution
-                        </span>
+                        Leiden resolution
                       </Text>
                       <NumericInput
                         placeholder="0.5"
@@ -992,16 +924,7 @@ export function ParameterSelection({
                   <>
                     <Label className="param-row-input">
                       <Text className="param-text-100">
-                        <span
-                          className={
-                            showStepHelper == "clus"
-                              ? "param-row-tooltip param-row-tooltip-highlight"
-                              : "param-row-tooltip"
-                          }
-                          onMouseEnter={() => setShowStepHelper("clus")}
-                        >
-                          Walktrap Steps
-                        </span>
+                        Walktrap steps
                       </Text>
                       <NumericInput
                         placeholder="4"
@@ -1034,30 +957,12 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <H5 className="param-section-title">
-            <span
-              className={
-                showStepHelper == "markdet"
-                  ? "param-row-tooltip param-row-tooltip-highlight"
-                  : "param-row-tooltip"
-              }
-              onMouseEnter={() => setShowStepHelper("markdet")}
-            >
-              Marker detection
-            </span>
+            Marker detection
           </H5>
           <div className="param-row">
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "markdet"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("markdet")}
-                >
-                  Compute AUC?
-                </span>
+                Compute AUC?
               </Text>
               <Switch
                 style={{ marginTop: "10px" }}
@@ -1078,16 +983,7 @@ export function ParameterSelection({
             </Label>
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "markdet"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("markdet")}
-                >
-                  Log-FC threshold
-                </span>
+                Log-FC threshold
               </Text>
               <NumericInput
                 placeholder="0"
@@ -1114,30 +1010,12 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <H5 className="param-section-title">
-            <span
-              className={
-                showStepHelper == "tsne"
-                  ? "param-row-tooltip param-row-tooltip-highlight"
-                  : "param-row-tooltip"
-              }
-              onMouseEnter={() => setShowStepHelper("tsne")}
-            >
-              t-SNE
-            </span>
+            t-SNE
           </H5>
           <div className="param-row">
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "tsne"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("tsne")}
-                >
-                  Perplexity
-                </span>
+                Perplexity
               </Text>
               <NumericInput
                 placeholder="30"
@@ -1152,16 +1030,7 @@ export function ParameterSelection({
             </Label>
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "tsne"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("tsne")}
-                >
-                  Iterations
-                </span>
+                Number of iterations
               </Text>
               <NumericInput
                 placeholder="500"
@@ -1185,30 +1054,12 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <H5 className="param-section-title">
-            <span
-              className={
-                showStepHelper == "umap"
-                  ? "param-row-tooltip param-row-tooltip-highlight"
-                  : "param-row-tooltip"
-              }
-              onMouseEnter={() => setShowStepHelper("umap")}
-            >
-              UMAP
-            </span>
+            UMAP
           </H5>
           <div className="param-row">
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "umap"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("umap")}
-                >
-                  Number of neighbors
-                </span>
+                Number of neighbors
               </Text>
               <NumericInput
                 placeholder="15"
@@ -1223,16 +1074,7 @@ export function ParameterSelection({
             </Label>
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == 7
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper(7)}
-                >
-                  Minimum distance
-                </span>
+                Minimum distance
               </Text>
               <NumericInput
                 placeholder="0.01"
@@ -1249,16 +1091,7 @@ export function ParameterSelection({
             </Label>
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == 7
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper(7)}
-                >
-                  Epochs
-                </span>
+                Number of epochs
               </Text>
               <NumericInput
                 placeholder="500"
@@ -1282,30 +1115,12 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <H5 className="param-section-title">
-            <span
-              className={
-                showStepHelper == "fsetenrich"
-                  ? "param-row-tooltip param-row-tooltip-highlight"
-                  : "param-row-tooltip"
-              }
-              onMouseEnter={() => setShowStepHelper("fsetenrich")}
-            >
-              Feature set enrichment
-            </span>
+            Gene set enrichment
           </H5>
           <div className="param-row">
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "fsetenrich"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("fsetenrich")}
-                >
-                  Number of top markers
-                </span>
+                Number of top markers
               </Text>
               <NumericInput
                 placeholder="100"
@@ -1325,16 +1140,7 @@ export function ParameterSelection({
               <>
                 <Label className="param-row-input">
                   <Text className="param-text-100">
-                    <span
-                      className={
-                        showStepHelper == "fsetenrich"
-                          ? "param-row-tooltip param-row-tooltip-highlight"
-                          : "param-row-tooltip"
-                      }
-                      onMouseEnter={() => setShowStepHelper("fsetenrich")}
-                    >
-                      Choose species
-                    </span>
+                    Species
                   </Text>
                   <HTMLSelect
                     onChange={(e) => {
@@ -1366,16 +1172,7 @@ export function ParameterSelection({
                   tmpParams["feature_set_enrichment"]["species"] !== "none" && (
                     <Label className="param-row-input">
                       <Text className="param-text-100">
-                        <span
-                          className={
-                            showStepHelper == "fsetenrich"
-                              ? "param-row-tooltip param-row-tooltip-highlight"
-                              : "param-row-tooltip"
-                          }
-                          onMouseEnter={() => setShowStepHelper("fsetenrich")}
-                        >
-                          Choose species
-                        </span>
+                        Species
                       </Text>
                       <select
                         multiple={true}
@@ -1443,30 +1240,12 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <H5 className="param-section-title">
-            <span
-              className={
-                showStepHelper == "cellann"
-                  ? "param-row-tooltip param-row-tooltip-highlight"
-                  : "param-row-tooltip"
-              }
-              onMouseEnter={() => setShowStepHelper("cellann")}
-            >
-              Cell type annotation
-            </span>
+            Cell type annotation
           </H5>
           <div className="param-row">
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "cellann"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("cellann")}
-                >
-                  Choose reference datasets
-                </span>
+                Reference datasets:
               </Text>
               <div
                 style={{
@@ -1571,31 +1350,13 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <H5 className="param-section-title">
-            <span
-              className={
-                showStepHelper == "ann"
-                  ? "param-row-tooltip param-row-tooltip-highlight"
-                  : "param-row-tooltip"
-              }
-              onMouseEnter={() => setShowStepHelper("ann")}
-            >
-              Nearest neighbor search
-            </span>
+            Nearest neighbor search
           </H5>
 
           <div className="param-row">
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "ann"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("ann")}
-                >
-                  Approximate
-                </span>
+                Use approximate search?
               </Text>
               <Switch
                 style={{ marginTop: "10px" }}
@@ -1625,31 +1386,13 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <H5 className="param-section-title">
-            <span
-              className={
-                showStepHelper == "batch"
-                  ? "param-row-tooltip param-row-tooltip-highlight"
-                  : "param-row-tooltip"
-              }
-              onMouseEnter={() => setShowStepHelper("batch")}
-            >
-              Batch Correction
-            </span>
+            Batch correction
           </H5>
 
           <div className="param-row">
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "batch"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("batch")}
-                >
-                  Method
-                </span>
+                Correction method
               </Text>
               <HTMLSelect
                 onChange={(e) => {
@@ -1670,16 +1413,7 @@ export function ParameterSelection({
             </Label>
             <Label className="param-row-input">
               <Text className="param-text-100">
-                <span
-                  className={
-                    showStepHelper == "batch"
-                      ? "param-row-tooltip param-row-tooltip-highlight"
-                      : "param-row-tooltip"
-                  }
-                  onMouseEnter={() => setShowStepHelper("batch")}
-                >
-                  Number of neighbors
-                </span>
+                Number of neighbors
               </Text>
               <NumericInput
                 placeholder="15"
@@ -1707,30 +1441,12 @@ export function ParameterSelection({
         <div>
           <div>
             <H5 className="param-section-title">
-              <span
-                className={
-                  showStepHelper == "adtqc"
-                    ? "param-row-tooltip param-row-tooltip-highlight"
-                    : "param-row-tooltip"
-                }
-                onMouseEnter={() => setShowStepHelper("adtqc")}
-              >
-                Quality control (ADT)
-              </span>
+              Quality control (ADT)
             </H5>
             <div className="param-row">
               <Label className="param-row-input">
                 <Text className="param-text-100">
-                  <span
-                    className={
-                      showStepHelper == "adtqc"
-                        ? "param-row-tooltip param-row-tooltip-highlight"
-                        : "param-row-tooltip"
-                    }
-                    onMouseEnter={() => setShowStepHelper("adtqc")}
-                  >
-                    Filter cells?
-                  </span>
+                  Filter cells?
                 </Text>
                 <Switch
                   style={{ marginTop: "10px" }}
@@ -1753,16 +1469,7 @@ export function ParameterSelection({
                 <>
                   <Label className="param-row-input">
                     <Text className="param-text-100">
-                      <span
-                        className={
-                          showStepHelper == "adtqc"
-                            ? "param-row-tooltip param-row-tooltip-highlight"
-                            : "param-row-tooltip"
-                        }
-                        onMouseEnter={() => setShowStepHelper("adtqc")}
-                      >
-                        Number of MADs
-                      </span>
+                      Number of MADs
                     </Text>
                     <NumericInput
                       placeholder="3"
@@ -1780,16 +1487,7 @@ export function ParameterSelection({
                   </Label>
                   <Label className="param-row-input">
                     <Text className="param-text-100">
-                      <span
-                        className={
-                          showStepHelper == "adtqc"
-                            ? "param-row-tooltip param-row-tooltip-highlight"
-                            : "vrow-tooltip"
-                        }
-                        onMouseEnter={() => setShowStepHelper("adtqc")}
-                      >
-                        Minimum Detected Drop
-                      </span>
+                      Minimum detected drop
                     </Text>
                     <NumericInput
                       placeholder="0.1"
@@ -1811,16 +1509,7 @@ export function ParameterSelection({
                   </Label>
                   <Label className="param-row-input">
                     <Text className="param-text-100">
-                      <span
-                        className={
-                          showStepHelper == "adtqc"
-                            ? "param-row-tooltip param-row-tooltip-highlight"
-                            : "param-row-tooltip"
-                        }
-                        onMouseEnter={() => setShowStepHelper("adtqc")}
-                      >
-                        Prefix for isotype controls
-                      </span>
+                      Isotype control prefix
                     </Text>
                     <InputGroup
                       leftIcon="filter"
@@ -1852,30 +1541,12 @@ export function ParameterSelection({
         <div>
           <div>
             <H5 className="param-section-title">
-              <span
-                className={
-                  showStepHelper == "adtnorm"
-                    ? "param-row-tooltip param-row-tooltip-highlight"
-                    : "param-row-tooltip"
-                }
-                onMouseEnter={() => setShowStepHelper("adtnorm")}
-              >
-                Normalization (ADT)
-              </span>
+              Normalization (ADT)
             </H5>
             <div className="param-row">
               <Label className="param-row-input">
                 <Text className="param-text-100">
-                  <span
-                    className={
-                      showStepHelper == "adtnorm"
-                        ? "param-row-tooltip param-row-tooltip-highlight"
-                        : "param-row-tooltip"
-                    }
-                    onMouseEnter={() => setShowStepHelper("adtnorm")}
-                  >
-                    Number of PC's
-                  </span>
+                  Number of PCs
                 </Text>
                 <NumericInput
                   placeholder="25"
@@ -1893,16 +1564,7 @@ export function ParameterSelection({
               </Label>
               <Label className="param-row-input">
                 <Text className="param-text-100">
-                  <span
-                    className={
-                      showStepHelper == "adtnorm"
-                        ? "param-row-tooltip param-row-tooltip-highlight"
-                        : "param-row-tooltip"
-                    }
-                    onMouseEnter={() => setShowStepHelper("adtnorm")}
-                  >
-                    Number of Clusters
-                  </span>
+                  Number of clusters
                 </Text>
                 <NumericInput
                   placeholder="20"
@@ -1931,30 +1593,12 @@ export function ParameterSelection({
         <div>
           <div>
             <H5 className="param-section-title">
-              <span
-                className={
-                  showStepHelper == "adtpca"
-                    ? "param-row-tooltip param-row-tooltip-highlight"
-                    : "param-row-tooltip"
-                }
-                onMouseEnter={() => setShowStepHelper("adtpca")}
-              >
-                Principal components analysis (ADT)
-              </span>
+              Principal components analysis (ADT)
             </H5>
             <div className="param-row">
               <Label className="param-row-input">
                 <Text className="param-text-100">
-                  <span
-                    className={
-                      showStepHelper == "adtpca"
-                        ? "param-row-tooltip param-row-tooltip-highlight"
-                        : "param-row-tooltip"
-                    }
-                    onMouseEnter={() => setShowStepHelper("adtpca")}
-                  >
-                    Number of PC's
-                  </span>
+                  Number of PCs
                 </Text>
                 <NumericInput
                   placeholder="25"
@@ -1980,32 +1624,17 @@ export function ParameterSelection({
         <div>
           <div>
             <H5 className="param-section-title">
-              <span
-                className={
-                  showStepHelper == "combweights"
-                    ? "param-row-tooltip param-row-tooltip-highlight"
-                    : "param-row-tooltip"
-                }
-                onMouseEnter={() => setShowStepHelper("combweights")}
-              >
-                Combined Embedding
-              </span>
+              Combined embedding
             </H5>
             <div className="param-row">
-              <Label className="param-row-input">
+              <Label 
+                className="param-row-input"
+              >
                 <Text className="param-text-100">
-                  <span
-                    className={
-                      showStepHelper == "combweights"
-                        ? "param-row-tooltip param-row-tooltip-highlight"
-                        : "param-row-tooltip"
-                    }
-                    onMouseEnter={() => setShowStepHelper("combweights")}
-                  >
-                    RNA Weight
-                  </span>
+                  RNA weight
                 </Text>
                 <NumericInput
+                  disabled={!!preInputOptionsStatus && !("RNA" in preInputOptionsStatus)}
                   placeholder="1"
                   defaultValue={tmpParams["combine_embeddings"]["rna_weight"]}
                   min={0}
@@ -2019,22 +1648,14 @@ export function ParameterSelection({
               </Label>
               <Label className="param-row-input">
                 <Text className="param-text-100">
-                  <span
-                    className={
-                      showStepHelper == "combweights"
-                        ? "param-row-tooltip param-row-tooltip-highlight"
-                        : "param-row-tooltip"
-                    }
-                    onMouseEnter={() => setShowStepHelper("combweights")}
-                  >
-                    ADT Weight
-                  </span>
+                  ADT weight
                 </Text>
                 <NumericInput
                   placeholder="1"
                   min={0}
                   defaultValue={tmpParams["combine_embeddings"]["adt_weight"]}
                   value={tmpParams["combine_embeddings"]["adt_weight"]}
+                  disabled={missingModality("ADT")}
                   onValueChange={(nval, val) => {
                     let gip = { ...tmpParams };
                     gip["combine_embeddings"]["adt_weight"] = nval;
@@ -2044,16 +1665,7 @@ export function ParameterSelection({
               </Label>
               <Label className="param-row-input">
                 <Text className="param-text-100">
-                  <span
-                    className={
-                      showStepHelper == "combweights"
-                        ? "param-row-tooltip param-row-tooltip-highlight"
-                        : "param-row-tooltip"
-                    }
-                    onMouseEnter={() => setShowStepHelper("combweights")}
-                  >
-                    CRISPR Weight
-                  </span>
+                  CRISPR weight
                 </Text>
                 <NumericInput
                   placeholder="1"
@@ -2062,6 +1674,7 @@ export function ParameterSelection({
                     tmpParams["combine_embeddings"]["crispr_weight"]
                   }
                   value={tmpParams["combine_embeddings"]["crispr_weight"]}
+                  disabled={missingModality("CRISPR")}
                   onValueChange={(nval, val) => {
                     let gip = { ...tmpParams };
                     gip["combine_embeddings"]["crispr_weight"] = nval;
@@ -2082,30 +1695,12 @@ export function ParameterSelection({
         <div>
           <div>
             <H5 className="param-section-title">
-              <span
-                className={
-                  showStepHelper == "crisprqc"
-                    ? "param-row-tooltip param-row-tooltip-highlight"
-                    : "param-row-tooltip"
-                }
-                onMouseEnter={() => setShowStepHelper("crisprqc")}
-              >
-                Quality control (CRISPR)
-              </span>
+              Quality control (CRISPR)
             </H5>
             <div className="param-row">
               <Label className="param-row-input">
                 <Text className="param-text-100">
-                  <span
-                    className={
-                      showStepHelper == "crisprqc"
-                        ? "param-row-tooltip param-row-tooltip-highlight"
-                        : "param-row-tooltip"
-                    }
-                    onMouseEnter={() => setShowStepHelper("crisprqc")}
-                  >
-                    Filter cells?
-                  </span>
+                  Filter cells?
                 </Text>
                 <Switch
                   style={{ marginTop: "10px" }}
@@ -2128,16 +1723,7 @@ export function ParameterSelection({
                 <>
                   <Label className="param-row-input">
                     <Text className="param-text-100">
-                      <span
-                        className={
-                          showStepHelper == "crisprqc"
-                            ? "param-row-tooltip param-row-tooltip-highlight"
-                            : "param-row-tooltip"
-                        }
-                        onMouseEnter={() => setShowStepHelper("crisprqc")}
-                      >
-                        Number of MADs
-                      </span>
+                      Number of MADs
                     </Text>
                     <NumericInput
                       placeholder="3"
@@ -2192,30 +1778,12 @@ export function ParameterSelection({
         <div>
           <div>
             <H5 className="param-section-title">
-              <span
-                className={
-                  showStepHelper == "crisprpca"
-                    ? "param-row-tooltip param-row-tooltip-highlight"
-                    : "param-row-tooltip"
-                }
-                onMouseEnter={() => setShowStepHelper("crisprpca")}
-              >
-                Principal components analysis (CRISPR)
-              </span>
+              Principal components analysis (CRISPR)
             </H5>
             <div className="param-row">
               <Label className="param-row-input">
                 <Text className="param-text-100">
-                  <span
-                    className={
-                      showStepHelper == "crisprpca"
-                        ? "param-row-tooltip param-row-tooltip-highlight"
-                        : "param-row-tooltip"
-                    }
-                    onMouseEnter={() => setShowStepHelper("crisprpca")}
-                  >
-                    Number of PC's
-                  </span>
+                  Number of PCs
                 </Text>
                 <NumericInput
                   placeholder="25"
@@ -2236,124 +1804,219 @@ export function ParameterSelection({
   };
 
   return (
-    <Card className="section" interactive={false} elevation={Elevation.ZERO}>
-      <div className="section-header">
-        <H2 className="section-header-title">Analysis Parameters</H2>
+    <Card
+      className="param-section"
+      interactive={false}
+      elevation={Elevation.ZERO}
+    >
+      <div className="param-section-header">
+        <H2 className="param-section-header-title">Set Analysis Parameters</H2>
       </div>
       <Divider />
-      <div className="section-content">
-        <div className="section-content-body">
-          <Callout icon="airplane">
-            <p>
-              <strong> Set or Modify parameters. </strong>A number of defaults
-              are chosen for various analysis steps in Kana.
-            </p>
-
-            <p>
-              <strong>
-                <i>
-                  you can choose to set parameters now, but be aware the
-                  available parameters depends on the type of analysis (batch,
-                  multi-modal etc) & dataset imported into Kana.
-                </i>
-              </strong>
-            </p>
-          </Callout>
-          <Divider />
-          <ButtonGroup>
-            <Button
-              intent={showRNA ? "primary" : "none"}
-              // icon={showRNA ? "double-chevron-down" : "double-chevron-up"}
-              onClick={() => setShowRNA(!showRNA)}
-              text={
-                showRNA ? "Collapse RNA parameters" : "Expand RNA parameters"
+      <div className="param-section-content">
+        <div className="param-section-content-body">
+          <Tabs
+            defaultSelectedTabId={"rnaqc"}
+            vertical={true}
+            onChange={(ntab, otab) => {
+              setShowStepHelper(ntab);
+            }}
+          >
+            <Tab
+              id="rnaqc"
+              title="Quality control"
+              tagContent="RNA"
+              disabled={missingModality("RNA")}
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_rna_qc()}
+                </>
               }
-            />
-            <Button
-              intent={showADT ? "primary" : "none"}
-              // icon={showADT ? "double-chevron-down" : "double-chevron-up"}
-              onClick={() => setShowADT(!showADT)}
-              text={
-                showADT ? "Collapse ADT parameters" : "Expand ADT parameters"
+            ></Tab>
+            <Tab
+              id="fs"
+              title="Feature selection"
+              tagContent="RNA"
+              disabled={missingModality("RNA")}
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_fs()}
+                </>
               }
-            />
-            <Button
-              intent={showCRISPR ? "primary" : "none"}
-              // icon={showCRISPR ? "double-chevron-down" : "double-chevron-up"}
-              onClick={() => setShowCRISPR(!showCRISPR)}
-              text={
-                showCRISPR
-                  ? "Collapse CRISPR parameters"
-                  : "Expand CRISPR parameters"
+            ></Tab>
+            <Tab
+              id="rnapca"
+              title="Principal components analysis"
+              tagContent="RNA"
+              disabled={missingModality("RNA")}
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_rna_pca()}
+                </>
               }
-            />
-          </ButtonGroup>
-          <Divider />
-          <Collapse isOpen={showRNA}>
-            {render_rna_qc()}
-            <Divider />
-            {render_fs()}
-            <Divider />
-            {render_rna_pca()}
-          </Collapse>
-          <Collapse isOpen={showADT}>
-            {render_adtqc()}
-            <Divider />
-            {render_adtnorm()}
-            <Divider />
-            {render_adtpca()}
-            <Divider />
-          </Collapse>
-          <Collapse isOpen={showCRISPR}>
-            {render_crisprqc()}
-            <Divider />
-            {render_crisprpca()}
-            <Divider />
-          </Collapse>
-          {render_batch_correction()}
-          <Divider />
-          {render_clus()}
-          <Divider />
-          {render_ann()}
-          <Divider />
-          {render_markdet()}
-          <Divider />
-          {render_tsne()}
-          <Divider />
-          {render_umap()}
-          <Divider />
-          {render_cellann()}
-          <Divider />
-          {render_combweights()}
-          <Divider />
-          {render_fsetenrich()}
-        </div>
-        <div className="section-info">
-          <div>
-            {openInfo && (
-              <Button
-                outlined={true}
-                fill={true}
-                intent="warning"
-                text="Hide Info"
-                onClick={() => setOpenInfo(false)}
-              />
-            )}
-            {!openInfo && (
-              <Button
-                outlined={true}
-                fill={true}
-                intent="warning"
-                text="Show Info"
-                onClick={() => setOpenInfo(true)}
-              />
-            )}
-            <Collapse isOpen={openInfo}>{render_stepinfo()}</Collapse>
-          </div>
+            ></Tab>
+            <Tab
+              id="adtqc"
+              title="Quality control"
+              tagContent="ADT"
+              disabled={missingModality("ADT")}
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_adtqc()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="adtnorm"
+              title="Normalization"
+              tagContent="ADT"
+              disabled={missingModality("ADT")}
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_adtnorm()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="adtpca"
+              title="Principal components analysis"
+              tagContent="ADT"
+              disabled={missingModality("ADT")}
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_adtpca()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="crisprqc"
+              title="Quality control"
+              tagContent="CRISPR"
+              disabled={missingModality("CRISPR")}
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_crisprqc()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="crisprpca"
+              title="Principal components analysis"
+              tagContent="CRISPR"
+              disabled={missingModality("CRISPR")}
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_crisprpca()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="combweights"
+              title="Combined embedding"
+              disabled={!!preInputOptionsStatus && Object.keys(preInputOptionsStatus).length == 1}
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_combweights()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="batch"
+              title="Batch correction"
+              disabled={hasMultipleBatches()}
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_batch_correction()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="ann"
+              title="Nearest neighbor search"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_ann()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="clus"
+              title="Clustering"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_clus()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="markdet"
+              title="Marker detection"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_markdet()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="tsne"
+              title="t-SNE"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_tsne()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="umap"
+              title="UMAP"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_umap()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="cellann"
+              title="Cell type annotation"
+              disabled={missingModality("RNA")}
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_cellann()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="fsetenrich"
+              title="Gene set enrichment"
+              disabled={missingModality("RNA")}
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_fsetenrich()}
+                </>
+              }
+            ></Tab>
+          </Tabs>
         </div>
       </div>
       <Divider />
-      <div className="section-footer">
+      <div className="param-section-footer">
         <Tooltip2 content="Cancel changes" placement="left">
           <Button
             icon="cross"
