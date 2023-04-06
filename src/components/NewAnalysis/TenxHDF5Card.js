@@ -33,7 +33,8 @@ import "./index.css";
 import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 
 import { MODALITIES } from "../../utils/utils";
-import { guessModalities } from "./utils";
+
+import { guessModalities, reportFeatureTypes } from "./utils";
 
 export function TenxHDF5({
   resource,
@@ -132,30 +133,22 @@ export function TenxHDF5({
           <Button icon="cross" minimal={true} onClick={handleRemove} />
         </ButtonGroup>
       </div>
-      <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
-          <strong>{resource.format}</strong> contains{" "}
-          {dsMeta && dsMeta.cells.numberOfCells} cells and{" "}
-          {dsMeta && Object.keys(dsMeta.modality_features).length}{" "}
-          {dsMeta && Object.keys(dsMeta.modality_features).length > 1
-            ? "modalities"
-            : "modality"}
-          .
+          This <strong>10X HDF5</strong> dataset contains{" "}
+          {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature
+          types: {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
-        <Divider />
         <Collapse isOpen={collapse}>
           <div>
-            {dsMeta && Object.keys(dsMeta.modality_features).length > 1 && (
-              <H5>Optional settings</H5>
-            )}
             {dsMeta &&
               MODALITIES.map((mod, i) => {
                 return (
                   <div key={i}>
+                    <Divider />
                     <Label className="row-input">
                       <Text>
-                        <strong>{mod} Modality</strong>
+                        <strong>{mod} modality</strong>
                       </Text>
                       <HTMLSelect
                         defaultValue={
@@ -195,10 +188,10 @@ export function TenxHDF5({
                           }
                         }}
                       >
-                        <option value="none">None</option>
+                        <option value="none">--- no selection ---</option>
                         {getAvailableModalities(mod).map((x, i) => (
                           <option key={i} value={x}>
-                            {x === "" ? "Unknown Modality" : x}
+                            {x === "" ? "unnamed" : x}
                           </option>
                         ))}
                       </HTMLSelect>
@@ -227,9 +220,29 @@ export function TenxHDF5({
                     >
                       <Label className="row-input">
                         <Text>
-                          <strong>{mod} Feature ID</strong>
+                          <strong>{mod} primary feature ID</strong>
                         </Text>
                         <HTMLSelect
+                          disabled={
+                            options?.[
+                              `featureType${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }Name`
+                            ] === undefined ||
+                            options?.[
+                              `featureType${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }Name`
+                            ] === null ||
+                            options?.[
+                              `featureType${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }Name`
+                            ] === "none"
+                          }
                           defaultValue="none"
                           onChange={(e) => {
                             if (e.target.value) {
@@ -279,7 +292,6 @@ export function TenxHDF5({
                         </HTMLSelect>
                       </Label>
                     </FormGroup>
-                    <Divider />
                   </div>
                 );
               })}

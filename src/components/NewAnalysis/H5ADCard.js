@@ -168,20 +168,19 @@ export function H5AD({
           <Button icon="cross" minimal={true} onClick={handleRemove} />
         </ButtonGroup>
       </div>
-      <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
-          <strong>{resource.format}</strong> contains{" "}
-          {dsMeta && dsMeta.cells.numberOfCells} cells
+          This <strong>{resource.format}</strong> dataset contains{" "}
+          {dsMeta && dsMeta.cells.numberOfCells} cells and{" "}
+          {dsMeta && dsMeta.all_features.numberOfFeatures} features.
         </p>
         <Divider />
         <Collapse isOpen={collapse}>
           <div>
-            {dsMeta && <H5>Optional settings</H5>}
             {dsMeta && (
               <Label className="row-input">
                 <Text>
-                  <span>Primary Count Matrix Name</span>
+                  <span>Primary count matrix name</span>
                 </Text>
                 <HTMLSelect
                   defaultValue={dsMeta.all_assay_names[0]}
@@ -203,7 +202,7 @@ export function H5AD({
               <>
                 <Label className="row-input">
                   <Text>
-                    <span>Choose a column that specifies feature type</span>
+                    <span>Feature type column</span>
                   </Text>
                   <HTMLSelect
                     defaultValue="none"
@@ -227,13 +226,57 @@ export function H5AD({
                     ))}
                   </HTMLSelect>
                 </Label>
+                {(options["featureTypeColumnName"] === null ||
+                  options["featureTypeColumnName"] === undefined ||
+                  options["featureTypeColumnName"] === "none") && (
+                  <Label className="row-input">
+                    <Divider />
+                    <Text>
+                      <strong>Note: All cells are considered RNA.</strong>
+                    </Text>
+                    <br />
+                    <FormGroup>
+                      <Label className="row-input">
+                        <Text>
+                          <strong>RNA primary feature ID</strong>
+                        </Text>
+                        <HTMLSelect
+                          defaultValue="none"
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              let tmpOptions = { ...options };
+                              if (e.target.value === "none") {
+                                tmpOptions[`primaryRnaFeatureIdColumn`] = null;
+                              } else {
+                                tmpOptions[`primaryRnaFeatureIdColumn`] =
+                                  e.target.value;
+                              }
+                              setOptions(tmpOptions);
+                            }
+                          }}
+                        >
+                          <option value="none">rownames</option>
+                          {dsMeta.all_features &&
+                            Object.keys(dsMeta.all_features["columns"]).map(
+                              (x, i) => (
+                                <option key={i} value={x}>
+                                  {x}
+                                </option>
+                              )
+                            )}
+                        </HTMLSelect>
+                      </Label>
+                    </FormGroup>
+                  </Label>
+                )}
                 {options["featureTypeColumnName"] &&
                   MODALITIES.map((mod, i) => {
                     return (
                       <div key={i}>
+                        <Divider />
                         <Label className="row-input">
                           <Text>
-                            <strong>{mod} Modality</strong>
+                            <strong>{mod} modality</strong>
                           </Text>
                           <HTMLSelect
                             defaultValue={
@@ -285,7 +328,7 @@ export function H5AD({
                             <option value="none">None</option>
                             {getAvailableModalities(mod).map((x, i) => (
                               <option key={i} value={x}>
-                                {x === "" ? "Unknown Modality" : x}
+                                {x === "" ? <em>unnamed</em> : x}
                               </option>
                             ))}
                           </HTMLSelect>
@@ -314,9 +357,29 @@ export function H5AD({
                         >
                           <Label className="row-input">
                             <Text>
-                              <strong>{mod} Feature ID</strong>
+                              <strong>{mod} primary feature ID</strong>
                             </Text>
                             <HTMLSelect
+                              disabled={
+                                options?.[
+                                  `featureType${
+                                    mod.toLowerCase().charAt(0).toUpperCase() +
+                                    mod.toLowerCase().slice(1)
+                                  }Name`
+                                ] === undefined ||
+                                options?.[
+                                  `featureType${
+                                    mod.toLowerCase().charAt(0).toUpperCase() +
+                                    mod.toLowerCase().slice(1)
+                                  }Name`
+                                ] === null ||
+                                options?.[
+                                  `featureType${
+                                    mod.toLowerCase().charAt(0).toUpperCase() +
+                                    mod.toLowerCase().slice(1)
+                                  }Name`
+                                ] === "none"
+                              }
                               defaultValue="none"
                               onChange={(e) => {
                                 if (e.target.value) {
@@ -358,7 +421,6 @@ export function H5AD({
                             </HTMLSelect>
                           </Label>
                         </FormGroup>
-                        <Divider />
                       </div>
                     );
                   })}
