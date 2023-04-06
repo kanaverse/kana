@@ -43,6 +43,12 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   const handleClose = () => {
     setNewInputs([]);
     setInputOptions([]);
+
+    setPreInputOptionsStatus(null);
+    setPreInputFilesStatus(null);
+
+    setEhubSel("none");
+
     setOpenInfo(true);
   };
 
@@ -56,14 +62,20 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   // minimise info box on the right
   const [openInfo, setOpenInfo] = useState(true);
 
+  // default ehub dataset selection
+  const [ehubSel, setEhubSel] = useState("none");
+
   // Access App Context
   const {
     ehubDatasets,
+    setEhubDatasets,
     setPreInputFiles,
     preInputFilesStatus,
     setPreInputOptions,
     preInputOptionsStatus,
     setInputFiles,
+    setPreInputOptionsStatus,
+    setPreInputFilesStatus,
   } = useContext(AppContext);
 
   // what tab was selected to identify format
@@ -106,6 +118,8 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
 
     setNewInputs([...newInputs, tmpNewInputs]);
     setOpenInfo(false);
+
+    setEhubSel("none");
 
     setTmpNewInputs(initTmpFile());
   };
@@ -335,13 +349,15 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                   </Text>
                   {Array.isArray(ehubDatasets) ? (
                     <HTMLSelect
-                      defaultValue={"none"}
+                      value={ehubSel}
                       onChange={(e) => {
                         if (e.target.value && e.target.value !== "none") {
                           setTmpNewInputs({
                             ...tmpNewInputs,
                             id: e.target.value,
                           });
+
+                          setEhubSel(e.target.value);
                         }
                       }}
                     >
