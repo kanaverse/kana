@@ -178,11 +178,10 @@ export function H5AD({
         <Divider />
         <Collapse isOpen={collapse}>
           <div>
-            {dsMeta && <H5>Optional settings</H5>}
             {dsMeta && (
               <Label className="row-input">
                 <Text>
-                  <span>Primary Count Matrix Name</span>
+                  <span>Primary count matrix name</span>
                 </Text>
                 <HTMLSelect
                   defaultValue={dsMeta.all_assay_names[0]}
@@ -234,7 +233,7 @@ export function H5AD({
                       <div key={i}>
                         <Label className="row-input">
                           <Text>
-                            <strong>{mod} Modality</strong>
+                            <strong>{mod} modality</strong>
                           </Text>
                           <HTMLSelect
                             defaultValue={
@@ -286,7 +285,7 @@ export function H5AD({
                             <option value="none">None</option>
                             {getAvailableModalities(mod).map((x, i) => (
                               <option key={i} value={x}>
-                                {x === "" ? "Unknown Modality" : x}
+                                {x === "" ? <em>unnamed</em> : x}
                               </option>
                             ))}
                           </HTMLSelect>
@@ -315,7 +314,7 @@ export function H5AD({
                         >
                           <Label className="row-input">
                             <Text>
-                              <strong>{mod} Feature ID</strong>
+                              <strong>{mod} primary feature ID</strong>
                             </Text>
                             <HTMLSelect
                               defaultValue="none"

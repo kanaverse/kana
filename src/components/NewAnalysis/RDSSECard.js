@@ -211,23 +211,20 @@ export function RDSSE({
       <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
-          This <strong>{resource.format}</strong> dataset contains{" "}
+          This <strong>RDS</strong> dataset contains{" "}
           {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature types:{" "}
           {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
         <Divider />
         <Collapse isOpen={collapse}>
           <div>
-            {dsMeta && Object.keys(dsMeta.modality_features).length > 1 && (
-              <H5>Optional settings</H5>
-            )}
             {dsMeta &&
               MODALITIES.map((mod, i) => {
                 return (
                   <div key={i}>
                     <Label className="row-input">
                       <Text>
-                        <strong>{mod} Modality</strong>
+                        <strong>{mod} modality</strong>
                       </Text>
                       <HTMLSelect
                         defaultValue={
@@ -252,7 +249,7 @@ export function RDSSE({
                         <option value="none">None</option>
                         {getAvailableModalities(mod).map((x, i) => (
                           <option key={i} value={x}>
-                            {x === "" ? "Unknown Modality" : x}
+                            {x === "" ? "unnamed" : x}
                           </option>
                         ))}
                       </HTMLSelect>
@@ -267,7 +264,7 @@ export function RDSSE({
                     >
                       <Label className="row-input">
                         <Text>
-                          <strong>{mod} Count Assay</strong>
+                          <strong>{mod} count assay</strong>
                         </Text>
                         <HTMLSelect
                           defaultValue={
@@ -314,7 +311,7 @@ export function RDSSE({
                     >
                       <Label className="row-input">
                         <Text>
-                          <strong>{mod} Feature ID</strong>
+                          <strong>{mod} primary feature ID</strong>
                         </Text>
                         <HTMLSelect
                           defaultValue="none"

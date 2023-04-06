@@ -21,15 +21,6 @@ export function guessModalities(preflight) {
   return tmpOptions;
 }
 
-export function sanitizeFormatName(format) {
-  switch(format) {
-    case "10X": return "10X HDF5";
-    case "MatrixMarket": return "10X MatrixMarket";
-    case "SummarizedExperiment": return "RDS";
-  }
-  return format;
-}
-
 export function reportFeatureTypes(modality_features) {
   return Object.entries(modality_features).map((x, i) => 
     <>

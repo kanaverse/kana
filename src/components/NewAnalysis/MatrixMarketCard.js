@@ -135,7 +135,7 @@ export function MatrixMarket({
       <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
-          This <strong>{resource.format}</strong> dataset contains{" "}
+          This <strong>10X MatrixMarket</strong> dataset contains{" "}
           {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature types:{" "}
           {dsMeta && Object.entries(dsMeta.modality_features).map(x => 
               <> 
@@ -147,16 +147,13 @@ export function MatrixMarket({
         <Divider />
         <Collapse isOpen={collapse}>
           <div>
-            {dsMeta && Object.keys(dsMeta.modality_features).length > 1 && (
-              <H5>Optional settings</H5>
-            )}
             {dsMeta &&
               MODALITIES.map((mod, i) => {
                 return (
                   <div key={i}>
                     <Label className="row-input">
                       <Text>
-                        <strong>{mod} Modality</strong>
+                        <strong>{mod} modality</strong>
                       </Text>
                       <HTMLSelect
                         defaultValue={
@@ -199,7 +196,7 @@ export function MatrixMarket({
                         <option value="none">None</option>
                         {getAvailableModalities(mod).map((x, i) => (
                           <option key={i} value={x}>
-                            {x === "" ? "Unknown Modality" : x}
+                            {x === "" ? <em>unnamed</em> : x}
                           </option>
                         ))}
                       </HTMLSelect>
@@ -228,7 +225,7 @@ export function MatrixMarket({
                     >
                       <Label className="row-input">
                         <Text>
-                          <strong>{mod} Feature ID</strong>
+                          <strong>{mod} primary feature ID</strong>
                         </Text>
                         <HTMLSelect
                           defaultValue="none"
