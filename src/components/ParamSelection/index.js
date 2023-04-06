@@ -74,6 +74,10 @@ export function ParameterSelection({
       )
   };
 
+  const missingModality = (x) => {
+      return !!preInputOptionsStatus && !(x in preInputOptionsStatus);
+  };
+
   const render_stepinfo = () => {
     return (
       <>
@@ -1651,7 +1655,7 @@ export function ParameterSelection({
                   min={0}
                   defaultValue={tmpParams["combine_embeddings"]["adt_weight"]}
                   value={tmpParams["combine_embeddings"]["adt_weight"]}
-                  disabled={!!preInputOptionsStatus && !("ADT" in preInputOptionsStatus)}
+                  disabled={missingModality("ADT")}
                   onValueChange={(nval, val) => {
                     let gip = { ...tmpParams };
                     gip["combine_embeddings"]["adt_weight"] = nval;
@@ -1670,7 +1674,7 @@ export function ParameterSelection({
                     tmpParams["combine_embeddings"]["crispr_weight"]
                   }
                   value={tmpParams["combine_embeddings"]["crispr_weight"]}
-                  disabled={!!preInputOptionsStatus && !("CRISPR" in preInputOptionsStatus)}
+                  disabled={missingModality("CRISPR")}
                   onValueChange={(nval, val) => {
                     let gip = { ...tmpParams };
                     gip["combine_embeddings"]["crispr_weight"] = nval;
@@ -1822,7 +1826,7 @@ export function ParameterSelection({
               id="rnaqc"
               title="Quality control"
               tagContent="RNA"
-              disabled={!!preInputOptionsStatus && !("RNA" in preInputOptionsStatus)}
+              disabled={missingModality("RNA")}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1834,6 +1838,7 @@ export function ParameterSelection({
               id="fs"
               title="Feature selection"
               tagContent="RNA"
+              disabled={missingModality("RNA")}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1845,7 +1850,7 @@ export function ParameterSelection({
               id="rnapca"
               title="Principal components analysis"
               tagContent="RNA"
-              disabled={!!preInputOptionsStatus && !("RNA" in preInputOptionsStatus)}
+              disabled={missingModality("RNA")}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1857,7 +1862,7 @@ export function ParameterSelection({
               id="adtqc"
               title="Quality control"
               tagContent="ADT"
-              disabled={!!preInputOptionsStatus && !("ADT" in preInputOptionsStatus)}
+              disabled={missingModality("ADT")}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1869,7 +1874,7 @@ export function ParameterSelection({
               id="adtnorm"
               title="Normalization"
               tagContent="ADT"
-              disabled={!!preInputOptionsStatus && !("ADT" in preInputOptionsStatus)}
+              disabled={missingModality("ADT")}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1880,8 +1885,8 @@ export function ParameterSelection({
             <Tab
               id="adtpca"
               title="Principal components analysis"
-              disabled={!!preInputOptionsStatus && !("ADT" in preInputOptionsStatus)}
               tagContent="ADT"
+              disabled={missingModality("ADT")}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1893,7 +1898,7 @@ export function ParameterSelection({
               id="crisprqc"
               title="Quality control"
               tagContent="CRISPR"
-              disabled={!!preInputOptionsStatus && !("CRISPR" in preInputOptionsStatus)}
+              disabled={missingModality("CRISPR")}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1905,7 +1910,7 @@ export function ParameterSelection({
               id="crisprpca"
               title="Principal components analysis"
               tagContent="CRISPR"
-              disabled={!!preInputOptionsStatus && !("CRISPR" in preInputOptionsStatus)}
+              disabled={missingModality("CRISPR")}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1988,7 +1993,7 @@ export function ParameterSelection({
             <Tab
               id="cellann"
               title="Cell type annotation"
-              disabled={!!preInputOptionsStatus && !("RNA" in preInputOptionsStatus)}
+              disabled={missingModality("RNA")}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1999,7 +2004,7 @@ export function ParameterSelection({
             <Tab
               id="fsetenrich"
               title="Gene set enrichment"
-              disabled={!!preInputOptionsStatus && !("RNA" in preInputOptionsStatus)}
+              disabled={missingModality("RNA")}
               panel={
                 <>
                   {render_stepinfo()}
