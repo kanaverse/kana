@@ -34,6 +34,8 @@ import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 
 import { MODALITIES } from "../../utils/utils";
 
+import { reportFeatureTypes } from "./utils";
+
 export function ExperimentHub({
   resource,
   index,
@@ -107,13 +109,9 @@ export function ExperimentHub({
       <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
-          <strong>{resource.format}</strong> contains{" "}
-          {dsMeta && dsMeta.cells.numberOfCells} cells and{" "}
-          {dsMeta && Object.keys(dsMeta.modality_features).length}{" "}
-          {dsMeta && Object.keys(dsMeta.modality_features).length > 1
-            ? "modalities"
-            : "modality"}
-          .
+          This <strong>{resource.format}</strong> dataset contains{" "}
+          {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature types:{" "}
+          {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
         <Divider />
         <Collapse isOpen={collapse}>

@@ -314,6 +314,16 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           panel={
             <>
             <div className="row">
+              <Callout intent="primary">
+              <p>
+                 Pull a published dataset from Bioconductor's {" "}
+                 <a href="http://bioconductor.org/packages/ExperimentHub" target="_blank">ExperimentHub</a>{" "}
+                 database.
+                 A curated selection of small datasets is provided here for demonstration purposes.
+              </p>
+              </Callout>
+            </div>
+            <div className="row">
               <Label className="row-input">
                 <Text className="text-100">
                   <span>Choose an ExperimentHub dataset</span>
@@ -342,16 +352,6 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 )}
               </Label>
             </div>
-            <div className="row">
-              <Callout intent="primary">
-              <p>
-                 Pull a published dataset from Bioconductor's {" "}
-                 <a href="http://bioconductor.org/packages/ExperimentHub" target="_blank">ExperimentHub</a>{" "}
-                 database.
-                 A curated selection of small datasets is provided here for demonstration purposes.
-              </p>
-              </Callout>
-            </div>
             </>
           }
         />
@@ -360,6 +360,25 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           title="10X MatrixMarket"
           panel={
             <>
+            <div className="row">
+              <Callout intent="primary">
+              <p>
+                 Load a 10X MatrixMarket file, typically produced by processing pipelines like Cellranger.
+                 We assume that the data has already been filtered to remove empty droplets. 
+              </p>
+              <p>
+                 The count matrix should have an <Code>*.mtx</Code> or (if Gzip-compressed) <Code>*.mtx.gz</Code> extension. 
+              </p>
+              <p>
+                 We recommend supplying the feature annotation as an additional TSV file with gene identifiers and symbols - 
+                 this is usually called <Code>features.tsv.gz</Code> or{" "} <Code>genes.tsv</Code>.
+              </p>
+              <p>
+                 You may optionally supply an additional TSV file with per-barcode annotations, e.g., 
+                 sample assignments for each cell, previously generated clusters.
+              </p>
+              </Callout>
+            </div>
             <div className="row">
               <Label className="row-input">
                 <Text className="text-100">
@@ -431,25 +450,6 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 />
               </Label>
             </div>
-            <div className="row">
-              <Callout intent="primary">
-              <p>
-                 Load a 10X MatrixMarket file, typically produced by processing pipelines like Cellranger.
-                 We assume that the data has already been filtered to remove empty droplets. 
-              </p>
-              <p>
-                 The count matrix should have an <Code>*.mtx</Code> or (if Gzip-compressed) <Code>*.mtx.gz</Code> extension. 
-              </p>
-              <p>
-                 We recommend supplying the feature annotation as an additional TSV file with gene identifiers and symbols - 
-                 this is usually called <Code>features.tsv.gz</Code> or{" "} <Code>genes.tsv</Code>.
-              </p>
-              <p>
-                 You may optionally supply an additional TSV file with per-barcode annotations, e.g., 
-                 sample assignments for each cell, previously generated clusters.
-              </p>
-              </Callout>
-            </div>
             </>
           }
         />
@@ -458,29 +458,6 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           title="10X HDF5"
           panel={
             <>
-            <div className="row">
-              <Label className="row-input">
-                <Text className="text-100">
-                  <span>Choose a 10X HDF5 file</span>
-                </Text>
-                <FileInput
-                  style={{
-                    marginTop: "5px",
-                  }}
-                  text={
-                    tmpNewInputs?.h5 ? tmpNewInputs?.h5.name : ".h5 or .hdf5"
-                  }
-                  onInputChange={(msg) => {
-                    if (msg.target.files) {
-                      setTmpNewInputs({
-                        ...tmpNewInputs,
-                        h5: msg.target.files[0],
-                      });
-                    }
-                  }}
-                />
-              </Label>
-            </div>
             <div className="row">
               <Callout intent="primary">
               <p>
@@ -505,6 +482,29 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
               </p>
               </Callout>
             </div>
+            <div className="row">
+              <Label className="row-input">
+                <Text className="text-100">
+                  <span>Choose a 10X HDF5 file</span>
+                </Text>
+                <FileInput
+                  style={{
+                    marginTop: "5px",
+                  }}
+                  text={
+                    tmpNewInputs?.h5 ? tmpNewInputs?.h5.name : ".h5 or .hdf5"
+                  }
+                  onInputChange={(msg) => {
+                    if (msg.target.files) {
+                      setTmpNewInputs({
+                        ...tmpNewInputs,
+                        h5: msg.target.files[0],
+                      });
+                    }
+                  }}
+                />
+              </Label>
+            </div>
             </>
           }
         />
@@ -513,6 +513,14 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           title="H5AD"
           panel={
             <>
+            <div className="row">
+              <Callout intent="primary">
+                <p>
+                  Load a H5AD (<Code>*.h5ad</Code>) file containing a count matrix in one of its layers.{" "}
+                  Gene annotations should be present in the <Code>vars</Code>.
+                </p>
+              </Callout>
+            </div>
             <div className="row">
               <Label className="row-input">
                 <Text className="text-100">
@@ -534,14 +542,6 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 />
               </Label>
             </div>
-            <div className="row">
-              <Callout intent="primary">
-                <p>
-                  Load a H5AD (<Code>*.h5ad</Code>) file containing a count matrix in one of its layers.{" "}
-                  Gene annotations should be present in the <Code>vars</Code>.
-                </p>
-              </Callout>
-            </div>
             </>
           }
         />
@@ -550,6 +550,15 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           title="RDS"
           panel={
             <>
+            <div className="row">
+              <Callout intent="primary">
+                <p>
+                  Load an RDS (<Code>*.rds</Code>) file containing a single <Code>SummarizedExperiment</Code> object.{" "}
+                  We support any instance of a <Code>SummarizedExperiment</Code> subclass containing a dense or sparse count matrix. 
+                  If a <Code>SingleCellExperiment</Code> object is provided, other modalities can be extracted from the alternative experiments.
+                </p>
+              </Callout>
+            </div>
             <div className="row">
               <Label className="row-input">
                 <Text className="text-100">
@@ -570,15 +579,6 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                   }}
                 />
               </Label>
-            </div>
-            <div className="row">
-              <Callout intent="primary">
-                <p>
-                  Load an RDS (<Code>*.rds</Code>) file containing a single <Code>SummarizedExperiment</Code> object.{" "}
-                  We support any instance of a <Code>SummarizedExperiment</Code> subclass containing a dense or sparse count matrix. 
-                  If a <Code>SingleCellExperiment</Code> object is provided, other modalities can be extracted from the alternative experiments.
-                </p>
-              </Callout>
             </div>
             </>
           }
@@ -800,15 +800,17 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
       >
         <p>
           If you load multiple datasets, we only use modalities that are present in each dataset.
-          For each modality, we only use the intersection of features across datasets
-          {preInputOptionsStatus && Object.keys(preInputOptionsStatus).length > 0 ? ", as computed below:" : "."}
+          For each modality, we only use the intersection of features across datasets.
+          This is done using the <em>primary feature IDs</em> for each modality,
+          which you can customize manually for each dataset to improve the size of the intersections
+          {preInputOptionsStatus && Object.keys(preInputOptionsStatus).length > 0 ? ":" : "."}
         </p>
         {preInputOptionsStatus && Object.keys(preInputOptionsStatus).length > 0 ?
            <ul>
            {Object.keys(preInputOptionsStatus).map((x, i) => {
              return (
                <li>
-                 {x}: {preInputOptionsStatus[x]}{" "} common features
+                 <Code>{x}</Code>: {preInputOptionsStatus[x]}{" "} common features
                </li>
              );
            })}

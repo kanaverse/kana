@@ -1,3 +1,5 @@
+import { Code } from "@blueprintjs/core";
+
 export function guessModalities(preflight) {
   let tmpOptions = {};
   for (const [k, v] of Object.entries(preflight.modality_features)) {
@@ -18,3 +20,23 @@ export function guessModalities(preflight) {
 
   return tmpOptions;
 }
+
+export function sanitizeFormatName(format) {
+  switch(format) {
+    case "10X": return "10X HDF5";
+    case "MatrixMarket": return "10X MatrixMarket";
+    case "SummarizedExperiment": return "RDS";
+  }
+  return format;
+}
+
+export function reportFeatureTypes(modality_features) {
+  return Object.entries(modality_features).map((x, i) => 
+    <>
+      {i > 0 ? ", " : "" }
+      {x[0] == "" ? (<Code><em>unnamed</em></Code>) : <Code>{x[0]}</Code>}{" "}
+      ({x[1].numberOfFeatures} features)
+    </>
+  );
+}
+

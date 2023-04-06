@@ -171,8 +171,9 @@ export function H5AD({
       <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
-          <strong>{resource.format}</strong> contains{" "}
-          {dsMeta && dsMeta.cells.numberOfCells} cells
+          This <strong>{resource.format}</strong> dataset contains{" "}
+          {dsMeta && dsMeta.cells.numberOfCells} cells and{" "}
+          {dsMeta && dsMeta.all_features.numberOfFeatures} features.
         </p>
         <Divider />
         <Collapse isOpen={collapse}>
@@ -203,7 +204,7 @@ export function H5AD({
               <>
                 <Label className="row-input">
                   <Text>
-                    <span>Choose a column that specifies feature type</span>
+                    <span>Feature type column</span>
                   </Text>
                   <HTMLSelect
                     defaultValue="none"
