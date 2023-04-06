@@ -168,7 +168,6 @@ export function H5AD({
           <Button icon="cross" minimal={true} onClick={handleRemove} />
         </ButtonGroup>
       </div>
-      <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
           This <strong>{resource.format}</strong> dataset contains{" "}

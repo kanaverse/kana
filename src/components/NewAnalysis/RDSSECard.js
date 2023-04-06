@@ -208,7 +208,6 @@ export function RDSSE({
           <Button icon="cross" minimal={true} onClick={handleRemove} />
         </ButtonGroup>
       </div>
-      <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
           This <strong>RDS</strong> dataset contains{" "}

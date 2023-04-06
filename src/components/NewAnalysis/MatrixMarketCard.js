@@ -132,7 +132,6 @@ export function MatrixMarket({
           <Button icon="cross" minimal={true} onClick={handleRemove} />
         </ButtonGroup>
       </div>
-      <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
           This <strong>10X MatrixMarket</strong> dataset contains{" "}
