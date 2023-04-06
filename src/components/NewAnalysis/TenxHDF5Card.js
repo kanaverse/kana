@@ -139,13 +139,13 @@ export function TenxHDF5({
           {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature types:{" "}
           {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
-        <Divider />
         <Collapse isOpen={collapse}>
           <div>
             {dsMeta &&
               MODALITIES.map((mod, i) => {
                 return (
                   <div key={i}>
+                    <Divider />
                     <Label className="row-input">
                       <Text>
                         <strong>{mod} modality</strong>
@@ -188,7 +188,7 @@ export function TenxHDF5({
                           }
                         }}
                       >
-                        <option value="none">None</option>
+                        <option value="none">--- no selection ---</option>
                         {getAvailableModalities(mod).map((x, i) => (
                           <option key={i} value={x}>
                             {x === "" ? "unnamed" : x}
@@ -272,7 +272,6 @@ export function TenxHDF5({
                         </HTMLSelect>
                       </Label>
                     </FormGroup>
-                    <Divider />
                   </div>
                 );
               })}

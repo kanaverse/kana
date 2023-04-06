@@ -135,21 +135,22 @@ export function MatrixMarket({
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
           This <strong>10X MatrixMarket</strong> dataset contains{" "}
-          {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature types:{" "}
-          {dsMeta && Object.entries(dsMeta.modality_features).map(x => 
-              <> 
+          {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature
+          types:{" "}
+          {dsMeta &&
+            Object.entries(dsMeta.modality_features).map((x) => (
+              <>
                 <Code>{x[0]}</Code> ({x[1].numberOfFeatures} features)
               </>
-            )
-          }
+            ))}
         </p>
-        <Divider />
         <Collapse isOpen={collapse}>
           <div>
             {dsMeta &&
               MODALITIES.map((mod, i) => {
                 return (
                   <div key={i}>
+                    <Divider />
                     <Label className="row-input">
                       <Text>
                         <strong>{mod} modality</strong>
@@ -192,7 +193,7 @@ export function MatrixMarket({
                           }
                         }}
                       >
-                        <option value="none">None</option>
+                        <option value="none">--- no selection ---</option>
                         {getAvailableModalities(mod).map((x, i) => (
                           <option key={i} value={x}>
                             {x === "" ? <em>unnamed</em> : x}
@@ -227,6 +228,26 @@ export function MatrixMarket({
                           <strong>{mod} primary feature ID</strong>
                         </Text>
                         <HTMLSelect
+                          disabled={
+                            options?.[
+                              `featureType${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }Name`
+                            ] === undefined ||
+                            options?.[
+                              `featureType${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }Name`
+                            ] === null ||
+                            options?.[
+                              `featureType${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }Name`
+                            ] === "none"
+                          }
                           defaultValue="none"
                           onChange={(e) => {
                             if (e.target.value) {
@@ -276,7 +297,6 @@ export function MatrixMarket({
                         </HTMLSelect>
                       </Label>
                     </FormGroup>
-                    <Divider />
                   </div>
                 );
               })}
