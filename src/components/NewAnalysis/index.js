@@ -795,22 +795,31 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
       <Callout
         className="section-input-item"
         intent="primary"
-        title="Summary across datasets"
+        title="Incorporating multiple datasets"
         icon="issue"
       >
-        Contains {Object.keys(preInputOptionsStatus).length}{" "}
-        {Object.keys(preInputOptionsStatus).length > 1
-          ? "modalities"
-          : "modality"}
-        {preInputOptionsStatus &&
-          Object.keys(preInputOptionsStatus).map((x, i) => {
-            return (
-              <p key={i}>
-                Modality: <em>{x}</em> contains {preInputOptionsStatus[x]}{" "}
-                common features
-              </p>
-            );
-          })}
+        <p>
+          If you load multiple datasets, we only use modalities that are present in each dataset.
+          For each modality, we only use the intersection of features across datasets
+          {preInputOptionsStatus && Object.keys(preInputOptionsStatus).length > 0 ? ", as computed below:" : "."}
+        </p>
+        {preInputOptionsStatus && Object.keys(preInputOptionsStatus).length > 0 ?
+           <ul>
+           {Object.keys(preInputOptionsStatus).map((x, i) => {
+             return (
+               <li>
+                 {x}: {preInputOptionsStatus[x]}{" "} common features
+               </li>
+             );
+           })}
+           </ul>
+           :
+           ""
+        }
+        <p>
+          Each dataset is treated as a separate batch during batch correction.
+          This default behavior can be changed in the analysis parameters.
+        </p>
       </Callout>
     );
   };
