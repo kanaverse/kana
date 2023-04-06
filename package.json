@@ -12,8 +12,8 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "bakana": "2.0.10",
-    "bakana-remotes": "^1.0.0",
+    "bakana": "2.0.11",
+    "bakana-remotes": "^1.0.1",
     "bioconductor": "^0.3.1",
     "d3": "^7.8.2",
     "epiviz.gl": "^1.0.4",
@@ -46,7 +46,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "build-dev": "PUBLIC_URL=/kana-v3-dev react-scripts build"
   },
   "eslintConfig": {
     "extends": [

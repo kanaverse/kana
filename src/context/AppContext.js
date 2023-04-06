@@ -33,6 +33,12 @@ const AppContextProvider = ({ children }) => {
   // Pre flight Input Status
   const [preInputFilesStatus, setPreInputFilesStatus] = useState(null);
 
+  // Pre flight Options
+  const [preInputOptions, setPreInputOptions] = useState(null);
+
+  // Pre flight Options Status
+  const [preInputOptionsStatus, setPreInputOptionsStatus] = useState(null);
+
   // Ehub datasets
   const [ehubDatasets, setEhubDatasets] = useState(null);
 
@@ -235,6 +241,10 @@ const AppContextProvider = ({ children }) => {
         setFsetEnrichCollections,
         loadZiesel,
         setLoadZiesel,
+        preInputOptions,
+        setPreInputOptions,
+        preInputOptionsStatus,
+        setPreInputOptionsStatus,
       }}
     >
       {children}

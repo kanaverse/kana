@@ -121,6 +121,8 @@ export function AnalysisMode(props) {
     setFsetEnrichCollections,
     loadZiesel,
     setLoadZiesel,
+    preInputOptions,
+    setPreInputOptionsStatus,
   } = useContext(AppContext);
 
   // modalities
@@ -307,6 +309,20 @@ export function AnalysisMode(props) {
       }
     }
   }, [preInputFiles, wasmInitialized]);
+
+  useEffect(() => {
+    if (wasmInitialized && preInputFiles) {
+      if (preInputFiles.files && preInputOptions.options.length > 1) {
+        scranWorker.postMessage({
+          type: "PREFLIGHT_OPTIONS",
+          payload: {
+            ...preInputOptions,
+            inputs: preInputFiles,
+          },
+        });
+      }
+    }
+  }, [preInputOptions, wasmInitialized]);
 
   // NEW analysis: files are imported into Kana
   useEffect(() => {
@@ -782,6 +798,10 @@ export function AnalysisMode(props) {
     } else if (type === "PREFLIGHT_INPUT_DATA") {
       if (resp.details) {
         setPreInputFilesStatus(resp.details);
+      }
+    } else if (type === "PREFLIGHT_OPTIONS_DATA") {
+      if (resp) {
+        setPreInputOptionsStatus(resp);
       }
     } else if (type === "inputs_DATA") {
       var info = [];

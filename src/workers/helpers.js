@@ -282,14 +282,14 @@ export async function fetchStepSummary(state, step) {
   } else if (step === "feature_set_enrichment") {
     let collections = state.feature_set_enrichment.fetchCollectionDetails();
     let sets = state.feature_set_enrichment.fetchSetDetails();
-    return { 
-        collections: collections,
-        sets: {
-            names: sets.names,
-            descriptions: sets.descriptions,
-            sizes: sets.sizes.slice(),
-            collections: sets.collections.slice()
-        }
-    }
+    return {
+      collections: collections,
+      sets: {
+        names: sets.names,
+        descriptions: sets.descriptions,
+        sizes: sets.sizes.slice(),
+        collections: sets.collections.slice(),
+      },
+    };
   }
 }

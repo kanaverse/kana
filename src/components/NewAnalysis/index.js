@@ -57,8 +57,14 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   const [openInfo, setOpenInfo] = useState(true);
 
   // Access App Context
-  const { ehubDatasets, setPreInputFiles, preInputFilesStatus, setInputFiles } =
-    useContext(AppContext);
+  const {
+    ehubDatasets,
+    setPreInputFiles,
+    preInputFilesStatus,
+    setPreInputOptions,
+    preInputOptionsStatus,
+    setInputFiles,
+  } = useContext(AppContext);
 
   // what tab was selected to identify format
   const [tabSelected, setTabSelected] = useState("ExperimentHub");
@@ -262,8 +268,11 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   useEffect(() => {
     if (Array.isArray(newInputs) && newInputs.length > 0) {
       let mapFiles = {};
+      let counter = 0;
       for (const f of newInputs) {
+        f.options = inputOptions[counter];
         mapFiles[f.name] = f;
+        counter++;
       }
 
       setPreInputFiles({
@@ -271,6 +280,19 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
       });
     }
   }, [newInputs]);
+
+  // compute intersection when options change
+  useEffect(() => {
+    if (
+      Array.isArray(newInputs) &&
+      newInputs.length > 0 &&
+      preInputFilesStatus
+    ) {
+      setPreInputOptions({
+        options: inputOptions,
+      });
+    }
+  }, [inputOptions]);
 
   const render_inputs = () => {
     return (
@@ -692,6 +714,31 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
     );
   };
 
+  const render_multi_summary = () => {
+    return (
+      <Callout
+        className="section-input-item"
+        intent="primary"
+        title="Summary across datasets"
+        icon="issue"
+      >
+        Contains {Object.keys(preInputOptionsStatus).length}{" "}
+        {Object.keys(preInputOptionsStatus).length > 1
+          ? "modalities"
+          : "modality"}
+        {preInputOptionsStatus &&
+          Object.keys(preInputOptionsStatus).map((x, i) => {
+            return (
+              <p key={i}>
+                Modality: <em>{x}</em> contains {preInputOptionsStatus[x]}{" "}
+                common features
+              </p>
+            );
+          })}
+      </Callout>
+    );
+  };
+
   return (
     <Card className="section" interactive={false} elevation={Elevation.ZERO}>
       <div className="section-header">
@@ -850,6 +897,12 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
             <>
               <Divider />
               {render_batch_correction()}
+            </>
+          )}
+          {preInputOptionsStatus && newInputs.length > 1 && (
+            <>
+              <Divider />
+              {render_multi_summary()}
             </>
           )}
           <div className="section-inputs">

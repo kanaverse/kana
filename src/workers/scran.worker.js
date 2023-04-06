@@ -610,6 +610,55 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
+  } else if (type == "PREFLIGHT_OPTIONS") {
+    loaded.then(async (x) => {
+      let resp = {};
+      try {
+        let counter = 0;
+        let features = {};
+
+        for (const [k, v] of Object.entries(payload.inputs.files)) {
+          if ("uid" in v) {
+            let ds = preflights[v.uid];
+
+            if (
+              Array.isArray(payload.options) &&
+              payload.options.length > counter
+            ) {
+              ds.setOptions(payload.options[counter]);
+
+              let res = ds.previewPrimaryIds({ cache: true });
+
+              for (const i_mod of ["RNA", "ADT", "CRISPR"]) {
+                if (i_mod in res) {
+                  if (!features[i_mod]) {
+                    features[i_mod] = [res[i_mod]];
+                  } else {
+                    features[i_mod].push(res[i_mod]);
+                  }
+                }
+              }
+            }
+          }
+          counter++;
+        }
+
+        for (const [k, v] of Object.entries(features)) {
+          resp[k] = gesel.intersect(v).length;
+        }
+        
+      } catch (e) {
+        console.error(e);
+        resp.status = "ERROR";
+        resp.reason = e.toString();
+      }
+
+      postMessage({
+        type: "PREFLIGHT_OPTIONS_DATA",
+        resp: resp,
+        msg: "Success: PREFLIGHT_OPTIONS done",
+      });
+    });
   } else if (type == "PREFLIGHT_INPUT") {
     loaded
       .then(async (x) => {
@@ -622,7 +671,9 @@ onmessage = function (msg) {
             if ("uid" in v) {
               if (!(v.uid in preflights)) {
                 preflights[v.uid] = createDataset(v);
-                preflights_summary[v.uid] = await preflights[v.uid].summary();
+                preflights_summary[v.uid] = await preflights[v.uid].summary({
+                  cache: true,
+                });
               }
               current[k] = preflights[v.uid];
               summary[k] = summarizeDataset(preflights_summary[v.uid], v);
