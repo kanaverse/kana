@@ -21,7 +21,7 @@ async function proxyAndCache(url) {
 }
 
 bakana.CellLabellingState.setDownload(proxyAndCache);
-bakana.FeatureSetEnrichmentState.setDownload(proxyAndCache);
+gesel.setGeneDownload(proxyAndCache);
 bakana.RnaQualityControlState.setDownload(proxyAndCache);
 
 gesel.referenceDownload(async (file, start, end) => {
