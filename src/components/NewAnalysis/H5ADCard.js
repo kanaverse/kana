@@ -180,7 +180,7 @@ export function H5AD({
             {dsMeta && (
               <Label className="row-input">
                 <Text>
-                  <span>Primary count matrix name</span>
+                  <strong>Primary count matrix name</strong>
                 </Text>
                 <HTMLSelect
                   defaultValue={dsMeta.all_assay_names[0]}
@@ -202,7 +202,7 @@ export function H5AD({
               <>
                 <Label className="row-input">
                   <Text>
-                    <span>Feature type column</span>
+                    <strong>Feature type column</strong>
                   </Text>
                   <HTMLSelect
                     defaultValue="none"
@@ -231,14 +231,11 @@ export function H5AD({
                   options["featureTypeColumnName"] === "none") && (
                   <Label className="row-input">
                     <Divider />
-                    <Text>
-                      <strong>Note: All cells are considered RNA.</strong>
-                    </Text>
-                    <br />
                     <FormGroup>
                       <Label className="row-input">
                         <Text>
-                          <strong>RNA primary feature ID</strong>
+                          <strong>RNA primary feature ID</strong>{" "}
+                          <small>(when no feature type is provided, we assume that only RNA data is present)</small>
                         </Text>
                         <HTMLSelect
                           defaultValue="none"

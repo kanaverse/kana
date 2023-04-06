@@ -118,7 +118,7 @@ export function ExperimentHub({
             <div>
               <Label className="row-input">
                 <Text>
-                  <span>RNA primary feature ID</span>
+                  <strong>RNA primary feature ID</strong>
                 </Text>
                 <HTMLSelect
                   defaultValue="none"
