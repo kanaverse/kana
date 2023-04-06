@@ -589,108 +589,103 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
 
   const render_batch_correction = () => {
     return (
+      <>
       <Callout
         className="section-input-item"
         intent="primary"
-        title="Optional Parameters"
+        title="Batch correction by annotation"
         icon="issue"
       >
+        <p>
+          If you upload a single dataset, you can optionally tell <strong>kana</strong> to perform batch correction based on batch assignments from a single annotation column.
+        </p>
         <Label className="row-input">
-          <Switch
-            checked={showBatch}
-            label="Perform Batch correction?"
-            onChange={() => setShowBatch(!showBatch)}
-          />
-          {showBatch && (
-            <>
-              Choose the annotation column that specifies <strong>batch</strong>{" "}
-              information.
-              <HTMLSelect
-                defaultValue={default_none}
-                onChange={(e) => {
-                  let tmpBatch = null;
+          <HTMLSelect
+            defaultValue={default_none}
+            onChange={(e) => {
+              let tmpBatch = null;
 
-                  tmpBatch = e.target.value;
-                  if (e.target.value === default_none) {
-                    tmpBatch = null;
-                  }
-                  setBatch(tmpBatch);
-                }}
-              >
-                <option key={default_none} value={default_none}>
-                  none
-                </option>
-                {Object.keys(
-                  preInputFilesStatus[newInputs[0].name].cells["columns"]
-                ).map((x, i) => (
-                  <option key={i} value={x}>
-                    {x}
-                  </option>
-                ))}
-              </HTMLSelect>
-            </>
-          )}
+              tmpBatch = e.target.value;
+              if (e.target.value === default_none) {
+                tmpBatch = null;
+              }
+              setBatch(tmpBatch);
+            }}
+          >
+            <option key={default_none} value={default_none}>
+              none
+            </option>
+            {Object.keys(
+              preInputFilesStatus[newInputs[0].name].cells["columns"]
+            ).map((x, i) => (
+              <option key={i} value={x}>
+                {x}
+              </option>
+            ))}
+          </HTMLSelect>
         </Label>
+      </Callout>
+      <Callout
+        className="section-input-item"
+        intent="primary"
+        title="Subsetting by annotation"
+        icon="issue"
+      >
+        <p>
+          If you upload a single dataset, you can optionally tell <strong>kana</strong> to subset the cells based on a single annotation column.
+          You can select groups of interest (for categorical fields) or a range of values (for continuous fields) to define a subset of cells that will be used in the downstream analysis.
+          For categorical fields, only the first 50 levels are shown. 
+        </p>
         <Label className="row-input">
-          <Switch
-            checked={showSubset}
-            label="Subset dataset?"
-            onChange={() => setShowSubset(!showSubset)}
-          />
-          {showSubset && (
-            <>
-              Perform analysis on a subset of cells
-              <HTMLSelect
-                defaultValue={default_none}
-                onChange={(e) => {
-                  let tmpSubset = { ...subset };
+          <HTMLSelect
+            defaultValue={default_none}
+            onChange={(e) => {
+              let tmpSubset = { ...subset };
 
-                  tmpSubset["subset"] = e.target.value;
-                  if (e.target.value === default_none) {
-                    tmpSubset["subset"] = null;
-                  } else {
-                    if (
-                      preInputFilesStatus[newInputs[0].name].cells["columns"][
-                        tmpSubset["subset"]
-                      ].type === "categorical"
-                    ) {
-                      tmpSubset["values"] = [];
-                    } else {
-                      tmpSubset["minmax"] = [
-                        preInputFilesStatus[newInputs[0].name].cells["columns"][
-                          tmpSubset["subset"]
-                        ].min,
-                        preInputFilesStatus[newInputs[0].name].cells["columns"][
-                          tmpSubset["subset"]
-                        ].max,
-                      ];
-                      tmpSubset["chosen_minmax"] = [
-                        preInputFilesStatus[newInputs[0].name].cells["columns"][
-                          tmpSubset["subset"]
-                        ].min,
-                        preInputFilesStatus[newInputs[0].name].cells["columns"][
-                          tmpSubset["subset"]
-                        ].max,
-                      ];
-                    }
-                  }
+              tmpSubset["subset"] = e.target.value;
+              if (e.target.value === default_none) {
+                tmpSubset["subset"] = null;
+              } else {
+                if (
+                  preInputFilesStatus[newInputs[0].name].cells["columns"][
+                    tmpSubset["subset"]
+                  ].type === "categorical"
+                ) {
+                  tmpSubset["values"] = [];
+                } else {
+                  tmpSubset["minmax"] = [
+                    preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      tmpSubset["subset"]
+                    ].min,
+                    preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      tmpSubset["subset"]
+                    ].max,
+                  ];
+                  tmpSubset["chosen_minmax"] = [
+                    preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      tmpSubset["subset"]
+                    ].min,
+                    preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      tmpSubset["subset"]
+                    ].max,
+                  ];
+                }
+              }
 
-                  setSubset(tmpSubset);
-                }}
-              >
-                <option key={default_none} value={default_none}>
-                  none
-                </option>
-                {Object.keys(
-                  preInputFilesStatus[newInputs[0].name].cells["columns"]
-                ).map((x, i) => (
-                  <option key={i} value={x}>
-                    {x}
-                  </option>
-                ))}
-              </HTMLSelect>
-            </>
-          )}
+              setSubset(tmpSubset);
+            }}
+          >
+            <option key={default_none} value={default_none}>
+              none
+            </option>
+            {Object.keys(
+              preInputFilesStatus[newInputs[0].name].cells["columns"]
+            ).map((x, i) => (
+              <option key={i} value={x}>
+                {x}
+              </option>
+            ))}
+          </HTMLSelect>
         </Label>
         {subset?.["subset"] !== null && (
           <>
@@ -791,6 +786,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           </>
         )}
       </Callout>
+      </>
     );
   };
 
@@ -843,14 +839,14 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
             disabled={!tmpStatusValid}
             onClick={handleAddDataset}
           ></Button>
-        </div>
-        <div className="section-info">
           {preInputFilesStatus && newInputs && newInputs.length === 1 && (
             <>
               <Divider />
               {render_batch_correction()}
             </>
           )}
+        </div>
+        <div className="section-info">
           {preInputOptionsStatus && newInputs.length > 1 && (
             <>
               <Divider />
