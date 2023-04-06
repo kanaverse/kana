@@ -49,7 +49,7 @@ export function ParameterSelection({
   const [showCRISPR, setShowCRISPR] = useState(true);
 
   // access app context
-  const { params, setParams, fsetEnrichCollections } = useContext(AppContext);
+  const { params, setParams, fsetEnrichCollections, inputFiles, preInputFiles, preInputOptionsStatus } = useContext(AppContext);
 
   // new params, so that they can be discarded later
   const [tmpParams, setTmpParams] = useState(params);
@@ -58,6 +58,20 @@ export function ParameterSelection({
     setStateIndeterminate(false);
     setParams(tmpParams);
     setShowPanel("results");
+  };
+
+  const hasMultipleBatches = () => {
+    return (!!inputFiles.files) ?
+      (
+        Object.keys(inputFiles.files).length == 1 &&
+        typeof inputFiles.batch !== "string"
+      )
+      :
+      (
+        !!preInputFiles &&
+        Object.keys(preInputFiles.files).length == 1 &&
+        typeof preInputFiles.batch !== "string"
+      )
   };
 
   const render_stepinfo = () => {
@@ -1606,7 +1620,7 @@ export function ParameterSelection({
         <div>
           <div>
             <H5 className="param-section-title">
-              Combined Embedding
+              Combined embedding
             </H5>
             <div className="param-row">
               <Label className="param-row-input">
@@ -1801,7 +1815,8 @@ export function ParameterSelection({
           >
             <Tab
               id="rnaqc"
-              title="Quality control (RNA)"
+              title="Quality control"
+              tagContent="RNA"
               panel={
                 <>
                   {render_stepinfo()}
@@ -1811,7 +1826,8 @@ export function ParameterSelection({
             ></Tab>
             <Tab
               id="fs"
-              title="Feature Selection (RNA)"
+              title="Feature selection"
+              tagContent="RNA"
               panel={
                 <>
                   {render_stepinfo()}
@@ -1821,7 +1837,8 @@ export function ParameterSelection({
             ></Tab>
             <Tab
               id="rnapca"
-              title="Principal components analysis (RNA)"
+              title="Principal components analysis"
+              tagContent="RNA"
               panel={
                 <>
                   {render_stepinfo()}
@@ -1831,7 +1848,8 @@ export function ParameterSelection({
             ></Tab>
             <Tab
               id="adtqc"
-              title="Quality control (ADT)"
+              title="Quality control"
+              tagContent="ADT"
               panel={
                 <>
                   {render_stepinfo()}
@@ -1841,7 +1859,8 @@ export function ParameterSelection({
             ></Tab>
             <Tab
               id="adtnorm"
-              title="Normalization (ADT)"
+              title="Normalization"
+              tagContent="ADT"
               panel={
                 <>
                   {render_stepinfo()}
@@ -1851,7 +1870,8 @@ export function ParameterSelection({
             ></Tab>
             <Tab
               id="adtpca"
-              title="Principal components analysis (ADT)"
+              title="Principal components analysis"
+              tagContent="ADT"
               panel={
                 <>
                   {render_stepinfo()}
@@ -1861,7 +1881,8 @@ export function ParameterSelection({
             ></Tab>
             <Tab
               id="crisprqc"
-              title="Quality control (CRISPR)"
+              title="Quality control"
+              tagContent="CRISPR"
               panel={
                 <>
                   {render_stepinfo()}
@@ -1871,7 +1892,8 @@ export function ParameterSelection({
             ></Tab>
             <Tab
               id="crisprpca"
-              title="Principal components analysis (CRISPR)"
+              title="Principal components analysis"
+              tagContent="CRISPR"
               panel={
                 <>
                   {render_stepinfo()}
@@ -1880,22 +1902,23 @@ export function ParameterSelection({
               }
             ></Tab>
             <Tab
-              id="batch"
-              title="Batch correction"
+              id="combweights"
+              title="Combined embedding"
               panel={
                 <>
                   {render_stepinfo()}
-                  {render_batch_correction()}
+                  {render_combweights()}
                 </>
               }
             ></Tab>
             <Tab
-              id="clus"
-              title="Clustering"
+              id="batch"
+              title="Batch correction"
+              disabled={hasMultipleBatches()}
               panel={
                 <>
                   {render_stepinfo()}
-                  {render_clus()}
+                  {render_batch_correction()}
                 </>
               }
             ></Tab>
@@ -1906,6 +1929,16 @@ export function ParameterSelection({
                 <>
                   {render_stepinfo()}
                   {render_ann()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="clus"
+              title="Clustering"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_clus()}
                 </>
               }
             ></Tab>
@@ -1946,16 +1979,6 @@ export function ParameterSelection({
                 <>
                   {render_stepinfo()}
                   {render_cellann()}
-                </>
-              }
-            ></Tab>
-            <Tab
-              id="combweights"
-              title="Combined embedding"
-              panel={
-                <>
-                  {render_stepinfo()}
-                  {render_combweights()}
                 </>
               }
             ></Tab>

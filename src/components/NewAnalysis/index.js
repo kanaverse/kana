@@ -291,6 +291,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
 
       setPreInputFiles({
         files: mapFiles,
+        batch: batch
       });
     }
   }, [newInputs]);
