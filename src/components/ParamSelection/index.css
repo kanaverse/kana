@@ -76,10 +76,9 @@
   font-style: italic;
 }
 
-/* .param-text-100 {
-  color: #C87619;
-  font-weight: 500;
-} */
+.param-text-100 {
+  font-style: italic;
+}
 
 .param-section-title {
     color: #C87619;
