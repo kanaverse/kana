@@ -17,6 +17,8 @@ import {
   NumericInput,
   Checkbox,
   ButtonGroup,
+  Tabs,
+  Tab,
 } from "@blueprintjs/core";
 
 import "./index.css";
@@ -39,7 +41,7 @@ export function ParameterSelection({
   const [openInfo, setOpenInfo] = useState(true);
 
   // which helper to show? (on the right info box)
-  const [showStepHelper, setShowStepHelper] = useState(null);
+  const [showStepHelper, setShowStepHelper] = useState("rnaqc");
 
   // expand RNA section?
   const [showRNA, setShowRNA] = useState(true);
@@ -2236,13 +2238,17 @@ export function ParameterSelection({
   };
 
   return (
-    <Card className="section" interactive={false} elevation={Elevation.ZERO}>
-      <div className="section-header">
-        <H2 className="section-header-title">Analysis Parameters</H2>
+    <Card
+      className="param-section"
+      interactive={false}
+      elevation={Elevation.ZERO}
+    >
+      <div className="param-section-header">
+        <H2 className="param-section-header-title">Analysis Parameters</H2>
       </div>
       <Divider />
-      <div className="section-content">
-        <div className="section-content-body">
+      <div className="param-section-content">
+        <div className="param-section-content-body">
           <Callout icon="airplane">
             <p>
               <strong> Set or Modify parameters. </strong>A number of defaults
@@ -2260,100 +2266,183 @@ export function ParameterSelection({
             </p>
           </Callout>
           <Divider />
-          <ButtonGroup>
-            <Button
-              intent={showRNA ? "primary" : "none"}
-              // icon={showRNA ? "double-chevron-down" : "double-chevron-up"}
-              onClick={() => setShowRNA(!showRNA)}
-              text={
-                showRNA ? "Collapse RNA parameters" : "Expand RNA parameters"
+          <Tabs
+            defaultSelectedTabId={"rnaqc"}
+            vertical={true}
+            onChange={(ntab, otab) => {
+              setShowStepHelper(ntab);
+            }}
+          >
+            <Tab
+              id="rnaqc"
+              title="Quality control (RNA)"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_rna_qc()}
+                </>
               }
-            />
-            <Button
-              intent={showADT ? "primary" : "none"}
-              // icon={showADT ? "double-chevron-down" : "double-chevron-up"}
-              onClick={() => setShowADT(!showADT)}
-              text={
-                showADT ? "Collapse ADT parameters" : "Expand ADT parameters"
+            ></Tab>
+            <Tab
+              id="fs"
+              title="Feature Selection (RNA)"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_fs()}
+                </>
               }
-            />
-            <Button
-              intent={showCRISPR ? "primary" : "none"}
-              // icon={showCRISPR ? "double-chevron-down" : "double-chevron-up"}
-              onClick={() => setShowCRISPR(!showCRISPR)}
-              text={
-                showCRISPR
-                  ? "Collapse CRISPR parameters"
-                  : "Expand CRISPR parameters"
+            ></Tab>
+            <Tab
+              id="rnapca"
+              title="Principal components analysis (RNA)"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_rna_pca()}
+                </>
               }
-            />
-          </ButtonGroup>
-          <Divider />
-          <Collapse isOpen={showRNA}>
-            {render_rna_qc()}
-            <Divider />
-            {render_fs()}
-            <Divider />
-            {render_rna_pca()}
-          </Collapse>
-          <Collapse isOpen={showADT}>
-            {render_adtqc()}
-            <Divider />
-            {render_adtnorm()}
-            <Divider />
-            {render_adtpca()}
-            <Divider />
-          </Collapse>
-          <Collapse isOpen={showCRISPR}>
-            {render_crisprqc()}
-            <Divider />
-            {render_crisprpca()}
-            <Divider />
-          </Collapse>
-          {render_batch_correction()}
-          <Divider />
-          {render_clus()}
-          <Divider />
-          {render_ann()}
-          <Divider />
-          {render_markdet()}
-          <Divider />
-          {render_tsne()}
-          <Divider />
-          {render_umap()}
-          <Divider />
-          {render_cellann()}
-          <Divider />
-          {render_combweights()}
-          <Divider />
-          {render_fsetenrich()}
-        </div>
-        <div className="section-info">
-          <div>
-            {openInfo && (
-              <Button
-                outlined={true}
-                fill={true}
-                intent="warning"
-                text="Hide Info"
-                onClick={() => setOpenInfo(false)}
-              />
-            )}
-            {!openInfo && (
-              <Button
-                outlined={true}
-                fill={true}
-                intent="warning"
-                text="Show Info"
-                onClick={() => setOpenInfo(true)}
-              />
-            )}
-            <Collapse isOpen={openInfo}>{render_stepinfo()}</Collapse>
-          </div>
+            ></Tab>
+            <Tab
+              id="adtqc"
+              title="Quality control (ADT)"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_adtqc()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="adtnorm"
+              title="Normalization (ADT)"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_adtnorm()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="adtpca"
+              title="Principal components analysis (ADT)"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_adtpca()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="crisprqc"
+              title="Quality control (CRISPR)"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_crisprqc()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="crisprpca"
+              title="Principal components analysis (CRISPR)"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_crisprpca()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="batch"
+              title="Batch correction"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_batch_correction()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="clus"
+              title="Clustering"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_clus()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="ann"
+              title="Nearest neighbor search"
+              panel={<>{render_ann()}</>}
+            ></Tab>
+            <Tab
+              id="markdet"
+              title="Marker detection"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_markdet()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="tsne"
+              title="t-SNE"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_tsne()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="umap"
+              title="UMAP"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_umap()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="cellann"
+              title="Cell type annotation"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_cellann()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="combweights"
+              title="Combined embedding"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_combweights()}
+                </>
+              }
+            ></Tab>
+            <Tab
+              id="fsetenrich"
+              title="Feature set enrichment"
+              panel={
+                <>
+                  {render_stepinfo()}
+                  {render_fsetenrich()}
+                </>
+              }
+            ></Tab>
+          </Tabs>
         </div>
       </div>
       <Divider />
-      <div className="section-footer">
+      <div className="param-section-footer">
         <Tooltip2 content="Cancel changes" placement="left">
           <Button
             icon="cross"
