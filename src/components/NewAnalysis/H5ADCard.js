@@ -226,10 +226,54 @@ export function H5AD({
                     ))}
                   </HTMLSelect>
                 </Label>
+                {(options["featureTypeColumnName"] === null ||
+                  options["featureTypeColumnName"] === undefined ||
+                  options["featureTypeColumnName"] === "none") && (
+                  <Label className="row-input">
+                    <Divider />
+                    <Text>
+                      <strong>Note: All cells are considered RNA.</strong>
+                    </Text>
+                    <br />
+                    <FormGroup>
+                      <Label className="row-input">
+                        <Text>
+                          <strong>RNA primary feature ID</strong>
+                        </Text>
+                        <HTMLSelect
+                          defaultValue="none"
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              let tmpOptions = { ...options };
+                              if (e.target.value === "none") {
+                                tmpOptions[`primaryRnaFeatureIdColumn`] = null;
+                              } else {
+                                tmpOptions[`primaryRnaFeatureIdColumn`] =
+                                  e.target.value;
+                              }
+                              setOptions(tmpOptions);
+                            }
+                          }}
+                        >
+                          <option value="none">rownames</option>
+                          {dsMeta.all_features &&
+                            Object.keys(dsMeta.all_features["columns"]).map(
+                              (x, i) => (
+                                <option key={i} value={x}>
+                                  {x}
+                                </option>
+                              )
+                            )}
+                        </HTMLSelect>
+                      </Label>
+                    </FormGroup>
+                  </Label>
+                )}
                 {options["featureTypeColumnName"] &&
                   MODALITIES.map((mod, i) => {
                     return (
                       <div key={i}>
+                        <Divider />
                         <Label className="row-input">
                           <Text>
                             <strong>{mod} modality</strong>
@@ -316,6 +360,26 @@ export function H5AD({
                               <strong>{mod} primary feature ID</strong>
                             </Text>
                             <HTMLSelect
+                              disabled={
+                                options?.[
+                                  `featureType${
+                                    mod.toLowerCase().charAt(0).toUpperCase() +
+                                    mod.toLowerCase().slice(1)
+                                  }Name`
+                                ] === undefined ||
+                                options?.[
+                                  `featureType${
+                                    mod.toLowerCase().charAt(0).toUpperCase() +
+                                    mod.toLowerCase().slice(1)
+                                  }Name`
+                                ] === null ||
+                                options?.[
+                                  `featureType${
+                                    mod.toLowerCase().charAt(0).toUpperCase() +
+                                    mod.toLowerCase().slice(1)
+                                  }Name`
+                                ] === "none"
+                              }
                               defaultValue="none"
                               onChange={(e) => {
                                 if (e.target.value) {
@@ -357,7 +421,6 @@ export function H5AD({
                             </HTMLSelect>
                           </Label>
                         </FormGroup>
-                        <Divider />
                       </div>
                     );
                   })}
