@@ -310,8 +310,9 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
       >
         <Tab
           id="ExperimentHub"
-          title="Experiment Hub"
+          title="ExperimentHub"
           panel={
+            <>
             <div className="row">
               <Label className="row-input">
                 <Text className="text-100">
@@ -341,16 +342,28 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 )}
               </Label>
             </div>
+            <div className="row">
+              <Callout intent="primary">
+              <p>
+                 Pull a published dataset from Bioconductor's {" "}
+                 <a href="http://bioconductor.org/packages/ExperimentHub" target="_blank">ExperimentHub</a>{" "}
+                 database.
+                 A curated selection of small datasets is provided here for demonstration purposes.
+              </p>
+              </Callout>
+            </div>
+            </>
           }
         />
         <Tab
           id="MatrixMarket"
-          title="Matrix Market"
+          title="10X MatrixMarket"
           panel={
+            <>
             <div className="row">
               <Label className="row-input">
                 <Text className="text-100">
-                  <span>Choose a count file</span>
+                  <span>Choose a count matrix file</span>
                 </Text>
                 <FileInput
                   style={{
@@ -396,7 +409,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
               </Label>
               <Label className="row-input">
                 <Text className="text-100">
-                  <span>Choose an annotation or barcode file</span>
+                  <span>Choose a barcode annotation file (optional)</span>
                 </Text>
                 <FileInput
                   style={{
@@ -418,12 +431,33 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 />
               </Label>
             </div>
+            <div className="row">
+              <Callout intent="primary">
+              <p>
+                 Load a 10X MatrixMarket file, typically produced by processing pipelines like Cellranger.
+                 We assume that the data has already been filtered to remove empty droplets. 
+              </p>
+              <p>
+                 The count matrix should have an <Code>*.mtx</Code> or (if Gzip-compressed) <Code>*.mtx.gz</Code> extension. 
+              </p>
+              <p>
+                 We recommend supplying the feature annotation as an additional TSV file with gene identifiers and symbols - 
+                 this is usually called <Code>features.tsv.gz</Code> or{" "} <Code>genes.tsv</Code>.
+              </p>
+              <p>
+                 You may optionally supply an additional TSV file with per-barcode annotations, e.g., 
+                 sample assignments for each cell, previously generated clusters.
+              </p>
+              </Callout>
+            </div>
+            </>
           }
         />
         <Tab
           id="10X"
-          title="10X HDF5 Matrix"
+          title="10X HDF5"
           panel={
+            <>
             <div className="row">
               <Label className="row-input">
                 <Text className="text-100">
@@ -447,12 +481,38 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 />
               </Label>
             </div>
+            <div className="row">
+              <Callout intent="primary">
+              <p>
+                Load a HDF5 file in the 10X feature-barcode format, typically produced by processing pipelines like Cellranger.
+                We assume that the data has already been filtered to remove empty droplets. 
+                This is usually called something like{" "}
+                <Code>filtered_feature_bc_matrix.h5</Code> in the output of
+                processing pipelines like Cellranger. 
+              </p>
+              <p>
+                See{" "}
+                <strong>
+                  <a
+                    target="_blank"
+                    href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices"
+                  >
+                    here
+                </a>
+                </strong>{" "}
+                for details. Do not confuse this with the molecule information
+                file, which is something totally different!
+              </p>
+              </Callout>
+            </div>
+            </>
           }
         />
         <Tab
           id="H5AD"
           title="H5AD"
           panel={
+            <>
             <div className="row">
               <Label className="row-input">
                 <Text className="text-100">
@@ -474,12 +534,22 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 />
               </Label>
             </div>
+            <div className="row">
+              <Callout intent="primary">
+                <p>
+                  Load a H5AD (<Code>*.h5ad</Code>) file containing a count matrix in one of its layers.{" "}
+                  Gene annotations should be present in the <Code>vars</Code>.
+                </p>
+              </Callout>
+            </div>
+            </>
           }
         />
         <Tab
           id="SummarizedExperiment"
-          title="SummarizedExperiment (RDS)"
+          title="RDS"
           panel={
+            <>
             <div className="row">
               <Label className="row-input">
                 <Text className="text-100">
@@ -501,6 +571,16 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 />
               </Label>
             </div>
+            <div className="row">
+              <Callout intent="primary">
+                <p>
+                  Load an RDS (<Code>*.rds</Code>) file containing a single <Code>SummarizedExperiment</Code> object.{" "}
+                  We support any instance of a <Code>SummarizedExperiment</Code> subclass containing a dense or sparse count matrix. 
+                  If a <Code>SingleCellExperiment</Code> object is provided, other modalities can be extracted from the alternative experiments.
+                </p>
+              </Callout>
+            </div>
+            </>
           }
         />
       </Tabs>
@@ -747,46 +827,10 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
       <Divider />
       <div className="section-content">
         <div className="section-content-body">
-          <Callout icon="airplane">
+          <Callout>
             <p>
-              <strong> Import your dataset to get started. </strong>We currently
-              support several common file formats for single-cell RNA-seq count
-              data.
-            </p>
-
-            <p>
-              <strong>(optionally) Batch correction:</strong> You can import
-              more than one dataset to integrate and analyze datasets. If you
-              only import a single dataset, specify the annotation column that
-              contains the batch information.
-            </p>
-
-            <p>
-              <strong>
-                Kana can (optionally) restrict the analysis to a pre-defined
-                subset of cells.
-              </strong>{" "}
-              We peek at the per-cell annotation available from the dataset, if
-              any exists. For an annotation field of interest, we can select
-              groups of interest (for categorical fields) or a range of values
-              (for continuous fields). This defines a subset of cells that is
-              passed onto the downstream analysis.
-            </p>
-            <p>
-              For categorical fields, only the first 50 levels are shown,
-              otherwise we'd run out of space. For continuous fields, the
-              defaults are set to the minimum and maximum values across all
-              cells - empty fields correspond to negative and positive infinity,
-              respectively.
-            </p>
-
-            <p>
-              <strong>
-                <i>
-                  To quickly explore the features Kana provides, choose an
-                  ExperimentHub dataset.
-                </i>
-              </strong>
+              <strong> Import your dataset to get started.</strong>{" "}
+              Choose from a range of common single-cell formats below.
             </p>
           </Callout>
           {newInputs && render_inputs()}
@@ -801,98 +845,6 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           ></Button>
         </div>
         <div className="section-info">
-          <div>
-            {openInfo && (
-              <Button
-                outlined={true}
-                fill={true}
-                intent="warning"
-                text="Hide Info"
-                onClick={() => setOpenInfo(false)}
-              />
-            )}
-            {!openInfo && (
-              <Button
-                outlined={true}
-                fill={true}
-                intent="warning"
-                text="Show Info"
-                onClick={() => setOpenInfo(true)}
-              />
-            )}
-            <Collapse isOpen={openInfo}>
-              <Callout intent="primary">
-                <p>Data formats we currently support -</p>
-                <p>
-                  <strong>
-                    A count matrix in the Matrix Market (<Code>*.mtx</Code>)
-                    format.{" "}
-                  </strong>
-                  This file may be Gzip-compressed, in which case we expect it
-                  to have a <Code>*.mtx.gz</Code> extension. We assume that the
-                  matrix has already been filtered to remove empty droplets. We
-                  also recommend supplying the feature annotation as an
-                  additional TSV file with gene identifiers and symbols - this
-                  is usually called <Code>features.tsv.gz</Code> or{" "}
-                  <Code>genes.tsv</Code> in the output of processing pipelines
-                  like Cellranger.
-                </p>
-                <p>
-                  <strong>
-                    A count matrix in the 10X HDF5 feature-barCode matrix
-                    format.{" "}
-                  </strong>
-                  We assume that the matrix has already been filtered to remove
-                  empty droplets. This is usually called something like{" "}
-                  <Code>filtered_feature_bc_matrix.h5</Code> in the output of
-                  processing pipelines like Cellranger. (See{" "}
-                  <strong>
-                    <a
-                      target="_blank"
-                      href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices"
-                    >
-                      here
-                    </a>
-                  </strong>{" "}
-                  for details. Do not confuse this with the molecule information
-                  file, which is something different altogether.)
-                </p>
-                <p>
-                  <strong>
-                    A count matrix in the H5AD (<Code>*.h5ad</Code>) format.{" "}
-                  </strong>
-                  We assume that the count matrix is stored in the{" "}
-                  <Code>X</Code> group. We will also try to guess which field in
-                  the <Code>obs</Code> annotation contains gene symbols.
-                </p>
-
-                <p>
-                  <strong>
-                    A SummarizedExperiment object saved in the RDS (
-                    <Code>*.rds</Code>) format.{" "}
-                  </strong>
-                  We support any SummarizedExperiment subclass containing a
-                  dense or sparse count matrix (identified as any assay with
-                  name starting with "counts", or if none exist, just the first
-                  assay). For a SingleCellExperiment, any alternative experiment
-                  with name starting with "hto", "adt" or "antibody" is assumed
-                  to represent CITE-seq data.
-                </p>
-
-                <p>
-                  <strong>
-                    A Dataset saved to <Code>ExperimentHub</Code>.{" "}
-                  </strong>
-                  We support any SummarizedExperiment subclass containing a
-                  dense or sparse count matrix (identified as any assay with
-                  name starting with "counts", or if none exist, just the first
-                  assay). For a SingleCellExperiment, any alternative experiment
-                  with name starting with "hto", "adt" or "antibody" is assumed
-                  to represent CITE-seq data.
-                </p>
-              </Callout>
-            </Collapse>
-          </div>
           {preInputFilesStatus && newInputs && newInputs.length === 1 && (
             <>
               <Divider />
