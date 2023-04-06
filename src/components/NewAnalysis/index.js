@@ -313,45 +313,50 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           title="ExperimentHub"
           panel={
             <>
-            <div className="row">
-              <Callout intent="primary">
-              <p>
-                 Pull a published dataset from Bioconductor's {" "}
-                 <a href="http://bioconductor.org/packages/ExperimentHub" target="_blank">ExperimentHub</a>{" "}
-                 database.
-                 A curated selection of small datasets is provided here for demonstration purposes.
-              </p>
-              </Callout>
-            </div>
-            <div className="row">
-              <Label className="row-input">
-                <Text className="text-100">
-                  <span>Choose an ExperimentHub dataset</span>
-                </Text>
-                {Array.isArray(ehubDatasets) ? (
-                  <HTMLSelect
-                    defaultValue={"none"}
-                    onChange={(e) => {
-                      if (e.target.value && e.target.value !== "none") {
-                        setTmpNewInputs({
-                          ...tmpNewInputs,
-                          id: e.target.value,
-                        });
-                      }
-                    }}
-                  >
-                    <option value="none">None</option>
-                    {ehubDatasets.map((x, i) => (
-                      <option key={i} value={x}>
-                        {x}
-                      </option>
-                    ))}
-                  </HTMLSelect>
-                ) : (
-                  "No ExperimentHub datasets available"
-                )}
-              </Label>
-            </div>
+              <div className="row">
+                <Callout intent="primary">
+                  <p>
+                    Pull a published dataset from Bioconductor's{" "}
+                    <a
+                      href="http://bioconductor.org/packages/ExperimentHub"
+                      target="_blank"
+                    >
+                      ExperimentHub
+                    </a>{" "}
+                    database. A curated selection of small datasets is provided
+                    here for demonstration purposes.
+                  </p>
+                </Callout>
+              </div>
+              <div className="row">
+                <Label className="row-input">
+                  <Text className="text-100">
+                    <span>Choose an ExperimentHub dataset</span>
+                  </Text>
+                  {Array.isArray(ehubDatasets) ? (
+                    <HTMLSelect
+                      defaultValue={"none"}
+                      onChange={(e) => {
+                        if (e.target.value && e.target.value !== "none") {
+                          setTmpNewInputs({
+                            ...tmpNewInputs,
+                            id: e.target.value,
+                          });
+                        }
+                      }}
+                    >
+                      <option value="none">--- no selection ---</option>
+                      {ehubDatasets.map((x, i) => (
+                        <option key={i} value={x}>
+                          {x}
+                        </option>
+                      ))}
+                    </HTMLSelect>
+                  ) : (
+                    "No ExperimentHub datasets available"
+                  )}
+                </Label>
+              </div>
             </>
           }
         />
@@ -360,96 +365,101 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           title="10X MatrixMarket"
           panel={
             <>
-            <div className="row">
-              <Callout intent="primary">
-              <p>
-                 Load a 10X MatrixMarket file, typically produced by processing pipelines like Cellranger.
-                 We assume that the data has already been filtered to remove empty droplets. 
-              </p>
-              <p>
-                 The count matrix should have an <Code>*.mtx</Code> or (if Gzip-compressed) <Code>*.mtx.gz</Code> extension. 
-              </p>
-              <p>
-                 We recommend supplying the feature annotation as an additional TSV file with gene identifiers and symbols - 
-                 this is usually called <Code>features.tsv.gz</Code> or{" "} <Code>genes.tsv</Code>.
-              </p>
-              <p>
-                 You may optionally supply an additional TSV file with per-barcode annotations, e.g., 
-                 sample assignments for each cell, previously generated clusters.
-              </p>
-              </Callout>
-            </div>
-            <div className="row">
-              <Label className="row-input">
-                <Text className="text-100">
-                  <span>Choose a count matrix file</span>
-                </Text>
-                <FileInput
-                  style={{
-                    marginTop: "5px",
-                  }}
-                  text={
-                    tmpNewInputs?.mtx
-                      ? tmpNewInputs?.mtx.name
-                      : ".mtx or .mtx.gz"
-                  }
-                  onInputChange={(msg) => {
-                    if (msg.target.files) {
-                      setTmpNewInputs({
-                        ...tmpNewInputs,
-                        mtx: msg.target.files[0],
-                      });
+              <div className="row">
+                <Callout intent="primary">
+                  <p>
+                    Load a 10X MatrixMarket file, typically produced by
+                    processing pipelines like Cellranger. We assume that the
+                    data has already been filtered to remove empty droplets.
+                  </p>
+                  <p>
+                    The count matrix should have an <Code>*.mtx</Code> or (if
+                    Gzip-compressed) <Code>*.mtx.gz</Code> extension.
+                  </p>
+                  <p>
+                    We recommend supplying the feature annotation as an
+                    additional TSV file with gene identifiers and symbols - this
+                    is usually called <Code>features.tsv.gz</Code> or{" "}
+                    <Code>genes.tsv</Code>.
+                  </p>
+                  <p>
+                    You may optionally supply an additional TSV file with
+                    per-barcode annotations, e.g., sample assignments for each
+                    cell, previously generated clusters.
+                  </p>
+                </Callout>
+              </div>
+              <div className="row">
+                <Label className="row-input">
+                  <Text className="text-100">
+                    <span>Choose a count matrix file</span>
+                  </Text>
+                  <FileInput
+                    style={{
+                      marginTop: "5px",
+                    }}
+                    text={
+                      tmpNewInputs?.mtx
+                        ? tmpNewInputs?.mtx.name
+                        : ".mtx or .mtx.gz"
                     }
-                  }}
-                />
-              </Label>
-              <Label className="row-input">
-                <Text className="text-100">
-                  <span>Choose a feature or gene file</span>
-                </Text>
-                <FileInput
-                  style={{
-                    marginTop: "5px",
-                  }}
-                  text={
-                    tmpNewInputs?.genes
-                      ? tmpNewInputs?.genes.name
-                      : ".tsv or .tsv.gz"
-                  }
-                  onInputChange={(msg) => {
-                    if (msg.target.files) {
-                      setTmpNewInputs({
-                        ...tmpNewInputs,
-                        genes: msg.target.files[0],
-                      });
+                    onInputChange={(msg) => {
+                      if (msg.target.files) {
+                        setTmpNewInputs({
+                          ...tmpNewInputs,
+                          mtx: msg.target.files[0],
+                        });
+                      }
+                    }}
+                  />
+                </Label>
+                <Label className="row-input">
+                  <Text className="text-100">
+                    <span>Choose a feature or gene file</span>
+                  </Text>
+                  <FileInput
+                    style={{
+                      marginTop: "5px",
+                    }}
+                    text={
+                      tmpNewInputs?.genes
+                        ? tmpNewInputs?.genes.name
+                        : ".tsv or .tsv.gz"
                     }
-                  }}
-                />
-              </Label>
-              <Label className="row-input">
-                <Text className="text-100">
-                  <span>Choose a barcode annotation file (optional)</span>
-                </Text>
-                <FileInput
-                  style={{
-                    marginTop: "5px",
-                  }}
-                  text={
-                    tmpNewInputs?.annotations
-                      ? tmpNewInputs?.annotations.name
-                      : ".tsv or .tsv.gz"
-                  }
-                  onInputChange={(msg) => {
-                    if (msg.target.files) {
-                      setTmpNewInputs({
-                        ...tmpNewInputs,
-                        annotations: msg.target.files[0],
-                      });
+                    onInputChange={(msg) => {
+                      if (msg.target.files) {
+                        setTmpNewInputs({
+                          ...tmpNewInputs,
+                          genes: msg.target.files[0],
+                        });
+                      }
+                    }}
+                  />
+                </Label>
+                <Label className="row-input">
+                  <Text className="text-100">
+                    <span>Choose a barcode annotation file (optional)</span>
+                  </Text>
+                  <FileInput
+                    style={{
+                      marginTop: "5px",
+                    }}
+                    text={
+                      tmpNewInputs?.annotations
+                        ? tmpNewInputs?.annotations.name
+                        : ".tsv or .tsv.gz"
                     }
-                  }}
-                />
-              </Label>
-            </div>
+                    onInputChange={(msg) => {
+                      if (msg.target.files) {
+                        setTmpNewInputs({
+                          ...tmpNewInputs,
+                          annotations: msg.target.files[0],
+                        });
+                      }
+                    }}
+                  />
+                </Label>
+              </div>
             </>
           }
         />
@@ -458,53 +468,54 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           title="10X HDF5"
           panel={
             <>
-            <div className="row">
-              <Callout intent="primary">
-              <p>
-                Load a HDF5 file in the 10X feature-barcode format, typically produced by processing pipelines like Cellranger.
-                We assume that the data has already been filtered to remove empty droplets. 
-                This is usually called something like{" "}
-                <Code>filtered_feature_bc_matrix.h5</Code> in the output of
-                processing pipelines like Cellranger. 
-              </p>
-              <p>
-                See{" "}
-                <strong>
-                  <a
-                    target="_blank"
-                    href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices"
-                  >
-                    here
-                </a>
-                </strong>{" "}
-                for details. Do not confuse this with the molecule information
-                file, which is something totally different!
-              </p>
-              </Callout>
-            </div>
-            <div className="row">
-              <Label className="row-input">
-                <Text className="text-100">
-                  <span>Choose a 10X HDF5 file</span>
-                </Text>
-                <FileInput
-                  style={{
-                    marginTop: "5px",
-                  }}
-                  text={
-                    tmpNewInputs?.h5 ? tmpNewInputs?.h5.name : ".h5 or .hdf5"
-                  }
-                  onInputChange={(msg) => {
-                    if (msg.target.files) {
-                      setTmpNewInputs({
-                        ...tmpNewInputs,
-                        h5: msg.target.files[0],
-                      });
+              <div className="row">
+                <Callout intent="primary">
+                  <p>
+                    Load a HDF5 file in the 10X feature-barcode format,
+                    typically produced by processing pipelines like Cellranger.
+                    We assume that the data has already been filtered to remove
+                    empty droplets. This is usually called something like{" "}
+                    <Code>filtered_feature_bc_matrix.h5</Code> in the output of
+                    processing pipelines like Cellranger.
+                  </p>
+                  <p>
+                    See{" "}
+                    <strong>
+                      <a
+                        target="_blank"
+                        href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices"
+                      >
+                        here
+                      </a>
+                    </strong>{" "}
+                    for details. Do not confuse this with the molecule
+                    information file, which is something totally different!
+                  </p>
+                </Callout>
+              </div>
+              <div className="row">
+                <Label className="row-input">
+                  <Text className="text-100">
+                    <span>Choose a 10X HDF5 file</span>
+                  </Text>
+                  <FileInput
+                    style={{
+                      marginTop: "5px",
+                    }}
+                    text={
+                      tmpNewInputs?.h5 ? tmpNewInputs?.h5.name : ".h5 or .hdf5"
                     }
-                  }}
-                />
-              </Label>
-            </div>
+                    onInputChange={(msg) => {
+                      if (msg.target.files) {
+                        setTmpNewInputs({
+                          ...tmpNewInputs,
+                          h5: msg.target.files[0],
+                        });
+                      }
+                    }}
+                  />
+                </Label>
+              </div>
             </>
           }
         />
@@ -513,35 +524,36 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           title="H5AD"
           panel={
             <>
-            <div className="row">
-              <Callout intent="primary">
-                <p>
-                  Load a H5AD (<Code>*.h5ad</Code>) file containing a count matrix in one of its layers.{" "}
-                  Gene annotations should be present in the <Code>vars</Code>.
-                </p>
-              </Callout>
-            </div>
-            <div className="row">
-              <Label className="row-input">
-                <Text className="text-100">
-                  <span>Choose a H5AD dataset</span>
-                </Text>
-                <FileInput
-                  style={{
-                    marginTop: "5px",
-                  }}
-                  text={tmpNewInputs?.h5 ? tmpNewInputs?.h5.name : ".h5ad"}
-                  onInputChange={(msg) => {
-                    if (msg.target.files) {
-                      setTmpNewInputs({
-                        ...tmpNewInputs,
-                        h5: msg.target.files[0],
-                      });
-                    }
-                  }}
-                />
-              </Label>
-            </div>
+              <div className="row">
+                <Callout intent="primary">
+                  <p>
+                    Load a H5AD (<Code>*.h5ad</Code>) file containing a count
+                    matrix in one of its layers. Gene annotations should be
+                    present in the <Code>vars</Code>.
+                  </p>
+                </Callout>
+              </div>
+              <div className="row">
+                <Label className="row-input">
+                  <Text className="text-100">
+                    <span>Choose a H5AD dataset</span>
+                  </Text>
+                  <FileInput
+                    style={{
+                      marginTop: "5px",
+                    }}
+                    text={tmpNewInputs?.h5 ? tmpNewInputs?.h5.name : ".h5ad"}
+                    onInputChange={(msg) => {
+                      if (msg.target.files) {
+                        setTmpNewInputs({
+                          ...tmpNewInputs,
+                          h5: msg.target.files[0],
+                        });
+                      }
+                    }}
+                  />
+                </Label>
+              </div>
             </>
           }
         />
@@ -550,36 +562,40 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           title="RDS"
           panel={
             <>
-            <div className="row">
-              <Callout intent="primary">
-                <p>
-                  Load an RDS (<Code>*.rds</Code>) file containing a single <Code>SummarizedExperiment</Code> object.{" "}
-                  We support any instance of a <Code>SummarizedExperiment</Code> subclass containing a dense or sparse count matrix. 
-                  If a <Code>SingleCellExperiment</Code> object is provided, other modalities can be extracted from the alternative experiments.
-                </p>
-              </Callout>
-            </div>
-            <div className="row">
-              <Label className="row-input">
-                <Text className="text-100">
-                  <span>Choose an RDS File</span>
-                </Text>
-                <FileInput
-                  style={{
-                    marginTop: "5px",
-                  }}
-                  text={tmpNewInputs?.rds ? tmpNewInputs?.rds.name : ".rds"}
-                  onInputChange={(msg) => {
-                    if (msg.target.files) {
-                      setTmpNewInputs({
-                        ...tmpNewInputs,
-                        rds: msg.target.files[0],
-                      });
-                    }
-                  }}
-                />
-              </Label>
-            </div>
+              <div className="row">
+                <Callout intent="primary">
+                  <p>
+                    Load an RDS (<Code>*.rds</Code>) file containing a single{" "}
+                    <Code>SummarizedExperiment</Code> object. We support any
+                    instance of a <Code>SummarizedExperiment</Code> subclass
+                    containing a dense or sparse count matrix. If a{" "}
+                    <Code>SingleCellExperiment</Code> object is provided, other
+                    modalities can be extracted from the alternative
+                    experiments.
+                  </p>
+                </Callout>
+              </div>
+              <div className="row">
+                <Label className="row-input">
+                  <Text className="text-100">
+                    <span>Choose an RDS File</span>
+                  </Text>
+                  <FileInput
+                    style={{
+                      marginTop: "5px",
+                    }}
+                    text={tmpNewInputs?.rds ? tmpNewInputs?.rds.name : ".rds"}
+                    onInputChange={(msg) => {
+                      if (msg.target.files) {
+                        setTmpNewInputs({
+                          ...tmpNewInputs,
+                          rds: msg.target.files[0],
+                        });
+                      }
+                    }}
+                  />
+                </Label>
+              </div>
             </>
           }
         />
@@ -590,202 +606,208 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   const render_batch_correction = () => {
     return (
       <>
-      <Callout
-        className="section-input-item"
-        intent="primary"
-        title="Batch correction by annotation"
-        icon="issue"
-      >
-        <p>
-          If you upload a single dataset, you can optionally tell <strong>kana</strong> to perform batch correction based on batch assignments from a single annotation column.
-        </p>
-        <Label className="row-input">
-          <HTMLSelect
-            defaultValue={default_none}
-            onChange={(e) => {
-              let tmpBatch = null;
+        <Callout
+          className="section-input-item"
+          intent="primary"
+          title="Batch correction by annotation"
+          icon="issue"
+        >
+          <p>
+            If you upload a single dataset, you can optionally tell{" "}
+            <strong>kana</strong> to perform batch correction based on batch
+            assignments from a single annotation column.
+          </p>
+          <Label className="row-input">
+            <HTMLSelect
+              defaultValue={default_none}
+              onChange={(e) => {
+                let tmpBatch = null;
 
-              tmpBatch = e.target.value;
-              if (e.target.value === default_none) {
-                tmpBatch = null;
-              }
-              setBatch(tmpBatch);
-            }}
-          >
-            <option key={default_none} value={default_none}>
-              none
-            </option>
-            {Object.keys(
-              preInputFilesStatus[newInputs[0].name].cells["columns"]
-            ).map((x, i) => (
-              <option key={i} value={x}>
-                {x}
+                tmpBatch = e.target.value;
+                if (e.target.value === default_none) {
+                  tmpBatch = null;
+                }
+                setBatch(tmpBatch);
+              }}
+            >
+              <option key={default_none} value={default_none}>
+                --- no selection ---
               </option>
-            ))}
-          </HTMLSelect>
-        </Label>
-      </Callout>
-      <Callout
-        className="section-input-item"
-        intent="primary"
-        title="Subsetting by annotation"
-        icon="issue"
-      >
-        <p>
-          If you upload a single dataset, you can optionally tell <strong>kana</strong> to subset the cells based on a single annotation column.
-          You can select groups of interest (for categorical fields) or a range of values (for continuous fields) to define a subset of cells that will be used in the downstream analysis.
-          For categorical fields, only the first 50 levels are shown. 
-        </p>
-        <Label className="row-input">
-          <HTMLSelect
-            defaultValue={default_none}
-            onChange={(e) => {
-              let tmpSubset = { ...subset };
+              {Object.keys(
+                preInputFilesStatus[newInputs[0].name].cells["columns"]
+              ).map((x, i) => (
+                <option key={i} value={x}>
+                  {x}
+                </option>
+              ))}
+            </HTMLSelect>
+          </Label>
+        </Callout>
+        <Callout
+          className="section-input-item"
+          intent="primary"
+          title="Subsetting by annotation"
+          icon="issue"
+        >
+          <p>
+            If you upload a single dataset, you can optionally tell{" "}
+            <strong>kana</strong> to subset the cells based on a single
+            annotation column. You can select groups of interest (for
+            categorical fields) or a range of values (for continuous fields) to
+            define a subset of cells that will be used in the downstream
+            analysis. For categorical fields, only the first 50 levels are
+            shown.
+          </p>
+          <Label className="row-input">
+            <HTMLSelect
+              defaultValue={default_none}
+              onChange={(e) => {
+                let tmpSubset = { ...subset };
 
-              tmpSubset["subset"] = e.target.value;
-              if (e.target.value === default_none) {
-                tmpSubset["subset"] = null;
-              } else {
+                tmpSubset["subset"] = e.target.value;
+                if (e.target.value === default_none) {
+                  tmpSubset["subset"] = null;
+                } else {
+                  if (
+                    preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      tmpSubset["subset"]
+                    ].type === "categorical"
+                  ) {
+                    tmpSubset["values"] = [];
+                  } else {
+                    tmpSubset["minmax"] = [
+                      preInputFilesStatus[newInputs[0].name].cells["columns"][
+                        tmpSubset["subset"]
+                      ].min,
+                      preInputFilesStatus[newInputs[0].name].cells["columns"][
+                        tmpSubset["subset"]
+                      ].max,
+                    ];
+                    tmpSubset["chosen_minmax"] = [
+                      preInputFilesStatus[newInputs[0].name].cells["columns"][
+                        tmpSubset["subset"]
+                      ].min,
+                      preInputFilesStatus[newInputs[0].name].cells["columns"][
+                        tmpSubset["subset"]
+                      ].max,
+                    ];
+                  }
+                }
+
+                setSubset(tmpSubset);
+              }}
+            >
+              <option key={default_none} value={default_none}>
+                --- no selection ---
+              </option>
+              {Object.keys(
+                preInputFilesStatus[newInputs[0].name].cells["columns"]
+              ).map((x, i) => (
+                <option key={i} value={x}>
+                  {x}
+                </option>
+              ))}
+            </HTMLSelect>
+          </Label>
+          {subset?.["subset"] !== null && (
+            <>
+              {(() => {
                 if (
                   preInputFilesStatus[newInputs[0].name].cells["columns"][
-                    tmpSubset["subset"]
-                  ].type === "categorical"
+                    subset["subset"]
+                  ].type == "categorical"
                 ) {
-                  tmpSubset["values"] = [];
-                } else {
-                  tmpSubset["minmax"] = [
-                    preInputFilesStatus[newInputs[0].name].cells["columns"][
-                      tmpSubset["subset"]
-                    ].min,
-                    preInputFilesStatus[newInputs[0].name].cells["columns"][
-                      tmpSubset["subset"]
-                    ].max,
-                  ];
-                  tmpSubset["chosen_minmax"] = [
-                    preInputFilesStatus[newInputs[0].name].cells["columns"][
-                      tmpSubset["subset"]
-                    ].min,
-                    preInputFilesStatus[newInputs[0].name].cells["columns"][
-                      tmpSubset["subset"]
-                    ].max,
-                  ];
-                }
-              }
-
-              setSubset(tmpSubset);
-            }}
-          >
-            <option key={default_none} value={default_none}>
-              none
-            </option>
-            {Object.keys(
-              preInputFilesStatus[newInputs[0].name].cells["columns"]
-            ).map((x, i) => (
-              <option key={i} value={x}>
-                {x}
-              </option>
-            ))}
-          </HTMLSelect>
-        </Label>
-        {subset?.["subset"] !== null && (
-          <>
-            {(() => {
-              if (
-                preInputFilesStatus[newInputs[0].name].cells["columns"][
-                  subset["subset"]
-                ].type == "categorical"
-              ) {
-                return (
-                  <div className="subset-section">
-                    {preInputFilesStatus[newInputs[0].name].cells["columns"][
-                      subset["subset"]
-                    ].values.map((x) => (
-                      <Checkbox
-                        key={"subset-" + x}
-                        checked={subset.values.includes(x)}
-                        label={x}
-                        inline={true}
-                        onChange={(e) => {
-                          let gip = { ...subset };
-
-                          if (e.target.checked) {
-                            if (!gip.values.includes(x)) gip.values.push(x);
-                          } else {
-                            if (gip.values.includes(x))
-                              gip.values = gip.values.filter((y) => y !== x);
-                          }
-
-                          setSubset(gip);
-                        }}
-                      />
-                    ))}
-                    {preInputFilesStatus[newInputs[0].name].cells["columns"][
-                      subset["subset"]
-                    ].truncated && "... and more"}
-                  </div>
-                );
-              } else {
-                return (
-                  <>
+                  return (
                     <div className="subset-section">
-                      <div className="subset-range-field">
-                        <H5>from</H5>
-                        <NumericInput
-                          min={
-                            isFinite(subset.minmax[0])
-                              ? subset.minmax[0]
-                              : undefined
-                          }
-                          max={
-                            isFinite(subset.minmax[1])
-                              ? subset.minmax[1]
-                              : undefined
-                          }
-                          value={
-                            isFinite(subset.chosen_minmax[0])
-                              ? subset.chosen_minmax[0]
-                              : undefined
-                          }
-                          onValueChange={(e) => {
+                      {preInputFilesStatus[newInputs[0].name].cells["columns"][
+                        subset["subset"]
+                      ].values.map((x) => (
+                        <Checkbox
+                          key={"subset-" + x}
+                          checked={subset.values.includes(x)}
+                          label={x}
+                          inline={true}
+                          onChange={(e) => {
                             let gip = { ...subset };
-                            gip["chosen_minmax"][0] = e;
+
+                            if (e.target.checked) {
+                              if (!gip.values.includes(x)) gip.values.push(x);
+                            } else {
+                              if (gip.values.includes(x))
+                                gip.values = gip.values.filter((y) => y !== x);
+                            }
+
                             setSubset(gip);
                           }}
                         />
-                      </div>
-                      <div className="subset-range-field">
-                        <H5>to</H5>
-                        <NumericInput
-                          min={
-                            isFinite(subset.minmax[0])
-                              ? subset.minmax[0]
-                              : undefined
-                          }
-                          max={
-                            isFinite(subset.minmax[1])
-                              ? subset.minmax[1]
-                              : undefined
-                          }
-                          value={
-                            isFinite(subset.chosen_minmax[1])
-                              ? subset.chosen_minmax[1]
-                              : undefined
-                          }
-                          onValueChange={(e) => {
-                            let gip = { ...subset };
-                            gip["chosen_minmax"][1] = e;
-                            setSubset(gip);
-                          }}
-                        />
-                      </div>
+                      ))}
+                      {preInputFilesStatus[newInputs[0].name].cells["columns"][
+                        subset["subset"]
+                      ].truncated && "... and more"}
                     </div>
-                  </>
-                );
-              }
-            })()}
-          </>
-        )}
-      </Callout>
+                  );
+                } else {
+                  return (
+                    <>
+                      <div className="subset-section">
+                        <div className="subset-range-field">
+                          <H5>from</H5>
+                          <NumericInput
+                            min={
+                              isFinite(subset.minmax[0])
+                                ? subset.minmax[0]
+                                : undefined
+                            }
+                            max={
+                              isFinite(subset.minmax[1])
+                                ? subset.minmax[1]
+                                : undefined
+                            }
+                            value={
+                              isFinite(subset.chosen_minmax[0])
+                                ? subset.chosen_minmax[0]
+                                : undefined
+                            }
+                            onValueChange={(e) => {
+                              let gip = { ...subset };
+                              gip["chosen_minmax"][0] = e;
+                              setSubset(gip);
+                            }}
+                          />
+                        </div>
+                        <div className="subset-range-field">
+                          <H5>to</H5>
+                          <NumericInput
+                            min={
+                              isFinite(subset.minmax[0])
+                                ? subset.minmax[0]
+                                : undefined
+                            }
+                            max={
+                              isFinite(subset.minmax[1])
+                                ? subset.minmax[1]
+                                : undefined
+                            }
+                            value={
+                              isFinite(subset.chosen_minmax[1])
+                                ? subset.chosen_minmax[1]
+                                : undefined
+                            }
+                            onValueChange={(e) => {
+                              let gip = { ...subset };
+                              gip["chosen_minmax"][1] = e;
+                              setSubset(gip);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  );
+                }
+              })()}
+            </>
+          )}
+        </Callout>
       </>
     );
   };
@@ -799,25 +821,31 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
         icon="issue"
       >
         <p>
-          If you load multiple datasets, we only use modalities that are present in each dataset.
-          For each modality, we only use the intersection of features across datasets.
-          This is done using the <em>primary feature IDs</em> for each modality,
-          which you can customize manually for each dataset to improve the size of the intersections
-          {preInputOptionsStatus && Object.keys(preInputOptionsStatus).length > 0 ? ":" : "."}
+          If you load multiple datasets, we only use modalities that are present
+          in each dataset. For each modality, we only use the intersection of
+          features across datasets. This is done using the{" "}
+          <em>primary feature IDs</em> for each modality, which you can
+          customize manually for each dataset to improve the size of the
+          intersections
+          {preInputOptionsStatus &&
+          Object.keys(preInputOptionsStatus).length > 0
+            ? ":"
+            : "."}
         </p>
-        {preInputOptionsStatus && Object.keys(preInputOptionsStatus).length > 0 ?
-           <ul>
-           {Object.keys(preInputOptionsStatus).map((x, i) => {
-             return (
-               <li>
-                 <Code>{x}</Code>: {preInputOptionsStatus[x]}{" "} common features
-               </li>
-             );
-           })}
-           </ul>
-           :
-           ""
-        }
+        {preInputOptionsStatus &&
+        Object.keys(preInputOptionsStatus).length > 0 ? (
+          <ul>
+            {Object.keys(preInputOptionsStatus).map((x, i) => {
+              return (
+                <li>
+                  <Code>{x}</Code>: {preInputOptionsStatus[x]} common features
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          ""
+        )}
         <p>
           Each dataset is treated as a separate batch during batch correction.
           This default behavior can be changed in the analysis parameters.
@@ -836,8 +864,8 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
         <div className="section-content-body">
           <Callout>
             <p>
-              <strong> Import your dataset to get started.</strong>{" "}
-              Choose from a range of common single-cell formats below.
+              <strong> Import your dataset to get started.</strong> Choose from
+              a range of common single-cell formats below.
             </p>
           </Callout>
           {newInputs && render_inputs()}
