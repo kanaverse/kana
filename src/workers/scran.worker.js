@@ -627,7 +627,7 @@ onmessage = function (msg) {
             ) {
               ds.setOptions(payload.options[counter]);
 
-              let res = ds.previewPrimaryIds({ cache: true });
+              let res = await ds.previewPrimaryIds({ cache: true });
 
               for (const i_mod of ["RNA", "ADT", "CRISPR"]) {
                 if (i_mod in res) {

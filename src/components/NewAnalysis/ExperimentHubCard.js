@@ -57,11 +57,11 @@ export function ExperimentHub({
       // set some defaults
       if (init2) {
         let tmpOptions = {};
-        for (const [k, v] of Object.entries(preflight.modality_features)) {
-          if (k.toLowerCase().indexOf("rna") > -1) {
-            tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
-          }
-        }
+        // for (const [k, v] of Object.entries(preflight.modality_features)) {
+        //   if (k.toLowerCase().indexOf("rna") > -1) {
+        //     tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
+        //   }
+        // }
 
         setOptions(tmpOptions);
         setInit2(false);
@@ -126,9 +126,16 @@ export function ExperimentHub({
                 <HTMLSelect
                   defaultValue="none"
                   onChange={(e) => {
-                    let tmpOptions = { ...options };
-                    tmpOptions["primaryRnaFeatureIdColumn"] = e.target.value;
-                    setOptions(tmpOptions);
+                    if (e.target.value) {
+                      let tmpOptions = { ...options };
+                      if (e.target.value === "none") {
+                        tmpOptions["primaryRnaFeatureIdColumn"] = null;
+                      } else {
+                        tmpOptions["primaryRnaFeatureIdColumn"] =
+                          e.target.value;
+                      }
+                      setOptions(tmpOptions);
+                    }
                   }}
                 >
                   <option value="none">rownames</option>
