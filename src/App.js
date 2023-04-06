@@ -92,6 +92,15 @@ function App() {
                 </a>{" "}
                 for more details.
               </p>
+                <p>
+                  Download some of our test datasets{" "}
+                  <a
+                    target="_blank"
+                    href="https://github.com/kanaverse/random-test-files/releases"
+                  >
+                    here
+                  </a> to try us out.
+                </p>
             </div>
             <div className="frontpage-actions">
               <Callout
@@ -138,15 +147,6 @@ function App() {
                   Try out <strong>kana</strong> using the Zeisel mouse brain
                   dataset from Bioconductor's ExperimentHub. No lock-in
                   contract, no credit check required.
-                </p>
-                <p>
-                  or download one of our test datasets{" "}
-                  <a
-                    target="_blank"
-                    href="https://github.com/kanaverse/random-test-files/releases"
-                  >
-                    from here.
-                  </a>
                 </p>
               </Callout>
             </div>

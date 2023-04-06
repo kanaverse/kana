@@ -132,30 +132,28 @@ export function MatrixMarket({
           <Button icon="cross" minimal={true} onClick={handleRemove} />
         </ButtonGroup>
       </div>
-      <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
-          <strong>{resource.format}</strong> contains{" "}
-          {dsMeta && dsMeta.cells.numberOfCells} cells and{" "}
-          {dsMeta && Object.keys(dsMeta.modality_features).length}{" "}
-          {dsMeta && Object.keys(dsMeta.modality_features).length > 1
-            ? "modalities"
-            : "modality"}
-          .
+          This <strong>10X MatrixMarket</strong> dataset contains{" "}
+          {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature
+          types:{" "}
+          {dsMeta &&
+            Object.entries(dsMeta.modality_features).map((x) => (
+              <>
+                <Code>{x[0]}</Code> ({x[1].numberOfFeatures} features)
+              </>
+            ))}
         </p>
-        <Divider />
         <Collapse isOpen={collapse}>
           <div>
-            {dsMeta && Object.keys(dsMeta.modality_features).length > 1 && (
-              <H5>Optional settings</H5>
-            )}
             {dsMeta &&
               MODALITIES.map((mod, i) => {
                 return (
                   <div key={i}>
+                    <Divider />
                     <Label className="row-input">
                       <Text>
-                        <strong>{mod} Modality</strong>
+                        <strong>{mod} modality</strong>
                       </Text>
                       <HTMLSelect
                         defaultValue={
@@ -195,10 +193,10 @@ export function MatrixMarket({
                           }
                         }}
                       >
-                        <option value="none">None</option>
+                        <option value="none">--- no selection ---</option>
                         {getAvailableModalities(mod).map((x, i) => (
                           <option key={i} value={x}>
-                            {x === "" ? "Unknown Modality" : x}
+                            {x === "" ? <em>unnamed</em> : x}
                           </option>
                         ))}
                       </HTMLSelect>
@@ -227,9 +225,29 @@ export function MatrixMarket({
                     >
                       <Label className="row-input">
                         <Text>
-                          <strong>{mod} Feature ID</strong>
+                          <strong>{mod} primary feature ID</strong>
                         </Text>
                         <HTMLSelect
+                          disabled={
+                            options?.[
+                              `featureType${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }Name`
+                            ] === undefined ||
+                            options?.[
+                              `featureType${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }Name`
+                            ] === null ||
+                            options?.[
+                              `featureType${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }Name`
+                            ] === "none"
+                          }
                           defaultValue="none"
                           onChange={(e) => {
                             if (e.target.value) {
@@ -279,7 +297,6 @@ export function MatrixMarket({
                         </HTMLSelect>
                       </Label>
                     </FormGroup>
-                    <Divider />
                   </div>
                 );
               })}
