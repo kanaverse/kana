@@ -312,7 +312,7 @@ export function AnalysisMode(props) {
 
   useEffect(() => {
     if (wasmInitialized && preInputFiles) {
-      if (preInputFiles.files && preInputOptions.options.length > 1) {
+      if (preInputFiles.files && preInputOptions.options.length > 0) {
         scranWorker.postMessage({
           type: "PREFLIGHT_OPTIONS",
           payload: {

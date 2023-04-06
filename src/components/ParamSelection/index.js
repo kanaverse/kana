@@ -1623,11 +1623,14 @@ export function ParameterSelection({
               Combined embedding
             </H5>
             <div className="param-row">
-              <Label className="param-row-input">
+              <Label 
+                className="param-row-input"
+              >
                 <Text className="param-text-100">
                   RNA weight
                 </Text>
                 <NumericInput
+                  disabled={!!preInputOptionsStatus && !("RNA" in preInputOptionsStatus)}
                   placeholder="1"
                   defaultValue={tmpParams["combine_embeddings"]["rna_weight"]}
                   min={0}
@@ -1648,6 +1651,7 @@ export function ParameterSelection({
                   min={0}
                   defaultValue={tmpParams["combine_embeddings"]["adt_weight"]}
                   value={tmpParams["combine_embeddings"]["adt_weight"]}
+                  disabled={!!preInputOptionsStatus && !("ADT" in preInputOptionsStatus)}
                   onValueChange={(nval, val) => {
                     let gip = { ...tmpParams };
                     gip["combine_embeddings"]["adt_weight"] = nval;
@@ -1666,6 +1670,7 @@ export function ParameterSelection({
                     tmpParams["combine_embeddings"]["crispr_weight"]
                   }
                   value={tmpParams["combine_embeddings"]["crispr_weight"]}
+                  disabled={!!preInputOptionsStatus && !("CRISPR" in preInputOptionsStatus)}
                   onValueChange={(nval, val) => {
                     let gip = { ...tmpParams };
                     gip["combine_embeddings"]["crispr_weight"] = nval;
@@ -1817,6 +1822,7 @@ export function ParameterSelection({
               id="rnaqc"
               title="Quality control"
               tagContent="RNA"
+              disabled={!!preInputOptionsStatus && !("RNA" in preInputOptionsStatus)}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1839,6 +1845,7 @@ export function ParameterSelection({
               id="rnapca"
               title="Principal components analysis"
               tagContent="RNA"
+              disabled={!!preInputOptionsStatus && !("RNA" in preInputOptionsStatus)}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1850,6 +1857,7 @@ export function ParameterSelection({
               id="adtqc"
               title="Quality control"
               tagContent="ADT"
+              disabled={!!preInputOptionsStatus && !("ADT" in preInputOptionsStatus)}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1861,6 +1869,7 @@ export function ParameterSelection({
               id="adtnorm"
               title="Normalization"
               tagContent="ADT"
+              disabled={!!preInputOptionsStatus && !("ADT" in preInputOptionsStatus)}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1871,6 +1880,7 @@ export function ParameterSelection({
             <Tab
               id="adtpca"
               title="Principal components analysis"
+              disabled={!!preInputOptionsStatus && !("ADT" in preInputOptionsStatus)}
               tagContent="ADT"
               panel={
                 <>
@@ -1883,6 +1893,7 @@ export function ParameterSelection({
               id="crisprqc"
               title="Quality control"
               tagContent="CRISPR"
+              disabled={!!preInputOptionsStatus && !("CRISPR" in preInputOptionsStatus)}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1894,6 +1905,7 @@ export function ParameterSelection({
               id="crisprpca"
               title="Principal components analysis"
               tagContent="CRISPR"
+              disabled={!!preInputOptionsStatus && !("CRISPR" in preInputOptionsStatus)}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1904,6 +1916,7 @@ export function ParameterSelection({
             <Tab
               id="combweights"
               title="Combined embedding"
+              disabled={!!preInputOptionsStatus && Object.keys(preInputOptionsStatus).length == 1}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1975,6 +1988,7 @@ export function ParameterSelection({
             <Tab
               id="cellann"
               title="Cell type annotation"
+              disabled={!!preInputOptionsStatus && !("RNA" in preInputOptionsStatus)}
               panel={
                 <>
                   {render_stepinfo()}
@@ -1985,6 +1999,7 @@ export function ParameterSelection({
             <Tab
               id="fsetenrich"
               title="Gene set enrichment"
+              disabled={!!preInputOptionsStatus && !("RNA" in preInputOptionsStatus)}
               panel={
                 <>
                   {render_stepinfo()}
