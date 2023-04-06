@@ -136,8 +136,8 @@ export function TenxHDF5({
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
           This <strong>10X HDF5</strong> dataset contains{" "}
-          {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature types:{" "}
-          {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
+          {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature
+          types: {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
         <Collapse isOpen={collapse}>
           <div>
@@ -223,6 +223,26 @@ export function TenxHDF5({
                           <strong>{mod} primary feature ID</strong>
                         </Text>
                         <HTMLSelect
+                          disabled={
+                            options?.[
+                              `featureType${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }Name`
+                            ] === undefined ||
+                            options?.[
+                              `featureType${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }Name`
+                            ] === null ||
+                            options?.[
+                              `featureType${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }Name`
+                            ] === "none"
+                          }
                           defaultValue="none"
                           onChange={(e) => {
                             if (e.target.value) {
