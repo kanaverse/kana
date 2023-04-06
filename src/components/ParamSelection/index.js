@@ -543,7 +543,7 @@ export function ParameterSelection({
         {showStepHelper === "fsetenrich" && (
           <Callout intent="primary">
             <p>
-              Test for gene set enrichment on the top set of upregulated markers.
+              Test for gene set enrichment among the top set of upregulated markers.
               We perform a hypergeometric test for enrichment using a 
               variety of gene sets from the Gene Ontology and MSigDB.
             </p>
@@ -1097,7 +1097,7 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <H5 className="param-section-title">
-            Feature set enrichment
+            Gene set enrichment
           </H5>
           <div className="param-row">
             <Label className="param-row-input">
@@ -1961,7 +1961,7 @@ export function ParameterSelection({
             ></Tab>
             <Tab
               id="fsetenrich"
-              title="Feature set enrichment"
+              title="Gene set enrichment"
               panel={
                 <>
                   {render_stepinfo()}
