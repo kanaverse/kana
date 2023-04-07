@@ -646,7 +646,6 @@ onmessage = function (msg) {
         for (const [k, v] of Object.entries(features)) {
           resp[k] = gesel.intersect(v).length;
         }
-        
       } catch (e) {
         console.error(e);
         resp.status = "ERROR";
@@ -680,7 +679,10 @@ onmessage = function (msg) {
             } else {
               let tmp_dataset = createDataset(v);
               current[k] = tmp_dataset;
-              summary[k] = summarizeDataset(current[k], v);
+              summary[k] = summarizeDataset(
+                await current[k].summary({ cache: true }),
+                v
+              );
             }
           }
 

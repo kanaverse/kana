@@ -123,6 +123,8 @@ export function AnalysisMode(props) {
     setLoadZiesel,
     preInputOptions,
     setPreInputOptionsStatus,
+    setPreInputOptions,
+    setPreInputFiles,
   } = useContext(AppContext);
 
   // modalities
@@ -694,25 +696,40 @@ export function AnalysisMode(props) {
 
   // autoload an example dataset
   useEffect(() => {
-    if (loadZiesel === true) {
+    if (loadZiesel && wasmInitialized) {
+      let files = {
+        "dataset-1": {
+          name: "dataset-1",
+          format: "ExperimentHub",
+          id: "zeisel-brain",
+          options: {
+            primaryRNAFeatureColumn: "id",
+          },
+        },
+      };
+
+      let options = {
+        primaryRNAFeatureColumn: "id",
+      };
+
+      setShowPanel("results");
+
+      setPreInputFiles({
+        files: files,
+        batch: null,
+      });
+
+      setPreInputOptions({
+        options: [options],
+      });
+
       setInputFiles({
         batch: null,
         subset: null,
-        files: {
-          "dataset-1": {
-            name: "dataset-1",
-            format: "ExperimentHub",
-            id: "zeisel-brain",
-            options: {
-              primaryRNAFeatureColumn: "id",
-            },
-          },
-        },
+        files: files,
       });
-
-      setShowPanel("results");
     }
-  }, [loadZiesel]);
+  }, [loadZiesel, wasmInitialized]);
 
   function add_to_logs(type, msg, status) {
     let tmp = [...logs];
