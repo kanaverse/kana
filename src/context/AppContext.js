@@ -27,6 +27,9 @@ const AppContextProvider = ({ children }) => {
   // creates a default dataset name
   const [datasetName, setDatasetName] = useState("My Analysis Title");
 
+  // storing tmp files
+  const [tmpFiles, setTmpFiles] = useState([]);
+
   // Pre flight Input State
   const [preInputFiles, setPreInputFiles] = useState(null);
 
@@ -245,6 +248,8 @@ const AppContextProvider = ({ children }) => {
         setPreInputOptions,
         preInputOptionsStatus,
         setPreInputOptionsStatus,
+        tmpFiles,
+        setTmpFiles,
       }}
     >
       {children}

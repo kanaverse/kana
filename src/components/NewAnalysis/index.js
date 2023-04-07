@@ -41,7 +41,7 @@ import { RDSSE } from "./RDSSECard";
 export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   // close the entire panel
   const handleClose = () => {
-    setNewInputs([]);
+    setTmpFiles([]);
     setInputOptions([]);
 
     setPreInputOptionsStatus(null);
@@ -54,7 +54,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
 
   const initTmpFile = () => {
     return {
-      name: `Dataset-${newInputs.length + 2}`,
+      name: `Dataset-${tmpFiles.length + 2}`,
       format: tabSelected,
     };
   };
@@ -75,13 +75,14 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
     setInputFiles,
     setPreInputOptionsStatus,
     setPreInputFilesStatus,
+    tmpFiles, setTmpFiles
   } = useContext(AppContext);
 
   // what tab was selected to identify format
   const [tabSelected, setTabSelected] = useState("ExperimentHub");
 
   // contains the full list of inputs
-  const [newInputs, setNewInputs] = useState([]);
+  // const [newInputs, setNewInputs] = useState([]);
 
   // contains batch selection
   const [batch, setBatch] = useState(null);
@@ -115,7 +116,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   const handleAddDataset = () => {
     tmpNewInputs["uid"] = generateUID(tmpNewInputs);
 
-    setNewInputs([...newInputs, tmpNewInputs]);
+    setTmpFiles([...tmpFiles, tmpNewInputs]);
     setOpenInfo(false);
 
     setEhubSel("none");
@@ -124,13 +125,13 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   };
 
   const handleRunAnalysis = () => {
-    if (Array.isArray(newInputs) && Array.isArray(inputOptions)) {
-      if (newInputs.length != inputOptions.length) {
+    if (Array.isArray(tmpFiles) && Array.isArray(inputOptions)) {
+      if (tmpFiles.length != inputOptions.length) {
         console.error("forgot to set options?");
       } else {
         let mapFiles = {};
-        for (let i = 0; i < newInputs.length; i++) {
-          let f = newInputs[i],
+        for (let i = 0; i < tmpFiles.length; i++) {
+          let f = tmpFiles[i],
             o = inputOptions[i];
 
           mapFiles[f.name] = {
@@ -169,15 +170,15 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   };
 
   const handleRunAndParams = () => {
-    if (Array.isArray(newInputs) && Array.isArray(inputOptions)) {
-      if (newInputs.length != inputOptions.length) {
+    if (Array.isArray(tmpFiles) && Array.isArray(inputOptions)) {
+      if (tmpFiles.length != inputOptions.length) {
         console.error("forgot to set options?");
       } else {
         setStateIndeterminate(true);
 
         let mapFiles = {};
-        for (let i = 0; i < newInputs.length; i++) {
-          let f = newInputs[i],
+        for (let i = 0; i < tmpFiles.length; i++) {
+          let f = tmpFiles[i],
             o = inputOptions[i];
 
           mapFiles[f.name] = {
@@ -279,10 +280,10 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
 
   // send a preflight req out everytime a new dataset is added
   useEffect(() => {
-    if (Array.isArray(newInputs) && newInputs.length > 0) {
+    if (Array.isArray(tmpFiles) && tmpFiles.length > 0) {
       let mapFiles = {};
       let counter = 0;
-      for (const f of newInputs) {
+      for (const f of tmpFiles) {
         f.options = inputOptions[counter];
         mapFiles[f.name] = f;
         counter++;
@@ -293,13 +294,13 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
         batch: batch,
       });
     }
-  }, [newInputs]);
+  }, [tmpFiles]);
 
   // compute intersection when options change
   useEffect(() => {
     if (
-      Array.isArray(newInputs) &&
-      newInputs.length > 0 &&
+      Array.isArray(tmpFiles) &&
+      tmpFiles.length > 0 &&
       preInputFilesStatus
     ) {
       setPreInputOptions({
@@ -650,7 +651,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 --- no selection ---
               </option>
               {Object.keys(
-                preInputFilesStatus[newInputs[0].name].cells["columns"]
+                preInputFilesStatus[tmpFiles[0].name].cells["columns"]
               ).map((x, i) => (
                 <option key={i} value={x}>
                   {x}
@@ -685,25 +686,25 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                   tmpSubset["subset"] = null;
                 } else {
                   if (
-                    preInputFilesStatus[newInputs[0].name].cells["columns"][
+                    preInputFilesStatus[tmpFiles[0].name].cells["columns"][
                       tmpSubset["subset"]
                     ].type === "categorical"
                   ) {
                     tmpSubset["values"] = [];
                   } else {
                     tmpSubset["minmax"] = [
-                      preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      preInputFilesStatus[tmpFiles[0].name].cells["columns"][
                         tmpSubset["subset"]
                       ].min,
-                      preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      preInputFilesStatus[tmpFiles[0].name].cells["columns"][
                         tmpSubset["subset"]
                       ].max,
                     ];
                     tmpSubset["chosen_minmax"] = [
-                      preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      preInputFilesStatus[tmpFiles[0].name].cells["columns"][
                         tmpSubset["subset"]
                       ].min,
-                      preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      preInputFilesStatus[tmpFiles[0].name].cells["columns"][
                         tmpSubset["subset"]
                       ].max,
                     ];
@@ -717,7 +718,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 --- no selection ---
               </option>
               {Object.keys(
-                preInputFilesStatus[newInputs[0].name].cells["columns"]
+                preInputFilesStatus[tmpFiles[0].name].cells["columns"]
               ).map((x, i) => (
                 <option key={i} value={x}>
                   {x}
@@ -729,13 +730,13 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
             <>
               {(() => {
                 if (
-                  preInputFilesStatus[newInputs[0].name].cells["columns"][
+                  preInputFilesStatus[tmpFiles[0].name].cells["columns"][
                     subset["subset"]
                   ].type == "categorical"
                 ) {
                   return (
                     <div className="subset-section">
-                      {preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      {preInputFilesStatus[tmpFiles[0].name].cells["columns"][
                         subset["subset"]
                       ].values.map((x) => (
                         <Checkbox
@@ -757,7 +758,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                           }}
                         />
                       ))}
-                      {preInputFilesStatus[newInputs[0].name].cells["columns"][
+                      {preInputFilesStatus[tmpFiles[0].name].cells["columns"][
                         subset["subset"]
                       ].truncated && "... and more"}
                     </div>
@@ -884,7 +885,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
               a range of common single-cell formats below.
             </p>
           </Callout>
-          {newInputs && render_inputs()}
+          {tmpFiles && render_inputs()}
           <Button
             outlined={false}
             fill={true}
@@ -894,7 +895,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
             disabled={!tmpStatusValid}
             onClick={handleAddDataset}
           ></Button>
-          {preInputFilesStatus && newInputs && newInputs.length === 1 && (
+          {preInputFilesStatus && tmpFiles && tmpFiles.length === 1 && (
             <>
               <Divider />
               {render_batch_correction()}
@@ -933,14 +934,14 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 Note: Names of each dataset must be unique!
               </Callout>
             )}
-          {preInputOptionsStatus && newInputs.length > 1 && (
+          {preInputOptionsStatus && tmpFiles.length > 1 && (
             <>
               <Divider />
               {render_multi_summary()}
             </>
           )}
           <div className="section-inputs">
-            {newInputs.map((x, i) => {
+            {tmpFiles.map((x, i) => {
               if (x.format == "ExperimentHub") {
                 return (
                   <ExperimentHub
@@ -952,8 +953,8 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                     }
                     inputOpts={inputOptions}
                     setInputOpts={setInputOptions}
-                    inputs={newInputs}
-                    setInputs={setNewInputs}
+                    inputs={tmpFiles}
+                    setInputs={setTmpFiles}
                   />
                 );
               } else if (x.format == "MatrixMarket") {
@@ -967,8 +968,8 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                     }
                     inputOpts={inputOptions}
                     setInputOpts={setInputOptions}
-                    inputs={newInputs}
-                    setInputs={setNewInputs}
+                    inputs={tmpFiles}
+                    setInputs={setTmpFiles}
                   />
                 );
               } else if (x.format == "10X") {
@@ -982,8 +983,8 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                     }
                     inputOpts={inputOptions}
                     setInputOpts={setInputOptions}
-                    inputs={newInputs}
-                    setInputs={setNewInputs}
+                    inputs={tmpFiles}
+                    setInputs={setTmpFiles}
                   />
                 );
               } else if (x.format == "H5AD") {
@@ -997,8 +998,8 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                     }
                     inputOpts={inputOptions}
                     setInputOpts={setInputOptions}
-                    inputs={newInputs}
-                    setInputs={setNewInputs}
+                    inputs={tmpFiles}
+                    setInputs={setTmpFiles}
                   />
                 );
               } else if (x.format == "SummarizedExperiment") {
@@ -1012,8 +1013,8 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                     }
                     inputOpts={inputOptions}
                     setInputOpts={setInputOptions}
-                    inputs={newInputs}
-                    setInputs={setNewInputs}
+                    inputs={tmpFiles}
+                    setInputs={setTmpFiles}
                   />
                 );
               }
@@ -1033,20 +1034,20 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
             Clear
           </Button>
         </Tooltip2>
-        {newInputs.length > 0 && (
+        {tmpFiles.length > 0 && (
           <Tooltip2 content="Run Analysis" placement="top">
             <Button
               icon="flame"
               onClick={handleRunAnalysis}
               intent={"warning"}
               large={true}
-              disabled={newInputs.length == 0}
+              disabled={tmpFiles.length == 0}
             >
               Analyze
             </Button>
           </Tooltip2>
         )}
-        {newInputs.length > 0 && (
+        {tmpFiles.length > 0 && (
           <Tooltip2
             content="Update or modify default analysis parameters"
             placement="right"
@@ -1055,7 +1056,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
               icon="arrow-right"
               onClick={handleRunAndParams}
               large={true}
-              disabled={newInputs.length == 0}
+              disabled={tmpFiles.length == 0}
             >
               Modify analysis parameters
             </Button>
