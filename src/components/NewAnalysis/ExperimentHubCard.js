@@ -109,8 +109,8 @@ export function ExperimentHub({
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
           This <strong>{resource.format}</strong> dataset contains{" "}
-          {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature types:{" "}
-          {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
+          {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature
+          types: {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
         <Divider />
         <Collapse isOpen={collapse}>

@@ -49,7 +49,14 @@ export function ParameterSelection({
   const [showCRISPR, setShowCRISPR] = useState(true);
 
   // access app context
-  const { params, setParams, fsetEnrichCollections, inputFiles, preInputFiles, preInputOptionsStatus } = useContext(AppContext);
+  const {
+    params,
+    setParams,
+    fsetEnrichCollections,
+    inputFiles,
+    preInputFiles,
+    preInputOptionsStatus,
+  } = useContext(AppContext);
 
   // new params, so that they can be discarded later
   const [tmpParams, setTmpParams] = useState(params);
@@ -61,21 +68,16 @@ export function ParameterSelection({
   };
 
   const hasMultipleBatches = () => {
-    return (!!inputFiles.files) ?
-      (
-        Object.keys(inputFiles.files).length == 1 &&
-        typeof inputFiles.batch !== "string"
-      )
-      :
-      (
-        !!preInputFiles &&
-        Object.keys(preInputFiles.files).length == 1 &&
-        typeof preInputFiles.batch !== "string"
-      )
+    return !!inputFiles.files
+      ? Object.keys(inputFiles.files).length == 1 &&
+          typeof inputFiles.batch !== "string"
+      : !!preInputFiles &&
+          Object.keys(preInputFiles.files).length == 1 &&
+          typeof preInputFiles.batch !== "string";
   };
 
   const missingModality = (x) => {
-      return !!preInputOptionsStatus && !(x in preInputOptionsStatus);
+    return !!preInputOptionsStatus && !(x in preInputOptionsStatus);
   };
 
   const render_stepinfo = () => {
@@ -100,9 +102,8 @@ export function ParameterSelection({
               that most cells in the dataset are of acceptable quality.
             </p>
             <p>
-              <strong>Filter cells</strong>: 
-              Skip all quality control on the RNA count
-              matrix. This is occasionally desirable if the input data has
+              <strong>Filter cells</strong>: Skip all quality control on the RNA
+              count matrix. This is occasionally desirable if the input data has
               already been subjected to QC (e.g., as part of a published paper),
               in which case no further filtering should be applied.
             </p>
@@ -119,12 +120,10 @@ export function ParameterSelection({
                 target="_blank"
                 href="https://github.com/kanaverse/kana-special-features"
               >
-                <strong>
-                  in-built lists
-                </strong>
+                <strong>in-built lists</strong>
               </a>{" "}
-              of Ensembl/Entrez identifiers and gene symbols for
-              mitochondrial genes in various species?
+              of Ensembl/Entrez identifiers and gene symbols for mitochondrial
+              genes in various species?
             </p>
             <p>
               <strong>Mitochondrial gene prefix</strong>: Prefix to use to
@@ -137,14 +136,15 @@ export function ParameterSelection({
           <Callout intent="primary">
             <p>
               Identify highly variable genes (HVGs) while accounting for the
-              mean-variance relationship of count-based data. We do so by fitting a mean-dependent
-              trend to the variances computed from the log-transformed
-              normalized expression values. HVGs are defined as those genes with
-              the largest positive residuals from the trend, as these are more
-              variable than the majority of genes at the same abundance. The aim is to only use the
-              HVGs in some downstream steps like the principal components
-              analysis, thereby improving computational efficiency and reducing
-              uninteresting technical noise.
+              mean-variance relationship of count-based data. We do so by
+              fitting a mean-dependent trend to the variances computed from the
+              log-transformed normalized expression values. HVGs are defined as
+              those genes with the largest positive residuals from the trend, as
+              these are more variable than the majority of genes at the same
+              abundance. The aim is to only use the HVGs in some downstream
+              steps like the principal components analysis, thereby improving
+              computational efficiency and reducing uninteresting technical
+              noise.
             </p>
             <p>
               <strong>Lowess span</strong>: The span of the LOWESS smoother for
@@ -157,7 +157,8 @@ export function ParameterSelection({
         {showStepHelper === "rnapca" && (
           <Callout intent="primary">
             <p>
-              Perform a principal components analysis (PCA) on the log-normalized RNA expresssion values to obtain per-cell
+              Perform a principal components analysis (PCA) on the
+              log-normalized RNA expresssion values to obtain per-cell
               coordinates in a low-dimensional space. Specifically, we obtain a
               compact representation of the dataset by only taking the top
               principal components (PCs) that explain the largest variance. This
@@ -196,42 +197,45 @@ export function ParameterSelection({
             </p>
             <p>
               <strong>Method</strong>: Clustering algorithm to use. Currently,
-              we support k-means clustering with initialization by PCA partitioning 
-              and Hartigon-Wong refinement; or multi-level community detection on an
-              shared nearest neighbor (SNN) graph, where the cells are the nodes
-              and edges are created between neighboring cells.
+              we support k-means clustering with initialization by PCA
+              partitioning and Hartigon-Wong refinement; or multi-level
+              community detection on an shared nearest neighbor (SNN) graph,
+              where the cells are the nodes and edges are created between
+              neighboring cells.
             </p>
             <p>For k-means clustering, we can set the additional parameter:</p>
             <p>
-              <strong>Number of clusters</strong>: Number of clusters
-              to create in k-means clustering. This is capped at 40 for
-              performance purposes.
+              <strong>Number of clusters</strong>: Number of clusters to create
+              in k-means clustering. This is capped at 40 for performance
+              purposes.
             </p>
-            <p>For SNN-based clustering, we can set the additional parameters:</p>
             <p>
-              <strong>Number of neighbors</strong>: Number of neighbors to
-              use to construct the SNN graph. Larger values result in broader
+              For SNN-based clustering, we can set the additional parameters:
+            </p>
+            <p>
+              <strong>Number of neighbors</strong>: Number of neighbors to use
+              to construct the SNN graph. Larger values result in broader
               clusters.
             </p>
             <p>
-              <strong>Weighting scheme</strong>: Weighting scheme to use
-              for the edges of the SNN graph. The <em>Rank</em> approach derives
-              a weight from the rank of the closest shared neighbor; the{" "}
+              <strong>Weighting scheme</strong>: Weighting scheme to use for the
+              edges of the SNN graph. The <em>Rank</em> approach derives a
+              weight from the rank of the closest shared neighbor; the{" "}
               <em>Number</em> approach uses the number of shared neighbors; and
               the <em>Jaccard</em> approach uses the Jaccard index of the
               neighbor sets.
             </p>
             <p>
               <strong>Community detection</strong>: Algorithm to use to detect
-              communities (i.e., clusters) from the SNN graph. Each algorithm 
-              has its own parameters that determine the granularity of the resulting
-              clusters.
+              communities (i.e., clusters) from the SNN graph. Each algorithm
+              has its own parameters that determine the granularity of the
+              resulting clusters.
             </p>
             <p>
-              <strong>Multilevel resolution</strong>: Resolution parameter for the
-              multi-level clustering, used to adjust the modularity calculation
-              during community optimization. Larger values yield more
-              fine-grained clusters.
+              <strong>Multilevel resolution</strong>: Resolution parameter for
+              the multi-level clustering, used to adjust the modularity
+              calculation during community optimization. Larger values yield
+              more fine-grained clusters.
             </p>
             <p>
               <strong>Leiden resolution</strong>: Resolution parameter for the
@@ -240,8 +244,8 @@ export function ParameterSelection({
               fine-grained clusters.
             </p>
             <p>
-              <strong>Walktrap steps</strong>: Number of steps for the
-              walktrap algorithm.  Larger values generally yield broader clusters.
+              <strong>Walktrap steps</strong>: Number of steps for the walktrap
+              algorithm. Larger values generally yield broader clusters.
             </p>
           </Callout>
         )}
@@ -261,8 +265,8 @@ export function ParameterSelection({
               embedding.
             </p>
             <p>
-              <strong>Number of iterations</strong>: Number of t-SNE iterations. Doesn't
-              usually have much of an effect if you leave it as it is.
+              <strong>Number of iterations</strong>: Number of t-SNE iterations.
+              Doesn't usually have much of an effect if you leave it as it is.
             </p>
           </Callout>
         )}
@@ -285,8 +289,9 @@ export function ParameterSelection({
               and favor local structure.
             </p>
             <p>
-              <strong>Number of epochs</strong>: Number of epochs to use for convergence.
-              This doesn't really change all too much in the results.
+              <strong>Number of epochs</strong>: Number of epochs to use for
+              convergence. This doesn't really change all too much in the
+              results.
             </p>
           </Callout>
         )}
@@ -327,12 +332,12 @@ export function ParameterSelection({
           <Callout intent="primary">
             <p>
               Build the index for the nearest neighbor search. This is used for
-              a variety of steps including the SNN graph-based clustering, t-SNE and
-              UMAP.
+              a variety of steps including the SNN graph-based clustering, t-SNE
+              and UMAP.
             </p>
             <p>
-              <strong>Use approximate search</strong>: Use an approximate neighbor search
-              algorithm - in this case, the{" "}
+              <strong>Use approximate search</strong>: Use an approximate
+              neighbor search algorithm - in this case, the{" "}
               <a href="https://github.com/spotify/Annoy">Annoy</a> method. This
               sacrifices some search accuracy for speed, which is usually
               acceptable for single-cell applications. Otherwise, an exact
@@ -343,12 +348,12 @@ export function ParameterSelection({
         {showStepHelper === "batch" && (
           <Callout intent="primary">
             <p>
-              Remove uninteresting differences between cells from different batches. This
-              places all cells in a common coordinate space for consistent
-              clustering and visualization. Otherwise, the interpretation of
-              downstream analysis results may be complicated by large
-              batch effects, obscuring the heterogeneity within
-              batches that is usually of interest.
+              Remove uninteresting differences between cells from different
+              batches. This places all cells in a common coordinate space for
+              consistent clustering and visualization. Otherwise, the
+              interpretation of downstream analysis results may be complicated
+              by large batch effects, obscuring the heterogeneity within batches
+              that is usually of interest.
             </p>
             <p>
               <strong>Correction method</strong>: Which correction method to use
@@ -358,8 +363,8 @@ export function ParameterSelection({
               samples. Linear regression is simpler but assumes that all samples
               have the same proportions of cell types, with a consistent batch
               effect in each cell type. Users may also choose not to correct for
-              faster analyses, if the batch effect is known to be negligible; or if
-              the differences between batches are interesting, e.g., because
+              faster analyses, if the batch effect is known to be negligible; or
+              if the differences between batches are interesting, e.g., because
               each "batch" corresponds to a different biological condition.
             </p>
             <p>
@@ -376,12 +381,12 @@ export function ParameterSelection({
               Remove low-quality cells based on the ADT counts. This uses the
               number of detected features and, if available, the total count for
               isotype (IgG) controls. Cells with few detected features or high
-              isotype counts are filtered out. We use an outlier-based
-              approach to define the filter threshold for each metric.
+              isotype counts are filtered out. We use an outlier-based approach
+              to define the filter threshold for each metric.
             </p>
             <p>
-              <strong>Filter cells</strong>: Skip all quality control on the ADT count
-              matrix. This is occasionally desirable if the input data has
+              <strong>Filter cells</strong>: Skip all quality control on the ADT
+              count matrix. This is occasionally desirable if the input data has
               already been subjected to QC (e.g., as part of a published paper),
               in which case no further filtering should be applied.
             </p>
@@ -392,12 +397,12 @@ export function ParameterSelection({
               Increasing this value will reduce the stringency of the filtering.
             </p>
             <p>
-              <strong>Minimum detected drop</strong>: Minimum relative drop in the
-              number of detected tags required to define an outlier.
-              The default value of 0.1 corresponds to a 10% drop, i.e., 
-              a cell must have fewer than 90% of the median number of detected tags
-              to be considered a low outlier. Increasing this value will reduce 
-              the number of outliers and thus the stringency of the filtering.
+              <strong>Minimum detected drop</strong>: Minimum relative drop in
+              the number of detected tags required to define an outlier. The
+              default value of 0.1 corresponds to a 10% drop, i.e., a cell must
+              have fewer than 90% of the median number of detected tags to be
+              considered a low outlier. Increasing this value will reduce the
+              number of outliers and thus the stringency of the filtering.
             </p>
             <p>
               <strong>Isotype control prefix</strong>: Prefix to use to identify
@@ -414,8 +419,9 @@ export function ParameterSelection({
               stronger in ADT data. We use a simple approach where we cluster
               cells based on their ADT counts, normalize for composition biases
               between clusters using an median-based method, normalize for
-              library size differences between cells within each cluster, and then
-              combine both of these normalizations to obtain per-cell factors.
+              library size differences between cells within each cluster, and
+              then combine both of these normalizations to obtain per-cell
+              factors.
             </p>
             <p>
               <strong>Number of clusters</strong>: Number of clusters to use in
@@ -435,7 +441,8 @@ export function ParameterSelection({
               obtained, it should not be necessary to spend much time
               fine-tuning this parameter. In fact, if the requested number of
               PCs is greater than the number of ADTs, this parameter will have
-              no effect and the ADT log-abundances are used directly for clustering.
+              no effect and the ADT log-abundances are used directly for
+              clustering.
             </p>
           </Callout>
         )}
@@ -460,16 +467,19 @@ export function ParameterSelection({
         )}
         {showStepHelper === "crisprqc" && (
           <Callout intent="primary">
-            <p>Remove low-quality cells based on the CRISPR guide counts. This uses the
-              count of the most abundant guide for filtering, where cells with 
-              low maximum counts are filtered out. We use an outlier-based
-              approach to define the filter threshold for this metric.
+            <p>
+              Remove low-quality cells based on the CRISPR guide counts. This
+              uses the count of the most abundant guide for filtering, where
+              cells with low maximum counts are filtered out. We use an
+              outlier-based approach to define the filter threshold for this
+              metric.
             </p>
             <p>
-              <strong>Filter cells</strong>: Skip all quality control on the CRISPR count
-              matrix. This is occasionally desirable if the input data has
-              already been subjected to QC (e.g., as part of a published paper),
-              in which case no further filtering should be applied.
+              <strong>Filter cells</strong>: Skip all quality control on the
+              CRISPR count matrix. This is occasionally desirable if the input
+              data has already been subjected to QC (e.g., as part of a
+              published paper), in which case no further filtering should be
+              applied.
             </p>
             <p>
               <strong>Number of MADs</strong>: Number of median absolute
@@ -483,11 +493,11 @@ export function ParameterSelection({
           <Callout intent="primary">
             <p>
               Perform a principal components analysis (PCA) on the
-              log-normalized CRISPR abundance matrix. As for RNA, the PCA is used for
-              compression and denoising prior to downstream steps like
+              log-normalized CRISPR abundance matrix. As for RNA, the PCA is
+              used for compression and denoising prior to downstream steps like
               clustering and visualization. However, unlike RNA, no feature
-              selection is performed here as there are relatively few CRISPR guides in
-              the first place.
+              selection is performed here as there are relatively few CRISPR
+              guides in the first place.
             </p>
             <p>
               <strong>Number of PCs</strong>: Number of principal components
@@ -504,27 +514,27 @@ export function ParameterSelection({
               single matrix that can be used in downstream analyses like
               clustering, allowing us to incorporate information from multiple
               modalities. The PCs from each modality are scaled to equalize
-              their intra-cluster variance, ensuring that modalities with
-              more features or higher baseline variability do not dominate the
-              combined embedding. This process can be customized by explicitly 
+              their intra-cluster variance, ensuring that modalities with more
+              features or higher baseline variability do not dominate the
+              combined embedding. This process can be customized by explicitly
               setting the weights for each modality; a larger value indicates
               that the modality will contribute more to the combined population
-              heterogeneity, while A value of zero indicates that the modality 
+              heterogeneity, while A value of zero indicates that the modality
               should not be used in teh combined embedding at all.
             </p>
             <p>
-              <strong>RNA weight</strong>: Weight for the RNA modality.
-              Only used if RNA data is available.
+              <strong>RNA weight</strong>: Weight for the RNA modality. Only
+              used if RNA data is available.
             </p>
             <p>
-              <strong>ADT weight</strong>: Weight for the ADT modality.
-              By default, this is equal to the RNA modality.
-              Only used if ADT data is available.
+              <strong>ADT weight</strong>: Weight for the ADT modality. By
+              default, this is equal to the RNA modality. Only used if ADT data
+              is available.
             </p>
             <p>
-              <strong>CRISPR weight</strong>: Weight for the CRISPR modality.
-              By default, this is set to zero as the tag counts are not usually used for clustering.
-              Only used if CRISPR data is available.
+              <strong>CRISPR weight</strong>: Weight for the CRISPR modality. By
+              default, this is set to zero as the tag counts are not usually
+              used for clustering. Only used if CRISPR data is available.
             </p>
           </Callout>
         )}
@@ -533,41 +543,43 @@ export function ParameterSelection({
             <p>
               Detect upregulated marker genes between clusters. This is achieved
               by performing pairwise comparisons between clusters based on their
-              log-expression values. For each comparison, we compute
-              a battery of different effect sizes, including the area under the
-              curve (AUC), Cohen's d, the log<sub>2</sub>-fold change between
-              cluster means, and the difference in the proportion of cells with
+              log-expression values. For each comparison, we compute a battery
+              of different effect sizes, including the area under the curve
+              (AUC), Cohen's d, the log<sub>2</sub>-fold change between cluster
+              means, and the difference in the proportion of cells with
               detectable expression. Effect sizes from all pairwise comparisons
-              are then aggregated together to obtain a single ranking per cluster.
-              The same approach is used for computing markers between groups of cels
-              defined by existing annotation columns.
+              are then aggregated together to obtain a single ranking per
+              cluster. The same approach is used for computing markers between
+              groups of cels defined by existing annotation columns.
             </p>
             <p>
-              <strong>Compute AUC</strong>: Should the AUC be computed for each pairwise comparison between clusters?
-              The AUC is more robust to outliers than Cohen's d, but is
-              also more time- and memory-intensive to compute.
-              Users may wish to disable this for large datasets.
+              <strong>Compute AUC</strong>: Should the AUC be computed for each
+              pairwise comparison between clusters? The AUC is more robust to
+              outliers than Cohen's d, but is also more time- and
+              memory-intensive to compute. Users may wish to disable this for
+              large datasets.
             </p>
             <p>
-              <strong>Log-FC threshold</strong>: threshold to use for computing the
-              Cohen's d. If this is non-zero, Cohen's d is redefined as the number of 
-              standard deviations between the group means after shifting the higher
-              mean downwards by the threshold. Increasing this value will force 
-              Cohen's d to focus on genes with larger log-fold changes at the expense
-              of small variances.
+              <strong>Log-FC threshold</strong>: threshold to use for computing
+              the Cohen's d. If this is non-zero, Cohen's d is redefined as the
+              number of standard deviations between the group means after
+              shifting the higher mean downwards by the threshold. Increasing
+              this value will force Cohen's d to focus on genes with larger
+              log-fold changes at the expense of small variances.
             </p>
           </Callout>
         )}
         {showStepHelper === "fsetenrich" && (
           <Callout intent="primary">
             <p>
-              Test for gene set enrichment among the top set of upregulated markers.
-              We perform a hypergeometric test for enrichment using a 
+              Test for gene set enrichment among the top set of upregulated
+              markers. We perform a hypergeometric test for enrichment using a
               variety of gene sets from the Gene Ontology and MSigDB.
             </p>
             <p>
-              <strong>Top markers</strong>: Number of top markers to use for the hypergeometric test.
-              Larger values will identify more overlaps at the cost of specificity.
+              <strong>Top markers</strong>: Number of top markers to use for the
+              hypergeometric test. Larger values will identify more overlaps at
+              the cost of specificity.
             </p>
           </Callout>
         )}
@@ -579,14 +591,10 @@ export function ParameterSelection({
     return (
       <div className="col">
         <div>
-          <H5 className="param-section-title">
-            Quality control (RNA)
-          </H5>
+          <H5 className="param-section-title">Quality control (RNA)</H5>
           <div className="param-row">
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Filter cells?
-              </Text>
+              <Text className="param-text-100">Filter cells?</Text>
               <Switch
                 style={{ marginTop: "10px" }}
                 large={true}
@@ -607,9 +615,7 @@ export function ParameterSelection({
             {tmpParams?.cell_filtering?.use_rna === true && (
               <>
                 <Label className="param-row-input">
-                  <Text className="param-text-100">
-                    Number of MADs
-                  </Text>
+                  <Text className="param-text-100">Number of MADs</Text>
                   <NumericInput
                     placeholder="3"
                     value={tmpParams["rna_quality_control"]["nmads"]}
@@ -680,14 +686,10 @@ export function ParameterSelection({
     return (
       <div className="col">
         <div>
-          <H5 className="param-section-title">
-            Feature selection (RNA)
-          </H5>
+          <H5 className="param-section-title">Feature selection (RNA)</H5>
           <div className="param-row">
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Lowess span
-              </Text>
+              <Text className="param-text-100">Lowess span</Text>
               <NumericInput
                 placeholder="0.3"
                 stepSize={0.1}
@@ -719,9 +721,7 @@ export function ParameterSelection({
           </H5>
           <div className="param-row">
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Number of HVGs
-              </Text>
+              <Text className="param-text-100">Number of HVGs</Text>
               <NumericInput
                 placeholder="2500"
                 value={tmpParams["rna_pca"]["num_hvgs"]}
@@ -734,9 +734,7 @@ export function ParameterSelection({
               />
             </Label>
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Number of PCs
-              </Text>
+              <Text className="param-text-100">Number of PCs</Text>
               <NumericInput
                 placeholder="25"
                 value={tmpParams["rna_pca"]["num_pcs"]}
@@ -758,14 +756,10 @@ export function ParameterSelection({
     return (
       <div className="col">
         <div>
-          <H5 className="param-section-title">
-            Clustering
-          </H5>
+          <H5 className="param-section-title">Clustering</H5>
           <div className="param-row">
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Method
-              </Text>
+              <Text className="param-text-100">Method</Text>
               <HTMLSelect
                 onChange={(e) => {
                   setTmpParams({
@@ -784,9 +778,7 @@ export function ParameterSelection({
             </Label>
             {tmpParams["choose_clustering"]["method"] == "kmeans" && (
               <Label className="param-row-input">
-                <Text className="param-text-100">
-                  Number of clusters
-                </Text>
+                <Text className="param-text-100">Number of clusters</Text>
                 <NumericInput
                   placeholder="10"
                   max="40"
@@ -806,9 +798,7 @@ export function ParameterSelection({
             {tmpParams["choose_clustering"]["method"] == "snn_graph" && (
               <>
                 <Label className="param-row-input">
-                  <Text className="param-text-100">
-                    Number of neighbors
-                  </Text>
+                  <Text className="param-text-100">Number of neighbors</Text>
                   <NumericInput
                     placeholder="10"
                     value={tmpParams["snn_graph_cluster"]["k"]}
@@ -824,9 +814,7 @@ export function ParameterSelection({
                   />
                 </Label>
                 <Label className="param-row-input">
-                  <Text className="param-text-100">
-                    Weighting scheme
-                  </Text>
+                  <Text className="param-text-100">Weighting scheme</Text>
                   <HTMLSelect
                     onChange={(e) => {
                       setTmpParams({
@@ -845,9 +833,7 @@ export function ParameterSelection({
                   </HTMLSelect>
                 </Label>
                 <Label className="param-row-input">
-                  <Text className="param-text-100">
-                    Community detection
-                  </Text>
+                  <Text className="param-text-100">Community detection</Text>
                   <HTMLSelect
                     onChange={(e) => {
                       setTmpParams({
@@ -897,9 +883,7 @@ export function ParameterSelection({
                 {tmpParams["snn_graph_cluster"]["algorithm"] === "leiden" && (
                   <>
                     <Label className="param-row-input">
-                      <Text className="param-text-100">
-                        Leiden resolution
-                      </Text>
+                      <Text className="param-text-100">Leiden resolution</Text>
                       <NumericInput
                         placeholder="0.5"
                         value={
@@ -923,9 +907,7 @@ export function ParameterSelection({
                 {tmpParams["snn_graph_cluster"]["algorithm"] == "walktrap" && (
                   <>
                     <Label className="param-row-input">
-                      <Text className="param-text-100">
-                        Walktrap steps
-                      </Text>
+                      <Text className="param-text-100">Walktrap steps</Text>
                       <NumericInput
                         placeholder="4"
                         value={tmpParams["snn_graph_cluster"]["walktrap_steps"]}
@@ -956,14 +938,10 @@ export function ParameterSelection({
     return (
       <div className="col">
         <div>
-          <H5 className="param-section-title">
-            Marker detection
-          </H5>
+          <H5 className="param-section-title">Marker detection</H5>
           <div className="param-row">
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Compute AUC?
-              </Text>
+              <Text className="param-text-100">Compute AUC?</Text>
               <Switch
                 style={{ marginTop: "10px" }}
                 large={true}
@@ -982,9 +960,7 @@ export function ParameterSelection({
               />
             </Label>
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Log-FC threshold
-              </Text>
+              <Text className="param-text-100">Log-FC threshold</Text>
               <NumericInput
                 placeholder="0"
                 value={tmpParams["marker_detection"]["lfc_threshold"]}
@@ -1009,14 +985,10 @@ export function ParameterSelection({
     return (
       <div className="col">
         <div>
-          <H5 className="param-section-title">
-            t-SNE
-          </H5>
+          <H5 className="param-section-title">t-SNE</H5>
           <div className="param-row">
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Perplexity
-              </Text>
+              <Text className="param-text-100">Perplexity</Text>
               <NumericInput
                 placeholder="30"
                 value={tmpParams["tsne"]["perplexity"]}
@@ -1029,9 +1001,7 @@ export function ParameterSelection({
               />
             </Label>
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Number of iterations
-              </Text>
+              <Text className="param-text-100">Number of iterations</Text>
               <NumericInput
                 placeholder="500"
                 value={tmpParams["tsne"]["iterations"]}
@@ -1053,14 +1023,10 @@ export function ParameterSelection({
     return (
       <div className="col">
         <div>
-          <H5 className="param-section-title">
-            UMAP
-          </H5>
+          <H5 className="param-section-title">UMAP</H5>
           <div className="param-row">
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Number of neighbors
-              </Text>
+              <Text className="param-text-100">Number of neighbors</Text>
               <NumericInput
                 placeholder="15"
                 value={tmpParams["umap"]["num_neighbors"]}
@@ -1073,9 +1039,7 @@ export function ParameterSelection({
               />
             </Label>
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Minimum distance
-              </Text>
+              <Text className="param-text-100">Minimum distance</Text>
               <NumericInput
                 placeholder="0.01"
                 stepSize={0.01}
@@ -1090,9 +1054,7 @@ export function ParameterSelection({
               />
             </Label>
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Number of epochs
-              </Text>
+              <Text className="param-text-100">Number of epochs</Text>
               <NumericInput
                 placeholder="500"
                 value={tmpParams["umap"]["num_epochs"]}
@@ -1114,14 +1076,10 @@ export function ParameterSelection({
     return (
       <div className="col">
         <div>
-          <H5 className="param-section-title">
-            Gene set enrichment
-          </H5>
+          <H5 className="param-section-title">Gene set enrichment</H5>
           <div className="param-row">
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Number of top markers
-              </Text>
+              <Text className="param-text-100">Number of top markers</Text>
               <NumericInput
                 placeholder="100"
                 value={tmpParams["feature_set_enrichment"]["top_markers"]}
@@ -1139,9 +1097,7 @@ export function ParameterSelection({
             {fsetEnrichCollections && (
               <>
                 <Label className="param-row-input">
-                  <Text className="param-text-100">
-                    Species
-                  </Text>
+                  <Text className="param-text-100">Species</Text>
                   <HTMLSelect
                     onChange={(e) => {
                       setTmpParams({
@@ -1171,9 +1127,7 @@ export function ParameterSelection({
                 {tmpParams["feature_set_enrichment"]["species"] !== null &&
                   tmpParams["feature_set_enrichment"]["species"] !== "none" && (
                     <Label className="param-row-input">
-                      <Text className="param-text-100">
-                        Species
-                      </Text>
+                      <Text className="param-text-100">Species</Text>
                       <select
                         multiple={true}
                         onChange={(e) => {
@@ -1239,14 +1193,10 @@ export function ParameterSelection({
     return (
       <div className="col">
         <div>
-          <H5 className="param-section-title">
-            Cell type annotation
-          </H5>
+          <H5 className="param-section-title">Cell type annotation</H5>
           <div className="param-row">
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Reference datasets:
-              </Text>
+              <Text className="param-text-100">Reference datasets:</Text>
               <div
                 style={{
                   marginTop: "10px",
@@ -1349,15 +1299,11 @@ export function ParameterSelection({
     return (
       <div className="col">
         <div>
-          <H5 className="param-section-title">
-            Nearest neighbor search
-          </H5>
+          <H5 className="param-section-title">Nearest neighbor search</H5>
 
           <div className="param-row">
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Use approximate search?
-              </Text>
+              <Text className="param-text-100">Use approximate search?</Text>
               <Switch
                 style={{ marginTop: "10px" }}
                 large={true}
@@ -1385,15 +1331,11 @@ export function ParameterSelection({
     return (
       <div className="col">
         <div>
-          <H5 className="param-section-title">
-            Batch correction
-          </H5>
+          <H5 className="param-section-title">Batch correction</H5>
 
           <div className="param-row">
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Correction method
-              </Text>
+              <Text className="param-text-100">Correction method</Text>
               <HTMLSelect
                 onChange={(e) => {
                   setTmpParams({
@@ -1412,9 +1354,7 @@ export function ParameterSelection({
               </HTMLSelect>
             </Label>
             <Label className="param-row-input">
-              <Text className="param-text-100">
-                Number of neighbors
-              </Text>
+              <Text className="param-text-100">Number of neighbors</Text>
               <NumericInput
                 placeholder="15"
                 value={tmpParams["batch_correction"]["num_neighbors"]}
@@ -1440,14 +1380,10 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <div>
-            <H5 className="param-section-title">
-              Quality control (ADT)
-            </H5>
+            <H5 className="param-section-title">Quality control (ADT)</H5>
             <div className="param-row">
               <Label className="param-row-input">
-                <Text className="param-text-100">
-                  Filter cells?
-                </Text>
+                <Text className="param-text-100">Filter cells?</Text>
                 <Switch
                   style={{ marginTop: "10px" }}
                   large={true}
@@ -1468,9 +1404,7 @@ export function ParameterSelection({
               {tmpParams?.cell_filtering?.use_adt === true && (
                 <>
                   <Label className="param-row-input">
-                    <Text className="param-text-100">
-                      Number of MADs
-                    </Text>
+                    <Text className="param-text-100">Number of MADs</Text>
                     <NumericInput
                       placeholder="3"
                       value={tmpParams["adt_quality_control"]["nmads"]}
@@ -1540,14 +1474,10 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <div>
-            <H5 className="param-section-title">
-              Normalization (ADT)
-            </H5>
+            <H5 className="param-section-title">Normalization (ADT)</H5>
             <div className="param-row">
               <Label className="param-row-input">
-                <Text className="param-text-100">
-                  Number of PCs
-                </Text>
+                <Text className="param-text-100">Number of PCs</Text>
                 <NumericInput
                   placeholder="25"
                   value={tmpParams["adt_normalization"]["num_pcs"]}
@@ -1563,9 +1493,7 @@ export function ParameterSelection({
                 />
               </Label>
               <Label className="param-row-input">
-                <Text className="param-text-100">
-                  Number of clusters
-                </Text>
+                <Text className="param-text-100">Number of clusters</Text>
                 <NumericInput
                   placeholder="20"
                   value={tmpParams["adt_normalization"]["num_clusters"]}
@@ -1597,9 +1525,7 @@ export function ParameterSelection({
             </H5>
             <div className="param-row">
               <Label className="param-row-input">
-                <Text className="param-text-100">
-                  Number of PCs
-                </Text>
+                <Text className="param-text-100">Number of PCs</Text>
                 <NumericInput
                   placeholder="25"
                   value={tmpParams["adt_pca"]["num_pcs"]}
@@ -1623,18 +1549,14 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <div>
-            <H5 className="param-section-title">
-              Combined embedding
-            </H5>
+            <H5 className="param-section-title">Combined embedding</H5>
             <div className="param-row">
-              <Label 
-                className="param-row-input"
-              >
-                <Text className="param-text-100">
-                  RNA weight
-                </Text>
+              <Label className="param-row-input">
+                <Text className="param-text-100">RNA weight</Text>
                 <NumericInput
-                  disabled={!!preInputOptionsStatus && !("RNA" in preInputOptionsStatus)}
+                  disabled={
+                    !!preInputOptionsStatus && !("RNA" in preInputOptionsStatus)
+                  }
                   placeholder="1"
                   defaultValue={tmpParams["combine_embeddings"]["rna_weight"]}
                   min={0}
@@ -1647,9 +1569,7 @@ export function ParameterSelection({
                 />
               </Label>
               <Label className="param-row-input">
-                <Text className="param-text-100">
-                  ADT weight
-                </Text>
+                <Text className="param-text-100">ADT weight</Text>
                 <NumericInput
                   placeholder="1"
                   min={0}
@@ -1664,9 +1584,7 @@ export function ParameterSelection({
                 />
               </Label>
               <Label className="param-row-input">
-                <Text className="param-text-100">
-                  CRISPR weight
-                </Text>
+                <Text className="param-text-100">CRISPR weight</Text>
                 <NumericInput
                   placeholder="1"
                   min={0}
@@ -1694,14 +1612,10 @@ export function ParameterSelection({
       <div className="col">
         <div>
           <div>
-            <H5 className="param-section-title">
-              Quality control (CRISPR)
-            </H5>
+            <H5 className="param-section-title">Quality control (CRISPR)</H5>
             <div className="param-row">
               <Label className="param-row-input">
-                <Text className="param-text-100">
-                  Filter cells?
-                </Text>
+                <Text className="param-text-100">Filter cells?</Text>
                 <Switch
                   style={{ marginTop: "10px" }}
                   large={true}
@@ -1722,9 +1636,7 @@ export function ParameterSelection({
               {tmpParams?.cell_filtering?.use_crispr === true && (
                 <>
                   <Label className="param-row-input">
-                    <Text className="param-text-100">
-                      Number of MADs
-                    </Text>
+                    <Text className="param-text-100">Number of MADs</Text>
                     <NumericInput
                       placeholder="3"
                       value={tmpParams["crispr_quality_control"]["nmads"]}
@@ -1782,9 +1694,7 @@ export function ParameterSelection({
             </H5>
             <div className="param-row">
               <Label className="param-row-input">
-                <Text className="param-text-100">
-                  Number of PCs
-                </Text>
+                <Text className="param-text-100">Number of PCs</Text>
                 <NumericInput
                   placeholder="25"
                   value={tmpParams["crispr_pca"]["num_pcs"]}
@@ -1921,7 +1831,10 @@ export function ParameterSelection({
             <Tab
               id="combweights"
               title="Combined embedding"
-              disabled={!!preInputOptionsStatus && Object.keys(preInputOptionsStatus).length == 1}
+              disabled={
+                !!preInputOptionsStatus &&
+                Object.keys(preInputOptionsStatus).length == 1
+              }
               panel={
                 <>
                   {render_stepinfo()}

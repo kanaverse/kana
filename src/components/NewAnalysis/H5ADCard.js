@@ -235,7 +235,10 @@ export function H5AD({
                       <Label className="row-input">
                         <Text>
                           <strong>RNA primary feature ID</strong>{" "}
-                          <small>(when no feature type is provided, we assume that only RNA data is present)</small>
+                          <small>
+                            (when no feature type is provided, we assume that
+                            only RNA data is present)
+                          </small>
                         </Text>
                         <HTMLSelect
                           defaultValue="none"
