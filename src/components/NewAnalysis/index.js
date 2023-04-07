@@ -911,25 +911,26 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                   marginBottom: "10px",
                 }}
               >
-                <p>Upload files that in one of these formats;</p>
+                <p>Upload files in one of these formats -</p>
                 <ul>
                   <li>
-                    Matrix Market - <code>*.mtx</code> or <code>*.mtx.gz</code>
+                    Matrix Market - <code>*.mtx</code> or <code>*.mtx.gz</code>.
+                    For features or genes, these files can be either{" "}
+                    <code>*.tsv</code> or <code>*.tsv.gz</code>.
                   </li>
                   <li>
-                    features or genes, <code>*.tsv</code> or{" "}
-                    <code>*.tsv.gz</code>
+                    {" "}
+                    For h5 based formats (10X or H5AD) - files must end in
+                    <code>*.h5</code> or <code>*.hdf5</code> or{" "}
+                    <code>*.h5ad</code>
                   </li>
                   <li>
-                    HDF5 (10X or H5AD) - <code>*.h5</code> or{" "}
-                    <code>*.hdf5</code> or <code>*.h5ad</code>
+                    {" "}
+                    Summarized or single cell experiment object stored as RDS
+                    files must end with <code>*.rds</code>
                   </li>
-                  <li>
-                    RDS - <code>*.rds</code> or{" "}
-                  </li>
-                  <li>ExperimentHub ID</li>
                 </ul>
-                Note: Names of dataset must be unique!
+                Note: Names of each dataset must be unique!
               </Callout>
             )}
           {preInputOptionsStatus && newInputs.length > 1 && (
