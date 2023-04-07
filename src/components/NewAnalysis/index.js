@@ -68,7 +68,6 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   // Access App Context
   const {
     ehubDatasets,
-    setEhubDatasets,
     setPreInputFiles,
     preInputFilesStatus,
     setPreInputOptions,
@@ -102,7 +101,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   });
 
   // should i enable the add button?
-  const [tmpStatusValid, setTmpStatusValid] = useState(false);
+  const [tmpStatusValid, setTmpStatusValid] = useState(null);
 
   // show batch field?
   const [showBatch, setShowBatch] = useState(false);
@@ -291,7 +290,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
 
       setPreInputFiles({
         files: mapFiles,
-        batch: batch
+        batch: batch,
       });
     }
   }, [newInputs]);
@@ -903,6 +902,36 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           )}
         </div>
         <div className="section-info">
+          {(tmpNewInputs.mtx || tmpNewInputs.h5 || tmpNewInputs.rds) &&
+            !tmpStatusValid && (
+              <Callout
+                intent="danger"
+                title="Incorrect file format"
+                style={{
+                  marginBottom: "10px",
+                }}
+              >
+                <p>Upload files that in one of these formats;</p>
+                <ul>
+                  <li>
+                    Matrix Market - <code>*.mtx</code> or <code>*.mtx.gz</code>
+                  </li>
+                  <li>
+                    features or genes, <code>*.tsv</code> or{" "}
+                    <code>*.tsv.gz</code>
+                  </li>
+                  <li>
+                    HDF5 (10X or H5AD) - <code>*.h5</code> or{" "}
+                    <code>*.hdf5</code> or <code>*.h5ad</code>
+                  </li>
+                  <li>
+                    RDS - <code>*.rds</code> or{" "}
+                  </li>
+                  <li>ExperimentHub ID</li>
+                </ul>
+                Note: Names of dataset must be unique!
+              </Callout>
+            )}
           {preInputOptionsStatus && newInputs.length > 1 && (
             <>
               <Divider />
