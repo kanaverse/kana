@@ -1507,12 +1507,21 @@ export function AnalysisMode(props) {
                 intent={showPanel === "logs" ? "primary" : "none"}
               >
                 <div className="item-button-group">
-                  {!showQCLoader &&
-                  !showPCALoader &&
-                  !showNClusLoader &&
-                  !showCellLabelLoader &&
-                  !showMarkerLoader &&
-                  !showDimPlotLoader ? (
+                  {inputFiles?.files === null ? (
+                    <Button
+                      outlined={false}
+                      large={false}
+                      minimal={true}
+                      fill={true}
+                      icon={"console"}
+                      onClick={() => setShowLogs(true)}
+                      intent={showPanel === "logs" ? "primary" : "none"}
+                    ></Button>
+                  ) : !showQCLoader &&
+                    !showPCALoader &&
+                    !showNClusLoader &&
+                    !showMarkerLoader &&
+                    !showDimPlotLoader ? (
                     <Button
                       outlined={false}
                       large={false}
