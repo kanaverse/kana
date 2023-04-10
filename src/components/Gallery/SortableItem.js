@@ -110,7 +110,7 @@ export function SortableItem(props) {
               <Button
                 onClick={(e) => handleAction(x)}
                 minimal={true}
-                icon={x === "download" ? "cloud-download": x}
+                icon={x === "download" ? "download": x}
                 small={true}
               />
             </Tooltip2>

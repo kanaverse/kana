@@ -1,4 +1,10 @@
-import React, { useEffect, useContext, useState, useMemo } from "react";
+import React, {
+  ReactDOM,
+  useEffect,
+  useContext,
+  useState,
+  useMemo,
+} from "react";
 import {
   Button,
   H4,
@@ -21,6 +27,7 @@ import {
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 import { Virtuoso, TableVirtuoso } from "react-virtuoso";
 import * as d3 from "d3";
+import { CSVLink, CSVDownload } from "react-csv";
 
 import { AppContext } from "../../context/AppContext";
 import StackedHistogram from "../Plots/StackedHistogram";
@@ -39,6 +46,7 @@ const MarkerPlot = (props) => {
     setGeneColSel,
     annotationObj,
     annotationCols,
+    datasetName,
   } = useContext(AppContext);
 
   const default_cluster = `${code}::CLUSTERS`;
@@ -379,6 +387,34 @@ const MarkerPlot = (props) => {
     return `35px calc(100vh - ${defheight}px)`;
   };
 
+  const render_download_link = () => {
+    let dRows = [];
+
+    sortedRows.forEach((x) => {
+      dRows.push({
+        gene: genesInfo[geneColSel[props?.selectedModality]][x.gene],
+        mean: x.mean,
+        delta_detected: x.delta,
+        lfc: x.lfc,
+        detected: x.detected,
+      });
+    });
+
+    return (
+      <div style={{ padidngTop: "5px" }}>
+        <CSVLink
+          data={dRows}
+          target="_blank"
+          filename={`${datasetName}_markers.csv`}
+        >
+          <div>
+            <Button minimal={true} icon="download" small={true} />
+          </div>
+        </CSVLink>
+      </div>
+    );
+  };
+
   return (
     <div className="marker-container">
       <div className="marker-container-header">
@@ -444,6 +480,11 @@ const MarkerPlot = (props) => {
               intent={isExpanded ? "none" : "none"}
             />
           </Tooltip2>
+
+          <Tooltip2 content="Download markers as CSV">
+            {render_download_link()}
+          </Tooltip2>
+          
           <Tooltip2 content={showSettings ? "Hide Settings" : "Show Settings"}>
             <Button
               onClick={() => setShowSettings(!showSettings)}

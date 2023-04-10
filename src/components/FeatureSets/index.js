@@ -22,6 +22,7 @@ import {
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 import { Virtuoso, TableVirtuoso } from "react-virtuoso";
 import * as d3 from "d3";
+import { CSVLink, CSVDownload } from "react-csv";
 
 import { AppContext } from "../../context/AppContext";
 
@@ -41,6 +42,7 @@ const FeatureSetEnrichment = (props) => {
     annotationObj,
     annotationCols,
     appMode,
+    datasetName,
   } = useContext(AppContext);
 
   const default_cluster = `${code}::CLUSTERS`;
@@ -541,6 +543,71 @@ const FeatureSetEnrichment = (props) => {
     );
   };
 
+  const render_download_link = () => {
+    let dRows = [];
+
+    if (fRowExpanded && sortedRows[fRowExpanded].geneIndices) {
+      for (
+        let rgindex = 0;
+        rgindex < sortedRows[fRowExpanded].geneIndices.ordering.length;
+        rgindex++
+      ) {
+        const order = sortedRows[fRowExpanded].geneIndices.ordering[rgindex];
+        dRows.push({
+          gene:
+            appMode === "explore"
+              ? genesInfo[geneColSel[props?.selectedFsetModality]][order]
+              : genesInfo[geneColSel["RNA"]][order],
+          mean: sortedRows[fRowExpanded].geneIndices.means[rgindex],
+          delta_detected:
+            sortedRows[fRowExpanded].geneIndices.delta_detected[rgindex],
+          lfc: sortedRows[fRowExpanded].geneIndices.lfc[rgindex],
+          detected: sortedRows[fRowExpanded].geneIndices.detected[rgindex],
+        });
+      }
+
+      sortedRows.forEach((x) => {});
+
+      return (
+        <div style={{ padidngTop: "5px" }}>
+          <CSVLink
+            data={dRows}
+            target="_blank"
+            filename={`${datasetName}_gene_sets_for_set_${sortedRows[fRowExpanded].name}.csv`}
+          >
+            <div>
+              <Button minimal={true} icon="download" small={true} />
+            </div>
+          </CSVLink>
+        </div>
+      );
+    } else {
+      sortedRows.forEach((x) => {
+        dRows.push({
+          name: x.name,
+          description: x.description,
+          size: x.size,
+          count: x.count,
+          pvalue: x.pvalue,
+        });
+      });
+
+      return (
+        <div style={{ padidngTop: "5px" }}>
+          <CSVLink
+            data={dRows}
+            target="_blank"
+            filename={`${datasetName}_gene_sets.csv`}
+          >
+            <div>
+              <Button minimal={true} icon="download" small={true} />
+            </div>
+          </CSVLink>
+        </div>
+      );
+    }
+  };
+
   return (
     <div className="fsetenrich-container">
       <div className="fsetenrich-container-header">
@@ -597,6 +664,9 @@ const FeatureSetEnrichment = (props) => {
           </ButtonGroup>
         </div>
         <div>
+          <Tooltip2 content="Download markers as CSV">
+            {render_download_link()}
+          </Tooltip2>
           <Tooltip2 content={showSettings ? "Hide Settings" : "Show Settings"}>
             <Button
               onClick={() => setShowSettings(!showSettings)}
