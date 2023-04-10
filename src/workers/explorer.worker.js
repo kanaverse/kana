@@ -60,6 +60,12 @@ function createDataset(args, setOpts = false) {
       args.rds,
       setOpts ? args.options : {}
     );
+  } else if (args.format == "ZippedArtifactdb") {
+    return new bakana.ZippedArtifactdbResult(
+      args.zipname,
+      new bakana.SimpleFile(args.zipfile),
+      setOpts ? args.options : {}
+    );
   } else {
     throw new Error("unknown format '" + args.format + "'");
   }
@@ -225,7 +231,7 @@ onmessage = function (msg) {
             if (!finput.options.normalized) {
               for (const k of dataset.matrix.available()) {
                 let mat = dataset.matrix.get(k);
-                let lnorm = scran.logNormCounts(mat, {allowZeros: true});
+                let lnorm = scran.logNormCounts(mat, { allowZeros: true });
                 dataset.matrix.add(k, lnorm);
               }
             }
