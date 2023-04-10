@@ -17,7 +17,7 @@ import {
   Label,
   Divider,
   MenuItem,
-  ButtonGroup
+  ButtonGroup,
 } from "@blueprintjs/core";
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 import { Virtuoso } from "react-virtuoso";
@@ -425,11 +425,13 @@ const FeatureSetEnrichment = (props) => {
           label="Show p-values?"
           onChange={() => setShowPvalues(!showPvalues)}
         />
-        <span
+        <div
           style={{
-            cursor: "help",
+            display: "flex",
+            alignItems: "center",
           }}
         >
+          Rank gene sets
           <Popover2
             popoverClassName={Classes.POPOVER_CONTENT_SIZING}
             hasBackdrop={false}
@@ -524,14 +526,13 @@ const FeatureSetEnrichment = (props) => {
               </Card>
             }
           >
-            {/* <Icon
-              intent="warning"
-              icon="sort"
+            <Icon
+              icon="small-info-sign"
+              intent="primary"
               style={{
-                paddingRight: "5px",
+                padding: "0 5px",
               }}
-            ></Icon> */}
-            <span> Rank feature sets by </span>
+            ></Icon>
           </Popover2>
           <HTMLSelect
             onChange={(x) => {
@@ -552,7 +553,7 @@ const FeatureSetEnrichment = (props) => {
             <option>delta-d-mean</option>
             <option>delta-d-min-rank</option>
           </HTMLSelect>
-        </span>
+        </div>
         <Divider />
         {"collections" in props?.fsetEnirchDetails &&
           "sets" in props?.fsetEnirchDetails && (
@@ -664,13 +665,7 @@ const FeatureSetEnrichment = (props) => {
           marginTop: "5px",
         }}
       >
-        <Label
-          style={{
-            marginBottom: "0",
-          }}
-        >
-          Select Cluster
-        </Label>
+        <Label>Select Cluster</Label>
         <div className="fsetenrich-vsmode">
           <Popover2
             popoverClassName={Classes.POPOVER_CONTENT_SIZING}
@@ -706,7 +701,7 @@ const FeatureSetEnrichment = (props) => {
           >
             <Icon
               intent="warning"
-              icon="comparison"
+              icon="help"
               style={{ paddingRight: "5px" }}
             ></Icon>
           </Popover2>
@@ -715,6 +710,7 @@ const FeatureSetEnrichment = (props) => {
             checked={vsmode}
             innerLabelChecked="versus"
             innerLabel="general"
+            style={{ paddingTop: "10px" }}
             onChange={(e) => {
               if (e.target.checked === false) {
                 props?.setSelectedFsetVSCluster(null);

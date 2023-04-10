@@ -472,11 +472,13 @@ const MarkerPlot = (props) => {
           label="Show Expression?"
           onChange={() => setShowExpt(!showExpr)}
         />
-        <span
+        <div
           style={{
-            cursor: "help",
+            display: "flex",
+            alignItems: "center",
           }}
         >
+          Rank markers
           <Popover2
             popoverClassName={Classes.POPOVER_CONTENT_SIZING}
             hasBackdrop={false}
@@ -571,14 +573,13 @@ const MarkerPlot = (props) => {
               </Card>
             }
           >
-            {/* <Icon
-              intent="warning"
-              icon="sort"
+            <Icon
+              icon="small-info-sign"
+              intent="primary"
               style={{
-                paddingRight: "5px",
+                padding: "0 5px",
               }}
-            ></Icon> */}
-            <span> Rank markers by </span>
+            ></Icon>
           </Popover2>
           {"     "}
           <HTMLSelect
@@ -600,7 +601,7 @@ const MarkerPlot = (props) => {
             <option>delta-d-mean</option>
             <option>delta-d-min-rank</option>
           </HTMLSelect>
-        </span>
+        </div>
       </Collapse>
       <Divider />
       {props?.modality != null && (
@@ -708,7 +709,7 @@ const MarkerPlot = (props) => {
           >
             <Icon
               intent="warning"
-              icon="comparison"
+              icon="help"
               style={{ paddingRight: "5px" }}
             ></Icon>
           </Popover2>
@@ -717,6 +718,7 @@ const MarkerPlot = (props) => {
             checked={vsmode}
             innerLabelChecked="versus"
             innerLabel="general"
+            style={{ paddingTop: "2px" }}
             onChange={(e) => {
               if (e.target.checked === false) {
                 props?.setSelectedVSCluster(null);

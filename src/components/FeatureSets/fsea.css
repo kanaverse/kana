@@ -147,6 +147,7 @@
 .fsetenrich-vsmode {
   display: flex;
   flex-direction: row;
+  align-items: center;
 }
 
 .fsetenrich-cluster-selection {
