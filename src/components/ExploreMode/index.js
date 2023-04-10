@@ -849,19 +849,11 @@ export function ExplorerMode() {
                     minimal={true}
                     fill={true}
                     icon={"archive"}
-                    onClick={() =>
-                      showPanel !== "explore-import"
-                        ? setShowPanel("explore-import")
-                        : setShowPanel(null)
-                    }
+                    onClick={() => setShowPanel("explore-import")}
                     intent={showPanel === "explore-import" ? "primary" : "none"}
                   ></Button>
                   <span
-                    onClick={() =>
-                      showPanel !== "explore-import"
-                        ? setShowPanel("explore-import")
-                        : setShowPanel(null)
-                    }
+                    onClick={() => setShowPanel("explore-import")}
                     style={{
                       cursor: "pointer",
                       color:
@@ -901,19 +893,11 @@ export function ExplorerMode() {
                         minimal={true}
                         fill={true}
                         icon={"rocket-slant"}
-                        onClick={() =>
-                          showPanel !== "explore"
-                            ? setShowPanel("explore")
-                            : setShowPanel(null)
-                        }
+                        onClick={() => setShowPanel("explore")}
                         intent={showPanel === "explore" ? "primary" : "none"}
                       ></Button>
                       <span
-                        onClick={() =>
-                          showPanel !== "explore"
-                            ? setShowPanel("explore")
-                            : setShowPanel(null)
-                        }
+                        onClick={() => setShowPanel("explore")}
                         style={{
                           cursor: "pointer",
                           color: showPanel === "explore" ? "#184A90" : "black",

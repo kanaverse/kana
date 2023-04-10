@@ -1282,19 +1282,11 @@ export function AnalysisMode(props) {
                     minimal={true}
                     fill={true}
                     icon={"folder-new"}
-                    onClick={() =>
-                      showPanel !== "new"
-                        ? setShowPanel("new")
-                        : setShowPanel(null)
-                    }
+                    onClick={() => setShowPanel("new")}
                     intent={showPanel === "new" ? "primary" : "none"}
                   ></Button>
                   <span
-                    onClick={() =>
-                      showPanel !== "new"
-                        ? setShowPanel("new")
-                        : setShowPanel(null)
-                    }
+                    onClick={() => setShowPanel("new")}
                     style={{
                       cursor: "pointer",
                       color: showPanel === "new" ? "#184A90" : "black",
@@ -1325,19 +1317,11 @@ export function AnalysisMode(props) {
                     minimal={true}
                     fill={true}
                     icon={"archive"}
-                    onClick={() =>
-                      showPanel !== "load"
-                        ? setShowPanel("load")
-                        : setShowPanel(null)
-                    }
+                    onClick={() => setShowPanel("load")}
                     intent={showPanel === "load" ? "primary" : "none"}
                   ></Button>
                   <span
-                    onClick={() =>
-                      showPanel !== "load"
-                        ? setShowPanel("load")
-                        : setShowPanel(null)
-                    }
+                    onClick={() => setShowPanel("load")}
                     style={{
                       cursor: "pointer",
                       color: showPanel === "load" ? "#184A90" : "black",
@@ -1362,7 +1346,7 @@ export function AnalysisMode(props) {
                     content={
                       <Menu>
                         <MenuItem
-                          text="Save analysis to browser"
+                          text="Save analysis parameters (to browser)"
                           icon="floppy-disk"
                           disabled={selectedRedDim === null}
                           onClick={() => {
@@ -1371,7 +1355,7 @@ export function AnalysisMode(props) {
                         />
                         <Divider />
                         <MenuItem
-                          text="Download analysis as Kana file"
+                          text="Download analysis parameters"
                           icon="download"
                           disabled={selectedRedDim === null}
                           onClick={() => {
@@ -1379,7 +1363,7 @@ export function AnalysisMode(props) {
                           }}
                         />
                         <MenuItem
-                          text="Download analysis as RDS (SCE)"
+                          text="Download analysis results"
                           icon="download"
                           disabled={selectedRedDim === null}
                           onClick={() => {
@@ -1432,19 +1416,11 @@ export function AnalysisMode(props) {
                     minimal={true}
                     fill={true}
                     icon={"derive-column"}
-                    onClick={() =>
-                      showPanel !== "params"
-                        ? setShowPanel("params")
-                        : setShowPanel(null)
-                    }
+                    onClick={() => setShowPanel("params")}
                     intent={showPanel === "params" ? "primary" : "none"}
                   ></Button>
                   <span
-                    onClick={() =>
-                      showPanel !== "params"
-                        ? setShowPanel("params")
-                        : setShowPanel(null)
-                    }
+                    onClick={() => setShowPanel("params")}
                     style={{
                       cursor: "pointer",
                       color: showPanel === "params" ? "#184A90" : "black",
@@ -1484,19 +1460,11 @@ export function AnalysisMode(props) {
                         fill={true}
                         icon={"rocket-slant"}
                         disabled={selectedRedDim === null}
-                        onClick={() =>
-                          showPanel !== "results"
-                            ? setShowPanel("results")
-                            : setShowPanel(null)
-                        }
+                        onClick={() => setShowPanel("results")}
                         intent={showPanel === "results" ? "primary" : "none"}
                       ></Button>
                       <span
-                        onClick={() =>
-                          showPanel !== "results"
-                            ? setShowPanel("results")
-                            : setShowPanel(null)
-                        }
+                        onClick={() => setShowPanel("results")}
                         style={{
                           cursor: "pointer",
                           color: showPanel === "results" ? "#184A90" : "black",
