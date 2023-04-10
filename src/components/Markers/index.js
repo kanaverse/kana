@@ -19,7 +19,7 @@ import {
   ButtonGroup,
 } from "@blueprintjs/core";
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
-import { Virtuoso } from "react-virtuoso";
+import { Virtuoso, TableVirtuoso } from "react-virtuoso";
 import * as d3 from "d3";
 
 import { AppContext } from "../../context/AppContext";
@@ -369,7 +369,7 @@ const MarkerPlot = (props) => {
   };
 
   const getTableHeight = () => {
-    let defheight = 335;
+    let defheight = 340;
     if (showFilters) defheight = 570;
 
     if (props?.windowWidth < 1200) {
@@ -876,161 +876,153 @@ const MarkerPlot = (props) => {
                 onChange={(e) => setSearchInput(e.target.value)}
               />
             </div>
-            <Virtuoso
-              components={{
-                Item: ({ children, ...props }) => {
-                  return (
-                    <div className="row-card" {...props}>
-                      {children}
-                    </div>
-                  );
-                },
-                Header: () => {
-                  return (
-                    <div
-                      className="row-container row-header"
-                      style={{
-                        gridTemplateColumns: getRowWidths(),
-                      }}
-                    >
-                      <span>
-                        <HTMLSelect
-                          large={false}
-                          minimal={true}
-                          defaultValue={geneColSel[props?.selectedModality]}
-                          onChange={(nval, val) => {
-                            let tmp = { ...geneColSel };
-                            tmp[props?.selectedModality] =
-                              nval?.currentTarget?.value;
-                            setGeneColSel(tmp);
-                          }}
-                        >
-                          {Object.keys(genesInfo).map((x, i) => (
-                            <option key={i}>{x}</option>
-                          ))}
-                        </HTMLSelect>
-                      </span>
-                      {showLogFC && (
-                        <Popover2
-                          popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-                          hasBackdrop={false}
-                          interactionKind="hover"
-                          placement="auto"
-                          hoverOpenDelay={50}
-                          modifiers={{
-                            arrow: { enabled: true },
-                            flip: { enabled: true },
-                            preventOverflow: { enabled: true },
-                          }}
-                          content={
-                            <Card
-                              style={{
-                                width: "250px",
-                              }}
-                              elevation={Elevation.ZERO}
-                            >
-                              <p>
-                                Log-fold change in mean expression between cells
-                                inside and outside the cluster.
-                              </p>
-                              <p>
-                                Use the color scale below to apply a filter on
-                                this statistic.
-                              </p>
-                            </Card>
-                          }
-                        >
-                          <span
+            <TableVirtuoso
+              fixedHeaderContent={() => {
+                return (
+                  <div
+                    className="row-container row-header"
+                    style={{
+                      gridTemplateColumns: getRowWidths(),
+                      background: "white",
+                    }}
+                  >
+                    <span>
+                      <HTMLSelect
+                        large={false}
+                        minimal={true}
+                        defaultValue={geneColSel[props?.selectedModality]}
+                        onChange={(nval, val) => {
+                          let tmp = { ...geneColSel };
+                          tmp[props?.selectedModality] =
+                            nval?.currentTarget?.value;
+                          setGeneColSel(tmp);
+                        }}
+                      >
+                        {Object.keys(genesInfo).map((x, i) => (
+                          <option key={i}>{x}</option>
+                        ))}
+                      </HTMLSelect>
+                    </span>
+                    {showLogFC && (
+                      <Popover2
+                        popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                        hasBackdrop={false}
+                        interactionKind="hover"
+                        placement="auto"
+                        hoverOpenDelay={50}
+                        modifiers={{
+                          arrow: { enabled: true },
+                          flip: { enabled: true },
+                          preventOverflow: { enabled: true },
+                        }}
+                        content={
+                          <Card
                             style={{
-                              textDecoration: "underline",
-                              cursor: "help",
+                              width: "250px",
                             }}
+                            elevation={Elevation.ZERO}
                           >
-                            Log-FC
-                          </span>
-                        </Popover2>
-                      )}
-                      {showDelta && (
-                        <Popover2
-                          popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-                          hasBackdrop={false}
-                          interactionKind="hover"
-                          placement="auto"
-                          hoverOpenDelay={50}
-                          modifiers={{
-                            arrow: { enabled: true },
-                            flip: { enabled: true },
-                            preventOverflow: { enabled: true },
+                            <p>
+                              Log-fold change in mean expression between cells
+                              inside and outside the cluster.
+                            </p>
+                            <p>
+                              Use the color scale below to apply a filter on
+                              this statistic.
+                            </p>
+                          </Card>
+                        }
+                      >
+                        <span
+                          style={{
+                            textDecoration: "underline",
+                            cursor: "help",
                           }}
-                          content={
-                            <Card
-                              style={{
-                                width: "250px",
-                              }}
-                              elevation={Elevation.ZERO}
-                            >
-                              <p>
-                                Difference in the proportion of detected genes
-                                inside and outside the cluster.
-                              </p>
-                              <p>
-                                Use the color scale below to apply a filter on
-                                this statistic.
-                              </p>
-                            </Card>
-                          }
                         >
-                          <span
+                          Log-FC
+                        </span>
+                      </Popover2>
+                    )}
+                    {showDelta && (
+                      <Popover2
+                        popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                        hasBackdrop={false}
+                        interactionKind="hover"
+                        placement="auto"
+                        hoverOpenDelay={50}
+                        modifiers={{
+                          arrow: { enabled: true },
+                          flip: { enabled: true },
+                          preventOverflow: { enabled: true },
+                        }}
+                        content={
+                          <Card
                             style={{
-                              textDecoration: "underline",
-                              cursor: "help",
+                              width: "250px",
                             }}
+                            elevation={Elevation.ZERO}
                           >
-                            Δ-detected
-                          </span>
-                        </Popover2>
-                      )}
-                      {showExpr && (
-                        <Popover2
-                          popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-                          hasBackdrop={false}
-                          interactionKind="hover"
-                          placement="auto"
-                          hoverOpenDelay={50}
-                          modifiers={{
-                            arrow: { enabled: true },
-                            flip: { enabled: true },
-                            preventOverflow: { enabled: true },
+                            <p>
+                              Difference in the proportion of detected genes
+                              inside and outside the cluster.
+                            </p>
+                            <p>
+                              Use the color scale below to apply a filter on
+                              this statistic.
+                            </p>
+                          </Card>
+                        }
+                      >
+                        <span
+                          style={{
+                            textDecoration: "underline",
+                            cursor: "help",
                           }}
-                          content={
-                            <Card
-                              style={{
-                                width: "250px",
-                              }}
-                              elevation={Elevation.ZERO}
-                            >
-                              <p>
-                                The intensity of color represents the mean
-                                expression of the gene in this cluster, while
-                                the length of the bar represents the percentage
-                                of cells in which any expression is detected.
-                              </p>
-                            </Card>
-                          }
                         >
-                          <span
+                          Δ-detected
+                        </span>
+                      </Popover2>
+                    )}
+                    {showExpr && (
+                      <Popover2
+                        popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                        hasBackdrop={false}
+                        interactionKind="hover"
+                        placement="auto"
+                        hoverOpenDelay={50}
+                        modifiers={{
+                          arrow: { enabled: true },
+                          flip: { enabled: true },
+                          preventOverflow: { enabled: true },
+                        }}
+                        content={
+                          <Card
                             style={{
-                              textDecoration: "underline",
-                              cursor: "help",
+                              width: "250px",
                             }}
+                            elevation={Elevation.ZERO}
                           >
-                            Expression
-                          </span>
-                        </Popover2>
-                      )}
-                    </div>
-                  );
-                },
+                            <p>
+                              The intensity of color represents the mean
+                              expression of the gene in this cluster, while the
+                              length of the bar represents the percentage of
+                              cells in which any expression is detected.
+                            </p>
+                          </Card>
+                        }
+                      >
+                        <span
+                          style={{
+                            textDecoration: "underline",
+                            cursor: "help",
+                          }}
+                        >
+                          Expression
+                        </span>
+                      </Popover2>
+                    )}
+                  </div>
+                );
               }}
               className="marker-list"
               totalCount={sortedRows.length}

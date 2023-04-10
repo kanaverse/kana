@@ -20,7 +20,7 @@ import {
   ButtonGroup,
 } from "@blueprintjs/core";
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
-import { Virtuoso } from "react-virtuoso";
+import { Virtuoso, TableVirtuoso } from "react-virtuoso";
 import * as d3 from "d3";
 
 import { AppContext } from "../../context/AppContext";
@@ -1160,50 +1160,49 @@ const FeatureSetEnrichment = (props) => {
               }}
             >
               <Divider />
-              <Virtuoso
-                components={{
-                  Header: () => {
-                    return (
-                      <div
-                        className="fsetenrich-genelist-container"
-                        style={{ fontSize: "xx-small" }}
-                      >
-                        <span>
-                          <HTMLSelect
-                            large={false}
-                            minimal={true}
-                            defaultValue={geneColSel["RNA"]}
-                            onChange={(nval, val) => {
-                              let tmp = { ...geneColSel };
-                              tmp["RNA"] = nval?.currentTarget?.value;
-                              setGeneColSel(tmp);
-                            }}
-                          >
-                            {Object.keys(genesInfo).map((x, i) => (
-                              <option key={i}>{x}</option>
-                            ))}
-                          </HTMLSelect>
-                        </span>
-                        <div
-                          style={{
-                            width: "200px",
-                            display: "flex",
-                            flexDirection: "row",
-                            justifyContent: "center",
-                            alignContent: "center",
-                            alignItems: "center",
-                            gap: "5px",
-                            textAlign: "center",
+              <TableVirtuoso
+                fixedHeaderContent={() => {
+                  return (
+                    <div
+                      className="fsetenrich-genelist-container"
+                      style={{ fontSize: "xx-small", background: "white" }}
+                    >
+                      <span>
+                        <HTMLSelect
+                          large={false}
+                          minimal={true}
+                          defaultValue={geneColSel["RNA"]}
+                          onChange={(nval, val) => {
+                            let tmp = { ...geneColSel };
+                            tmp["RNA"] = nval?.currentTarget?.value;
+                            setGeneColSel(tmp);
                           }}
                         >
-                          <span style={{ width: "55px" }}>Log-FC</span>
-                          <span style={{ width: "55px" }}>Δ-detected</span>
-                          <span style={{ width: "55px" }}>Expression</span>
-                          <span style={{ width: "24px" }}></span>
-                        </div>
+                          {Object.keys(genesInfo).map((x, i) => (
+                            <option key={i}>{x}</option>
+                          ))}
+                        </HTMLSelect>
+                      </span>
+                      <div
+                        style={{
+                          width: "275px",
+                          marginLeft: "15px",
+                          display: "flex",
+                          flexDirection: "row",
+                          justifyContent: "center",
+                          alignContent: "center",
+                          alignItems: "center",
+                          gap: "5px",
+                          textAlign: "center",
+                        }}
+                      >
+                        <span style={{ width: "65px" }}>Log-FC</span>
+                        <span style={{ width: "55px" }}>Δ-detected</span>
+                        <span style={{ width: "55px" }}>Expression</span>
+                        <span style={{ width: "24px" }}></span>
                       </div>
-                    );
-                  },
+                    </div>
+                  );
                 }}
                 totalCount={
                   sortedRows[fRowExpanded].geneIndices.ordering.length
@@ -1243,10 +1242,10 @@ const FeatureSetEnrichment = (props) => {
 
                   return (
                     <div className="fsetenrich-genelist-container">
-                      <span style={{ width: "40px" }}>{rgname}</span>
+                      <span style={{ width: "50px" }}>{rgname}</span>
                       <div
                         style={{
-                          width: "200px",
+                          width: "275px",
                           display: "flex",
                           flexDirection: "row",
                           justifyContent: "center",
@@ -1491,108 +1490,100 @@ const FeatureSetEnrichment = (props) => {
                 onChange={(e) => setSearchInput(e.target.value)}
               />
             </div>
-            <Virtuoso
-              components={{
-                Item: ({ children, ...props }) => {
-                  return (
-                    <div className="row-card" {...props}>
-                      {children}
-                    </div>
-                  );
-                },
-                Header: () => {
-                  return (
-                    <div
-                      className="fsetenrich-row-container fsetenrich-row-header"
+            <TableVirtuoso
+              fixedHeaderContent={() => {
+                return (
+                  <div
+                    className="fsetenrich-row-container fsetenrich-row-header"
+                    style={{
+                      gridTemplateColumns: getRowWidths(),
+                      background: "white",
+                    }}
+                  >
+                    <span
                       style={{
-                        gridTemplateColumns: getRowWidths(),
+                        textDecoration: "underline",
+                        cursor: "help",
                       }}
                     >
-                      <span
-                        style={{
-                          textDecoration: "underline",
-                          cursor: "help",
+                      Feature set
+                    </span>
+                    {showPvalues && (
+                      <Popover2
+                        popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                        hasBackdrop={false}
+                        interactionKind="hover"
+                        placement="auto"
+                        hoverOpenDelay={50}
+                        modifiers={{
+                          arrow: { enabled: true },
+                          flip: { enabled: true },
+                          preventOverflow: { enabled: true },
                         }}
+                        content={
+                          <Card
+                            style={{
+                              width: "250px",
+                            }}
+                            elevation={Elevation.ZERO}
+                          >
+                            <p>pvalues</p>
+                            <p>
+                              Use the color scale below to apply a filter on
+                              this statistic.
+                            </p>
+                          </Card>
+                        }
                       >
-                        Feature set
-                      </span>
-                      {showPvalues && (
-                        <Popover2
-                          popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-                          hasBackdrop={false}
-                          interactionKind="hover"
-                          placement="auto"
-                          hoverOpenDelay={50}
-                          modifiers={{
-                            arrow: { enabled: true },
-                            flip: { enabled: true },
-                            preventOverflow: { enabled: true },
+                        <span
+                          style={{
+                            textDecoration: "underline",
+                            cursor: "help",
                           }}
-                          content={
-                            <Card
-                              style={{
-                                width: "250px",
-                              }}
-                              elevation={Elevation.ZERO}
-                            >
-                              <p>pvalues</p>
-                              <p>
-                                Use the color scale below to apply a filter on
-                                this statistic.
-                              </p>
-                            </Card>
-                          }
                         >
-                          <span
+                          pvalue
+                        </span>
+                      </Popover2>
+                    )}
+                    {showCounts && (
+                      <Popover2
+                        popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                        hasBackdrop={false}
+                        interactionKind="hover"
+                        placement="auto"
+                        hoverOpenDelay={50}
+                        modifiers={{
+                          arrow: { enabled: true },
+                          flip: { enabled: true },
+                          preventOverflow: { enabled: true },
+                        }}
+                        content={
+                          <Card
                             style={{
-                              textDecoration: "underline",
-                              cursor: "help",
+                              width: "250px",
                             }}
+                            elevation={Elevation.ZERO}
                           >
-                            pvalue
-                          </span>
-                        </Popover2>
-                      )}
-                      {showCounts && (
-                        <Popover2
-                          popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-                          hasBackdrop={false}
-                          interactionKind="hover"
-                          placement="auto"
-                          hoverOpenDelay={50}
-                          modifiers={{
-                            arrow: { enabled: true },
-                            flip: { enabled: true },
-                            preventOverflow: { enabled: true },
+                            <p>counts</p>
+                            <p>
+                              Use the color scale below to apply a filter on
+                              this statistic.
+                            </p>
+                          </Card>
+                        }
+                      >
+                        <span
+                          style={{
+                            textDecoration: "underline",
+                            cursor: "help",
                           }}
-                          content={
-                            <Card
-                              style={{
-                                width: "250px",
-                              }}
-                              elevation={Elevation.ZERO}
-                            >
-                              <p>counts</p>
-                              <p>
-                                Use the color scale below to apply a filter on
-                                this statistic.
-                              </p>
-                            </Card>
-                          }
                         >
-                          <span
-                            style={{
-                              textDecoration: "underline",
-                              cursor: "help",
-                            }}
-                          >
-                            count
-                          </span>
-                        </Popover2>
-                      )}
-                    </div>
-                  );
-                },
+                          count
+                        </span>
+                      </Popover2>
+                    )}
+                  </div>
+                );
               }}
               className="fsetenrich-list"
               totalCount={sortedRows.length}

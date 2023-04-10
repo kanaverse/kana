@@ -103,6 +103,7 @@
   /* grid-template-columns: 25% 14% 17% 25% 17%; */
   gap: 2px;
   align-items: center;
+  padding: 3px 0;
 }
 
 .fsetenrich-row-header {
