@@ -738,40 +738,35 @@ const DimPlot = (props) => {
 
   return (
     <div className="scatter-plot">
-      <ButtonGroup
-        // style={{ minWidth: 75, minHeight: 150 }}
-        fill={false}
-        large={false}
-        minimal={false}
-        vertical={false}
-        className="dimplot-left-sidebar"
-      >
-        {props?.redDimsData &&
-          Object.keys(props?.redDimsData).map((x, i) => {
-            return (
-              <Button
-                key={i}
-                onClick={() => props?.setSelectedRedDim(x)}
-                intent={props?.selectedRedDim === x ? "primary" : ""}
-                text={x}
-              />
-            );
-          })}
-        {/* <Button className="dim-button" disabled={true}>
+      <div className="dimplot-top-header">
+        <ButtonGroup
+          // style={{ minWidth: 75, minHeight: 150 }}
+          fill={false}
+          large={false}
+          minimal={false}
+          vertical={false}
+          className="dimplot-left-sidebar"
+        >
+          {props?.redDimsData &&
+            Object.keys(props?.redDimsData).map((x, i) => {
+              return (
+                <Button
+                  key={i}
+                  onClick={() => props?.setSelectedRedDim(x)}
+                  intent={props?.selectedRedDim === x ? "primary" : ""}
+                  text={x}
+                />
+              );
+            })}
+          {/* <Button className="dim-button" disabled={true}>
           <Icon icon="heat-grid"></Icon>
           <br />
           <span>HEATMAP (coming soon)</span>
         </Button> */}
-      </ButtonGroup>
-      <div className="dimplot-top-header">
-        {appMode == "analysis" && (
-          <ControlGroup
-            fill={false}
-            vertical={false}
-            style={{
-              marginRight: "4px",
-            }}
-          >
+        </ButtonGroup>
+
+        <ControlGroup fill={false} vertical={false}>
+          {appMode == "analysis" && (
             <Tooltip2 content="Interactively visualize embeddings from each step">
               <Button
                 icon="play"
@@ -783,14 +778,12 @@ const DimPlot = (props) => {
                 Animate
               </Button>
             </Tooltip2>
-            <Tooltip2 content="Save this embedding">
-              <Button icon="inheritance" onClick={handleSaveEmbedding}>
-                Save
-              </Button>
-            </Tooltip2>
-          </ControlGroup>
-        )}
-        <ControlGroup fill={false} vertical={false}>
+          )}
+          <Tooltip2 content="Copy embedding to gallery">
+            <Button icon="inheritance" onClick={handleSaveEmbedding}>
+              Copy to gallery
+            </Button>
+          </Tooltip2>
           <Tooltip2 content="Pan to move the plot">
             <Button
               active={plotMode === "PAN"}

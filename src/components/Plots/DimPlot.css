@@ -14,11 +14,12 @@
 }
 
 .dimplot-top-header {
-  grid-column: 2;
+  grid-column: 1 / -1 ;
   grid-row: 1;
-  justify-self: end;
+  justify-content: space-between;
   display: flex;
   flex-direction: row;
+
 }
 
 .dimplot-left-sidebar {
