@@ -17,6 +17,7 @@ import {
   Label,
   Divider,
   MenuItem,
+  ButtonGroup
 } from "@blueprintjs/core";
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 import { Virtuoso } from "react-virtuoso";
@@ -349,47 +350,56 @@ const FeatureSetEnrichment = (props) => {
     <div className="fsetenrich-container">
       <div className="fsetenrich-container-header">
         <div>
-          <Popover2
-            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-            hasBackdrop={false}
-            interactionKind="hover"
-            placement="left"
-            hoverOpenDelay={500}
-            modifiers={{
-              arrow: { enabled: true },
-              flip: { enabled: true },
-              preventOverflow: { enabled: true },
-            }}
-            content={
-              <Card
-                style={{
-                  width: "450px",
-                }}
-                elevation={Elevation.ZERO}
-              >
-                <p>Feature set enrichment.</p>
-              </Card>
-            }
+          <ButtonGroup
+            // style={{ minWidth: 75, minHeight: 150 }}
+            fill={false}
+            large={false}
+            minimal={false}
+            vertical={false}
           >
-            <H5
-              style={{
-                cursor: "help",
+            <Popover2
+              popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+              hasBackdrop={false}
+              interactionKind="hover"
+              placement="left"
+              hoverOpenDelay={500}
+              modifiers={{
+                arrow: { enabled: true },
+                flip: { enabled: true },
+                preventOverflow: { enabled: true },
               }}
+              content={
+                <Card
+                  style={{
+                    width: "450px",
+                  }}
+                  elevation={Elevation.ZERO}
+                >
+                  <p>
+                    This panel shows the marker genes that are upregulated in
+                    the cluster of interest compared to some or all of the other
+                    clusters. Hopefully, this allows us to assign some kind of
+                    biological meaning to each cluster based on the functions of
+                    the top markers. Several ranking schemes are available
+                    depending on how we choose to quantify the strength of the
+                    upregulation.
+                  </p>
+                </Card>
+              }
             >
-              Feature set enrichment
-            </H5>
-          </Popover2>
-          <span
-            style={{
-              marginTop: "5px",
-              marginLeft: "3px",
-              cursor: "pointer",
-              fontStyle: "italic",
-            }}
-            onClick={() => props?.setMarkersOrFsets("markers")}
-          >
-            switch to marker genes
-          </span>
+              <Button
+                onClick={() => props?.setMarkersOrFsets("markers")}
+                intent={props?.markersORFSets === "markers" ? "primary" : ""}
+                text="Markers"
+              />
+            </Popover2>
+
+            <Button
+              onClick={() => props?.setMarkersOrFsets("featuresets")}
+              intent={props?.markersORFSets === "featuresets" ? "primary" : ""}
+              text="Gene sets"
+            />
+          </ButtonGroup>
         </div>
         <div>
           <Tooltip2 content={showSettings ? "Hide Settings" : "Show Settings"}>
@@ -1006,7 +1016,7 @@ const FeatureSetEnrichment = (props) => {
                         row.name
                       )}
                     </strong>
-                    : {" "}
+                    :{" "}
                     {row.description.match("^http[^ ]+$") ? (
                       <a
                         style={{ textDecoration: "underline dotted" }}

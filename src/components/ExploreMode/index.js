@@ -1128,6 +1128,7 @@ export function ExplorerMode() {
                             setSelectedMarkerAnnotation
                           }
                           setMarkersOrFsets={setMarkersOrFsets}
+                          markersORFSets={markersORFSets}
                         />
                       )}
                     </div>
@@ -1143,6 +1144,7 @@ export function ExplorerMode() {
                       {fsetEnirchDetails && (
                         <FeatureSetEnrichment
                           setMarkersOrFsets={setMarkersOrFsets}
+                          markersORFSets={markersORFSets}
                           fsetClusterRank={fsetClusterRank}
                           setFsetClusterRank={setFsetClusterRank}
                           fsetEnirchDetails={fsetEnirchDetails}

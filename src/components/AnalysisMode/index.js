@@ -1731,6 +1731,7 @@ export function AnalysisMode(props) {
                               setSelectedMarkerAnnotation
                             }
                             setMarkersOrFsets={setMarkersOrFsets}
+                            markersORFSets={markersORFSets}
                           />
                         )}
                     </div>
@@ -1746,6 +1747,7 @@ export function AnalysisMode(props) {
                       {fsetEnirchDetails && (
                         <FeatureSetEnrichment
                           setMarkersOrFsets={setMarkersOrFsets}
+                          markersORFSets={markersORFSets}
                           fsetClusterRank={fsetClusterRank}
                           setFsetClusterRank={setFsetClusterRank}
                           fsetEnirchDetails={fsetEnirchDetails}
