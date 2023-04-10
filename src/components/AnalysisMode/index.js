@@ -1141,7 +1141,7 @@ export function AnalysisMode(props) {
         type: "text/plain",
       });
       tmpLink.href = URL.createObjectURL(fileNew);
-      tmpLink.download = datasetName.split(" ").join("_") + ".kana.gz";
+      tmpLink.download = datasetName.split(" ").join("_") + ".zip";
       tmpLink.click();
 
       setExportState(false);
@@ -1151,7 +1151,7 @@ export function AnalysisMode(props) {
         type: "text/plain",
       });
       tmpLink.href = URL.createObjectURL(fileNew);
-      tmpLink.download = datasetName.split(" ").join("_") + ".RDS";
+      tmpLink.download = datasetName.split(" ").join("_") + ".zip";
       tmpLink.click();
 
       setExportState(false);
