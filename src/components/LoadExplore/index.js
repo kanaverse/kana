@@ -40,6 +40,8 @@ import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 import { MODALITIES } from "../../utils/utils";
 import { H5ADCard } from "./H5ADCard";
 import { SECard } from "./SECard";
+import { ZippedADBCard } from "./ZippedADBCard";
+import JSZip from "jszip";
 
 export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
   // close the entire panel
@@ -82,6 +84,9 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
     setShowPanel("explore");
   };
 
+  // final inputs for confirmation with options
+  const [jsZipNames, setJsZipNames] = useState(null);
+
   // making sure tmpNewInputs are valid as the user chooses datasets
   useEffect(() => {
     if (tmpLoadInputs) {
@@ -99,6 +104,13 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
         }
 
         if (!x.rds) all_valid = false;
+      } else if (x.format === "ZippedArtifactdb") {
+        if (x?.zipfile && !x?.zipfile.name.toLowerCase().endsWith("zip")) {
+          all_valid = false;
+        }
+
+        if (!x.zipfile) all_valid = false;
+        if (!x.zipname) all_valid = false;
       }
 
       setTmpStatusValid(all_valid);
@@ -169,39 +181,120 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
             </div>
           }
         />
-        {
-          <Tab
-            id="SummarizedExperiment"
-            title="Load RDS file"
-            panel={
-              <div>
-                <div className="row">
+        <Tab
+          id="SummarizedExperiment"
+          title="Load RDS file"
+          panel={
+            <div>
+              <div className="row">
+                <Label className="row-input">
+                  <Text className="text-100">
+                    <span>Choose an RDS file</span>
+                  </Text>
+                  <FileInput
+                    style={{
+                      marginTop: "5px",
+                    }}
+                    text={tmpLoadInputs?.rds ? tmpLoadInputs?.rds.name : ".RDS"}
+                    onInputChange={(msg) => {
+                      if (msg.target.files) {
+                        setTmpLoadInputs({
+                          ...tmpLoadInputs,
+                          rds: msg.target.files[0],
+                        });
+                      }
+                    }}
+                  />
+                </Label>
+              </div>
+            </div>
+          }
+        />
+        <Tab
+          id="ZippedArtifactdb"
+          title="Load zipped result file"
+          panel={
+            <div>
+              <div className="row">
+                <Label className="row-input">
+                  <Text className="text-100">
+                    <span>Choose a zipped artifactdb result file</span>
+                  </Text>
+                  <FileInput
+                    style={{
+                      marginTop: "5px",
+                    }}
+                    text={
+                      tmpLoadInputs?.zipfile
+                        ? tmpLoadInputs?.zipfile.name
+                        : ".zip"
+                    }
+                    onInputChange={(msg) => {
+                      if (msg.target.files) {
+                        JSZip.loadAsync(msg.target.files[0]).then(
+                          function (zip) {
+                            let se_tld = [];
+                            zip.forEach(function (relativePath, zipEntry) {
+                              if (
+                                zipEntry.name.endsWith("/") &&
+                                zipEntry.name.split("/").length == 2
+                              ) {
+                                se_tld.push(zipEntry.name);
+                              }
+                            });
+
+                            setTmpStatusValid(true);
+                            setJsZipNames(se_tld);
+
+                            setTmpLoadInputs({
+                              ...tmpLoadInputs,
+                              zipfile: msg.target.files[0],
+                              zipname: se_tld[0],
+                            });
+                          },
+                          function (e) {
+                            console.error(
+                              "Error reading " +
+                                msg.target.files[0].name +
+                                ": " +
+                                e.message
+                            );
+
+                            setTmpStatusValid(false);
+                          }
+                        );
+                      }
+                    }}
+                  />
+                </Label>
+                {jsZipNames && jsZipNames.length > 0 && (
                   <Label className="row-input">
                     <Text className="text-100">
-                      <span>Choose an RDS file</span>
+                      <span>Choose a summarized experiment to load</span>
                     </Text>
-                    <FileInput
-                      style={{
-                        marginTop: "5px",
+                    <HTMLSelect
+                      defaultValue={jsZipNames[0]}
+                      onChange={(e) => {
+                        setTmpLoadInputs({
+                          ...tmpLoadInputs,
+                          zipname: e.currentTarget.value,
+                        });
                       }}
-                      text={
-                        tmpLoadInputs?.rds ? tmpLoadInputs?.rds.name : ".RDS"
-                      }
-                      onInputChange={(msg) => {
-                        if (msg.target.files) {
-                          setTmpLoadInputs({
-                            ...tmpLoadInputs,
-                            rds: msg.target.files[0],
-                          });
-                        }
-                      }}
-                    />
+                    >
+                      {jsZipNames.map((x, i) => {
+                        return (
+                          <option key={i} value={x}>
+                            {x}
+                          </option>
+                        );
+                      })}
+                    </HTMLSelect>
                   </Label>
-                </div>
+                )}
               </div>
-            }
-          />
-        }
+            </div>
+          }
+        />
       </Tabs>
     );
   };
@@ -284,6 +377,25 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
               ) {
                 return (
                   <SECard
+                    key={i}
+                    resource={x}
+                    index={i}
+                    preflight={
+                      preInputFilesStatus && preInputFilesStatus[x.name]
+                    }
+                    inputOpts={inputOptions}
+                    setInputOpts={setInputOptions}
+                    inputs={exploreInputs}
+                    setInputs={setExploreInputs}
+                  />
+                );
+              } else if (
+                x.format == "ZippedArtifactdb" &&
+                x.zipfile !== null &&
+                x.zipfile !== undefined
+              ) {
+                return (
+                  <ZippedADBCard
                     key={i}
                     resource={x}
                     index={i}
