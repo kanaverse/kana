@@ -34,8 +34,14 @@ import "./fsea.css";
 import { Select2 } from "@blueprintjs/select";
 
 const FeatureSetEnrichment = (props) => {
-  const { genesInfo, geneColSel, annotationObj, annotationCols, appMode } =
-    useContext(AppContext);
+  const {
+    genesInfo,
+    geneColSel,
+    setGeneColSel,
+    annotationObj,
+    annotationCols,
+    appMode,
+  } = useContext(AppContext);
 
   const default_cluster = `${code}::CLUSTERS`;
   const default_selection = `${code}::SELECTION`;
@@ -74,6 +80,8 @@ const FeatureSetEnrichment = (props) => {
 
   // scale to use for gradients on expression bar
   const detectedScale = d3.interpolateRdYlBu; //d3.interpolateRdBu;
+
+  const [fRowExpanded, setFRowExpanded] = useState(null);
 
   useEffect(() => {
     let width = 350;
@@ -345,6 +353,193 @@ const FeatureSetEnrichment = (props) => {
     );
     return tsortedRows;
   }, [prosRecords, searchInput, fsetFilter]);
+
+  const render_row_info = (row) => {
+    console.log(row);
+    return (
+      <>
+        <span className="fsetenrich-title">
+          <strong style={{ color: "#147EB3", fontSize: "x-small" }}>
+            {row.name.match("^GO:[0-9]+$") ? (
+              <a
+                style={{ textDecoration: "underline dotted" }}
+                href={"http://amigo.geneontology.org/amigo/term/" + row.name}
+                target="_blank"
+              >
+                {row.name}
+              </a>
+            ) : (
+              row.name
+            )}
+          </strong>
+          :{" "}
+          {row.description.match("^http[^ ]+$") ? (
+            <a
+              style={{ textDecoration: "underline dotted" }}
+              href={row.description}
+              target="_blank"
+            >
+              link to description
+            </a>
+          ) : (
+            row.description
+          )}
+        </span>
+        {showPvalues && (
+          <Popover2
+            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+            hasBackdrop={false}
+            interactionKind="hover"
+            placement="auto"
+            hoverOpenDelay={500}
+            modifiers={{
+              arrow: { enabled: true },
+              flip: { enabled: true },
+              preventOverflow: { enabled: true },
+            }}
+            content={
+              <Card elevation={Elevation.ZERO}>
+                <table>
+                  <tr>
+                    <td></td>
+                    <th scope="col">
+                      {row.name}:({row.size} genes)
+                    </th>
+                    <th scope="col">This feature set</th>
+                  </tr>
+                  <tr>
+                    <th scope="row">Pvalue</th>
+                    <td>{row.pvalue.toFixed(2)}</td>
+                    <td style={{ fontStyle: "italic" }}>
+                      ∈ [{pvalMinMax[0].toFixed(2)}, {pvalMinMax[1].toFixed(2)}]
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Count</th>
+                    <td>{row.count.toFixed(2)}</td>
+                    <td style={{ fontStyle: "italic" }}>
+                      ∈ [{countsMinMax[0].toFixed(2)},{" "}
+                      {countsMinMax[1].toFixed(2)}]
+                    </td>
+                  </tr>
+                </table>
+              </Card>
+            }
+          >
+            <PvalCell score={row.pvalue} />
+          </Popover2>
+        )}
+        {showCounts && (
+          <Popover2
+            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+            hasBackdrop={false}
+            interactionKind="hover"
+            placement="auto"
+            hoverOpenDelay={500}
+            modifiers={{
+              arrow: { enabled: true },
+              flip: { enabled: true },
+              preventOverflow: { enabled: true },
+            }}
+            content={
+              <Card elevation={Elevation.ZERO}>
+                <table>
+                  <tr>
+                    <td></td>
+                    <th scope="col">
+                      {row.name}: ({row.size} genes)
+                    </th>
+                    <th scope="col">This feature set</th>
+                  </tr>
+                  <tr>
+                    <th scope="row">Count</th>
+                    <td>{row.count.toFixed(2)}</td>
+                    <td style={{ fontStyle: "italic" }}>
+                      ∈ [{countsMinMax[0].toFixed(2)},{" "}
+                      {countsMinMax[1].toFixed(2)}]
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Pvalue</th>
+                    <td>{row.pvalue.toFixed(2)}</td>
+                    <td style={{ fontStyle: "italic" }}>
+                      ∈ [{pvalMinMax[0].toFixed(2)}, {pvalMinMax[1].toFixed(2)}]
+                    </td>
+                  </tr>
+                </table>
+              </Card>
+            }
+          >
+            <div
+              style={{
+                textAlign: "center",
+              }}
+            >
+              <span>
+                {row.count}/{row.size}
+              </span>
+            </div>
+          </Popover2>
+        )}
+        <div className="fsetenrich-row-action">
+          <Tooltip2
+            content={row.expanded ? "Unpin this gene set" : "Pin this gene set"}
+          >
+            <Button
+              icon="pin"
+              small={true}
+              fill={false}
+              className="fsetenrich-row-action"
+              outlined={row.expanded ? false : true}
+              intent={row.expanded ? "primary" : null}
+              onClick={() => {
+                let tmprecs = [...preProsRecords];
+                tmprecs[row._index].expanded = !tmprecs[row._index].expanded;
+                setPreProsRecords(tmprecs);
+
+                // do something
+                if (!tmprecs[row._index].expanded) {
+                  props?.setFeatureSetGeneIndex(null);
+                  setFRowExpanded(null);
+                } else {
+                  props?.setFeatureSetGeneIndex(row.set_id);
+                  if (!row.geneIndices) {
+                    props?.setReqFsetGeneIndex(row.set_id);
+                  }
+
+                  setFRowExpanded(row._index);
+                }
+              }}
+            ></Button>
+          </Tooltip2>
+          <Tooltip2 content="Visualize gene set scores">
+            <Button
+              small={true}
+              fill={false}
+              outlined={row.set_id === props?.selectedFsetIndex ? false : true}
+              intent={
+                row.set_id === props?.selectedFsetIndex ? "primary" : null
+              }
+              className="row-action"
+              onClick={() => {
+                props?.setGene(null);
+                if (row.set_id === props?.selectedFsetIndex) {
+                  props?.setSelectedFsetIndex(null);
+                } else {
+                  props?.setSelectedFsetIndex(row.set_id);
+                  if (!row.fscores) {
+                    props?.setReqFsetIndex(row.set_id);
+                  }
+                }
+              }}
+            >
+              <Icon icon={"heatmap"}></Icon>
+            </Button>
+          </Tooltip2>
+        </div>
+      </>
+    );
+  };
 
   return (
     <div className="fsetenrich-container">
@@ -855,770 +1050,698 @@ const FeatureSetEnrichment = (props) => {
           )}
         </div>
       )}
-      <div
-        className="fsetenrich-table"
-        style={{
-          gridTemplateRows: getTableHeight(),
-        }}
-      >
-        <div className="fsetenrich-header">
-          <InputGroup
-            leftIcon="search"
-            small={true}
-            placeholder="Search feature set..."
-            type="text"
-            onChange={(e) => setSearchInput(e.target.value)}
-          />
-        </div>
-        <Virtuoso
-          components={{
-            Item: ({ children, ...props }) => {
-              return (
-                <div className="row-card" {...props}>
-                  {children}
-                </div>
-              );
-            },
-            Header: () => {
-              return (
-                <div
-                  className="fsetenrich-row-container fsetenrich-row-header"
-                  style={{
-                    gridTemplateColumns: getRowWidths(),
-                  }}
-                >
-                  <span
+      {fRowExpanded !== null && (
+        <div style={{ margin: "5px 0" }}>
+          <div
+            className="fsetenrich-row-container fsetenrich-row-header"
+            style={{
+              gridTemplateColumns: getRowWidths(),
+            }}
+          >
+            <span
+              style={{
+                textDecoration: "underline",
+                cursor: "help",
+              }}
+            >
+              Feature set
+            </span>
+            {showPvalues && (
+              <Popover2
+                popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                hasBackdrop={false}
+                interactionKind="hover"
+                placement="auto"
+                hoverOpenDelay={50}
+                modifiers={{
+                  arrow: { enabled: true },
+                  flip: { enabled: true },
+                  preventOverflow: { enabled: true },
+                }}
+                content={
+                  <Card
                     style={{
-                      textDecoration: "underline",
-                      cursor: "help",
+                      width: "250px",
                     }}
+                    elevation={Elevation.ZERO}
                   >
-                    Feature set
-                  </span>
-                  {showPvalues && (
-                    <Popover2
-                      popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-                      hasBackdrop={false}
-                      interactionKind="hover"
-                      placement="auto"
-                      hoverOpenDelay={50}
-                      modifiers={{
-                        arrow: { enabled: true },
-                        flip: { enabled: true },
-                        preventOverflow: { enabled: true },
-                      }}
-                      content={
-                        <Card
-                          style={{
-                            width: "250px",
-                          }}
-                          elevation={Elevation.ZERO}
-                        >
-                          <p>pvalues</p>
-                          <p>
-                            Use the color scale below to apply a filter on this
-                            statistic.
-                          </p>
-                        </Card>
-                      }
-                    >
-                      <span
-                        style={{
-                          textDecoration: "underline",
-                          cursor: "help",
-                        }}
-                      >
-                        pvalue
-                      </span>
-                    </Popover2>
-                  )}
-                  {showCounts && (
-                    <Popover2
-                      popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-                      hasBackdrop={false}
-                      interactionKind="hover"
-                      placement="auto"
-                      hoverOpenDelay={50}
-                      modifiers={{
-                        arrow: { enabled: true },
-                        flip: { enabled: true },
-                        preventOverflow: { enabled: true },
-                      }}
-                      content={
-                        <Card
-                          style={{
-                            width: "250px",
-                          }}
-                          elevation={Elevation.ZERO}
-                        >
-                          <p>counts</p>
-                          <p>
-                            Use the color scale below to apply a filter on this
-                            statistic.
-                          </p>
-                        </Card>
-                      }
-                    >
-                      <span
-                        style={{
-                          textDecoration: "underline",
-                          cursor: "help",
-                        }}
-                      >
-                        count
-                      </span>
-                    </Popover2>
-                  )}
-                </div>
-              );
-            },
-          }}
-          className="fsetenrich-list"
-          totalCount={sortedRows.length}
-          itemContent={(index) => {
-            const row = sortedRows[index];
-            const rowexp = row.expanded;
-            const rowScores = row.fscores;
-            const rowGeneIndices = row.geneIndices;
-
-            return (
-              <div>
-                <div
-                  className="fsetenrich-row-container"
+                    <p>pvalues</p>
+                    <p>
+                      Use the color scale below to apply a filter on this
+                      statistic.
+                    </p>
+                  </Card>
+                }
+              >
+                <span
                   style={{
-                    gridTemplateColumns: getRowWidths(),
+                    textDecoration: "underline",
+                    cursor: "help",
                   }}
                 >
-                  <span
-                    className={
-                      row.expanded
-                        ? "fsetenrich-title-selected"
-                        : "fsetenrich-title"
-                    }
+                  pvalue
+                </span>
+              </Popover2>
+            )}
+            {showCounts && (
+              <Popover2
+                popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                hasBackdrop={false}
+                interactionKind="hover"
+                placement="auto"
+                hoverOpenDelay={50}
+                modifiers={{
+                  arrow: { enabled: true },
+                  flip: { enabled: true },
+                  preventOverflow: { enabled: true },
+                }}
+                content={
+                  <Card
+                    style={{
+                      width: "250px",
+                    }}
+                    elevation={Elevation.ZERO}
                   >
-                    <strong style={{ color: "#147EB3", fontSize: "x-small" }}>
-                      {row.name.match("^GO:[0-9]+$") ? (
-                        <a
-                          style={{ textDecoration: "underline dotted" }}
-                          href={
-                            "http://amigo.geneontology.org/amigo/term/" +
-                            row.name
-                          }
-                          target="_blank"
-                        >
-                          {row.name}
-                        </a>
-                      ) : (
-                        row.name
-                      )}
-                    </strong>
-                    :{" "}
-                    {row.description.match("^http[^ ]+$") ? (
-                      <a
-                        style={{ textDecoration: "underline dotted" }}
-                        href={row.description}
-                        target="_blank"
-                      >
-                        link to description
-                      </a>
-                    ) : (
-                      row.description
-                    )}
-                  </span>
-                  {showPvalues && (
-                    <Popover2
-                      popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-                      hasBackdrop={false}
-                      interactionKind="hover"
-                      placement="auto"
-                      hoverOpenDelay={500}
-                      modifiers={{
-                        arrow: { enabled: true },
-                        flip: { enabled: true },
-                        preventOverflow: { enabled: true },
-                      }}
-                      content={
-                        <Card elevation={Elevation.ZERO}>
-                          <table>
-                            <tr>
-                              <td></td>
-                              <th scope="col">
-                                {row.name}:({row.size} genes)
-                              </th>
-                              <th scope="col">This feature set</th>
-                            </tr>
-                            <tr>
-                              <th scope="row">Pvalue</th>
-                              <td>{row.pvalue.toFixed(2)}</td>
-                              <td style={{ fontStyle: "italic" }}>
-                                ∈ [{pvalMinMax[0].toFixed(2)},{" "}
-                                {pvalMinMax[1].toFixed(2)}]
-                              </td>
-                            </tr>
-                            <tr>
-                              <th scope="row">Count</th>
-                              <td>{row.count.toFixed(2)}</td>
-                              <td style={{ fontStyle: "italic" }}>
-                                ∈ [{countsMinMax[0].toFixed(2)},{" "}
-                                {countsMinMax[1].toFixed(2)}]
-                              </td>
-                            </tr>
-                          </table>
-                        </Card>
-                      }
-                    >
-                      <PvalCell score={row.pvalue} />
-                    </Popover2>
-                  )}
-                  {showCounts && (
-                    <Popover2
-                      popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-                      hasBackdrop={false}
-                      interactionKind="hover"
-                      placement="auto"
-                      hoverOpenDelay={500}
-                      modifiers={{
-                        arrow: { enabled: true },
-                        flip: { enabled: true },
-                        preventOverflow: { enabled: true },
-                      }}
-                      content={
-                        <Card elevation={Elevation.ZERO}>
-                          <table>
-                            <tr>
-                              <td></td>
-                              <th scope="col">
-                                {row.name}: ({row.size} genes)
-                              </th>
-                              <th scope="col">This feature set</th>
-                            </tr>
-                            <tr>
-                              <th scope="row">Count</th>
-                              <td>{row.count.toFixed(2)}</td>
-                              <td style={{ fontStyle: "italic" }}>
-                                ∈ [{countsMinMax[0].toFixed(2)},{" "}
-                                {countsMinMax[1].toFixed(2)}]
-                              </td>
-                            </tr>
-                            <tr>
-                              <th scope="row">Pvalue</th>
-                              <td>{row.pvalue.toFixed(2)}</td>
-                              <td style={{ fontStyle: "italic" }}>
-                                ∈ [{pvalMinMax[0].toFixed(2)},{" "}
-                                {pvalMinMax[1].toFixed(2)}]
-                              </td>
-                            </tr>
-                          </table>
-                        </Card>
-                      }
-                    >
+                    <p>counts</p>
+                    <p>
+                      Use the color scale below to apply a filter on this
+                      statistic.
+                    </p>
+                  </Card>
+                }
+              >
+                <span
+                  style={{
+                    textDecoration: "underline",
+                    cursor: "help",
+                  }}
+                >
+                  count
+                </span>
+              </Popover2>
+            )}
+          </div>
+          <div
+            className="fsetenrich-row-container"
+            style={{
+              gridTemplateColumns: getRowWidths(),
+              margin: "5px",
+            }}
+          >
+            {render_row_info(sortedRows[fRowExpanded])}
+          </div>
+          <span>Genes in this collection</span>
+          {sortedRows[fRowExpanded].geneIndices !== null &&
+          sortedRows[fRowExpanded].geneIndices !== undefined ? (
+            <div
+              style={{
+                height: "calc(100vh - 300px)",
+                marginBottom: "5px",
+              }}
+            >
+              <Divider />
+              <Virtuoso
+                components={{
+                  Header: () => {
+                    return (
                       <div
-                        style={{
-                          textAlign: "center",
-                        }}
+                        className="fsetenrich-genelist-container"
+                        style={{ fontSize: "xx-small" }}
                       >
                         <span>
-                          {row.count}/{row.size}
+                          <HTMLSelect
+                            large={false}
+                            minimal={true}
+                            defaultValue={geneColSel["RNA"]}
+                            onChange={(nval, val) => {
+                              let tmp = { ...geneColSel };
+                              tmp["RNA"] = nval?.currentTarget?.value;
+                              setGeneColSel(tmp);
+                            }}
+                          >
+                            {Object.keys(genesInfo).map((x, i) => (
+                              <option key={i}>{x}</option>
+                            ))}
+                          </HTMLSelect>
                         </span>
+                        <div
+                          style={{
+                            width: "200px",
+                            display: "flex",
+                            flexDirection: "row",
+                            justifyContent: "center",
+                            alignContent: "center",
+                            alignItems: "center",
+                            gap: "5px",
+                            textAlign: "center",
+                          }}
+                        >
+                          <span style={{ width: "55px" }}>Log-FC</span>
+                          <span style={{ width: "55px" }}>Δ-detected</span>
+                          <span style={{ width: "55px" }}>Expression</span>
+                          <span style={{ width: "24px" }}></span>
+                        </div>
                       </div>
-                    </Popover2>
-                  )}
-                  <div className="fsetenrich-row-action">
-                    <Tooltip2 content="Compute feature set scores">
-                      <Button
-                        icon={rowexp ? "minus" : "plus"}
-                        small={true}
-                        fill={false}
-                        className="fsetenrich-row-action"
-                        outlined={rowexp ? false : true}
-                        intent={rowexp ? "primary" : null}
-                        onClick={() => {
-                          let tmprecs = [...preProsRecords];
-                          tmprecs[row._index].expanded =
-                            !tmprecs[row._index].expanded;
-                          setPreProsRecords(tmprecs);
+                    );
+                  },
+                }}
+                totalCount={
+                  sortedRows[fRowExpanded].geneIndices.ordering.length
+                }
+                itemContent={(rgindex) => {
+                  // const rgrow = sortedRows[fRowExpanded].geneIndices[rgindex];
+                  const delta_detected =
+                      sortedRows[fRowExpanded].geneIndices.delta_detected[
+                        rgindex
+                      ],
+                    detected =
+                      sortedRows[fRowExpanded].geneIndices.detected[rgindex],
+                    lfc = sortedRows[fRowExpanded].geneIndices.lfc[rgindex],
+                    mean = sortedRows[fRowExpanded].geneIndices.means[rgindex],
+                    order =
+                      sortedRows[fRowExpanded].geneIndices.ordering[rgindex];
 
-                          // do something
-                          if (!tmprecs[row._index].expanded) {
-                            props?.setFeatureSetGeneIndex(null);
-                          } else {
-                            props?.setFeatureSetGeneIndex(row.set_id);
-                            if (!rowGeneIndices) {
-                              props?.setReqFsetGeneIndex(row.set_id);
-                            }
-                          }
-                        }}
-                      ></Button>
-                    </Tooltip2>
-                    <Tooltip2 content="Visualize feature scores">
-                      <Button
-                        small={true}
-                        fill={false}
-                        outlined={
-                          row.set_id === props?.selectedFsetIndex ? false : true
-                        }
-                        intent={
-                          row.set_id === props?.selectedFsetIndex
-                            ? "primary"
-                            : null
-                        }
-                        className="row-action"
-                        onClick={() => {
-                          props?.setGene(null);
-                          if (row.set_id === props?.selectedFsetIndex) {
-                            props?.setSelectedFsetIndex(null);
-                          } else {
-                            props?.setSelectedFsetIndex(row.set_id);
-                            if (!rowScores) {
-                              props?.setReqFsetIndex(row.set_id);
-                            }
-                          }
+                  const deltaMinMax = getMinMax(
+                      sortedRows[fRowExpanded].geneIndices.delta_detected
+                    ),
+                    detectedMinMax = getMinMax(
+                      sortedRows[fRowExpanded].geneIndices.detected
+                    ),
+                    lfcMinMax = getMinMax(
+                      sortedRows[fRowExpanded].geneIndices.lfc
+                    ),
+                    meanMinMax = getMinMax(
+                      sortedRows[fRowExpanded].geneIndices.means
+                    );
+
+                  const rgname =
+                    appMode === "explore"
+                      ? genesInfo[geneColSel[props?.selectedFsetModality]][
+                          order
+                        ]
+                      : genesInfo[geneColSel["RNA"]][order];
+
+                  return (
+                    <div className="fsetenrich-genelist-container">
+                      <span style={{ width: "40px" }}>{rgname}</span>
+                      <div
+                        style={{
+                          width: "200px",
+                          display: "flex",
+                          flexDirection: "row",
+                          justifyContent: "center",
+                          alignContent: "center",
+                          alignItems: "center",
+                          gap: "5px",
                         }}
                       >
-                        <Icon icon={"heatmap"}></Icon>
-                      </Button>
-                    </Tooltip2>
-                  </div>
-                </div>
-                <Collapse isOpen={rowexp}>
-                  <span>Genes in this feature set</span>
-                  {rowGeneIndices !== null && rowGeneIndices !== undefined ? (
+                        <Popover2
+                          popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                          hasBackdrop={false}
+                          interactionKind="hover"
+                          placement="auto"
+                          hoverOpenDelay={500}
+                          modifiers={{
+                            arrow: { enabled: true },
+                            flip: { enabled: true },
+                            preventOverflow: { enabled: true },
+                          }}
+                          content={
+                            <Card elevation={Elevation.ZERO}>
+                              <table>
+                                <tr>
+                                  <td></td>
+                                  <th scope="col">{rgname}</th>
+                                  <th scope="col">This cluster</th>
+                                </tr>
+                                <tr>
+                                  <th scope="row">Log-FC</th>
+                                  <td>{lfc.toFixed(2)}</td>
+                                  <td style={{ fontStyle: "italic" }}>
+                                    ∈ [{lfcMinMax[0].toFixed(2)},{" "}
+                                    {lfcMinMax[1].toFixed(2)}]
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <th scope="row">Δ-detected</th>
+                                  <td>{delta_detected.toFixed(2)}</td>
+                                  <td style={{ fontStyle: "italic" }}>
+                                    ∈ [{deltaMinMax[0].toFixed(2)},{" "}
+                                    {deltaMinMax[1].toFixed(2)}]
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <th scope="row">Detected</th>
+                                  <td>{detected.toFixed(2)}</td>
+                                  <td style={{ fontStyle: "italic" }}>
+                                    ∈ [{detectedMinMax[0].toFixed(2)},{" "}
+                                    {detectedMinMax[1].toFixed(2)}]
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <th scope="row">Expression</th>
+                                  <td>{mean.toFixed(2)}</td>
+                                  <td style={{ fontStyle: "italic" }}>
+                                    ∈ [{meanMinMax[0].toFixed(2)},{" "}
+                                    {meanMinMax[1].toFixed(2)}]
+                                  </td>
+                                </tr>
+                              </table>
+                            </Card>
+                          }
+                        >
+                          <HeatmapCell
+                            width={55}
+                            minmax={lfcMinMax}
+                            colorscale={d3.interpolateRdYlBu}
+                            score={lfc}
+                          />
+                        </Popover2>
+
+                        <Popover2
+                          popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                          hasBackdrop={false}
+                          interactionKind="hover"
+                          placement="auto"
+                          hoverOpenDelay={500}
+                          modifiers={{
+                            arrow: { enabled: true },
+                            flip: { enabled: true },
+                            preventOverflow: { enabled: true },
+                          }}
+                          content={
+                            <Card elevation={Elevation.ZERO}>
+                              <table>
+                                <tr>
+                                  <td></td>
+                                  <th scope="col">{rgname}</th>
+                                  <th scope="col">This cluster</th>
+                                </tr>
+                                <tr>
+                                  <th scope="row">Log-FC</th>
+                                  <td>{lfc.toFixed(2)}</td>
+                                  <td style={{ fontStyle: "italic" }}>
+                                    ∈ [{lfcMinMax[0].toFixed(2)},{" "}
+                                    {lfcMinMax[1].toFixed(2)}]
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <th scope="row">Δ-detected</th>
+                                  <td>{delta_detected.toFixed(2)}</td>
+                                  <td style={{ fontStyle: "italic" }}>
+                                    ∈ [{deltaMinMax[0].toFixed(2)},{" "}
+                                    {deltaMinMax[1].toFixed(2)}]
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <th scope="row">Detected</th>
+                                  <td>{detected.toFixed(2)}</td>
+                                  <td style={{ fontStyle: "italic" }}>
+                                    ∈ [{detectedMinMax[0].toFixed(2)},{" "}
+                                    {detectedMinMax[1].toFixed(2)}]
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <th scope="row">Expression</th>
+                                  <td>{mean.toFixed(2)}</td>
+                                  <td style={{ fontStyle: "italic" }}>
+                                    ∈ [{meanMinMax[0].toFixed(2)},{" "}
+                                    {meanMinMax[1].toFixed(2)}]
+                                  </td>
+                                </tr>
+                              </table>
+                            </Card>
+                          }
+                        >
+                          <HeatmapCell
+                            width={55}
+                            minmax={deltaMinMax}
+                            colorscale={d3.interpolateRdYlBu}
+                            score={delta_detected}
+                          />
+                        </Popover2>
+
+                        <Popover2
+                          popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                          hasBackdrop={false}
+                          interactionKind="hover"
+                          placement="auto"
+                          hoverOpenDelay={500}
+                          modifiers={{
+                            arrow: { enabled: true },
+                            flip: { enabled: true },
+                            preventOverflow: { enabled: true },
+                          }}
+                          content={
+                            <Card elevation={Elevation.ZERO}>
+                              <table>
+                                <tr>
+                                  <td></td>
+                                  <th scope="col">{rgname}</th>
+                                  <th scope="col">This cluster</th>
+                                </tr>
+                                <tr>
+                                  <th scope="row">Log-FC</th>
+                                  <td>{lfc.toFixed(2)}</td>
+                                  <td style={{ fontStyle: "italic" }}>
+                                    ∈ [{lfcMinMax[0].toFixed(2)},{" "}
+                                    {lfcMinMax[1].toFixed(2)}]
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <th scope="row">Δ-detected</th>
+                                  <td>{delta_detected.toFixed(2)}</td>
+                                  <td style={{ fontStyle: "italic" }}>
+                                    ∈ [{deltaMinMax[0].toFixed(2)},{" "}
+                                    {deltaMinMax[1].toFixed(2)}]
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <th scope="row">Detected</th>
+                                  <td>{detected.toFixed(2)}</td>
+                                  <td style={{ fontStyle: "italic" }}>
+                                    ∈ [{detectedMinMax[0].toFixed(2)},{" "}
+                                    {detectedMinMax[1].toFixed(2)}]
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <th scope="row">Expression</th>
+                                  <td>{mean.toFixed(2)}</td>
+                                  <td style={{ fontStyle: "italic" }}>
+                                    ∈ [{meanMinMax[0].toFixed(2)},{" "}
+                                    {meanMinMax[1].toFixed(2)}]
+                                  </td>
+                                </tr>
+                              </table>
+                            </Card>
+                          }
+                        >
+                          <Cell
+                            width={55}
+                            minmax={meanMinMax}
+                            colorscale={d3.interpolateRdYlBu}
+                            score={mean}
+                            colorscore={detected}
+                          />
+                        </Popover2>
+
+                        <Button
+                          small={true}
+                          fill={false}
+                          outlined={order === props?.gene ? false : true}
+                          intent={order === props?.gene ? "primary" : null}
+                          onClick={() => {
+                            props?.setSelectedFsetIndex(null);
+                            if (order === props?.gene) {
+                              props?.setGene(null);
+                            } else {
+                              props?.setGene(order);
+                              props?.setReqGene(order);
+                            }
+                          }}
+                        >
+                          <Icon size={16} icon={"tint"}></Icon>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                }}
+              />
+              <Divider />
+            </div>
+          ) : (
+            <div className="bp4-skeleton"></div>
+          )}
+        </div>
+      )}
+      {fRowExpanded === null && (
+        <>
+          <div
+            className="fsetenrich-table"
+            style={{
+              gridTemplateRows: getTableHeight(),
+            }}
+          >
+            <div className="fsetenrich-header">
+              <InputGroup
+                leftIcon="search"
+                small={true}
+                placeholder="Search feature set..."
+                type="text"
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+            </div>
+            <Virtuoso
+              components={{
+                Item: ({ children, ...props }) => {
+                  return (
+                    <div className="row-card" {...props}>
+                      {children}
+                    </div>
+                  );
+                },
+                Header: () => {
+                  return (
                     <div
+                      className="fsetenrich-row-container fsetenrich-row-header"
                       style={{
-                        height: "100px",
-                        marginBottom: "5px",
+                        gridTemplateColumns: getRowWidths(),
                       }}
                     >
-                      <Divider />
-                      <Virtuoso
-                        components={{
-                          Header: () => {
-                            return (
-                              <div
-                                className="fsetenrich-genelist-container"
-                                style={{ fontSize: "xx-small" }}
-                              >
-                                <span style={{ width: "40px" }}>
-                                  Gene Symbol
-                                </span>
-                                <div
-                                  style={{
-                                    width: "200px",
-                                    display: "flex",
-                                    flexDirection: "row",
-                                    justifyContent: "center",
-                                    alignContent: "center",
-                                    alignItems: "center",
-                                    gap: "5px",
-                                    textAlign: "center",
-                                  }}
-                                >
-                                  <span style={{ width: "55px" }}>Log-FC</span>
-                                  <span style={{ width: "55px" }}>
-                                    Δ-detected
-                                  </span>
-                                  <span style={{ width: "55px" }}>
-                                    Expression
-                                  </span>
-                                  <span style={{ width: "24px" }}></span>
-                                </div>
-                              </div>
-                            );
-                          },
+                      <span
+                        style={{
+                          textDecoration: "underline",
+                          cursor: "help",
                         }}
-                        totalCount={rowGeneIndices.ordering.length}
-                        itemContent={(rgindex) => {
-                          // const rgrow = rowGeneIndices[rgindex];
-                          const delta_detected =
-                              rowGeneIndices.delta_detected[rgindex],
-                            detected = rowGeneIndices.detected[rgindex],
-                            lfc = rowGeneIndices.lfc[rgindex],
-                            mean = rowGeneIndices.means[rgindex],
-                            order = rowGeneIndices.ordering[rgindex];
-
-                          const deltaMinMax = getMinMax(
-                              rowGeneIndices.delta_detected
-                            ),
-                            detectedMinMax = getMinMax(rowGeneIndices.detected),
-                            lfcMinMax = getMinMax(rowGeneIndices.lfc),
-                            meanMinMax = getMinMax(rowGeneIndices.means);
-
-                          const rgname =
-                            appMode === "explore"
-                              ? genesInfo[
-                                  geneColSel[props?.selectedFsetModality]
-                                ][order]
-                              : genesInfo[geneColSel["RNA"]][order];
-
-                          return (
-                            <div className="fsetenrich-genelist-container">
-                              <span style={{ width: "40px" }}>{rgname}</span>
-                              <div
-                                style={{
-                                  width: "200px",
-                                  display: "flex",
-                                  flexDirection: "row",
-                                  justifyContent: "center",
-                                  alignContent: "center",
-                                  alignItems: "center",
-                                  gap: "5px",
-                                }}
-                              >
-                                <Popover2
-                                  popoverClassName={
-                                    Classes.POPOVER_CONTENT_SIZING
-                                  }
-                                  hasBackdrop={false}
-                                  interactionKind="hover"
-                                  placement="auto"
-                                  hoverOpenDelay={500}
-                                  modifiers={{
-                                    arrow: { enabled: true },
-                                    flip: { enabled: true },
-                                    preventOverflow: { enabled: true },
-                                  }}
-                                  content={
-                                    <Card elevation={Elevation.ZERO}>
-                                      <table>
-                                        <tr>
-                                          <td></td>
-                                          <th scope="col">{rgname}</th>
-                                          <th scope="col">This cluster</th>
-                                        </tr>
-                                        <tr>
-                                          <th scope="row">Log-FC</th>
-                                          <td>{lfc.toFixed(2)}</td>
-                                          <td style={{ fontStyle: "italic" }}>
-                                            ∈ [{lfcMinMax[0].toFixed(2)},{" "}
-                                            {lfcMinMax[1].toFixed(2)}]
-                                          </td>
-                                        </tr>
-                                        <tr>
-                                          <th scope="row">Δ-detected</th>
-                                          <td>{delta_detected.toFixed(2)}</td>
-                                          <td style={{ fontStyle: "italic" }}>
-                                            ∈ [{deltaMinMax[0].toFixed(2)},{" "}
-                                            {deltaMinMax[1].toFixed(2)}]
-                                          </td>
-                                        </tr>
-                                        <tr>
-                                          <th scope="row">Detected</th>
-                                          <td>{detected.toFixed(2)}</td>
-                                          <td style={{ fontStyle: "italic" }}>
-                                            ∈ [{detectedMinMax[0].toFixed(2)},{" "}
-                                            {detectedMinMax[1].toFixed(2)}]
-                                          </td>
-                                        </tr>
-                                        <tr>
-                                          <th scope="row">Expression</th>
-                                          <td>{mean.toFixed(2)}</td>
-                                          <td style={{ fontStyle: "italic" }}>
-                                            ∈ [{meanMinMax[0].toFixed(2)},{" "}
-                                            {meanMinMax[1].toFixed(2)}]
-                                          </td>
-                                        </tr>
-                                      </table>
-                                    </Card>
-                                  }
-                                >
-                                  <HeatmapCell
-                                    width={55}
-                                    minmax={lfcMinMax}
-                                    colorscale={d3.interpolateRdYlBu}
-                                    score={lfc}
-                                  />
-                                </Popover2>
-
-                                <Popover2
-                                  popoverClassName={
-                                    Classes.POPOVER_CONTENT_SIZING
-                                  }
-                                  hasBackdrop={false}
-                                  interactionKind="hover"
-                                  placement="auto"
-                                  hoverOpenDelay={500}
-                                  modifiers={{
-                                    arrow: { enabled: true },
-                                    flip: { enabled: true },
-                                    preventOverflow: { enabled: true },
-                                  }}
-                                  content={
-                                    <Card elevation={Elevation.ZERO}>
-                                      <table>
-                                        <tr>
-                                          <td></td>
-                                          <th scope="col">{rgname}</th>
-                                          <th scope="col">This cluster</th>
-                                        </tr>
-                                        <tr>
-                                          <th scope="row">Log-FC</th>
-                                          <td>{lfc.toFixed(2)}</td>
-                                          <td style={{ fontStyle: "italic" }}>
-                                            ∈ [{lfcMinMax[0].toFixed(2)},{" "}
-                                            {lfcMinMax[1].toFixed(2)}]
-                                          </td>
-                                        </tr>
-                                        <tr>
-                                          <th scope="row">Δ-detected</th>
-                                          <td>{delta_detected.toFixed(2)}</td>
-                                          <td style={{ fontStyle: "italic" }}>
-                                            ∈ [{deltaMinMax[0].toFixed(2)},{" "}
-                                            {deltaMinMax[1].toFixed(2)}]
-                                          </td>
-                                        </tr>
-                                        <tr>
-                                          <th scope="row">Detected</th>
-                                          <td>{detected.toFixed(2)}</td>
-                                          <td style={{ fontStyle: "italic" }}>
-                                            ∈ [{detectedMinMax[0].toFixed(2)},{" "}
-                                            {detectedMinMax[1].toFixed(2)}]
-                                          </td>
-                                        </tr>
-                                        <tr>
-                                          <th scope="row">Expression</th>
-                                          <td>{mean.toFixed(2)}</td>
-                                          <td style={{ fontStyle: "italic" }}>
-                                            ∈ [{meanMinMax[0].toFixed(2)},{" "}
-                                            {meanMinMax[1].toFixed(2)}]
-                                          </td>
-                                        </tr>
-                                      </table>
-                                    </Card>
-                                  }
-                                >
-                                  <HeatmapCell
-                                    width={55}
-                                    minmax={deltaMinMax}
-                                    colorscale={d3.interpolateRdYlBu}
-                                    score={delta_detected}
-                                  />
-                                </Popover2>
-
-                                <Popover2
-                                  popoverClassName={
-                                    Classes.POPOVER_CONTENT_SIZING
-                                  }
-                                  hasBackdrop={false}
-                                  interactionKind="hover"
-                                  placement="auto"
-                                  hoverOpenDelay={500}
-                                  modifiers={{
-                                    arrow: { enabled: true },
-                                    flip: { enabled: true },
-                                    preventOverflow: { enabled: true },
-                                  }}
-                                  content={
-                                    <Card elevation={Elevation.ZERO}>
-                                      <table>
-                                        <tr>
-                                          <td></td>
-                                          <th scope="col">{rgname}</th>
-                                          <th scope="col">This cluster</th>
-                                        </tr>
-                                        <tr>
-                                          <th scope="row">Log-FC</th>
-                                          <td>{lfc.toFixed(2)}</td>
-                                          <td style={{ fontStyle: "italic" }}>
-                                            ∈ [{lfcMinMax[0].toFixed(2)},{" "}
-                                            {lfcMinMax[1].toFixed(2)}]
-                                          </td>
-                                        </tr>
-                                        <tr>
-                                          <th scope="row">Δ-detected</th>
-                                          <td>{delta_detected.toFixed(2)}</td>
-                                          <td style={{ fontStyle: "italic" }}>
-                                            ∈ [{deltaMinMax[0].toFixed(2)},{" "}
-                                            {deltaMinMax[1].toFixed(2)}]
-                                          </td>
-                                        </tr>
-                                        <tr>
-                                          <th scope="row">Detected</th>
-                                          <td>{detected.toFixed(2)}</td>
-                                          <td style={{ fontStyle: "italic" }}>
-                                            ∈ [{detectedMinMax[0].toFixed(2)},{" "}
-                                            {detectedMinMax[1].toFixed(2)}]
-                                          </td>
-                                        </tr>
-                                        <tr>
-                                          <th scope="row">Expression</th>
-                                          <td>{mean.toFixed(2)}</td>
-                                          <td style={{ fontStyle: "italic" }}>
-                                            ∈ [{meanMinMax[0].toFixed(2)},{" "}
-                                            {meanMinMax[1].toFixed(2)}]
-                                          </td>
-                                        </tr>
-                                      </table>
-                                    </Card>
-                                  }
-                                >
-                                  <Cell
-                                    width={55}
-                                    minmax={meanMinMax}
-                                    colorscale={d3.interpolateRdYlBu}
-                                    score={mean}
-                                    colorscore={detected}
-                                  />
-                                </Popover2>
-
-                                <Button
-                                  small={true}
-                                  fill={false}
-                                  outlined={
-                                    order === props?.gene ? false : true
-                                  }
-                                  intent={
-                                    order === props?.gene ? "primary" : null
-                                  }
-                                  onClick={() => {
-                                    props?.setSelectedFsetIndex(null);
-                                    if (order === props?.gene) {
-                                      props?.setGene(null);
-                                    } else {
-                                      props?.setGene(order);
-                                      props?.setReqGene(order);
-                                    }
-                                  }}
-                                >
-                                  <Icon size={16} icon={"tint"}></Icon>
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        }}
-                      />
-                      <Divider />
+                      >
+                        Feature set
+                      </span>
+                      {showPvalues && (
+                        <Popover2
+                          popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                          hasBackdrop={false}
+                          interactionKind="hover"
+                          placement="auto"
+                          hoverOpenDelay={50}
+                          modifiers={{
+                            arrow: { enabled: true },
+                            flip: { enabled: true },
+                            preventOverflow: { enabled: true },
+                          }}
+                          content={
+                            <Card
+                              style={{
+                                width: "250px",
+                              }}
+                              elevation={Elevation.ZERO}
+                            >
+                              <p>pvalues</p>
+                              <p>
+                                Use the color scale below to apply a filter on
+                                this statistic.
+                              </p>
+                            </Card>
+                          }
+                        >
+                          <span
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "help",
+                            }}
+                          >
+                            pvalue
+                          </span>
+                        </Popover2>
+                      )}
+                      {showCounts && (
+                        <Popover2
+                          popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+                          hasBackdrop={false}
+                          interactionKind="hover"
+                          placement="auto"
+                          hoverOpenDelay={50}
+                          modifiers={{
+                            arrow: { enabled: true },
+                            flip: { enabled: true },
+                            preventOverflow: { enabled: true },
+                          }}
+                          content={
+                            <Card
+                              style={{
+                                width: "250px",
+                              }}
+                              elevation={Elevation.ZERO}
+                            >
+                              <p>counts</p>
+                              <p>
+                                Use the color scale below to apply a filter on
+                                this statistic.
+                              </p>
+                            </Card>
+                          }
+                        >
+                          <span
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "help",
+                            }}
+                          >
+                            count
+                          </span>
+                        </Popover2>
+                      )}
                     </div>
-                  ) : (
-                    <div className="bp4-skeleton"></div>
-                  )}
-                </Collapse>
-              </div>
-            );
-          }}
-        />
-      </div>
-      <Popover2
-        popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-        hasBackdrop={false}
-        interactionKind="hover"
-        placement="top"
-        hoverOpenDelay={500}
-        modifiers={{
-          arrow: { enabled: true },
-          flip: { enabled: true },
-          preventOverflow: { enabled: true },
-        }}
-        content={
-          <Card
-            style={{
-              width: "450px",
-            }}
-            elevation={Elevation.ZERO}
-          >
-            <p>
-              Filter feature set summary according to various statistics. For
-              example, this can be used to apply a minimum threshold on the{" "}
-              <strong>
-                <em>count</em>
-              </strong>{" "}
-              or{" "}
-              <strong>
-                <em>p-value</em>
-              </strong>
-            </p>
-            <p>
-              Note that this does not change the relative ordering in the table
-              above.
-            </p>
-          </Card>
-        }
-      >
-        <Button
-          fill={true}
-          outlined={showFilters}
-          intent={"primary"}
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          Click to {showFilters ? "Hide filters" : "Filter feature sets"}
-        </Button>
-      </Popover2>
-      <Collapse isOpen={showFilters}>
-        <div className="fsetenrich-filter-container">
-          <Tag
-            className="fsetenrich-filter-container-tag"
-            minimal={true}
-            intent="primary"
-          >
-            count
-          </Tag>
-          {countsMinMax && (
-            <div className="fsetenrich-slider-container">
-              {/* <Histogram data={selectedClusterSummary} datakey={"lfc"} height={100} minmax={lfcMinMax}/> */}
-              <div className="fsetenrich-filter-gradient">
-                <div
-                  style={{
-                    backgroundImage: createColorScale(
-                      countsMinMax[0],
-                      countsMinMax[1]
-                    ),
-                    width: "100%",
-                    height: "5px",
-                  }}
-                ></div>
-                &nbsp;
-              </div>
-              <RangeSlider
-                className="fsetenrich-filter-slider"
-                min={countsMinMax[0]}
-                max={countsMinMax[1]}
-                labelValues={countsMinMax}
-                stepSize={1}
-                onChange={(val) => handleFilter(val, "count")}
-                value={fsetFilter?.["count"]}
-                vertical={false}
-              />
-            </div>
-          )}
-        </div>
+                  );
+                },
+              }}
+              className="fsetenrich-list"
+              totalCount={sortedRows.length}
+              itemContent={(index) => {
+                const row = sortedRows[index];
+                const rowexp = row.expanded;
+                const rowScores = row.fscores;
+                const rowGeneIndices = row.geneIndices;
 
-        <div className="fsetenrich-filter-container">
-          <Tag
-            className="fsetenrich-filter-container-tag"
-            minimal={true}
-            intent="primary"
+                return (
+                  <div>
+                    <div
+                      className="fsetenrich-row-container"
+                      style={{
+                        gridTemplateColumns: getRowWidths(),
+                      }}
+                    >
+                      {render_row_info(row)}
+                    </div>
+                  </div>
+                );
+              }}
+            />
+          </div>
+          <Popover2
+            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+            hasBackdrop={false}
+            interactionKind="hover"
+            placement="top"
+            hoverOpenDelay={500}
+            modifiers={{
+              arrow: { enabled: true },
+              flip: { enabled: true },
+              preventOverflow: { enabled: true },
+            }}
+            content={
+              <Card
+                style={{
+                  width: "450px",
+                }}
+                elevation={Elevation.ZERO}
+              >
+                <p>
+                  Filter feature set summary according to various statistics.
+                  For example, this can be used to apply a minimum threshold on
+                  the{" "}
+                  <strong>
+                    <em>count</em>
+                  </strong>{" "}
+                  or{" "}
+                  <strong>
+                    <em>p-value</em>
+                  </strong>
+                </p>
+                <p>
+                  Note that this does not change the relative ordering in the
+                  table above.
+                </p>
+              </Card>
+            }
           >
-            p-value
-          </Tag>
-          {/* <Histogram data={deltas} height={35} color="#4580E6" minmax={deltaMinMax} /> */}
-          {pvalMinMax && (
-            <div className="fsetenrich-slider-container">
-              <div className="fsetenrich-filter-gradient">
-                <div
-                  style={{
-                    backgroundImage: createColorScale(
-                      pvalMinMax[0],
-                      pvalMinMax[1]
-                    ),
-                    width: "100%",
-                    height: "5px",
-                  }}
-                ></div>
-                &nbsp;
-              </div>
-              <RangeSlider
-                className="fsetenrich-filter-slider"
-                min={pvalMinMax[0]}
-                max={pvalMinMax[1]}
-                labelValues={pvalMinMax}
-                stepSize={0.01}
-                onChange={(val) => handleFilter(val, "pvalue")}
-                value={fsetFilter?.["pvalue"]}
-                vertical={false}
-              />
+            <Button
+              fill={true}
+              outlined={showFilters}
+              intent={"primary"}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              Click to {showFilters ? "Hide filters" : "Filter feature sets"}
+            </Button>
+          </Popover2>
+          <Collapse isOpen={showFilters}>
+            <div className="fsetenrich-filter-container">
+              <Tag
+                className="fsetenrich-filter-container-tag"
+                minimal={true}
+                intent="primary"
+              >
+                count
+              </Tag>
+              {countsMinMax && (
+                <div className="fsetenrich-slider-container">
+                  {/* <Histogram data={selectedClusterSummary} datakey={"lfc"} height={100} minmax={lfcMinMax}/> */}
+                  <div className="fsetenrich-filter-gradient">
+                    <div
+                      style={{
+                        backgroundImage: createColorScale(
+                          countsMinMax[0],
+                          countsMinMax[1]
+                        ),
+                        width: "100%",
+                        height: "5px",
+                      }}
+                    ></div>
+                    &nbsp;
+                  </div>
+                  <RangeSlider
+                    className="fsetenrich-filter-slider"
+                    min={countsMinMax[0]}
+                    max={countsMinMax[1]}
+                    labelValues={countsMinMax}
+                    stepSize={1}
+                    onChange={(val) => handleFilter(val, "count")}
+                    value={fsetFilter?.["count"]}
+                    vertical={false}
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </Collapse>
+
+            <div className="fsetenrich-filter-container">
+              <Tag
+                className="fsetenrich-filter-container-tag"
+                minimal={true}
+                intent="primary"
+              >
+                p-value
+              </Tag>
+              {/* <Histogram data={deltas} height={35} color="#4580E6" minmax={deltaMinMax} /> */}
+              {pvalMinMax && (
+                <div className="fsetenrich-slider-container">
+                  <div className="fsetenrich-filter-gradient">
+                    <div
+                      style={{
+                        backgroundImage: createColorScale(
+                          pvalMinMax[0],
+                          pvalMinMax[1]
+                        ),
+                        width: "100%",
+                        height: "5px",
+                      }}
+                    ></div>
+                    &nbsp;
+                  </div>
+                  <RangeSlider
+                    className="fsetenrich-filter-slider"
+                    min={pvalMinMax[0]}
+                    max={pvalMinMax[1]}
+                    labelValues={pvalMinMax}
+                    stepSize={0.01}
+                    onChange={(val) => handleFilter(val, "pvalue")}
+                    value={fsetFilter?.["pvalue"]}
+                    vertical={false}
+                  />
+                </div>
+              )}
+            </div>
+          </Collapse>
+        </>
+      )}
     </div>
   );
 };
