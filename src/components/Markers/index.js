@@ -484,7 +484,7 @@ const MarkerPlot = (props) => {
           <Tooltip2 content="Download markers as CSV">
             {render_download_link()}
           </Tooltip2>
-          
+
           <Tooltip2 content={showSettings ? "Hide Settings" : "Show Settings"}>
             <Button
               onClick={() => setShowSettings(!showSettings)}
@@ -659,7 +659,7 @@ const MarkerPlot = (props) => {
           >
             {props?.modality.map((x, i) => (
               <option key={x} value={x}>
-                {x}
+                {x === "" ? "unnamed" : x}
               </option>
             ))}
           </HTMLSelect>
@@ -676,9 +676,15 @@ const MarkerPlot = (props) => {
             props?.setSelectedMarkerAnnotation(nval?.currentTarget?.value);
           }}
         >
+          {console.log(Object.keys(annotationCols), annotationCols)}
           <optgroup label="Supplied">
-            {annotationCols
-              .filter((x) => !x.startsWith(code) && x !== "__batch__")
+            {Object.keys(annotationCols)
+              .filter(
+                (x) =>
+                  !annotationCols[x].name.startsWith(code) &&
+                  annotationCols[x].name !== "__batch__" &&
+                  annotationCols[x].truncated === false
+              )
               .map((x) => (
                 <option value={x} key={x}>
                   {x}
@@ -686,9 +692,19 @@ const MarkerPlot = (props) => {
               ))}
           </optgroup>
           <optgroup label="Computed">
-            {annotationCols
-              .filter((x) => x.startsWith(code) || x === "__batch__")
-              .filter((x) => !x.replace(`${code}::`, "").startsWith("QC"))
+            {Object.keys(annotationCols)
+              .filter(
+                (x) =>
+                  (annotationCols[x].name.startsWith(code) ||
+                    annotationCols[x].name === "__batch__") &&
+                  annotationCols[x].truncated === false
+              )
+              .filter(
+                (x) =>
+                  !annotationCols[x].name
+                    .replace(`${code}::`, "")
+                    .startsWith("QC")
+              )
               .map((x) => (
                 <option value={x} key={x}>
                   {x.replace(`${code}::`, "")}

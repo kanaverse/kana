@@ -218,6 +218,9 @@ export function AnalysisMode(props) {
   // which marker cluster is selected
   const [selectedCluster, setSelectedCluster] = useState(null);
 
+  // which dimplot cluster is selected
+  const [selectedDimPlotCluster, setSelectedDimPlotCluster] = useState(default_cluster);
+
   // which cluster is selected from markers table
   const [selectedMarkerAnnotation, setSelectedMarkerAnnotation] =
     useState(null);
@@ -855,7 +858,7 @@ export function AnalysisMode(props) {
           data = resp["data"],
           all = {};
 
-        let t_annots = [...annotationCols];
+        let t_annots = { ...annotationCols };
 
         for (const [group, gvals] of Object.entries(data)) {
           for (const [key, val] of Object.entries(gvals)) {
@@ -864,8 +867,14 @@ export function AnalysisMode(props) {
             if (min < all[key][0]) all[key][0] = min;
             if (max > all[key][1]) all[key][1] = max;
 
-            if (t_annots.indexOf(`${code}::QC::RNA_${key}`) == -1) {
-              t_annots.push(`${code}::QC::RNA_${key}`);
+            if (
+              Object.keys(t_annots).indexOf(`${code}::QC::RNA_${key}`) == -1
+            ) {
+              t_annots[`${code}::QC::RNA_${key}`] = {
+                name: `${code}::QC::RNA_${key}`,
+                truncated: true,
+                type: "continuous",
+              };
             }
           }
           ranges[group] = all;
@@ -883,7 +892,7 @@ export function AnalysisMode(props) {
           data = resp["data"],
           all = {};
 
-        let t_annots = [...annotationCols];
+        let t_annots = { ...annotationCols };
 
         for (const [group, gvals] of Object.entries(data)) {
           for (const [key, val] of Object.entries(gvals)) {
@@ -892,8 +901,14 @@ export function AnalysisMode(props) {
             if (min < all[key][0]) all[key][0] = min;
             if (max > all[key][1]) all[key][1] = max;
 
-            if (t_annots.indexOf(`${code}::QC::ADT_${key}`) == -1) {
-              t_annots.push(`${code}::QC::ADT_${key}`);
+            if (
+              Object.keys(t_annots).indexOf(`${code}::QC::ADT_${key}`) == -1
+            ) {
+              t_annots[`${code}::QC::ADT_${key}`] = {
+                name: `${code}::QC::ADT_${key}`,
+                truncated: true,
+                type: "continuous",
+              };
             }
           }
           ranges[group] = all;
@@ -923,7 +938,7 @@ export function AnalysisMode(props) {
           data = resp["data"],
           all = {};
 
-        let t_annots = [...annotationCols];
+        let t_annots = { ...annotationCols };
 
         for (const [group, gvals] of Object.entries(data)) {
           for (const [key, val] of Object.entries(gvals)) {
@@ -932,8 +947,14 @@ export function AnalysisMode(props) {
             if (min < all[key][0]) all[key][0] = min;
             if (max > all[key][1]) all[key][1] = max;
 
-            if (t_annots.indexOf(`${code}::QC::CRISPR${key}`) == -1) {
-              t_annots.push(`${code}::QC::CRISPR_${key}`);
+            if (
+              Object.keys(t_annots).indexOf(`${code}::QC::CRISPR${key}`) == -1
+            ) {
+              t_annots[`${code}::QC::CRISPR_${key}`] = {
+                name: `${code}::QC::CRISPR_${key}`,
+                truncated: true,
+                type: "continuous",
+              };
             }
           }
           ranges[group] = all;
@@ -983,9 +1004,13 @@ export function AnalysisMode(props) {
       setPcaVarExp({ ...pcaVarExp, CRISPR: resp["var_exp"] });
       setShowPCALoader(false);
     } else if (type === "choose_clustering_DATA") {
-      let t_annots = [...annotationCols];
-      if (t_annots.indexOf(default_cluster) == -1) {
-        t_annots.push(default_cluster);
+      let t_annots = { ...annotationCols };
+      if (Object.keys(t_annots).indexOf(default_cluster) == -1) {
+        t_annots[default_cluster] = {
+          name: default_cluster,
+          truncated: false,
+          type: "continuous",
+        };
         setAnnotationCols(t_annots);
       }
 
@@ -1689,6 +1714,7 @@ export function AnalysisMode(props) {
                         setSelectedFsetIndex={setSelectedFsetIndex}
                         featureScoreCache={featureScoreCache}
                         fsetEnirchDetails={fsetEnirchDetails}
+                        selectedDimPlotCluster={selectedDimPlotCluster}
                       />
                     )}
                   </div>

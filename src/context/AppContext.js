@@ -69,7 +69,7 @@ const AppContextProvider = ({ children }) => {
   });
 
   // all cell annotations available
-  const [annotationCols, setAnnotationCols] = useState([]);
+  const [annotationCols, setAnnotationCols] = useState({});
   const [annotationObj, setAnnotationObj] = useState({});
 
   // default params
