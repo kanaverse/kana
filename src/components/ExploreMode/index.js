@@ -953,7 +953,17 @@ export function ExplorerMode() {
                 intent={showPanel === "logs" ? "primary" : "none"}
               >
                 <div className="item-button-group">
-                  {!showMarkerLoader && !showDimPlotLoader ? (
+                  {exploreFiles?.files === null ? (
+                    <Button
+                      outlined={false}
+                      large={false}
+                      minimal={true}
+                      fill={true}
+                      icon={"console"}
+                      onClick={() => setShowLogs(true)}
+                      intent={showPanel === "logs" ? "primary" : "none"}
+                    ></Button>
+                  ) : !showMarkerLoader && !showDimPlotLoader ? (
                     <Button
                       outlined={false}
                       large={false}
