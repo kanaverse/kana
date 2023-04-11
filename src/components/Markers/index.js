@@ -426,42 +426,11 @@ const MarkerPlot = (props) => {
             minimal={false}
             vertical={false}
           >
-            <Popover2
-              popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-              hasBackdrop={false}
-              interactionKind="hover"
-              placement="left"
-              hoverOpenDelay={500}
-              modifiers={{
-                arrow: { enabled: true },
-                flip: { enabled: true },
-                preventOverflow: { enabled: true },
-              }}
-              content={
-                <Card
-                  style={{
-                    width: "450px",
-                  }}
-                  elevation={Elevation.ZERO}
-                >
-                  <p>
-                    This panel shows the marker genes that are upregulated in
-                    the cluster of interest compared to some or all of the other
-                    clusters. Hopefully, this allows us to assign some kind of
-                    biological meaning to each cluster based on the functions of
-                    the top markers. Several ranking schemes are available
-                    depending on how we choose to quantify the strength of the
-                    upregulation.
-                  </p>
-                </Card>
-              }
-            >
-              <Button
-                onClick={() => props?.setMarkersOrFsets("markers")}
-                intent={props?.markersORFSets === "markers" ? "primary" : ""}
-                text="Markers"
-              />
-            </Popover2>
+            <Button
+              onClick={() => props?.setMarkersOrFsets("markers")}
+              intent={props?.markersORFSets === "markers" ? "primary" : ""}
+              text="Markers"
+            />
 
             <Button
               onClick={() => props?.setMarkersOrFsets("featuresets")}
@@ -471,6 +440,39 @@ const MarkerPlot = (props) => {
           </ButtonGroup>
         </div>
         <div>
+          <Popover2
+            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+            hasBackdrop={false}
+            interactionKind="hover"
+            placement="left"
+            hoverOpenDelay={500}
+            modifiers={{
+              arrow: { enabled: true },
+              flip: { enabled: true },
+              preventOverflow: { enabled: true },
+            }}
+            content={
+              <Card
+                style={{
+                  width: "450px",
+                }}
+                elevation={Elevation.ZERO}
+              >
+                <p>
+                  This panel shows the marker genes that are upregulated in the
+                  cluster of interest compared to some or all of the other
+                  clusters. Hopefully, this allows us to assign some kind of
+                  biological meaning to each cluster based on the functions of
+                  the top markers. Several ranking schemes are available
+                  depending on how we choose to quantify the strength of the
+                  upregulation.
+                </p>
+              </Card>
+            }
+          >
+            <Button minimal={true} icon="info-sign" small={true} />
+          </Popover2>
+
           <Tooltip2 content={isExpanded ? "Maximize" : "Minimize"}>
             <Button
               onClick={() => setIsExpanded(!isExpanded)}

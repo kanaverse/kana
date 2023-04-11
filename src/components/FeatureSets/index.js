@@ -619,42 +619,11 @@ const FeatureSetEnrichment = (props) => {
             minimal={false}
             vertical={false}
           >
-            <Popover2
-              popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-              hasBackdrop={false}
-              interactionKind="hover"
-              placement="left"
-              hoverOpenDelay={500}
-              modifiers={{
-                arrow: { enabled: true },
-                flip: { enabled: true },
-                preventOverflow: { enabled: true },
-              }}
-              content={
-                <Card
-                  style={{
-                    width: "450px",
-                  }}
-                  elevation={Elevation.ZERO}
-                >
-                  <p>
-                    This panel shows the marker genes that are upregulated in
-                    the cluster of interest compared to some or all of the other
-                    clusters. Hopefully, this allows us to assign some kind of
-                    biological meaning to each cluster based on the functions of
-                    the top markers. Several ranking schemes are available
-                    depending on how we choose to quantify the strength of the
-                    upregulation.
-                  </p>
-                </Card>
-              }
-            >
-              <Button
-                onClick={() => props?.setMarkersOrFsets("markers")}
-                intent={props?.markersORFSets === "markers" ? "primary" : ""}
-                text="Markers"
-              />
-            </Popover2>
+            <Button
+              onClick={() => props?.setMarkersOrFsets("markers")}
+              intent={props?.markersORFSets === "markers" ? "primary" : ""}
+              text="Markers"
+            />
 
             <Button
               onClick={() => props?.setMarkersOrFsets("featuresets")}
@@ -664,6 +633,30 @@ const FeatureSetEnrichment = (props) => {
           </ButtonGroup>
         </div>
         <div>
+          <Popover2
+            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+            hasBackdrop={false}
+            interactionKind="hover"
+            placement="left"
+            hoverOpenDelay={500}
+            modifiers={{
+              arrow: { enabled: true },
+              flip: { enabled: true },
+              preventOverflow: { enabled: true },
+            }}
+            content={
+              <Card
+                style={{
+                  width: "450px",
+                }}
+                elevation={Elevation.ZERO}
+              >
+                <p>SOMETHING ABOUT GENE SETS</p>
+              </Card>
+            }
+          >
+            <Button minimal={true} icon="info-sign" small={true} />
+          </Popover2>
           <Tooltip2 content="Download markers as CSV">
             {render_download_link()}
           </Tooltip2>
@@ -731,7 +724,7 @@ const FeatureSetEnrichment = (props) => {
                   <li>
                     The area under the curve (
                     <strong>
-                    <em>AUC</em>
+                      <em>AUC</em>
                     </strong>
                     ) is the probability that a randomly chosen observation from
                     one cluster is greater than a randomly chosen observation
@@ -740,7 +733,7 @@ const FeatureSetEnrichment = (props) => {
                   <li>
                     The log-fold change (
                     <strong>
-                    <em>lfc</em>
+                      <em>lfc</em>
                     </strong>
                     ) is the difference in the mean log-expression between two
                     clusters.
@@ -748,7 +741,8 @@ const FeatureSetEnrichment = (props) => {
                   <li>
                     The
                     <strong>
-                    {" "}<em>Δ-detected</em>{" "}
+                      {" "}
+                      <em>Δ-detected</em>{" "}
                     </strong>
                     is the difference in the detected proportions between two
                     clusters.
