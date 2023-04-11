@@ -1240,6 +1240,7 @@ export function ExplorerMode() {
                     setClusHighlight={setClusHighlight}
                     colorByAnnotation={colorByAnnotation}
                     windowWidth={windowWidth}
+                    selectedDimPlotCluster={selectedDimPlotCluster}
                   />
                 </div>
               </SplitPane>

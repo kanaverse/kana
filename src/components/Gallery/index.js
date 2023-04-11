@@ -304,7 +304,7 @@ const Gallery = (props) => {
             color: colors,
             config: {
               embedding: x,
-              annotation: "clusters",
+              annotation: props?.selectedDimPlotCluster,
               highlight: null,
               gene: null,
             },
@@ -315,7 +315,7 @@ const Gallery = (props) => {
             color: colors,
             config: {
               embedding: x,
-              annotation: "clusters",
+              annotation: props?.selectedDimPlotCluster,
               highlight: null,
               gene: null,
             },
@@ -331,7 +331,7 @@ const Gallery = (props) => {
                 color: colors,
                 config: {
                   embedding: x,
-                  annotation: `${code}::clusters`,
+                  annotation: props?.selectedDimPlotCluster,
                   highlight: null,
                   gene: null,
                 },

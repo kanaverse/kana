@@ -64,7 +64,7 @@ const UDimPlot = (props) => {
 
       if (color.length != rdata.x.length) {
         console.error(
-          "colors don't match x and y coordinates, for ",
+          "colors don't match x and y coordinate length, for ",
           props?.data?.config?.embedding
         );
       } else {

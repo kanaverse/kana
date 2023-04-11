@@ -1833,6 +1833,7 @@ export function AnalysisMode(props) {
                     setClusHighlight={setClusHighlight}
                     colorByAnnotation={colorByAnnotation}
                     windowWidth={windowWidth}
+                    selectedDimPlotCluster={selectedDimPlotCluster}
                   />
                 </div>
               </SplitPane>
