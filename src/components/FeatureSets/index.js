@@ -723,7 +723,7 @@ const FeatureSetEnrichment = (props) => {
                 <ul>
                   <li>
                     <strong>
-                      <em>Cohen's d</em>
+                      <em>Cohen's d</em>{" "}
                     </strong>
                     is the ratio of the log-fold change to the average standard
                     deviation between two clusters.
@@ -731,7 +731,7 @@ const FeatureSetEnrichment = (props) => {
                   <li>
                     The area under the curve (
                     <strong>
-                      <em>AUC</em>
+                    <em>AUC</em>
                     </strong>
                     ) is the probability that a randomly chosen observation from
                     one cluster is greater than a randomly chosen observation
@@ -740,7 +740,7 @@ const FeatureSetEnrichment = (props) => {
                   <li>
                     The log-fold change (
                     <strong>
-                      <em>lfc</em>
+                    <em>lfc</em>
                     </strong>
                     ) is the difference in the mean log-expression between two
                     clusters.
@@ -748,7 +748,7 @@ const FeatureSetEnrichment = (props) => {
                   <li>
                     The
                     <strong>
-                      <em>Δ-detected</em>
+                    {" "}<em>Δ-detected</em>{" "}
                     </strong>
                     is the difference in the detected proportions between two
                     clusters.
@@ -762,7 +762,7 @@ const FeatureSetEnrichment = (props) => {
                 <ul>
                   <li>
                     <strong>
-                      <em>mean</em>
+                      <em>mean</em>{" "}
                     </strong>
                     uses the mean effect sizes from all pairwise comparisons.
                     This generally provides a good compromise between
@@ -770,7 +770,7 @@ const FeatureSetEnrichment = (props) => {
                   </li>
                   <li>
                     <strong>
-                      <em>min</em>
+                      <em>min</em>{" "}
                     </strong>
                     uses the minimum effect size from all pairwise comparisons.
                     This promotes feature sets that are exclusively expressed in
@@ -779,7 +779,7 @@ const FeatureSetEnrichment = (props) => {
                   </li>
                   <li>
                     <strong>
-                      <em>min-rank</em>
+                      <em>min-rank</em>{" "}
                     </strong>
                     ranks genes according to their best rank in each of the
                     individual pairwise comparisons. This is the most robust as
