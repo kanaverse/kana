@@ -56,9 +56,14 @@ export function ZippedADBCard({
 
       // set some defaults
       let tmpOptions = {};
-      tmpOptions["primaryMatrixName"] = preflight.all_assay_names[0];
-      tmpOptions["isPrimaryNormalized"] = true;
+      tmpOptions["primaryAssay"] = {};
+      tmpOptions["isPrimaryNormalized"] = {};
+      for (const [k, v] of Object.entries(preflight.modality_assay_names)) {
+        tmpOptions["primaryAssay"][k] = v[0];
+        tmpOptions["isPrimaryNormalized"][k] = true;
+      }
       tmpOptions["reducedDimensionNames"] = null;
+      setOptions(tmpOptions);
 
       setOptions(tmpOptions);
     }
@@ -115,33 +120,59 @@ export function ZippedADBCard({
             <div>
               <Label className="row-input">
                 <Text>
-                  <span>Primary Assay</span>
+                  <span>Choose a primary assay across modalities</span>
                 </Text>
-                <HTMLSelect
-                  defaultValue={dsMeta.all_assay_names[0]}
-                  onChange={(e) => {
-                    let tmpOptions = { ...options };
-                    tmpOptions["primaryMatrixName"] = e.target.value;
-                    setOptions(tmpOptions);
-                  }}
-                >
-                  {dsMeta.all_assay_names.map((x, i) => (
-                    <option key={i} value={x}>
-                      {x}
-                    </option>
-                  ))}
-                </HTMLSelect>
-              </Label>
-              <Label className="row-input">
-                <Switch
-                  checked={options["isPrimaryNormalized"]}
-                  label="Is Primary Assay Normalized?"
-                  onChange={(e) => {
-                    let tmpOptions = { ...options };
-                    tmpOptions["isPrimaryNormalized"] = e.target.checked;
-                    setOptions(tmpOptions);
-                  }}
-                />
+                {Object.keys(dsMeta.modality_assay_names).map((x, i) => {
+                  return (
+                    <div key={i}>
+                      <Label className="row-input">
+                        <Text>
+                          <span>
+                            Modality:{" "}
+                            {x === "" ? <em>"Unknown Modality"</em> : x}
+                          </span>
+                        </Text>
+                        <HTMLSelect
+                          defaultValue={options["primaryAssay"][x]}
+                          onChange={(e) => {
+                            let tmpOptions = { ...options };
+                            if (e.target.value === "none") {
+                              delete tmpOptions["primaryAssay"][x];
+                            } else {
+                              tmpOptions["primaryAssay"][x] = e.target.value;
+                            }
+                            setOptions(tmpOptions);
+                          }}
+                        >
+                          <option key={i} value="none">
+                            None
+                          </option>
+                          {dsMeta.modality_assay_names[x].map((ax, i) => (
+                            <option key={i} value={ax}>
+                              {ax}
+                            </option>
+                          ))}
+                        </HTMLSelect>
+                      </Label>
+                      {options["primaryAssay"][x] &&
+                        options["primaryAssay"][x] !== "none" && (
+                          <Label className="row-input">
+                            <Switch
+                              checked={options["isPrimaryNormalized"]}
+                              label="Is this assay normalized?"
+                              onChange={(e) => {
+                                let tmpOptions = { ...options };
+                                tmpOptions["isPrimaryNormalized"] =
+                                  e.target.checked;
+                                setOptions(tmpOptions);
+                              }}
+                            />
+                          </Label>
+                        )}
+                      <Divider />
+                    </div>
+                  );
+                })}
               </Label>
             </div>
           )}
