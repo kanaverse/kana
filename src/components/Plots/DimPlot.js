@@ -843,53 +843,55 @@ const DimPlot = (props) => {
               >
                 <Label style={{ marginBottom: "0" }}>
                   Choose annotation
-                  <HTMLSelect
-                    elementRef={selector}
-                    large={false}
-                    minimal={true}
-                    defaultValue={`${code}::CLUSTERS`}
-                    onChange={(nval) => {
-                      props?.setColorByAnnotation(nval?.currentTarget?.value);
-                      setShowToggleFactors(false);
-                      setFactorsMinMax(null);
-                      props?.setClusHighlight(null);
-                      props?.setHighlightPoints(null);
-                      props?.setClusHighlightLabel(null);
+                  {props?.selectedDimPlotCluster && (
+                    <HTMLSelect
+                      elementRef={selector}
+                      large={false}
+                      minimal={true}
+                      defaultValue={props?.selectedDimPlotCluster}
+                      onChange={(nval) => {
+                        props?.setColorByAnnotation(nval?.currentTarget?.value);
+                        setShowToggleFactors(false);
+                        setFactorsMinMax(null);
+                        props?.setClusHighlight(null);
+                        props?.setHighlightPoints(null);
+                        props?.setClusHighlightLabel(null);
 
-                      let state = factorState[props?.colorByAnnotation];
-                      if (state == undefined || state == null) {
-                        state = true;
-                      }
-                      setToggleFactorsGradient(state);
-                    }}
-                  >
-                    <optgroup label="Supplied">
-                      {Object.keys(annotationCols)
-                        .filter(
-                          (x) =>
-                            !annotationCols[x].name.startsWith(code) &&
-                            annotationCols[x].name !== "__batch__"
-                        )
-                        .map((x) => (
-                          <option value={x} key={x}>
-                            {x}
-                          </option>
-                        ))}
-                    </optgroup>
-                    <optgroup label="Computed">
-                      {Object.keys(annotationCols)
-                        .filter(
-                          (x) =>
-                            annotationCols[x].name.startsWith(code) ||
-                            annotationCols[x].name === "__batch__"
-                        )
-                        .map((x) => (
-                          <option value={x} key={x}>
-                            {x.replace(`${code}::`, "")}
-                          </option>
-                        ))}
-                    </optgroup>
-                  </HTMLSelect>
+                        let state = factorState[props?.colorByAnnotation];
+                        if (state == undefined || state == null) {
+                          state = true;
+                        }
+                        setToggleFactorsGradient(state);
+                      }}
+                    >
+                      <optgroup label="Supplied">
+                        {Object.keys(annotationCols)
+                          .filter(
+                            (x) =>
+                              !annotationCols[x].name.startsWith(code) &&
+                              annotationCols[x].name !== "__batch__"
+                          )
+                          .map((x) => (
+                            <option value={x} key={x}>
+                              {x}
+                            </option>
+                          ))}
+                      </optgroup>
+                      <optgroup label="Computed">
+                        {Object.keys(annotationCols)
+                          .filter(
+                            (x) =>
+                              annotationCols[x].name.startsWith(code) ||
+                              annotationCols[x].name === "__batch__"
+                          )
+                          .map((x) => (
+                            <option value={x} key={x}>
+                              {x.replace(`${code}::`, "")}
+                            </option>
+                          ))}
+                      </optgroup>
+                    </HTMLSelect>
+                  )}
                 </Label>
                 {showToggleFactors && (
                   <>

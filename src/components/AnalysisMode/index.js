@@ -218,6 +218,9 @@ export function AnalysisMode(props) {
   // which marker cluster is selected
   const [selectedCluster, setSelectedCluster] = useState(null);
 
+  // which dimplot cluster is selected
+  const [selectedDimPlotCluster, setSelectedDimPlotCluster] = useState(default_cluster);
+
   // which cluster is selected from markers table
   const [selectedMarkerAnnotation, setSelectedMarkerAnnotation] =
     useState(null);
@@ -1711,6 +1714,7 @@ export function AnalysisMode(props) {
                         setSelectedFsetIndex={setSelectedFsetIndex}
                         featureScoreCache={featureScoreCache}
                         fsetEnirchDetails={fsetEnirchDetails}
+                        selectedDimPlotCluster={selectedDimPlotCluster}
                       />
                     )}
                   </div>

@@ -200,6 +200,9 @@ export function ExplorerMode() {
   // which cluster is selected from markers table
   const [selectedCluster, setSelectedCluster] = useState(null);
 
+  // which dimplot cluster is selected
+  const [selectedDimPlotCluster, setSelectedDimPlotCluster] = useState(null);
+
   // which cluster is selected from markers table
   const [selectedMarkerAnnotation, setSelectedMarkerAnnotation] =
     useState(null);
@@ -664,6 +667,7 @@ export function ExplorerMode() {
           def_anno = "cluster";
         }
 
+        setSelectedDimPlotCluster(def_anno);
         setSelectedMarkerAnnotation(def_anno);
         setReqAnnotation(def_anno);
       }
@@ -1116,6 +1120,7 @@ export function ExplorerMode() {
                         setSelectedFsetIndex={setSelectedFsetIndex}
                         featureScoreCache={featureScoreCache}
                         fsetEnirchDetails={fsetEnirchDetails}
+                        selectedDimPlotCluster={selectedDimPlotCluster}
                       />
                     )}
                   </div>
