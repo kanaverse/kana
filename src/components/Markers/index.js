@@ -659,7 +659,7 @@ const MarkerPlot = (props) => {
           >
             {props?.modality.map((x, i) => (
               <option key={x} value={x}>
-                {x}
+                {x === "" ? "unnamed" : x}
               </option>
             ))}
           </HTMLSelect>
