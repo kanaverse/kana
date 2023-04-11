@@ -61,6 +61,8 @@ const scranWorker = new Worker(
   { type: "module" }
 );
 
+let logs = [];
+
 export function ExplorerMode() {
   // true until wasm is initialized
   const [loading, setLoading] = useState(true);
@@ -82,7 +84,7 @@ export function ExplorerMode() {
   const [exportState, setExportState] = useState(false);
 
   // Logs
-  const [logs, setLogs] = useState([]);
+  // const [logs, setLogs] = useState([]);
   // show logs drawer
   const [showLogs, setShowLogs] = useState(false);
 
@@ -547,17 +549,17 @@ export function ExplorerMode() {
   }, [markersORFSets]);
 
   function add_to_logs(type, msg, status) {
-    let tmp = [...logs];
+    // let tmp = [...logs];
     let d = new Date();
-    tmp.push([type, d.toLocaleTimeString(), msg, status]);
+    logs.push([type, d.toLocaleTimeString(), msg, status]);
 
-    setLogs(tmp);
+    // setLogs(tmp);
   }
 
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    console.log("ON EXPLORE MAIN::RCV::", payload);
+    // console.log("ON EXPLORE MAIN::RCV::", payload);
 
     // process any error messages
     if (payload) {
@@ -780,7 +782,7 @@ export function ExplorerMode() {
       setFsetGeneIndxCache(tmp);
       setReqFsetGeneIndex(null);
     } else {
-      console.log("unknown msg type", payload);
+      // console.info("unknown msg type", payload);
     }
   };
 

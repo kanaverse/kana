@@ -357,7 +357,6 @@ const FeatureSetEnrichment = (props) => {
   }, [prosRecords, searchInput, fsetFilter]);
 
   const render_row_info = (row) => {
-    console.log(row);
     return (
       <>
         <span className="fsetenrich-title">

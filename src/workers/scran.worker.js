@@ -220,6 +220,7 @@ async function postStepSummary(step) {
       postSuccess(step, output);
     }
   } catch (err) {
+    console.error(err);
     postError(step, err, true);
   }
 }
@@ -283,7 +284,7 @@ var loaded;
 onmessage = function (msg) {
   const { type, payload } = msg.data;
 
-  console.log("WORKER::RCV::", type, payload);
+  // console.log("WORKER::RCV::", type, payload);
 
   let fatal = false;
   if (type == "INIT") {
@@ -346,7 +347,8 @@ onmessage = function (msg) {
         resp: ehub_ids,
         msg: "Success: ExperimentHub initialized",
       });
-    } catch {
+    } catch (err) {
+      console.error(err);
       postMessage({
         type: "ExperimentHub_ERROR",
         msg: "Error: Cannot access datasets in ExperimentHub",
@@ -1156,6 +1158,7 @@ onmessage = function (msg) {
         postError(type, err, fatal);
       });
   } else {
+    console.error(`Type: ${type} not defined`);
     postError(type, `Type: ${type} not defined`, fatal);
   }
 };

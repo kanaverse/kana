@@ -678,7 +678,6 @@ const MarkerPlot = (props) => {
             props?.setSelectedMarkerAnnotation(nval?.currentTarget?.value);
           }}
         >
-          {console.log(Object.keys(annotationCols), annotationCols)}
           <optgroup label="Supplied">
             {Object.keys(annotationCols)
               .filter(

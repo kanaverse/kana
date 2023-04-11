@@ -166,7 +166,7 @@ var loaded;
 onmessage = function (msg) {
   const { type, payload } = msg.data;
 
-  console.log("EXPLORE WORKER::RCV::", type, payload);
+  // console.log("EXPLORE WORKER::RCV::", type, payload);
 
   let fatal = false;
   if (type == "INIT") {

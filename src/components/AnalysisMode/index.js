@@ -63,6 +63,8 @@ const scranWorker = new Worker(
   { type: "module" }
 );
 
+let logs = [];
+
 export function AnalysisMode(props) {
   // true until wasm is initialized
   const [loading, setLoading] = useState(true);
@@ -86,7 +88,7 @@ export function AnalysisMode(props) {
   const [exportRDSState, setExportRDSState] = useState(false);
 
   // Logs
-  const [logs, setLogs] = useState([]);
+  // const [logs, setLogs] = useState([]);
   // show logs drawer
   const [showLogs, setShowLogs] = useState(false);
 
@@ -219,7 +221,8 @@ export function AnalysisMode(props) {
   const [selectedCluster, setSelectedCluster] = useState(null);
 
   // which dimplot cluster is selected
-  const [selectedDimPlotCluster, setSelectedDimPlotCluster] = useState(default_cluster);
+  const [selectedDimPlotCluster, setSelectedDimPlotCluster] =
+    useState(default_cluster);
 
   // which cluster is selected from markers table
   const [selectedMarkerAnnotation, setSelectedMarkerAnnotation] =
@@ -735,17 +738,17 @@ export function AnalysisMode(props) {
   }, [loadZiesel, wasmInitialized]);
 
   function add_to_logs(type, msg, status) {
-    let tmp = [...logs];
+    // let tmp = [...logs];
     let d = new Date();
-    tmp.push([type, d.toLocaleTimeString(), msg, status]);
+    logs.push([type, d.toLocaleTimeString(), msg, status]);
 
-    setLogs(tmp);
+    // setLogs(tmp);
   }
 
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    console.log("ON MAIN::RCV::", payload);
+    // console.log("ON MAIN::RCV::", payload);
 
     // process any error messages
     if (payload) {
@@ -1211,7 +1214,7 @@ export function AnalysisMode(props) {
       setFsetGeneIndxCache(tmp);
       setReqFsetGeneIndex(null);
     } else {
-      console.log("unknown msg type", payload);
+      // console.info("unknown msg type", payload);
     }
   };
 
