@@ -10,7 +10,7 @@ import {
   fetchStepSummary,
 } from "./helpers.js";
 import { code } from "../utils/utils.js";
-import { rank } from "d3";
+import * as bioc from "bioconductor";
 /***************************************/
 
 // Evade CORS problems and enable caching.
@@ -74,7 +74,9 @@ function createDataset(args, setOpts = false) {
 function summarizeResult(summary, args) {
   let cells_summary = {};
   for (const k of summary.cells.columnNames()) {
-    cells_summary[k] = bakana.summarizeArray(summary.cells.column(k));
+    let kcol = summary.cells.column(k);
+    if (Array.isArray(kcol) || ArrayBuffer.isView(kcol))
+      cells_summary[k] = bakana.summarizeArray(kcol);
   }
   let tmp_meta = {
     cells: {
@@ -83,7 +85,10 @@ function summarizeResult(summary, args) {
     },
   };
 
-  if (args.format === "SummarizedExperiment") {
+  if (
+    args.format === "SummarizedExperiment" ||
+    args.format === "ZippedArtifactdb"
+  ) {
     tmp_meta["modality_features"] = {};
     if ("modality_features" in summary) {
       for (const [k, v] of Object.entries(summary.modality_features)) {
@@ -117,7 +122,10 @@ function summarizeResult(summary, args) {
 
   if (args.format === "H5AD") {
     tmp_meta["all_assay_names"] = summary.all_assay_names;
-  } else if (args.format === "SummarizedExperiment") {
+  } else if (
+    args.format === "SummarizedExperiment" ||
+    args.format === "ZippedArtifactdb"
+  ) {
     tmp_meta["modality_assay_names"] = summary.modality_assay_names;
   }
 
@@ -141,6 +149,10 @@ function getMarkerStandAloneForAnnot(annotation, annotation_vec) {
 }
 
 const getAnnotation = (annotation) => {
+  if (annotation.indexOf(":::") !== -1) {
+    let splits = annotation.split(":::");
+    return dataset.cells.column(splits[0]).column(splits[1]);
+  }
   return dataset.cells.column(annotation);
 };
 
@@ -224,7 +236,7 @@ onmessage = function (msg) {
           }
 
           for (const [k, v] of Object.entries(current)) {
-            dataset = v.load();
+            dataset = await v.load();
 
             let finput = files[k];
 
@@ -238,8 +250,31 @@ onmessage = function (msg) {
 
             let step_inputs = "inputs";
             postAttempt(step_inputs);
+
+            // extract cell annotations
+            let annotation_keys = {};
+            for (const k of dataset.cells.columnNames()) {
+              let kcol = dataset.cells.column(k);
+              if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
+                const ksumm = bakana.summarizeArray(kcol);
+                if (ksumm.type === "continuous") {
+                  annotation_keys[k] = {
+                    name: k,
+                    truncated: new Set(kcol).size >= 50,
+                    type: ksumm.type,
+                  };
+                } else if (ksumm.type === "categorical") {
+                  annotation_keys[k] = {
+                    name: k,
+                    truncated: ksumm.truncated === true,
+                    type: ksumm.type,
+                  };
+                }
+              }
+            }
+
             let step_inputs_resp = {
-              annotations: dataset.cells.columnNames(),
+              annotations: annotation_keys,
               genes: {},
               num_cells: dataset.cells.numberOfRows(),
               num_genes: {},
@@ -512,7 +547,8 @@ onmessage = function (msg) {
         let annot = payload.annotation;
         let vec, output;
 
-        vec = dataset.cells.column(annot);
+        vec = getAnnotation(annot);
+        // dataset.cells.column(annot);
 
         if (ArrayBuffer.isView(vec)) {
           output = {

@@ -1,4 +1,4 @@
-import * as bioc from "bioconductor";
+import * as bakana from "bakana";
 
 export function extractBuffers(object, store) {
   if (!object) {
@@ -111,11 +111,33 @@ export async function fetchStepSummary(state, step) {
       gene_info[k] = info;
     }
 
+    let cell_info = {};
+    for (const c of state[step].fetchCellAnnotations().columnNames()) {
+      let col = state[step].fetchCellAnnotations().column(c);
+
+      if (Array.isArray(col) || ArrayBuffer.isView(col)) {
+        const ksumm = bakana.summarizeArray(col);
+        if (ksumm.type === "continuous") {
+          cell_info[c] = {
+            name: c,
+            truncated: new Set(col).size >= 50,
+            type: ksumm.type,
+          };
+        } else if (ksumm.type === "categorical") {
+          cell_info[c] = {
+            name: c,
+            truncated: ksumm.truncated === true,
+            type: ksumm.type,
+          };
+        }
+      }
+    }
+
     output = {
       num_cells: state[step].fetchCountMatrix().numberOfColumns(),
       num_genes: ngenes,
       genes: gene_info,
-      annotations: state[step].fetchCellAnnotations().columnNames(),
+      annotations: cell_info,
     };
 
     return output;

@@ -634,8 +634,16 @@ export function ExplorerMode() {
 
       if (resp?.annotations) {
         setAnnotationCols(resp.annotations);
-        setColorByAnnotation(resp.annotations[0]);
-        setSelectedFsetAnnotation(resp.annotations[0]);
+
+        let def_anno = Object.keys(resp.annotations)[0];
+        if (Object.keys(resp.annotations).indexOf("clusters") !== -1) {
+          def_anno = "clusters";
+        } else if (Object.keys(resp.annotations).indexOf("cluster") !== -1) {
+          def_anno = "cluster";
+        }
+
+        setColorByAnnotation(def_anno);
+        setSelectedFsetAnnotation(def_anno);
       }
 
       let pmods = Object.keys(resp.genes);
@@ -646,17 +654,34 @@ export function ExplorerMode() {
         setSelectedModality(tmodality);
       }
 
-      setSelectedMarkerAnnotation(resp.annotations[0]);
-      setReqAnnotation(resp.annotations[0]);
+      if (resp?.annotations) {
+        setAnnotationCols(resp.annotations);
+
+        let def_anno = Object.keys(resp.annotations)[0];
+        if (Object.keys(resp.annotations).indexOf("clusters") !== -1) {
+          def_anno = "clusters";
+        } else if (Object.keys(resp.annotations).indexOf("cluster") !== -1) {
+          def_anno = "cluster";
+        }
+
+        setSelectedMarkerAnnotation(def_anno);
+        setReqAnnotation(def_anno);
+      }
       // setSelectedCluster(resp.annotations[0]);
       setSelectedFsetModality(tmodality);
 
       setShowNClusLoader(false);
       setShowMarkerLoader(false);
     } else if (type === "choose_clustering_DATA") {
-      setSelectedMarkerAnnotation(annotationCols[0]);
-      setReqAnnotation(annotationCols[0]);
-      setSelectedCluster(annotationCols[0]);
+      let def_anno = Object.keys(annotationCols)[0];
+      if (Object.keys(annotationCols).indexOf("clusters") !== -1) {
+        def_anno = "clusters";
+      } else if (Object.keys(annotationCols).indexOf("cluster") !== -1) {
+        def_anno = "cluster";
+      }
+      setSelectedMarkerAnnotation(def_anno);
+      setReqAnnotation(def_anno);
+      setSelectedCluster(def_anno);
     } else if (type === "marker_detection_START") {
       setSelectedCluster(null);
       setSelectedClusterIndex([]);
@@ -1102,35 +1127,38 @@ export function ExplorerMode() {
                           : "results-markers"
                       }
                     >
-                      {annotationCols.length > 0 && selectedClusterSummary && (
-                        <MarkerPlot
-                          selectedClusterSummary={selectedClusterSummary}
-                          setSelectedClusterSummary={setSelectedClusterSummary}
-                          selectedClusterIndex={selectedClusterIndex}
-                          selectedCluster={selectedCluster}
-                          setSelectedCluster={setSelectedCluster}
-                          selectedVSCluster={selectedVSCluster}
-                          setSelectedVSCluster={setSelectedVSCluster}
-                          setClusterRank={setClusterRank}
-                          customSelection={customSelection}
-                          setGene={setGene}
-                          gene={gene}
-                          setReqGene={setReqGene}
-                          modality={modality}
-                          selectedModality={selectedModality}
-                          setSelectedModality={setSelectedModality}
-                          setMarkersWidth={setMarkersWidth}
-                          markersWidth={markersWidth}
-                          windowWidth={windowWidth}
-                          setReqAnnotation={setReqAnnotation}
-                          selectedMarkerAnnotation={selectedMarkerAnnotation}
-                          setSelectedMarkerAnnotation={
-                            setSelectedMarkerAnnotation
-                          }
-                          setMarkersOrFsets={setMarkersOrFsets}
-                          markersORFSets={markersORFSets}
-                        />
-                      )}
+                      {Object.keys(annotationCols).length > 0 &&
+                        selectedClusterSummary && (
+                          <MarkerPlot
+                            selectedClusterSummary={selectedClusterSummary}
+                            setSelectedClusterSummary={
+                              setSelectedClusterSummary
+                            }
+                            selectedClusterIndex={selectedClusterIndex}
+                            selectedCluster={selectedCluster}
+                            setSelectedCluster={setSelectedCluster}
+                            selectedVSCluster={selectedVSCluster}
+                            setSelectedVSCluster={setSelectedVSCluster}
+                            setClusterRank={setClusterRank}
+                            customSelection={customSelection}
+                            setGene={setGene}
+                            gene={gene}
+                            setReqGene={setReqGene}
+                            modality={modality}
+                            selectedModality={selectedModality}
+                            setSelectedModality={setSelectedModality}
+                            setMarkersWidth={setMarkersWidth}
+                            markersWidth={markersWidth}
+                            windowWidth={windowWidth}
+                            setReqAnnotation={setReqAnnotation}
+                            selectedMarkerAnnotation={selectedMarkerAnnotation}
+                            setSelectedMarkerAnnotation={
+                              setSelectedMarkerAnnotation
+                            }
+                            setMarkersOrFsets={setMarkersOrFsets}
+                            markersORFSets={markersORFSets}
+                          />
+                        )}
                     </div>
                   )}
                   {markersORFSets === "featuresets" && (

@@ -864,8 +864,12 @@ const DimPlot = (props) => {
                     }}
                   >
                     <optgroup label="Supplied">
-                      {annotationCols
-                        .filter((x) => !x.startsWith(code) && x !== "__batch__")
+                      {Object.keys(annotationCols)
+                        .filter(
+                          (x) =>
+                            !annotationCols[x].name.startsWith(code) &&
+                            annotationCols[x].name !== "__batch__"
+                        )
                         .map((x) => (
                           <option value={x} key={x}>
                             {x}
@@ -873,8 +877,12 @@ const DimPlot = (props) => {
                         ))}
                     </optgroup>
                     <optgroup label="Computed">
-                      {annotationCols
-                        .filter((x) => x.startsWith(code) || x === "__batch__")
+                      {Object.keys(annotationCols)
+                        .filter(
+                          (x) =>
+                            annotationCols[x].name.startsWith(code) ||
+                            annotationCols[x].name === "__batch__"
+                        )
                         .map((x) => (
                           <option value={x} key={x}>
                             {x.replace(`${code}::`, "")}

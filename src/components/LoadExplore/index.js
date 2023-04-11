@@ -239,7 +239,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                                 zipEntry.name.endsWith("/") &&
                                 zipEntry.name.split("/").length == 2
                               ) {
-                                se_tld.push(zipEntry.name);
+                                se_tld.push(zipEntry.name.split("/")[0]);
                               }
                             });
 

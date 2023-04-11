@@ -898,8 +898,13 @@ const FeatureSetEnrichment = (props) => {
             }}
           >
             <optgroup label="Supplied">
-              {annotationCols
-                .filter((x) => !x.startsWith(code) && x !== "__batch__")
+              {Object.keys(annotationCols)
+                .filter(
+                  (x, i) =>
+                    !annotationCols[x].name.startsWith(code) &&
+                    annotationCols[x].name !== "__batch__" &&
+                    annotationCols[x].truncated === false
+                )
                 .map((x) => (
                   <option value={x} key={x}>
                     {x}
@@ -907,9 +912,19 @@ const FeatureSetEnrichment = (props) => {
                 ))}
             </optgroup>
             <optgroup label="Computed">
-              {annotationCols
-                .filter((x) => x.startsWith(code) || x === "__batch__")
-                .filter((x) => !x.replace(`${code}::`, "").startsWith("QC"))
+              {Object.keys(annotationCols)
+                .filter(
+                  (x) =>
+                    (annotationCols[x].name.startsWith(code) ||
+                      annotationCols[x].name === "__batch__") &&
+                    annotationCols[x].truncated === false
+                )
+                .filter(
+                  (x) =>
+                    !annotationCols[x].name
+                      .replace(`${code}::`, "")
+                      .startsWith("QC")
+                )
                 .map((x) => (
                   <option value={x} key={x}>
                     {x.replace(`${code}::`, "")}
