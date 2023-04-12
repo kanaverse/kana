@@ -1183,23 +1183,17 @@ const DimPlot = (props) => {
                   </div>
                   <div className="dim-range-slider">
                     <RangeSlider
-                      min={Math.round(exprMinMax[0])}
-                      max={Math.round(exprMinMax[1])}
+                      min={exprMinMax[0]}
+                      max={exprMinMax[1]}
                       stepSize={Math.max(
-                        Math.round(exprMinMax[1] - exprMinMax[0]) / 10,
-                        0.01
+                        Math.round(exprMinMax[1] - exprMinMax[0]) / 50,
+                        0.1
                       )}
-                      labelValues={[
-                        Math.round(exprMinMax[0]),
-                        Math.round(exprMinMax[1]),
-                      ]}
+                      labelValues={exprMinMax}
                       onChange={(range) => {
                         setSliderMinMax(range);
                       }}
-                      value={[
-                        Math.round(sliderMinMax[0]),
-                        Math.round(sliderMinMax[1]),
-                      ]}
+                      value={sliderMinMax}
                       vertical={false}
                     />
                   </div>
@@ -1260,20 +1254,14 @@ const DimPlot = (props) => {
                 </div>
                 <div className="dim-range-slider">
                   <RangeSlider
-                    min={Math.round(exprMinMax[0])}
-                    max={Math.round(exprMinMax[1])}
+                    min={exprMinMax[0]}
+                    max={exprMinMax[1]}
                     stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 10}
-                    labelValues={[
-                      Math.round(exprMinMax[0]),
-                      Math.round(exprMinMax[1]),
-                    ]}
+                    labelValues={exprMinMax}
                     onChange={(range) => {
                       setSliderMinMax(range);
                     }}
-                    value={[
-                      Math.round(sliderMinMax[0]),
-                      Math.round(sliderMinMax[1]),
-                    ]}
+                    value={sliderMinMax}
                     vertical={false}
                   />
                 </div>
