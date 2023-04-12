@@ -406,7 +406,7 @@ const FeatureSetEnrichment = (props) => {
                     <th scope="col">
                       {row.name}:({row.size} genes)
                     </th>
-                    <th scope="col">This feature set</th>
+                    <th scope="col">This gene set</th>
                   </tr>
                   <tr>
                     <th scope="row">Pvalue</th>
@@ -650,7 +650,11 @@ const FeatureSetEnrichment = (props) => {
                 }}
                 elevation={Elevation.ZERO}
               >
-                <p>SOMETHING ABOUT GENE SETS</p>
+                <p>
+                  This panel shows the gene sets that are most overrepresented in the top set of markers for any given cluster or comparison.
+                  Each gene set typically corresponds to some kind of biological process, pathway or activity,
+                  and can be used to concisely summarize the behavior of a cluster with respect to the rest of the cell population.
+                </p>
               </Card>
             }
           >
@@ -709,78 +713,10 @@ const FeatureSetEnrichment = (props) => {
               >
                 <p>
                   Choose the effect size and summary statistic to use for
-                  ranking feature sets. For each gene, effect sizes are computed
-                  by pairwise comparisons between clusters:
+                  ranking markers. This is used to determine the top markers
+                  to check for gene set enrichment. Check out the corresponding
+                  parameter in the marker table for more details.
                 </p>
-                <ul>
-                  <li>
-                    <strong>
-                      <em>Cohen's d</em>{" "}
-                    </strong>
-                    is the ratio of the log-fold change to the average standard
-                    deviation between two clusters.
-                  </li>
-                  <li>
-                    The area under the curve (
-                    <strong>
-                      <em>AUC</em>
-                    </strong>
-                    ) is the probability that a randomly chosen observation from
-                    one cluster is greater than a randomly chosen observation
-                    from another cluster.
-                  </li>
-                  <li>
-                    The log-fold change (
-                    <strong>
-                      <em>lfc</em>
-                    </strong>
-                    ) is the difference in the mean log-expression between two
-                    clusters.
-                  </li>
-                  <li>
-                    The
-                    <strong>
-                      {" "}
-                      <em>Δ-detected</em>{" "}
-                    </strong>
-                    is the difference in the detected proportions between two
-                    clusters.
-                  </li>
-                </ul>
-                <p>
-                  For each cluster, the effect sizes from the comparisons to all
-                  other clusters are summarized into a single statistic for
-                  ranking purposes:
-                </p>
-                <ul>
-                  <li>
-                    <strong>
-                      <em>mean</em>{" "}
-                    </strong>
-                    uses the mean effect sizes from all pairwise comparisons.
-                    This generally provides a good compromise between
-                    exclusitivity and robustness.
-                  </li>
-                  <li>
-                    <strong>
-                      <em>min</em>{" "}
-                    </strong>
-                    uses the minimum effect size from all pairwise comparisons.
-                    This promotes feature sets that are exclusively expressed in
-                    the chosen cluster, but will perform poorly if no such genes
-                    exist.
-                  </li>
-                  <li>
-                    <strong>
-                      <em>min-rank</em>{" "}
-                    </strong>
-                    ranks genes according to their best rank in each of the
-                    individual pairwise comparisons. This is the most robust as
-                    the combination of top-ranked genes will always be able to
-                    distinguish the chosen cluster from the other clusters, but
-                    may not give high rankings to exclusive genes.
-                  </li>
-                </ul>
               </Card>
             }
           >
@@ -1142,7 +1078,7 @@ const FeatureSetEnrichment = (props) => {
                 cursor: "help",
               }}
             >
-              Feature set
+              Gene set
             </span>
             {showPvalues && (
               <Popover2
@@ -1163,7 +1099,9 @@ const FeatureSetEnrichment = (props) => {
                     }}
                     elevation={Elevation.ZERO}
                   >
-                    <p>pvalues</p>
+                    <p>P-value for the overrepresentation of each gene set, 
+                      computed using a hypergeometric test.
+                    </p>
                     <p>
                       Use the color scale below to apply a filter on this
                       statistic.
@@ -1200,11 +1138,7 @@ const FeatureSetEnrichment = (props) => {
                     }}
                     elevation={Elevation.ZERO}
                   >
-                    <p>counts</p>
-                    <p>
-                      Use the color scale below to apply a filter on this
-                      statistic.
-                    </p>
+                    <p>Number of top markers in each gene set, relative to the size of the set.</p>
                   </Card>
                 }
               >
@@ -1563,7 +1497,7 @@ const FeatureSetEnrichment = (props) => {
               <InputGroup
                 leftIcon="search"
                 small={true}
-                placeholder="Search feature set..."
+                placeholder="Search gene sets..."
                 type="text"
                 onChange={(e) => setSearchInput(e.target.value)}
               />
@@ -1584,7 +1518,7 @@ const FeatureSetEnrichment = (props) => {
                         cursor: "help",
                       }}
                     >
-                      Feature set
+                      Gene set
                     </span>
                     {showPvalues && (
                       <Popover2
@@ -1619,7 +1553,7 @@ const FeatureSetEnrichment = (props) => {
                             cursor: "help",
                           }}
                         >
-                          pvalue
+                          p-value
                         </span>
                       </Popover2>
                     )}
@@ -1705,7 +1639,7 @@ const FeatureSetEnrichment = (props) => {
                 elevation={Elevation.ZERO}
               >
                 <p>
-                  Filter feature set summary according to various statistics.
+                  Filter gene sets according to various statistics.
                   For example, this can be used to apply a minimum threshold on
                   the{" "}
                   <strong>
@@ -1729,7 +1663,7 @@ const FeatureSetEnrichment = (props) => {
               intent={"primary"}
               onClick={() => setShowFilters(!showFilters)}
             >
-              Click to {showFilters ? "Hide filters" : "Filter feature sets"}
+              Click to {showFilters ? "Hide filters" : "Filter gene sets"}
             </Button>
           </Popover2>
           <Collapse isOpen={showFilters}>
