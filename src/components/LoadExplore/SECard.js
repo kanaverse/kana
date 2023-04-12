@@ -35,6 +35,8 @@ import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 
 import { MODALITIES } from "../../utils/utils";
 
+import { reportFeatureTypes } from "../NewAnalysis/utils.js";
+
 export function SECard({
   resource,
   index,
@@ -105,31 +107,22 @@ export function SECard({
       <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
-          <strong>{resource.format}</strong> contains{" "}
-          {dsMeta && dsMeta.cells.numberOfCells} cells and{" "}
-          {dsMeta && Object.keys(dsMeta.modality_features).length}{" "}
-          {dsMeta && Object.keys(dsMeta.modality_features).length > 1
-            ? "modalities"
-            : "modality"}
-          .
+          This <strong>RDS</strong> file contains{" "}
+          {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature
+          types: {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
         <Divider />
         <Collapse isOpen={collapse}>
           {dsMeta && (
             <div>
               <Label className="row-input">
-                <Text>
-                  <span>Choose a primary assay across modalities</span>
-                </Text>
                 {Object.keys(dsMeta.modality_assay_names).map((x, i) => {
                   return (
                     <div key={i}>
                       <Label className="row-input">
                         <Text>
-                          <span>
-                            Modality:{" "}
-                            {x === "" ? <em>"Unknown Modality"</em> : x}
-                          </span>
+                          <strong>Assay for feature type{" "}
+                          {x === "" ? <em><code>unnamed</code></em> : <code>{x}</code>}</strong>
                         </Text>
                         <HTMLSelect
                           defaultValue={options["primaryAssay"][x]}
@@ -158,7 +151,7 @@ export function SECard({
                           <Label className="row-input">
                             <Switch
                               checked={options["isPrimaryNormalized"]}
-                              label="Is this assay normalized?"
+                              label="Is this assay log-normalized?"
                               onChange={(e) => {
                                 let tmpOptions = { ...options };
                                 tmpOptions["isPrimaryNormalized"] =
