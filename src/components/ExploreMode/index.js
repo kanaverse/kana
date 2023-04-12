@@ -462,7 +462,7 @@ export function ExplorerMode() {
       });
       add_to_logs("info", `--- initFeaturesetEnrich sent ---`);
     }
-  }, [selectedFsetModality, selectedClusterSummary]);
+  }, [selectedFsetModality]);
 
   // compute feature set scores
   useEffect(() => {

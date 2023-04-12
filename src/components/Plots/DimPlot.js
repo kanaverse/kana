@@ -293,7 +293,7 @@ const DimPlot = (props) => {
             let index = props?.selectedClusterIndex?.[props?.gene];
             let expr = props?.selectedClusterSummary?.[index]?.expr;
 
-            if (Array.isArray(expr)) {
+            if (Array.isArray(expr) && gradient) {
               plot_colors[i] = "#" + gradient.colorAt(expr?.[i]);
               continue;
               // if we want per cell gradient
