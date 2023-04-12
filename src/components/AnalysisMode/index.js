@@ -578,9 +578,9 @@ export function AnalysisMode(props) {
       AppToaster.show({
         icon: "download",
         intent: "primary",
-        message: "Exporting analysis as RDS in the background",
+        message: "Exporting analysis as ZIP in the background",
       });
-      add_to_logs("info", `--- Export analysis state (to RDS) initialized ---`);
+      add_to_logs("info", `--- Export analysis state (to ZIP) initialized ---`);
     } else {
       inputFiles?.files &&
         AppToaster.show({
@@ -1415,7 +1415,7 @@ export function AnalysisMode(props) {
                           }}
                         />
                         <MenuItem
-                          text="Download analysis results"
+                          text="Download analysis results (as ZIP)"
                           icon="download"
                           disabled={selectedRedDim === null}
                           onClick={() => {
