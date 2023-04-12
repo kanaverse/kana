@@ -433,6 +433,7 @@ const MarkerPlot = (props) => {
             />
             {props?.selectedFsetModality !== null && (
               <Button
+                disabled={props?.selectedClusterSummary.length == 0}
                 onClick={() => props?.setMarkersOrFsets("featuresets")}
                 intent={
                   props?.markersORFSets === "featuresets" ? "primary" : ""
