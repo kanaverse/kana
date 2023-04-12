@@ -285,7 +285,10 @@ onmessage = function (msg) {
               step_inputs_resp["genes"][k] = {};
               step_inputs_resp["num_genes"][k] = v.numberOfRows();
               for (const col of v.columnNames()) {
-                step_inputs_resp["genes"][k][col] = v.column(col);
+                let kcol = v.column(col);
+                if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
+                  step_inputs_resp["genes"][k][col] = kcol;
+                }
               }
 
               if (v.rowNames()) {
