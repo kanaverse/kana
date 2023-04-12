@@ -359,128 +359,66 @@ const FeatureSetEnrichment = (props) => {
   const render_row_info = (row) => {
     return (
       <>
-        <span className="fsetenrich-title">
-          <strong style={{ color: "#147EB3", fontSize: "x-small" }}>
-            {row.name.match("^GO:[0-9]+$") ? (
+        <Popover2
+          popoverClassName={Classes.POPOVER_CONTENT_SIZING}
+          hasBackdrop={false}
+          interactionKind="hover"
+          placement="auto"
+          hoverOpenDelay={500}
+          modifiers={{
+            arrow: { enabled: true },
+            flip: { enabled: true },
+            preventOverflow: { enabled: true },
+          }}
+          content=<Card elevation={Elevation.ZERO}><strong>{row.name}</strong></Card>
+        >
+          <span className="fsetenrich-title">
+            <strong style={{ color: "#147EB3", fontSize: "x-small" }}>
+              {row.name.match("^GO:[0-9]+$") ? (
+                <a
+                  style={{ textDecoration: "underline dotted" }}
+                  href={"http://amigo.geneontology.org/amigo/term/" + row.name}
+                  target="_blank"
+                >
+                  {row.name}
+                </a>
+              ) : (
+                row.name
+              )}
+            </strong>
+            :{" "}
+            {row.description.match("^http[^ ]+$") ? (
               <a
                 style={{ textDecoration: "underline dotted" }}
-                href={"http://amigo.geneontology.org/amigo/term/" + row.name}
+                href={row.description}
                 target="_blank"
               >
-                {row.name}
+                link to description
               </a>
             ) : (
-              row.name
+              row.description
             )}
-          </strong>
-          :{" "}
-          {row.description.match("^http[^ ]+$") ? (
-            <a
-              style={{ textDecoration: "underline dotted" }}
-              href={row.description}
-              target="_blank"
-            >
-              link to description
-            </a>
-          ) : (
-            row.description
-          )}
-        </span>
+          </span>
+        </Popover2>
         {showPvalues && (
-          <Popover2
-            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-            hasBackdrop={false}
-            interactionKind="hover"
-            placement="auto"
-            hoverOpenDelay={500}
-            modifiers={{
-              arrow: { enabled: true },
-              flip: { enabled: true },
-              preventOverflow: { enabled: true },
+          <div
+            style={{
+              textAlign: "center",
             }}
-            content={
-              <Card elevation={Elevation.ZERO}>
-                <table>
-                  <tr>
-                    <td></td>
-                    <th scope="col">
-                      {row.name}:({row.size} genes)
-                    </th>
-                    <th scope="col">This gene set</th>
-                  </tr>
-                  <tr>
-                    <th scope="row">Pvalue</th>
-                    <td>{row.pvalue.toFixed(2)}</td>
-                    <td style={{ fontStyle: "italic" }}>
-                      ∈ [{pvalMinMax[0].toFixed(2)}, {pvalMinMax[1].toFixed(2)}]
-                    </td>
-                  </tr>
-                  <tr>
-                    <th scope="row">Count</th>
-                    <td>{row.count.toFixed(2)}</td>
-                    <td style={{ fontStyle: "italic" }}>
-                      ∈ [{countsMinMax[0].toFixed(2)},{" "}
-                      {countsMinMax[1].toFixed(2)}]
-                    </td>
-                  </tr>
-                </table>
-              </Card>
-            }
           >
-            <PvalCell score={row.pvalue} />
-          </Popover2>
+            <span>{row.pvalue.toExponential(1)}</span>
+          </div>
         )}
         {showCounts && (
-          <Popover2
-            popoverClassName={Classes.POPOVER_CONTENT_SIZING}
-            hasBackdrop={false}
-            interactionKind="hover"
-            placement="auto"
-            hoverOpenDelay={500}
-            modifiers={{
-              arrow: { enabled: true },
-              flip: { enabled: true },
-              preventOverflow: { enabled: true },
+          <div
+            style={{
+              textAlign: "center",
             }}
-            content={
-              <Card elevation={Elevation.ZERO}>
-                <table>
-                  <tr>
-                    <td></td>
-                    <th scope="col">
-                      {row.name}: ({row.size} genes)
-                    </th>
-                    <th scope="col">This feature set</th>
-                  </tr>
-                  <tr>
-                    <th scope="row">Count</th>
-                    <td>{row.count.toFixed(2)}</td>
-                    <td style={{ fontStyle: "italic" }}>
-                      ∈ [{countsMinMax[0].toFixed(2)},{" "}
-                      {countsMinMax[1].toFixed(2)}]
-                    </td>
-                  </tr>
-                  <tr>
-                    <th scope="row">Pvalue</th>
-                    <td>{row.pvalue.toFixed(2)}</td>
-                    <td style={{ fontStyle: "italic" }}>
-                      ∈ [{pvalMinMax[0].toFixed(2)}, {pvalMinMax[1].toFixed(2)}]
-                    </td>
-                  </tr>
-                </table>
-              </Card>
-            }
           >
-            <div
-              style={{
-                textAlign: "center",
-              }}
-            >
-              <span>
-                {row.count}/{row.size}
-              </span>
-            </div>
-          </Popover2>
+            <span>
+              {row.count}/{row.size}
+            </span>
+          </div>
         )}
         <div className="fsetenrich-row-action">
           <Tooltip2
@@ -1102,10 +1040,6 @@ const FeatureSetEnrichment = (props) => {
                     <p>P-value for the overrepresentation of each gene set, 
                       computed using a hypergeometric test.
                     </p>
-                    <p>
-                      Use the color scale below to apply a filter on this
-                      statistic.
-                    </p>
                   </Card>
                 }
               >
@@ -1539,10 +1473,8 @@ const FeatureSetEnrichment = (props) => {
                             }}
                             elevation={Elevation.ZERO}
                           >
-                            <p>pvalues</p>
-                            <p>
-                              Use the color scale below to apply a filter on
-                              this statistic.
+                            <p>P-value for the over-representation of each gene set among the top markers,
+                              computed using a hypergeometric test.
                             </p>
                           </Card>
                         }
@@ -1576,11 +1508,7 @@ const FeatureSetEnrichment = (props) => {
                             }}
                             elevation={Elevation.ZERO}
                           >
-                            <p>counts</p>
-                            <p>
-                              Use the color scale below to apply a filter on
-                              this statistic.
-                            </p>
+                            <p>Number of top markers in each gene set, relative to the size of the set.</p>
                           </Card>
                         }
                       >
