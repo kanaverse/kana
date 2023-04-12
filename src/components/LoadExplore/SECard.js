@@ -131,7 +131,7 @@ export function SECard({
                     }
                   }}
                 >
-                  <option value="none">None</option>
+                  <option value="none">--- no selection ---</option>
                   {Object.keys(dsMeta.modality_assay_names).map((x, i) => (
                     <option key={i} value={x}>
                       {x === "" ? (
@@ -174,7 +174,7 @@ export function SECard({
                             setOptions(tmpOptions);
                           }}
                         >
-                          <option value="none">None</option>
+                          <option value="none">--- no selection ---</option>
                           {dsMeta.modality_assay_names[x].map((ax, i) => (
                             <option key={i} value={ax}>
                               {ax}

@@ -217,7 +217,7 @@ export function H5AD({
                     }}
                   >
                     <option key="none" value="none">
-                      none
+                      --- no selection ---
                     </option>
                     {Object.keys(dsMeta.all_features.columns).map((x, i) => (
                       <option key={i} value={x}>
@@ -325,7 +325,7 @@ export function H5AD({
                               }
                             }}
                           >
-                            <option value="none">None</option>
+                            <option value="none">--- no selection ---</option>
                             {getAvailableModalities(mod).map((x, i) => (
                               <option key={i} value={x}>
                                 {x === "" ? <em>unnamed</em> : x}

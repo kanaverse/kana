@@ -386,6 +386,7 @@ onmessage = function (msg) {
             } else {
               current[k] = createDataset(v);
             }
+            current[k].setOptions(v.options);
           }
 
           // Cleaning out the preflight datasets that weren't used.

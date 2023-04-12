@@ -61,9 +61,11 @@ export function H5ADCard({
       tmpOptions["primaryMatrixName"] = preflight.all_assay_names[0];
       tmpOptions["isPrimaryNormalized"] = true;
       tmpOptions["reducedDimensionNames"] = null;
-      tmpOptions["featureTypeColumnName"] = Object.keys(
-        preflight.all_features.columns
-      )[0];
+      // tmpOptions["featureTypeColumnName"] = Object.keys(
+      //   preflight.all_features.columns
+      // )[0];
+
+      props?.setSelectedFsetModality("");
 
       setOptions(tmpOptions);
     }
@@ -116,34 +118,6 @@ export function H5ADCard({
             <div>
               <Label className="row-input">
                 <Text>
-                  <span>Choose RNA-seq modality for gene set enrichment</span>
-                </Text>
-                <HTMLSelect
-                  defaultValue="none"
-                  onChange={(e) => {
-                    if (e.target.value === "none") {
-                      props?.setSelectedFsetModality(null);
-                    } else {
-                      props?.setSelectedFsetModality(e.target.value);
-                    }
-                  }}
-                >
-                  <option value="none">None</option>
-                  {[""].map((x, i) => (
-                    <option key={i} value={x}>
-                      {x === "" ? (
-                        <em>
-                          <code>unnamed</code>
-                        </em>
-                      ) : (
-                        <code>{x}</code>
-                      )}
-                    </option>
-                  ))}
-                </HTMLSelect>
-              </Label>
-              <Label className="row-input">
-                <Text>
                   <span>Primary Assay</span>
                 </Text>
                 <HTMLSelect
@@ -174,16 +148,29 @@ export function H5ADCard({
               </Label>
               <Label className="row-input">
                 <Text>
-                  <strong>Feature type column name</strong>
+                  <strong>Feature type column name</strong>{" "}
+                  <small>
+                    (when no feature type is provided, we assume that only RNA
+                    data is present)
+                  </small>
                 </Text>
                 <HTMLSelect
-                  defaultValue={Object.keys(dsMeta.all_features["columns"])[0]}
+                  defaultValue="none"
                   onChange={(e) => {
                     let tmpOptions = { ...options };
-                    tmpOptions["primaryRnaFeatureIdColumn"] = e.target.value;
+                    if (e.target.value === "none") {
+                      tmpOptions["featureTypeColumnName"] = null;
+                      props?.setSelectedFsetModality("");
+                    } else {
+                      tmpOptions["featureTypeColumnName"] = e.target.value;
+                      props?.setSelectedFsetModality(
+                        dsMeta.all_features.columns[e.target.value].values[0]
+                      );
+                    }
                     setOptions(tmpOptions);
                   }}
                 >
+                  <option value="none">--- no selection ---</option>
                   {Object.keys(dsMeta.all_features["columns"]).map((x, i) => (
                     <option key={i} value={x}>
                       {x}
@@ -191,6 +178,40 @@ export function H5ADCard({
                   ))}
                 </HTMLSelect>
               </Label>
+              {options["featureTypeColumnName"] !== "none" &&
+                options["featureTypeColumnName"] !== null &&
+                options["featureTypeColumnName"] !== undefined && (
+                  <Label className="row-input">
+                    <Text>
+                      <span>
+                        Choose RNA-seq modality for gene set enrichment
+                      </span>
+                    </Text>
+                    <HTMLSelect
+                      onChange={(e) => {
+                        if (e.target.value === "none") {
+                          props?.setSelectedFsetModality(null);
+                        } else {
+                          props?.setSelectedFsetModality(e.target.value);
+                        }
+                      }}
+                    >
+                      {dsMeta.all_features.columns[
+                        options["featureTypeColumnName"]
+                      ].values.map((x, i) => (
+                        <option key={i} value={x}>
+                          {x === "" ? (
+                            <em>
+                              <code>unnamed</code>
+                            </em>
+                          ) : (
+                            <code>{x}</code>
+                          )}
+                        </option>
+                      ))}
+                    </HTMLSelect>
+                  </Label>
+                )}
             </div>
           )}
         </Collapse>
