@@ -35,6 +35,8 @@ import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 
 import { MODALITIES } from "../../utils/utils";
 
+import { reportFeatureTypes, reportEmbeddings } from "./utils.js";
+
 export function ZippedADBCard({
   resource,
   index,
@@ -106,31 +108,26 @@ export function ZippedADBCard({
       <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
-          <strong>{resource.format}</strong> contains{" "}
-          {dsMeta && dsMeta.cells.numberOfCells} cells and{" "}
-          {dsMeta && dsMeta.reduced_dimension_names.length}{" "}
-          {dsMeta && dsMeta.reduced_dimension_names.length > 1
-            ? "embeddings"
-            : "embedding"}
-          .
+          This <strong>ZIP</strong> file contains{" "}
+          {dsMeta && dsMeta.cells.numberOfCells} cells,{" "}
+          {dsMeta && reportEmbeddings(dsMeta.reduced_dimension_names)}{" "}
+          and the following feature
+          types: {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
         <Divider />
         <Collapse isOpen={collapse}>
           {dsMeta && (
             <div>
               <Label className="row-input">
-                <Text>
-                  <span>Choose a primary assay across modalities</span>
-                </Text>
                 {Object.keys(dsMeta.modality_assay_names).map((x, i) => {
                   return (
                     <div key={i}>
                       <Label className="row-input">
                         <Text>
-                          <span>
-                            Modality:{" "}
-                            {x === "" ? <em>"Unknown Modality"</em> : x}
-                          </span>
+                          <strong>
+                            Assay for feature type {" "}
+                            {x === "" ? <code><em>unnamed</em></code> : x}
+                          </strong>
                         </Text>
                         <HTMLSelect
                           defaultValue={options["primaryAssay"][x]}

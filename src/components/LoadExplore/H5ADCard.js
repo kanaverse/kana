@@ -35,6 +35,8 @@ import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 
 import { MODALITIES } from "../../utils/utils";
 
+import { reportEmbeddings } from "./utils.js";
+
 export function H5ADCard({
   resource,
   index,
@@ -104,13 +106,9 @@ export function H5ADCard({
       <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
-          <strong>{resource.format}</strong> contains{" "}
+          This <strong>H5AD</strong> file contains{" "}
           {dsMeta && dsMeta.cells.numberOfCells} cells and{" "}
-          {dsMeta && dsMeta.reduced_dimension_names.length}{" "}
-          {dsMeta && dsMeta.reduced_dimension_names.length > 1
-            ? "embeddings"
-            : "embedding"}
-          .
+          {dsMeta && dsMeta.all_features.numberOfFeatures} features.
         </p>
         <Divider />
         <Collapse isOpen={collapse}>
@@ -118,7 +116,7 @@ export function H5ADCard({
             <div>
               <Label className="row-input">
                 <Text>
-                  <span>Primary Assay</span>
+                  <strong>Primary Assay</strong>
                 </Text>
                 <HTMLSelect
                   defaultValue={dsMeta.all_assay_names[0]}
@@ -148,7 +146,7 @@ export function H5ADCard({
               </Label>
               <Label className="row-input">
                 <Text>
-                  <span>Feature type column name</span>
+                  <strong>Feature type column name</strong>
                 </Text>
                 <HTMLSelect
                   defaultValue={Object.keys(dsMeta.all_features["columns"])[0]}

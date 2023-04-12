@@ -35,7 +35,7 @@ import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 
 import { MODALITIES } from "../../utils/utils";
 
-import { reportFeatureTypes } from "../NewAnalysis/utils.js";
+import { reportFeatureTypes, reportEmbeddings } from "./utils.js";
 
 export function SECard({
   resource,
@@ -108,7 +108,9 @@ export function SECard({
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
           This <strong>RDS</strong> file contains{" "}
-          {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature
+          {dsMeta && dsMeta.cells.numberOfCells} cells,{" "}
+          {dsMeta && reportEmbeddings(dsMeta.reduced_dimension_names)}{" "}
+          and the following feature
           types: {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
         <Divider />
