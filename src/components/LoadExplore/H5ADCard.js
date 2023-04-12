@@ -118,7 +118,7 @@ export function H5ADCard({
             <div>
               <Label className="row-input">
                 <Text>
-                  <span>Primary Assay</span>
+                  <strong>Primary Assay</strong>
                 </Text>
                 <HTMLSelect
                   defaultValue={dsMeta.all_assay_names[0]}
@@ -146,6 +146,7 @@ export function H5ADCard({
                   }}
                 />
               </Label>
+              <Divider/>
               <Label className="row-input">
                 <Text>
                   <strong>Feature type column name</strong>{" "}
@@ -183,9 +184,9 @@ export function H5ADCard({
                 options["featureTypeColumnName"] !== undefined && (
                   <Label className="row-input">
                     <Text>
-                      <span>
-                        Choose RNA-seq modality for gene set enrichment
-                      </span>
+                      <strong>
+                        Name of the RNA feature type
+                      </strong>
                     </Text>
                     <HTMLSelect
                       onChange={(e) => {

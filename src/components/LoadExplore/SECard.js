@@ -119,7 +119,7 @@ export function SECard({
             <div>
               <Label className="row-input">
                 <Text>
-                  <span>Choose RNA-seq modality for gene set enrichment</span>
+                  <strong>Name of the RNA feature type</strong>
                 </Text>
                 <HTMLSelect
                   defaultValue="none"
@@ -145,6 +145,7 @@ export function SECard({
                   ))}
                 </HTMLSelect>
               </Label>
+              <Divider/>
               <Label className="row-input">
                 {Object.keys(dsMeta.modality_assay_names).map((x, i) => {
                   return (

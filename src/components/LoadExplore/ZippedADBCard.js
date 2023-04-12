@@ -120,7 +120,7 @@ export function ZippedADBCard({
             <div>
               <Label className="row-input">
                 <Text>
-                  <span>Choose RNA-seq modality for gene set enrichment</span>
+                  <strong>Name of the RNA feature type</strong>
                 </Text>
                 <HTMLSelect
                   defaultValue="none"
@@ -146,10 +146,8 @@ export function ZippedADBCard({
                   ))}
                 </HTMLSelect>
               </Label>
+              <Divider/>
               <Label className="row-input">
-                <Text>
-                  <span>Choose a primary assay across modalities</span>
-                </Text>
                 {Object.keys(dsMeta.modality_assay_names).map((x, i) => {
                   return (
                     <div key={i}>
