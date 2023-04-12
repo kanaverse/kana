@@ -1571,18 +1571,13 @@ const FeatureSetEnrichment = (props) => {
                 elevation={Elevation.ZERO}
               >
                 <p>
-                  Filter gene sets according to various statistics.
-                  For example, this can be used to apply a minimum threshold on
-                  the{" "}
+                  Filter gene sets on the{" "}
                   <strong>
                     <em>count</em>
-                  </strong>{" "}
-                  or{" "}
-                  <strong>
-                    <em>p-value</em>
                   </strong>
-                </p>
-                <p>
+                  , i.e., the number of top markers.
+                  This can be used to focus on gene sets that exhibit 
+                  a minimum overlap with the top markers.
                   Note that this does not change the relative ordering in the
                   table above.
                 </p>
@@ -1595,7 +1590,7 @@ const FeatureSetEnrichment = (props) => {
               intent={"primary"}
               onClick={() => setShowFilters(!showFilters)}
             >
-              Click to {showFilters ? "Hide filters" : "Filter gene sets"}
+              Click to {showFilters ? "hide filters" : "filter gene sets"}
             </Button>
           </Popover2>
           <Collapse isOpen={showFilters}>
