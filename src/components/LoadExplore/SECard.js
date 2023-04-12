@@ -86,25 +86,6 @@ export function SECard({
 
   return (
     <Callout className="section-input-item">
-      <div className="section-input-item-header">
-        <EditableText
-          intent="primary"
-          confirmOnEnterKey={true}
-          defaultValue={resource.name}
-          alwaysRenderInput={true}
-        />
-        <ButtonGroup minimal={true}>
-          <Button
-            icon={collapse ? "minimize" : "maximize"}
-            minimal={true}
-            onClick={() => {
-              setCollapse(!collapse);
-            }}
-          />
-          {/* <Button icon="cross" minimal={true} onClick={handleRemove} /> */}
-        </ButtonGroup>
-      </div>
-      <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
           This <strong>RDS</strong> file contains{" "}
@@ -145,11 +126,11 @@ export function SECard({
                   ))}
                 </HTMLSelect>
               </Label>
-              <Divider/>
               <Label className="row-input">
                 {Object.keys(dsMeta.modality_assay_names).map((x, i) => {
                   return (
                     <div key={i}>
+                      <Divider />
                       <Label className="row-input">
                         <Text>
                           <strong>
@@ -198,7 +179,6 @@ export function SECard({
                             />
                           </Label>
                         )}
-                      <Divider />
                     </div>
                   );
                 })}
