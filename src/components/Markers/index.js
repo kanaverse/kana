@@ -392,7 +392,7 @@ const MarkerPlot = (props) => {
 
     sortedRows.forEach((x) => {
       dRows.push({
-        gene: genesInfo[geneColSel[props?.selectedModality]][x.gene],
+        gene: genesInfo?.[geneColSel?.[props?.selectedModality]]?.[x.gene],
         mean: x.mean,
         delta_detected: x.delta,
         lfc: x.lfc,
@@ -656,10 +656,11 @@ const MarkerPlot = (props) => {
           Select Modality
           <HTMLSelect
             onChange={(x) => {
+              props?.setSelectedModality(x.currentTarget?.value);
+
               props?.setGene(null);
               props?.setSelectedVSCluster(null);
               props?.setSelectedCluster(null);
-              props?.setSelectedModality(x.currentTarget?.value);
               setMarkerFilter({});
             }}
           >

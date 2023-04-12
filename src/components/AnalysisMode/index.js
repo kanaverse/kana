@@ -520,14 +520,17 @@ export function AnalysisMode(props) {
   // if modality changes, show the new markers list
   useEffect(() => {
     if (selectedModality) {
-      setGenesInfo(inputData.genes[selectedModality]);
-      if (geneColSel[selectedModality] == null) {
+      if (
+        geneColSel[selectedModality] === null ||
+        geneColSel[selectedModality] === undefined
+      ) {
         let tmp = geneColSel;
         tmp[selectedModality] = Object.keys(
           inputData.genes[selectedModality]
         )[0];
         setGeneColSel(tmp);
       }
+      setGenesInfo(inputData.genes[selectedModality]);
     }
   }, [selectedModality]);
 
@@ -736,6 +739,27 @@ export function AnalysisMode(props) {
       });
     }
   }, [loadZiesel, wasmInitialized]);
+
+  // use effects to sync between markers and gene set cluster selection
+  // only sync from markers table if modality is "RNA"
+
+  useEffect(() => {
+    if (
+      selectedModality === "RNA" &&
+      markersORFSets === "markers" &&
+      selectedClusterSummary.length > 0
+    ) {
+      if (selectedFsetCluster !== selectedCluster)
+        setSelectedFsetCluster(selectedCluster);
+    }
+  }, [selectedCluster]);
+
+  useEffect(() => {
+    if (selectedModality === "RNA" && markersORFSets === "featuresets") {
+      if (selectedFsetCluster !== selectedCluster)
+        setSelectedCluster(selectedFsetCluster);
+    }
+  }, [selectedFsetCluster]);
 
   function add_to_logs(type, msg, status) {
     // let tmp = [...logs];
