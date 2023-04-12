@@ -436,7 +436,7 @@ export function ExplorerMode() {
 
   // if modality changes, show the new markers list
   useEffect(() => {
-    if (selectedModality) {
+    if (selectedModality !== null && selectedModality !== undefined) {
       if (
         geneColSel[selectedModality] === null ||
         geneColSel[selectedModality] === undefined

@@ -431,7 +431,6 @@ const MarkerPlot = (props) => {
               intent={props?.markersORFSets === "markers" ? "primary" : ""}
               text="Markers"
             />
-            {console.log("in markers", props?.selectedFsetModality)}
             {props?.selectedFsetModality !== null && (
               <Button
                 onClick={() => props?.setMarkersOrFsets("featuresets")}
