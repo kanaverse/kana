@@ -35,6 +35,8 @@ import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 
 import { MODALITIES } from "../../utils/utils";
 
+import { reportFeatureTypes, reportEmbeddings } from "./utils.js";
+
 export function ZippedADBCard({
   resource,
   index,
@@ -106,18 +108,44 @@ export function ZippedADBCard({
       <Divider />
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
-          <strong>{resource.format}</strong> contains{" "}
-          {dsMeta && dsMeta.cells.numberOfCells} cells and{" "}
-          {dsMeta && dsMeta.reduced_dimension_names.length}{" "}
-          {dsMeta && dsMeta.reduced_dimension_names.length > 1
-            ? "embeddings"
-            : "embedding"}
-          .
+          This <strong>ZIP</strong> file contains{" "}
+          {dsMeta && dsMeta.cells.numberOfCells} cells,{" "}
+          {dsMeta && reportEmbeddings(dsMeta.reduced_dimension_names)} and the
+          following feature types:{" "}
+          {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
         <Divider />
         <Collapse isOpen={collapse}>
           {dsMeta && (
             <div>
+              <Label className="row-input">
+                <Text>
+                  <span>Choose RNA-seq modality for gene set enrichment</span>
+                </Text>
+                <HTMLSelect
+                  defaultValue="none"
+                  onChange={(e) => {
+                    if (e.target.value === "none") {
+                      props?.setSelectedFsetModality(null);
+                    } else {
+                      props?.setSelectedFsetModality(e.target.value);
+                    }
+                  }}
+                >
+                  <option value="none">--- no selection ---</option>
+                  {Object.keys(dsMeta.modality_assay_names).map((x, i) => (
+                    <option key={i} value={x}>
+                      {x === "" ? (
+                        <em>
+                          <code>unnamed</code>
+                        </em>
+                      ) : (
+                        <code>{x}</code>
+                      )}
+                    </option>
+                  ))}
+                </HTMLSelect>
+              </Label>
               <Label className="row-input">
                 <Text>
                   <span>Choose a primary assay across modalities</span>
@@ -127,10 +155,16 @@ export function ZippedADBCard({
                     <div key={i}>
                       <Label className="row-input">
                         <Text>
-                          <span>
-                            Modality:{" "}
-                            {x === "" ? <em>"Unknown Modality"</em> : x}
-                          </span>
+                          <strong>
+                            Assay for feature type{" "}
+                            {x === "" ? (
+                              <code>
+                                <em>unnamed</em>
+                              </code>
+                            ) : (
+                              x
+                            )}
+                          </strong>
                         </Text>
                         <HTMLSelect
                           defaultValue={options["primaryAssay"][x]}
@@ -144,9 +178,7 @@ export function ZippedADBCard({
                             setOptions(tmpOptions);
                           }}
                         >
-                          <option key={i} value="none">
-                            None
-                          </option>
+                          <option value="none">--- no selection ---</option>
                           {dsMeta.modality_assay_names[x].map((ax, i) => (
                             <option key={i} value={ax}>
                               {ax}

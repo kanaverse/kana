@@ -233,6 +233,7 @@ onmessage = function (msg) {
               delete preflights[k];
             }
             current[k] = createDataset(v, true);
+            current[k].setOptions(v.options);
           }
 
           for (const [k, v] of Object.entries(current)) {
@@ -598,6 +599,7 @@ onmessage = function (msg) {
         let { annotation, rank_type, cluster, modality } = payload;
         let index = rank_type.indexOf("-");
         let resp;
+
         if (default_selection === annotation) {
           let sel_indices =
             custom_selection_state.fetchSelectionIndices(cluster);

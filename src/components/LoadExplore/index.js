@@ -154,13 +154,21 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
       >
         <Tab
           id="H5AD"
-          title="Load H5AD dataset"
+          title="H5AD"
           panel={
             <div>
               <div className="row">
+                <Callout intent="primary">
+                  <p>
+                    Load a <code>*.h5ad</code> file containing pre-computed
+                    analysis results such as reduced dimensions and clusterings.
+                  </p>
+                </Callout>
+              </div>
+              <div className="row">
                 <Label className="row-input">
                   <Text className="text-100">
-                    <span>Choose a H5AD dataset</span>
+                    <span>Choose a H5AD file</span>
                   </Text>
                   <FileInput
                     style={{
@@ -183,9 +191,18 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
         />
         <Tab
           id="SummarizedExperiment"
-          title="Load RDS file"
+          title="RDS"
           panel={
             <div>
+              <div className="row">
+                <Callout intent="primary">
+                  <p>
+                    Load an <code>*.rds</code> file containing a
+                    SingleCellExperiment with pre-computed analysis results such
+                    as reduced dimensions and clusterings.
+                  </p>
+                </Callout>
+              </div>
               <div className="row">
                 <Label className="row-input">
                   <Text className="text-100">
@@ -212,13 +229,22 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
         />
         <Tab
           id="ZippedArtifactdb"
-          title="Load zipped result file"
+          title="ZIP"
           panel={
             <div>
               <div className="row">
+                <Callout intent="primary">
+                  <p>
+                    Load an <code>*.zip</code> file containing the saved results
+                    from <strong>kana</strong>'s analysis mode. This should
+                    include reduced dimensions and clusterings.
+                  </p>
+                </Callout>
+              </div>
+              <div className="row">
                 <Label className="row-input">
                   <Text className="text-100">
-                    <span>Choose a zipped artifactdb result file</span>
+                    <span>Choose a ZIP file</span>
                   </Text>
                   <FileInput
                     style={{
@@ -302,57 +328,12 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
   return (
     <Card className="section" interactive={false} elevation={Elevation.ZERO}>
       <div className="section-header">
-        <H2 className="section-header-title">
-          Explore a dataset with results.
-        </H2>
+        <H2 className="section-header-title">Explore Pre-computed Results</H2>
       </div>
       <Divider />
       <div className="section-content">
-        <div className="section-content-body">
-          <Callout icon="airplane">
-            <p>
-              <strong>
-                {" "}
-                Choose a dataset with pre-computed results (tsne, umap etc) to
-                get started.{" "}
-              </strong>
-            </p>
-          </Callout>
-          <Divider />
-          {render_inputs()}
-        </div>
+        <div className="section-content-body">{render_inputs()}</div>
         <div className="section-info">
-          <div>
-            {openInfo && (
-              <Button
-                outlined={true}
-                fill={true}
-                intent="warning"
-                text="Hide Info"
-                onClick={() => setOpenInfo(false)}
-              />
-            )}
-            {!openInfo && (
-              <Button
-                outlined={true}
-                fill={true}
-                intent="warning"
-                text="Show Info"
-                onClick={() => setOpenInfo(true)}
-              />
-            )}
-            <Collapse isOpen={openInfo}>
-              <Callout intent="primary">
-                <p>
-                  Must be either files{" "}
-                  <strong>
-                    <code>*.H5AD or *.RDS</code>
-                  </strong>
-                  . files.
-                </p>
-              </Callout>
-            </Collapse>
-          </div>
           <div className="section-inputs">
             {exploreInputs.map((x, i) => {
               if (x.format == "H5AD" && x.h5 !== null && x.h5 !== undefined) {
@@ -368,6 +349,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                     setInputOpts={setInputOptions}
                     inputs={exploreInputs}
                     setInputs={setExploreInputs}
+                    setSelectedFsetModality={props?.setSelectedFsetModality}
                   />
                 );
               } else if (
@@ -387,6 +369,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                     setInputOpts={setInputOptions}
                     inputs={exploreInputs}
                     setInputs={setExploreInputs}
+                    setSelectedFsetModality={props?.setSelectedFsetModality}
                   />
                 );
               } else if (
@@ -406,6 +389,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                     setInputOpts={setInputOptions}
                     inputs={exploreInputs}
                     setInputs={setExploreInputs}
+                    setSelectedFsetModality={props?.setSelectedFsetModality}
                   />
                 );
               }

@@ -436,7 +436,7 @@ export function ExplorerMode() {
 
   // if modality changes, show the new markers list
   useEffect(() => {
-    if (selectedModality) {
+    if (selectedModality !== null && selectedModality !== undefined) {
       if (
         geneColSel[selectedModality] === null ||
         geneColSel[selectedModality] === undefined
@@ -453,7 +453,7 @@ export function ExplorerMode() {
 
   // compute feature set scores
   useEffect(() => {
-    if (selectedFsetModality !== null) {
+    if (selectedFsetModality !== null && selectedClusterSummary.length > 0) {
       scranWorker.postMessage({
         type: "initFeaturesetEnrich",
         payload: {
@@ -462,7 +462,7 @@ export function ExplorerMode() {
       });
       add_to_logs("info", `--- initFeaturesetEnrich sent ---`);
     }
-  }, [selectedFsetModality]);
+  }, [selectedFsetModality, selectedClusterSummary]);
 
   // compute feature set scores
   useEffect(() => {
@@ -677,7 +677,7 @@ export function ExplorerMode() {
         setReqAnnotation(def_anno);
       }
       // setSelectedCluster(resp.annotations[0]);
-      setSelectedFsetModality(tmodality);
+      // setSelectedFsetModality(tmodality);
 
       setShowNClusLoader(false);
       setShowMarkerLoader(false);
@@ -1177,6 +1177,7 @@ export function ExplorerMode() {
                             }
                             setMarkersOrFsets={setMarkersOrFsets}
                             markersORFSets={markersORFSets}
+                            selectedFsetModality={selectedFsetModality}
                           />
                         )}
                     </div>
@@ -1283,7 +1284,10 @@ export function ExplorerMode() {
             </div>
           )}
           {showPanel === "explore-import" && (
-            <LoadExplore setShowPanel={setShowPanel} />
+            <LoadExplore
+              setShowPanel={setShowPanel}
+              setSelectedFsetModality={setSelectedFsetModality}
+            />
           )}
         </div>
       </SplitPane>
