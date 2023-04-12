@@ -520,14 +520,17 @@ export function AnalysisMode(props) {
   // if modality changes, show the new markers list
   useEffect(() => {
     if (selectedModality) {
-      setGenesInfo(inputData.genes[selectedModality]);
-      if (geneColSel[selectedModality] == null) {
+      if (
+        geneColSel[selectedModality] === null ||
+        geneColSel[selectedModality] === undefined
+      ) {
         let tmp = geneColSel;
         tmp[selectedModality] = Object.keys(
           inputData.genes[selectedModality]
         )[0];
         setGeneColSel(tmp);
       }
+      setGenesInfo(inputData.genes[selectedModality]);
     }
   }, [selectedModality]);
 

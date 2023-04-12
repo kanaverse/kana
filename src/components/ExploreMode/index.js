@@ -436,15 +436,18 @@ export function ExplorerMode() {
 
   // if modality changes, show the new markers list
   useEffect(() => {
-    if (selectedModality !== null && selectedModality !== undefined) {
-      setGenesInfo(inputData.genes[selectedModality]);
-      if (geneColSel[selectedModality] == null) {
+    if (selectedModality) {
+      if (
+        geneColSel[selectedModality] === null ||
+        geneColSel[selectedModality] === undefined
+      ) {
         let tmp = geneColSel;
         tmp[selectedModality] = Object.keys(
           inputData.genes[selectedModality]
         )[0];
         setGeneColSel(tmp);
       }
+      setGenesInfo(inputData.genes[selectedModality]);
     }
   }, [selectedModality]);
 
