@@ -431,12 +431,16 @@ const MarkerPlot = (props) => {
               intent={props?.markersORFSets === "markers" ? "primary" : ""}
               text="Markers"
             />
-
-            <Button
-              onClick={() => props?.setMarkersOrFsets("featuresets")}
-              intent={props?.markersORFSets === "featuresets" ? "primary" : ""}
-              text="Gene sets"
-            />
+            {console.log("in markers", props?.selectedFsetModality)}
+            {props?.selectedFsetModality !== null && (
+              <Button
+                onClick={() => props?.setMarkersOrFsets("featuresets")}
+                intent={
+                  props?.markersORFSets === "featuresets" ? "primary" : ""
+                }
+                text="Gene sets"
+              />
+            )}
           </ButtonGroup>
         </div>
         <div>

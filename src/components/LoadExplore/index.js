@@ -160,7 +160,8 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
               <div className="row">
                 <Callout intent="primary">
                   <p>
-                    Load a <code>*.h5ad</code> file containing pre-computed analysis results such as reduced dimensions and clusterings.
+                    Load a <code>*.h5ad</code> file containing pre-computed
+                    analysis results such as reduced dimensions and clusterings.
                   </p>
                 </Callout>
               </div>
@@ -196,8 +197,9 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
               <div className="row">
                 <Callout intent="primary">
                   <p>
-                    Load an <code>*.rds</code> file containing a SingleCellExperiment with  
-                    pre-computed analysis results such as reduced dimensions and clusterings.
+                    Load an <code>*.rds</code> file containing a
+                    SingleCellExperiment with pre-computed analysis results such
+                    as reduced dimensions and clusterings.
                   </p>
                 </Callout>
               </div>
@@ -233,8 +235,9 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
               <div className="row">
                 <Callout intent="primary">
                   <p>
-                    Load an <code>*.zip</code> file containing the saved results from <strong>kana</strong>'s analysis mode.
-                    This should include reduced dimensions and clusterings.
+                    Load an <code>*.zip</code> file containing the saved results
+                    from <strong>kana</strong>'s analysis mode. This should
+                    include reduced dimensions and clusterings.
                   </p>
                 </Callout>
               </div>
@@ -325,15 +328,11 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
   return (
     <Card className="section" interactive={false} elevation={Elevation.ZERO}>
       <div className="section-header">
-        <H2 className="section-header-title">
-          Explore Pre-computed Results
-        </H2>
+        <H2 className="section-header-title">Explore Pre-computed Results</H2>
       </div>
       <Divider />
       <div className="section-content">
-        <div className="section-content-body">
-          {render_inputs()}
-        </div>
+        <div className="section-content-body">{render_inputs()}</div>
         <div className="section-info">
           <div className="section-inputs">
             {exploreInputs.map((x, i) => {
@@ -350,6 +349,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                     setInputOpts={setInputOptions}
                     inputs={exploreInputs}
                     setInputs={setExploreInputs}
+                    setSelectedFsetModality={props?.setSelectedFsetModality}
                   />
                 );
               } else if (
@@ -369,6 +369,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                     setInputOpts={setInputOptions}
                     inputs={exploreInputs}
                     setInputs={setExploreInputs}
+                    setSelectedFsetModality={props?.setSelectedFsetModality}
                   />
                 );
               } else if (
@@ -388,6 +389,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                     setInputOpts={setInputOptions}
                     inputs={exploreInputs}
                     setInputs={setExploreInputs}
+                    setSelectedFsetModality={props?.setSelectedFsetModality}
                   />
                 );
               }

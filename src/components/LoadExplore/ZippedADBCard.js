@@ -110,23 +110,60 @@ export function ZippedADBCard({
         <p>
           This <strong>ZIP</strong> file contains{" "}
           {dsMeta && dsMeta.cells.numberOfCells} cells,{" "}
-          {dsMeta && reportEmbeddings(dsMeta.reduced_dimension_names)}{" "}
-          and the following feature
-          types: {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
+          {dsMeta && reportEmbeddings(dsMeta.reduced_dimension_names)} and the
+          following feature types:{" "}
+          {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
         <Divider />
         <Collapse isOpen={collapse}>
           {dsMeta && (
             <div>
               <Label className="row-input">
+                <Text>
+                  <span>Choose RNA-seq modality for gene set enrichment</span>
+                </Text>
+                <HTMLSelect
+                  defaultValue="none"
+                  onChange={(e) => {
+                    if (e.target.value === "none") {
+                      props?.setSelectedFsetModality(null);
+                    } else {
+                      props?.setSelectedFsetModality(e.target.value);
+                    }
+                  }}
+                >
+                  <option value="none">None</option>
+                  {Object.keys(dsMeta.modality_assay_names).map((x, i) => (
+                    <option key={i} value={x}>
+                      {x === "" ? (
+                        <em>
+                          <code>unnamed</code>
+                        </em>
+                      ) : (
+                        <code>{x}</code>
+                      )}
+                    </option>
+                  ))}
+                </HTMLSelect>
+              </Label>
+              <Label className="row-input">
+                <Text>
+                  <span>Choose a primary assay across modalities</span>
+                </Text>
                 {Object.keys(dsMeta.modality_assay_names).map((x, i) => {
                   return (
                     <div key={i}>
                       <Label className="row-input">
                         <Text>
                           <strong>
-                            Assay for feature type {" "}
-                            {x === "" ? <code><em>unnamed</em></code> : x}
+                            Assay for feature type{" "}
+                            {x === "" ? (
+                              <code>
+                                <em>unnamed</em>
+                              </code>
+                            ) : (
+                              x
+                            )}
                           </strong>
                         </Text>
                         <HTMLSelect
@@ -141,9 +178,7 @@ export function ZippedADBCard({
                             setOptions(tmpOptions);
                           }}
                         >
-                          <option key={i} value="none">
-                            None
-                          </option>
+                          <option value="none">None</option>
                           {dsMeta.modality_assay_names[x].map((ax, i) => (
                             <option key={i} value={ax}>
                               {ax}

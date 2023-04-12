@@ -116,7 +116,35 @@ export function H5ADCard({
             <div>
               <Label className="row-input">
                 <Text>
-                  <strong>Primary Assay</strong>
+                  <span>Choose RNA-seq modality for gene set enrichment</span>
+                </Text>
+                <HTMLSelect
+                  defaultValue="none"
+                  onChange={(e) => {
+                    if (e.target.value === "none") {
+                      props?.setSelectedFsetModality(null);
+                    } else {
+                      props?.setSelectedFsetModality(e.target.value);
+                    }
+                  }}
+                >
+                  <option value="none">None</option>
+                  {[""].map((x, i) => (
+                    <option key={i} value={x}>
+                      {x === "" ? (
+                        <em>
+                          <code>unnamed</code>
+                        </em>
+                      ) : (
+                        <code>{x}</code>
+                      )}
+                    </option>
+                  ))}
+                </HTMLSelect>
+              </Label>
+              <Label className="row-input">
+                <Text>
+                  <span>Primary Assay</span>
                 </Text>
                 <HTMLSelect
                   defaultValue={dsMeta.all_assay_names[0]}

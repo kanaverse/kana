@@ -562,11 +562,15 @@ const FeatureSetEnrichment = (props) => {
               text="Markers"
             />
 
-            <Button
-              onClick={() => props?.setMarkersOrFsets("featuresets")}
-              intent={props?.markersORFSets === "featuresets" ? "primary" : ""}
-              text="Gene sets"
-            />
+            {props?.selectedFsetModality !== null && (
+              <Button
+                onClick={() => props?.setMarkersOrFsets("featuresets")}
+                intent={
+                  props?.markersORFSets === "featuresets" ? "primary" : ""
+                }
+                text="Gene sets"
+              />
+            )}
           </ButtonGroup>
         </div>
         <div>
@@ -730,7 +734,7 @@ const FeatureSetEnrichment = (props) => {
           )}
       </Collapse>
       <Divider />
-      {appMode === "explore" && props?.modality != null && (
+      {/* {appMode === "explore" && props?.modality != null && (
         <Label style={{ textAlign: "left", marginBottom: "5px" }}>
           Select RNA-seq Modality
           <HTMLSelect
@@ -751,7 +755,7 @@ const FeatureSetEnrichment = (props) => {
             ))}
           </HTMLSelect>
         </Label>
-      )}
+      )} */}
       {annotationCols && (
         <Label style={{ marginBottom: "0" }}>
           Choose annotation
