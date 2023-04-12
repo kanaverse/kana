@@ -1053,7 +1053,7 @@ const FeatureSetEnrichment = (props) => {
                     cursor: "help",
                   }}
                 >
-                  pvalue
+                  p-value
                 </span>
               </Popover2>
             )}
