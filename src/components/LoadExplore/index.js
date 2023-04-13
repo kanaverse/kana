@@ -150,6 +150,9 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
           tmp["format"] = ntab;
           setTmpLoadInputs(tmp);
           setTabSelected(ntab);
+
+          setExploreInputs([]);
+          setInputOptions([]);
         }}
       >
         <Tab
