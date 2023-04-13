@@ -499,7 +499,11 @@ const DimPlot = (props) => {
           }
           setToggleFactorsGradient(state);
 
-          setShowToggleFactors(true);
+          if (props?.colorByAnnotation.indexOf("cluster") !== -1) {
+            setShowToggleFactors(false);
+          } else {
+            setShowToggleFactors(true);
+          }
 
           // convert array to factors
           const [minTmp, maxTmp] = getMinMax(tmp.values);
