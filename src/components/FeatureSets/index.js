@@ -112,14 +112,10 @@ const FeatureSetEnrichment = (props) => {
 
   const getTableHeight = () => {
     let defheight = 273;
-    if (showFilters) defheight = 450;
+    if (showFilters) defheight = 340;
 
     if (props?.windowWidth < 1200) {
       defheight += 270;
-    }
-
-    if (appMode === "explore") {
-      defheight += 15;
     }
 
     return `35px calc(100vh - ${defheight}px)`;
@@ -1641,7 +1637,7 @@ const FeatureSetEnrichment = (props) => {
               )}
             </div>
 
-            <div className="fsetenrich-filter-container">
+            {/* <div className="fsetenrich-filter-container">
               <Tag
                 className="fsetenrich-filter-container-tag"
                 minimal={true}
@@ -1649,7 +1645,6 @@ const FeatureSetEnrichment = (props) => {
               >
                 p-value
               </Tag>
-              {/* <Histogram data={deltas} height={35} color="#4580E6" minmax={deltaMinMax} /> */}
               {pvalMinMax && (
                 <div className="fsetenrich-slider-container">
                   <div className="fsetenrich-filter-gradient">
@@ -1677,7 +1672,7 @@ const FeatureSetEnrichment = (props) => {
                   />
                 </div>
               )}
-            </div>
+            </div> */}
           </Collapse>
         </>
       )}
