@@ -99,6 +99,7 @@ function summarizeResult(summary, args) {
             continue;
           }
           tmod_summary[k] = bakana.summarizeArray(v.column(k));
+          tmod_summary[k]["_all_"] = v.column(k);
         }
         tmp_meta["modality_features"][k] = {
           columns: tmod_summary,
@@ -113,6 +114,7 @@ function summarizeResult(summary, args) {
       tmod_summary[k] = bakana.summarizeArray(
         summary["all_features"].column(k)
       );
+      tmod_summary[k]["_all_"] = summary["all_features"].column(k);
     }
     tmp_meta["all_features"] = {
       columns: tmod_summary,
