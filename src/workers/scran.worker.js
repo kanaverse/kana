@@ -243,21 +243,35 @@ function getMarkerStandAloneForAnnot(annotation, annotation_vec) {
 const getAnnotation = (annotation, unfiltered = true) => {
   let vec;
   if (annotation.startsWith(`${code}::QC::`)) {
-    let splits = annotation.replace(`${code}::QC::`, "");
-    vec = superstate.cell_filtering.fetchFilteredQualityMetric(
-      splits.substring(4),
-      splits.substring(0, 3)
-    );
-    // Filter to match QC unless requested otherwise.
-  } else if (unfiltered !== false) {
-    vec = superstate.cell_filtering.applyFilter(
-      superstate.inputs.fetchCellAnnotations().column(annotation)
-    );
+    let metric = annotation.replace(`${code}::QC::`, "");
+    let split_metric = metric.split("_");
+    let metrics =
+      superstate[
+        `${split_metric[0].toLowerCase()}_quality_control`
+      ].fetchMetrics();
+
+    if (split_metric[1] === "sums") {
+      vec = metrics.sums();
+    } else if (split_metric[1] === "detected") {
+      vec = metrics.detected();
+    } else if (split_metric[1] === "proportion") {
+      if (split_metric[0].toLowerCase() === "rna") {
+        vec = metrics.subsetProportions(0);
+      } else if (split_metric[0].toLowerCase() === "adt") {
+        vec = metrics.subsetTotals(0);
+      } else if (split_metric[0].toLowerCase() === "crispr") {
+        vec = metrics.maxProportions(0);
+      }
+    }
   } else {
     vec = superstate.inputs.fetchAnnotations(annotation);
   }
 
-  return vec;
+  if (!unfiltered) {
+    vec = superstate.cell_filtering.applyFilter(vec);
+  }
+
+  return vec.slice();
 };
 
 const getMatrix = () => {
@@ -944,7 +958,7 @@ onmessage = function (msg) {
         let annot = payload.annotation;
         let vec, output;
 
-        vec = getAnnotation(annot, payload.unfiltered);
+        vec = getAnnotation(annot, !!payload.unfiltered);
 
         if (ArrayBuffer.isView(vec)) {
           output = {
