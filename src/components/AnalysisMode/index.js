@@ -1830,6 +1830,7 @@ export function AnalysisMode(props) {
                           setSelectedFsetVSCluster={setSelectedFsetVSCluster}
                           customSelection={customSelection}
                           setReqAnnotation={setReqAnnotation}
+                          selectedFsetModality={selectedFsetModality}
                         />
                       )}
                     </div>

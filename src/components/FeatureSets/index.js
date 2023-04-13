@@ -370,7 +370,9 @@ const FeatureSetEnrichment = (props) => {
             flip: { enabled: true },
             preventOverflow: { enabled: true },
           }}
-          content=<Card elevation={Elevation.ZERO}><strong>{row.name}</strong></Card>
+          content=<Card elevation={Elevation.ZERO}>
+            <strong>{row.name}</strong>
+          </Card>
         >
           <span className="fsetenrich-title">
             <strong style={{ color: "#147EB3", fontSize: "x-small" }}>
@@ -491,10 +493,7 @@ const FeatureSetEnrichment = (props) => {
       ) {
         const order = sortedRows[fRowExpanded].geneIndices.ordering[rgindex];
         dRows.push({
-          gene:
-            appMode === "explore"
-              ? genesInfo[geneColSel[props?.selectedFsetModality]][order]
-              : genesInfo[geneColSel["RNA"]][order],
+          gene: genesInfo[geneColSel?.[props?.selectedFsetModality]]?.[order],
           mean: sortedRows[fRowExpanded].geneIndices.means[rgindex],
           delta_detected:
             sortedRows[fRowExpanded].geneIndices.delta_detected[rgindex],
@@ -593,9 +592,12 @@ const FeatureSetEnrichment = (props) => {
                 elevation={Elevation.ZERO}
               >
                 <p>
-                  This panel shows the gene sets that are most overrepresented in the top set of markers for any given cluster or comparison.
-                  Each gene set typically corresponds to some kind of biological process, pathway or activity,
-                  and can be used to concisely summarize the behavior of a cluster with respect to the rest of the cell population.
+                  This panel shows the gene sets that are most overrepresented
+                  in the top set of markers for any given cluster or comparison.
+                  Each gene set typically corresponds to some kind of biological
+                  process, pathway or activity, and can be used to concisely
+                  summarize the behavior of a cluster with respect to the rest
+                  of the cell population.
                 </p>
               </Card>
             }
@@ -655,8 +657,8 @@ const FeatureSetEnrichment = (props) => {
               >
                 <p>
                   Choose the effect size and summary statistic to use for
-                  ranking markers. This is used to determine the top markers
-                  to check for gene set enrichment. Check out the corresponding
+                  ranking markers. This is used to determine the top markers to
+                  check for gene set enrichment. Check out the corresponding
                   parameter in the marker table for more details.
                 </p>
               </Card>
@@ -1041,7 +1043,8 @@ const FeatureSetEnrichment = (props) => {
                     }}
                     elevation={Elevation.ZERO}
                   >
-                    <p>P-value for the overrepresentation of each gene set, 
+                    <p>
+                      P-value for the overrepresentation of each gene set,
                       computed using a hypergeometric test.
                     </p>
                   </Card>
@@ -1076,7 +1079,10 @@ const FeatureSetEnrichment = (props) => {
                     }}
                     elevation={Elevation.ZERO}
                   >
-                    <p>Number of top markers in each gene set, relative to the size of the set.</p>
+                    <p>
+                      Number of top markers in each gene set, relative to the
+                      size of the set.
+                    </p>
                   </Card>
                 }
               >
@@ -1121,10 +1127,11 @@ const FeatureSetEnrichment = (props) => {
                         <HTMLSelect
                           large={false}
                           minimal={true}
-                          defaultValue={geneColSel["RNA"]}
+                          defaultValue={geneColSel[props?.selectedFsetModality]}
                           onChange={(nval, val) => {
                             let tmp = { ...geneColSel };
-                            tmp["RNA"] = nval?.currentTarget?.value;
+                            tmp[props?.selectedFsetModality] =
+                              nval?.currentTarget?.value;
                             setGeneColSel(tmp);
                           }}
                         >
@@ -1184,11 +1191,9 @@ const FeatureSetEnrichment = (props) => {
                     );
 
                   const rgname =
-                    appMode === "explore"
-                      ? genesInfo[geneColSel[props?.selectedFsetModality]][
-                          order
-                        ]
-                      : genesInfo[geneColSel["RNA"]][order];
+                    genesInfo[geneColSel?.[props?.selectedFsetModality]]?.[
+                      order
+                    ];
 
                   return (
                     <div className="fsetenrich-genelist-container">
@@ -1477,8 +1482,10 @@ const FeatureSetEnrichment = (props) => {
                             }}
                             elevation={Elevation.ZERO}
                           >
-                            <p>P-value for the over-representation of each gene set among the top markers,
-                              computed using a hypergeometric test.
+                            <p>
+                              P-value for the over-representation of each gene
+                              set among the top markers, computed using a
+                              hypergeometric test.
                             </p>
                           </Card>
                         }
@@ -1512,7 +1519,10 @@ const FeatureSetEnrichment = (props) => {
                             }}
                             elevation={Elevation.ZERO}
                           >
-                            <p>Number of top markers in each gene set, relative to the size of the set.</p>
+                            <p>
+                              Number of top markers in each gene set, relative
+                              to the size of the set.
+                            </p>
                           </Card>
                         }
                       >
@@ -1575,11 +1585,10 @@ const FeatureSetEnrichment = (props) => {
                   <strong>
                     <em>count</em>
                   </strong>
-                  , i.e., the number of top markers.
-                  This can be used to focus on gene sets that exhibit 
-                  a minimum overlap with the top markers.
-                  Note that this does not change the relative ordering in the
-                  table above.
+                  , i.e., the number of top markers. This can be used to focus
+                  on gene sets that exhibit a minimum overlap with the top
+                  markers. Note that this does not change the relative ordering
+                  in the table above.
                 </p>
               </Card>
             }
