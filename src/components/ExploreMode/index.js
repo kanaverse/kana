@@ -272,7 +272,8 @@ export function ExplorerMode() {
   const [selectedFsetVSCluster, setSelectedFsetVSCluster] = useState(null);
   // modality in feature set
   const [selectedFsetModality, setSelectedFsetModality] = useState(null);
-
+  // was feature set initialized?
+  const [initFset, setInitFset] = useState(false);
   /*******
    * USER REQUESTS - END
    ******/
@@ -451,18 +452,16 @@ export function ExplorerMode() {
     }
   }, [selectedModality]);
 
-  // compute feature set scores
+  // initialize feature set
   useEffect(() => {
-    if (selectedFsetModality !== null && selectedClusterSummary.length > 0) {
-      scranWorker.postMessage({
-        type: "initFeaturesetEnrich",
-        payload: {
-          modality: selectedFsetModality,
-        },
-      });
-      add_to_logs("info", `--- initFeaturesetEnrich sent ---`);
+    if (
+      !initFset &&
+      selectedFsetModality !== null &&
+      selectedClusterSummary.length > 0
+    ) {
+      initFsetReq();
     }
-  }, [selectedFsetModality]);
+  }, [selectedFsetModality, selectedClusterSummary]);
 
   // compute feature set scores
   useEffect(() => {
@@ -557,6 +556,23 @@ export function ExplorerMode() {
     logs.push([type, d.toLocaleTimeString(), msg, status]);
 
     // setLogs(tmp);
+  }
+
+  function initFsetReq() {
+    if (
+      !initFset &&
+      selectedFsetModality !== null &&
+      selectedClusterSummary.length > 0
+    ) {
+      scranWorker.postMessage({
+        type: "initFeaturesetEnrich",
+        payload: {
+          modality: selectedFsetModality,
+        },
+      });
+      setInitFset(true);
+      add_to_logs("info", `--- initFeaturesetEnrich sent ---`);
+    }
   }
 
   scranWorker.onmessage = (msg) => {
