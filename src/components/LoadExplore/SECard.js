@@ -50,6 +50,7 @@ export function SECard({
   const [dsMeta, setDsMeta] = useState(null);
   const [options, setOptions] = useState({});
   const [collapse, setCollapse] = useState(true);
+  const [sortedFeatureVals, setSortedFeatureVals] = useState(null);
 
   // when preflight is available
   useEffect(() => {
@@ -66,6 +67,18 @@ export function SECard({
       }
       tmpOptions["reducedDimensionNames"] = null;
       setOptions(tmpOptions);
+
+      let top_modality = Object.keys(preflight.modality_features).sort(
+        (a, b) => {
+          return (
+            preflight.modality_features[b].numberOfFeatures -
+            preflight.modality_features[a].numberOfFeatures
+          );
+        }
+      );
+
+      props?.setSelectedFsetModality(top_modality[0]);
+      setSortedFeatureVals(top_modality);
     }
   }, [preflight]);
 
@@ -90,9 +103,9 @@ export function SECard({
         <p>
           This <strong>RDS</strong> file contains{" "}
           {dsMeta && dsMeta.cells.numberOfCells} cells,{" "}
-          {dsMeta && reportEmbeddings(dsMeta.reduced_dimension_names)}{" "}
-          and the following feature
-          types: {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
+          {dsMeta && reportEmbeddings(dsMeta.reduced_dimension_names)} and the
+          following feature types:{" "}
+          {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
         <Divider />
         <Collapse isOpen={collapse}>
@@ -103,7 +116,7 @@ export function SECard({
                   <strong>Name of the RNA feature type</strong>
                 </Text>
                 <HTMLSelect
-                  defaultValue="none"
+                  defaultValue={sortedFeatureVals[0]}
                   onChange={(e) => {
                     if (e.target.value === "none") {
                       props?.setSelectedFsetModality(null);
@@ -113,7 +126,7 @@ export function SECard({
                   }}
                 >
                   <option value="none">--- no selection ---</option>
-                  {Object.keys(dsMeta.modality_assay_names).map((x, i) => (
+                  {sortedFeatureVals.map((x, i) => (
                     <option key={i} value={x}>
                       {x === "" ? (
                         <em>

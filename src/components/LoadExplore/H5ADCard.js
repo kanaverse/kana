@@ -51,6 +51,8 @@ export function H5ADCard({
   const [options, setOptions] = useState({});
   const [collapse, setCollapse] = useState(true);
 
+  const [sortedFeatureVals, setSortedFeatureVals] = useState(null);
+
   // when preflight is available
   useEffect(() => {
     if (preflight && preflight !== null && preflight !== undefined) {
@@ -61,12 +63,7 @@ export function H5ADCard({
       tmpOptions["primaryMatrixName"] = preflight.all_assay_names[0];
       tmpOptions["isPrimaryNormalized"] = true;
       tmpOptions["reducedDimensionNames"] = null;
-      // tmpOptions["featureTypeColumnName"] = Object.keys(
-      //   preflight.all_features.columns
-      // )[0];
-
       props?.setSelectedFsetModality("");
-
       setOptions(tmpOptions);
     }
   }, [preflight]);
@@ -84,6 +81,31 @@ export function H5ADCard({
     tmpInputs.splice(index, 1);
     setInputs(tmpInputs);
   };
+
+  useEffect(() => {
+    if (
+      options["featureTypeColumnName"] !== "none" &&
+      options["featureTypeColumnName"] !== null &&
+      options["featureTypeColumnName"] !== undefined
+    ) {
+      const vals =
+        dsMeta.all_features.columns[options["featureTypeColumnName"]].values;
+
+      const all_vals =
+        dsMeta.all_features.columns[options["featureTypeColumnName"]]["_all_"];
+
+      const top_mods = vals.sort((a, b) => {
+        return (
+          all_vals.filter((x) => x == b).length -
+          all_vals.filter((x) => x == a).length
+        );
+      });
+
+      setSortedFeatureVals(top_mods);
+
+      props?.setSelectedFsetModality(top_mods[0]);
+    }
+  }, [options["featureTypeColumnName"]]);
 
   return (
     <Callout className="section-input-item">
@@ -127,7 +149,7 @@ export function H5ADCard({
                   }}
                 />
               </Label>
-              <Divider/>
+              <Divider />
               <Label className="row-input">
                 <Text>
                   <strong>Feature type column name</strong>{" "}
@@ -162,14 +184,14 @@ export function H5ADCard({
               </Label>
               {options["featureTypeColumnName"] !== "none" &&
                 options["featureTypeColumnName"] !== null &&
-                options["featureTypeColumnName"] !== undefined && (
+                options["featureTypeColumnName"] !== undefined &&
+                sortedFeatureVals && (
                   <Label className="row-input">
                     <Text>
-                      <strong>
-                        Name of the RNA feature type
-                      </strong>
+                      <strong>Name of the RNA feature type</strong>
                     </Text>
                     <HTMLSelect
+                      defaultValue={sortedFeatureVals[0]}
                       onChange={(e) => {
                         if (e.target.value === "none") {
                           props?.setSelectedFsetModality(null);
@@ -178,9 +200,7 @@ export function H5ADCard({
                         }
                       }}
                     >
-                      {dsMeta.all_features.columns[
-                        options["featureTypeColumnName"]
-                      ].values.map((x, i) => (
+                      {sortedFeatureVals.map((x, i) => (
                         <option key={i} value={x}>
                           {x === "" ? (
                             <em>
