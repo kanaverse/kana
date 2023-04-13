@@ -53,8 +53,12 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
   const [openInfo, setOpenInfo] = useState(true);
 
   // Access App Context
-  const { setExploreFiles, setPreInputFiles, preInputFilesStatus } =
-    useContext(AppContext);
+  const {
+    setExploreFiles,
+    setPreInputFiles,
+    preInputFilesStatus,
+    setPreInputFilesStatus,
+  } = useContext(AppContext);
 
   // what tab was selected to identify format
   const [tabSelected, setTabSelected] = useState("H5AD");
@@ -153,6 +157,8 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
 
           setExploreInputs([]);
           setInputOptions([]);
+          setPreInputFiles(null);
+          setPreInputFilesStatus(null);
         }}
       >
         <Tab
