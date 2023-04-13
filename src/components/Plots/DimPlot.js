@@ -169,7 +169,7 @@ const DimPlot = (props) => {
     if (Array.isArray(sliderMinMax)) {
       let tmpgradient = new Rainbow();
       tmpgradient.setSpectrum("#F5F8FA", "#2965CC");
-      tmpgradient.setNumberRange(...sliderMinMax);
+      tmpgradient.setNumberRange(sliderMinMax[0], sliderMinMax[1] + 0.00001);
       setGradient(tmpgradient);
       setShowGradient(true);
     }
