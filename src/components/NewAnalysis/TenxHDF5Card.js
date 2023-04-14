@@ -74,6 +74,10 @@ export function TenxHDF5({
     }
   }, [options]);
 
+  useEffect(() => {
+    setCollapse(!props?.expand);
+  }, [props?.expand]);
+
   const getAvailableModalities = (modality) => {
     let curr_mod_sel =
       options?.[

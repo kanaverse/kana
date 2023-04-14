@@ -75,7 +75,8 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
     setInputFiles,
     setPreInputOptionsStatus,
     setPreInputFilesStatus,
-    tmpFiles, setTmpFiles
+    tmpFiles,
+    setTmpFiles,
   } = useContext(AppContext);
 
   // what tab was selected to identify format
@@ -298,11 +299,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
 
   // compute intersection when options change
   useEffect(() => {
-    if (
-      Array.isArray(tmpFiles) &&
-      tmpFiles.length > 0 &&
-      preInputFilesStatus
-    ) {
+    if (Array.isArray(tmpFiles) && tmpFiles.length > 0 && preInputFilesStatus) {
       setPreInputOptions({
         options: inputOptions,
       });
@@ -946,6 +943,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <ExperimentHub
                     key={i}
+                    expand={i === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
@@ -961,6 +959,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <MatrixMarket
                     key={i}
+                    expand={i === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
@@ -976,6 +975,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <TenxHDF5
                     key={i}
+                    expand={i === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
@@ -991,6 +991,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <H5AD
                     key={i}
+                    expand={i === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
@@ -1006,6 +1007,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <RDSSE
                     key={i}
+                    expand={i === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={

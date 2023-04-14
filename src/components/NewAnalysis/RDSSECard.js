@@ -137,6 +137,10 @@ export function RDSSE({
     setOptions(tmpOptions);
   }, [options?.["rnaExperiment"]]);
 
+  useEffect(() => {
+    setCollapse(!props?.expand);
+  }, [props?.expand]);
+
   const getAvailableModalities = (modality) => {
     let curr_mod_sel = options?.[`${modality.toLowerCase()}Experiment`];
 
