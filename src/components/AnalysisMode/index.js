@@ -1193,7 +1193,7 @@ export function AnalysisMode(props) {
         type: "text/plain",
       });
       tmpLink.href = URL.createObjectURL(fileNew);
-      tmpLink.download = datasetName.split(" ").join("_") + ".zip";
+      tmpLink.download = datasetName.split(" ").join("_") + "_parameters.zip";
       tmpLink.click();
 
       setExportState(false);
@@ -1203,7 +1203,7 @@ export function AnalysisMode(props) {
         type: "text/plain",
       });
       tmpLink.href = URL.createObjectURL(fileNew);
-      tmpLink.download = datasetName.split(" ").join("_") + ".zip";
+      tmpLink.download = datasetName.split(" ").join("_") + "_results.zip";
       tmpLink.click();
 
       setExportState(false);
