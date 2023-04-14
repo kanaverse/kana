@@ -153,17 +153,16 @@ function App() {
                 </p>
               </Callout>
               <Callout
-                title="looking for the old version?"
+                title="I want to go back to the old version!"
                 onClick={() => {
                   window.open("https://jkanche.com/kana", "_blank");
                 }}
                 className="frontpage-rowitem"
-                icon="buggy"
+                icon="heart-broken"
                 style={{ cursor: "pointer" }}
               >
                 <p>
-                  If you really want to use <strong>kana</strong> <em>2.x</em>,
-                  you are stuck in the past like a dinosaur.
+                  Sometimes it's time to move on, but for all other times, there's <strong>kana</strong> <em>2.0</em>.
                 </p>
               </Callout>
             </div>
