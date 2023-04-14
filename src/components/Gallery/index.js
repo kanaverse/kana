@@ -40,7 +40,8 @@ const Gallery = (props) => {
     let set = false;
 
     if (data?.config?.annotation) {
-      text += `⊃ ${data.config?.annotation.toLowerCase()} `;
+      const sanitized_anno = data.config?.annotation.replace(`${code}::`, "");
+      text += `⊃ ${sanitized_anno.toLowerCase()} `;
 
       if (data?.config?.highlight) {
         if (String(data?.config?.highlight).startsWith("cs")) {
