@@ -245,10 +245,7 @@ export async function fetchStepSummary(state, step) {
       });
       discard_vec = discardBuff.slice();
     } else {
-      let available = state["inputs"].hasAvailable();
-      remaining = state["inputs"]
-        .fetchCountMatrix(available[0])
-        .numberOfColumns();
+      remaining = state.inputs.fetchCountMatrix().numberOfColumns();
     }
     let output = { retained: remaining, discard: discard_vec };
     return output;
