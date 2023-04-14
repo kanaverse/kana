@@ -89,7 +89,8 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
           x?.file != null &&
           !(
             x.file.name.toLowerCase().endsWith("kana") ||
-            x.file.name.toLowerCase().endsWith("kana.gz")
+            x.file.name.toLowerCase().endsWith("kana.gz") ||
+            x.file.name.toLowerCase().endsWith("zip")
           )
         ) {
           setTmpStatusValid(false);
@@ -133,7 +134,7 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
                     text={
                       tmpLoadInputs?.file
                         ? tmpLoadInputs?.file.name
-                        : ".kana or .kana.gz"
+                        : ".kana or .kana.gz or .zip"
                     }
                     onInputChange={(msg) => {
                       if (msg.target.files) {

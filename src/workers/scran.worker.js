@@ -464,6 +464,10 @@ onmessage = function (msg) {
             }
           );
 
+          config.parameters.other = {
+            custom_selections: superstate.custom_selections.fetchSelections(),
+          };
+
           var transferrable = [];
           extractBuffers(config.parameters, transferrable);
           postMessage(
@@ -663,7 +667,11 @@ onmessage = function (msg) {
         }
 
         for (const [k, v] of Object.entries(features)) {
-          resp[k] = gesel.intersect(v).length;
+          if (v.length !== payload.options.length) {
+            resp[k] = 0;
+          } else {
+            resp[k] = gesel.intersect(v).length;
+          }
         }
       } catch (e) {
         console.error(e);
