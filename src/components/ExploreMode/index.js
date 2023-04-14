@@ -1332,7 +1332,7 @@ export function ExplorerMode() {
         canEscapeKeyCancel={false}
         canOutsideClickCancel={false}
         confirmButtonText={scranError?.fatal ? "Reload App" : "close"}
-        icon="warning-sign"
+        icon="bug"
         intent="danger"
         isOpen={scranError != null}
         onConfirm={() => {
