@@ -25,7 +25,7 @@ export function SortableItem(props) {
     highlight: "Clear selection of cells",
     trash: "Remove plot",
     import: "Export CSV",
-    blank: "nothing yet"
+    blank: "nothing yet",
   };
 
   // TODO: Template for each item in the Gallery
@@ -83,13 +83,13 @@ export function SortableItem(props) {
 
         break;
       case "trash":
+        // also remove items from list
+        // let titems = [...props?.items];
+        // titems.splice(titems.indexOf(props?.id), 1);
+        // props?.setItems(titems);
         let plots = [...props?.savedPlot];
         plots.splice(parseInt(props?.id) - 100, 1);
         props?.setSavedPlot(plots);
-        // also remove items from list
-        let titems = [...props?.items];
-        titems.splice(titems.indexOf(props?.id), 1);
-        props?.setItems(titems);
         break;
       case "import":
         props?.setSelectedPoints(null);
@@ -110,7 +110,7 @@ export function SortableItem(props) {
               <Button
                 onClick={(e) => handleAction(x)}
                 minimal={true}
-                icon={x === "download" ? "download": x}
+                icon={x === "download" ? "download" : x}
                 small={true}
               />
             </Tooltip2>

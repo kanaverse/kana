@@ -25,6 +25,7 @@ import { SortableItem } from "./SortableItem";
 import { Popover2 } from "@blueprintjs/popover2";
 
 const Gallery = (props) => {
+  const [defaultItems, setDefaultItems] = useState([]);
   const [items, setItems] = useState([]);
   const [itemContent, setItemContent] = useState({});
   const { datasetName, annotationObj } = useContext(AppContext);
@@ -94,12 +95,60 @@ const Gallery = (props) => {
 
   useEffect(() => {
     get_children();
-  }, [props]);
+  }, [
+    props?.qcData,
+    props?.pcaVarExp,
+    props?.clusterColors,
+    props?.cellLabelData,
+    props?.redDimsData,
+  ]);
+
+  useEffect(() => {
+    if (props?.savedPlot && Array.isArray(props?.savedPlot)) {
+      let tmpItems = [...defaultItems];
+      tmpItems.reverse();
+      let tmpItemContent = { ...itemContent };
+
+      let actions = ["select", "download", "trash"];
+      if (props?.selectedPoints && props?.selectedPoints.length > 0) {
+        actions = ["highlight", "select", "download", "trash"];
+      }
+
+      if (props?.savedPlot.length == 0) {
+        tmpItems = tmpItems.filter((x) => parseInt(x) < 100);
+      }
+
+      props?.savedPlot.map((x, i) => {
+        if (!tmpItems.includes(`${100 + i}`)) {
+          tmpItems.push(`${100 + i}`);
+        }
+        tmpItemContent[`${100 + i}`] = {
+          // id: 5 + i,
+          title: get_image_title(x),
+          className: "gitem",
+          actions: actions,
+          data: x,
+          content: (
+            <UDimPlot
+              embeddata={props?.redDimsData[x.config.embedding]}
+              selectedPoints={props?.selectedPoints}
+              setSelectedPoints={props?.setSelectedPoints}
+              highlightPoints={props?.highlightPoints}
+              colorByAnnotation={props?.colorByAnnotation}
+              data={x}
+            />
+          ),
+        };
+      });
+
+      setItems(tmpItems.reverse());
+      setItemContent(tmpItemContent);
+    }
+  }, [props?.savedPlot]);
 
   function get_children() {
-    let tmpItems = [...items];
-    tmpItems.reverse();
-    let tmpItemContent = { ...itemContent };
+    let tmpItems = [];
+    let tmpItemContent = {};
 
     if (props?.qcData && isObject(props?.qcData?.data)) {
       let tqcid = [...qcids];
@@ -343,41 +392,8 @@ const Gallery = (props) => {
       });
     }
 
-    if (props?.savedPlot) {
-      let actions = ["select", "download", "trash"];
-      if (props?.selectedPoints && props?.selectedPoints.length > 0) {
-        actions = ["highlight", "select", "download", "trash"];
-      }
-
-      if (props?.savedPlot.length == 0) {
-        tmpItems = tmpItems.filter((x) => parseInt(x) < 100);
-      }
-
-      props?.savedPlot.map((x, i) => {
-        if (!tmpItems.includes(`${100 + i}`)) {
-          tmpItems.push(`${100 + i}`);
-        }
-        tmpItemContent[`${100 + i}`] = {
-          // id: 5 + i,
-          title: get_image_title(x),
-          className: "gitem",
-          actions: actions,
-          data: x,
-          content: (
-            <UDimPlot
-              embeddata={props?.redDimsData[x.config.embedding]}
-              selectedPoints={props?.selectedPoints}
-              setSelectedPoints={props?.setSelectedPoints}
-              highlightPoints={props?.highlightPoints}
-              colorByAnnotation={props?.colorByAnnotation}
-              data={x}
-            />
-          ),
-        };
-      });
-    }
-
     setItems(tmpItems.reverse());
+    setDefaultItems(tmpItems);
     setItemContent(tmpItemContent);
   }
 
@@ -407,7 +423,7 @@ const Gallery = (props) => {
   return (
     <DndContext modifiers={[restrictToWindowEdges]} onDragEnd={handleDragEnd}>
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
-        {items.map((x) => (
+        {items.map((x, i) => (
           <SortableItem
             setSelectedPoints={props?.setSelectedPoints}
             setRestoreState={props?.setRestoreState}
@@ -417,7 +433,7 @@ const Gallery = (props) => {
             setItems={setItems}
             itemContent={itemContent}
             setItemContent={setItemContent}
-            key={x}
+            key={i + x}
             id={x}
             {...itemContent[x]}
           />
