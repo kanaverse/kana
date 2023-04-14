@@ -56,7 +56,11 @@ export function H5AD({
 
       // set some defaults
       if (init2) {
-        let tmpOptions = {};
+        let tmpOptions = {
+          featureTypeRnaName: null,
+          featureTypeAdtName: null,
+          featureTypeCrisprName: null,
+        };
         tmpOptions["countMatrixName"] = preflight.all_assay_names[0];
         setOptions(tmpOptions);
         setInit2(false);

@@ -162,7 +162,11 @@ export function RDSSE({
   };
 
   function guessModalities(preflight) {
-    let tmpOptions = {};
+    let tmpOptions = {
+      rnaExperiment: null,
+      adtExperiment: null,
+      crisprExperiment: null,
+    };
     for (const [k, v] of Object.entries(preflight.modality_features)) {
       if (k == "" || k.toLowerCase().indexOf("gene") > -1) {
         tmpOptions["rnaExperiment"] = k;

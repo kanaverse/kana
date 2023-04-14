@@ -1,7 +1,11 @@
 import { Code } from "@blueprintjs/core";
 
 export function guessModalities(preflight) {
-  let tmpOptions = {};
+  let tmpOptions = {
+    featureTypeRnaName: null,
+    featureTypeAdtName: null,
+    featureTypeCrisprName: null,
+  };
   for (const [k, v] of Object.entries(preflight.modality_features)) {
     if (k.toLowerCase() == "" || k.toLowerCase().indexOf("gene") > -1) {
       tmpOptions["featureTypeRnaName"] = k;
@@ -22,12 +26,17 @@ export function guessModalities(preflight) {
 }
 
 export function reportFeatureTypes(modality_features) {
-  return Object.entries(modality_features).map((x, i) => 
+  return Object.entries(modality_features).map((x, i) => (
     <>
-      {i > 0 ? ", " : "" }
-      {x[0] == "" ? (<Code><em>unnamed</em></Code>) : <Code>{x[0]}</Code>}{" "}
+      {i > 0 ? ", " : ""}
+      {x[0] == "" ? (
+        <Code>
+          <em>unnamed</em>
+        </Code>
+      ) : (
+        <Code>{x[0]}</Code>
+      )}{" "}
       ({x[1].numberOfFeatures} features)
     </>
-  );
+  ));
 }
-
