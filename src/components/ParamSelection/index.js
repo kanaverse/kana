@@ -54,12 +54,18 @@ export function ParameterSelection({
     setParams,
     fsetEnrichCollections,
     inputFiles,
+    loadFiles,
+    loadParams,
     preInputFiles,
     preInputOptionsStatus,
   } = useContext(AppContext);
 
   // new params, so that they can be discarded later
   const [tmpParams, setTmpParams] = useState(params);
+
+  useEffect(() => {
+    setTmpParams(params);
+  }, [params]);
 
   const handleRunAnalysis = () => {
     setStateIndeterminate(false);
@@ -68,6 +74,9 @@ export function ParameterSelection({
   };
 
   const hasMultipleBatches = () => {
+    if (!!loadFiles) {
+      return loadParams?.inputs?.batch === "string";
+    }
     return !!inputFiles.files
       ? Object.keys(inputFiles.files).length == 1 &&
           typeof inputFiles.batch !== "string"

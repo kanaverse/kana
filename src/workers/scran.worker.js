@@ -464,7 +464,7 @@ onmessage = function (msg) {
             }
           );
 
-          config.parameters.other = {
+          const other = {
             custom_selections: superstate.custom_selections.fetchSelections(),
           };
 
@@ -473,10 +473,40 @@ onmessage = function (msg) {
           postMessage(
             {
               type: "loadedParameters",
-              resp: config.parameters,
+              resp: {
+                parameters: config.parameters,
+                other: other,
+              },
             },
             transferrable
           );
+
+          let features = {};
+          let resp = {};
+          const loaded_ds = superstate.inputs.fetchDatasets();
+          for (const [k, v] of Object.entries(loaded_ds)) {
+            let res = await v.previewPrimaryIds({ cache: true });
+
+            for (const i_mod of ["RNA", "ADT", "CRISPR"]) {
+              if (i_mod in res) {
+                if (!features[i_mod]) {
+                  features[i_mod] = [res[i_mod]];
+                } else {
+                  features[i_mod].push(res[i_mod]);
+                }
+              }
+            }
+          }
+
+          for (const [k, v] of Object.entries(features)) {
+            resp[k] = gesel.intersect(v).length;
+          }
+
+          postMessage({
+            type: "PREFLIGHT_OPTIONS_DATA",
+            resp: resp,
+            msg: "Success: PREFLIGHT_OPTIONS done",
+          });
         })
         .catch((err) => {
           console.error(err);
