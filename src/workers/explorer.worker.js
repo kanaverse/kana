@@ -476,7 +476,7 @@ onmessage = function (msg) {
     loaded
       .then((x) => {
         let row_idx = payload.gene;
-        let modality = payload.modality.toLowerCase();
+        let modality = payload.modality;
 
         var vec = dataset.matrix.get(modality).row(row_idx);
 
