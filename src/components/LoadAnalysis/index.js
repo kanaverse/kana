@@ -239,7 +239,7 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
       <Divider />
       <div className="section-content">
         <div className="section-content-body">
-          <Callout icon="airplane">
+          <Callout>
             <p>
               <strong> Import a saved analysis to get started. </strong>
             </p>

@@ -1028,10 +1028,10 @@ export function ExplorerMode() {
                 </div>
               </Tooltip2>
             </div>
-            <Divider />
+            {/* <Divider /> */}
           </div>
           <div className="left-sidebar-content-flex-bottom">
-            <Divider />
+            {/* <Divider /> */}
             {/* <div
               className={
                 showPanel === "info" ? "item-sidebar-intent" : "item-sidebar"
@@ -1066,7 +1066,19 @@ export function ExplorerMode() {
             <div className="item-sidebar">
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
-                content="Checkout Kanaverse"
+                content={
+                  <div style={{ width: "250px" }}>
+                    Kana is developed by Jayaram Kancherla (
+                    <a href="https://github.com/jkanche" target="_blank">
+                      <strong>@jkanche</strong>
+                    </a>
+                    ), Aaron Lun (
+                    <a href="https://github.com/LTLA" target="_blank">
+                      <strong>@LTLA</strong>
+                    </a>
+                    ). Checkout Kanaverse for more details.
+                  </div>
+                }
                 minimal={false}
                 placement={"right"}
               >

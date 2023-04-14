@@ -1602,22 +1602,16 @@ export function AnalysisMode(props) {
                 </div>
               </Tooltip2>
             </div>
-            <Divider />
+            {/* <Divider /> */}
           </div>
           <div className="left-sidebar-content-flex-bottom">
-            <Divider />
-            {/* <div
-              className={
-                showPanel === "info" ? "item-sidebar-intent" : "item-sidebar"
-              }
-            >
-              {" "}
+            {/* <Divider />
+            <div className="item-sidebar">
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
                 content="Wanna know more about Kana?"
                 minimal={false}
                 placement={"right"}
-                intent={showPanel === "info" ? "primary" : "none"}
               >
                 <div className="item-button-group">
                   <Button
@@ -1626,12 +1620,6 @@ export function AnalysisMode(props) {
                     minimal={true}
                     fill={true}
                     icon={"info-sign"}
-                    onClick={() =>
-                      showPanel !== "info"
-                        ? setShowPanel("info")
-                        : setShowPanel(null)
-                    }
-                    intent={showPanel === "info" ? "primary" : "none"}
                   ></Button>
                   <span>INFO</span>
                 </div>
@@ -1641,7 +1629,19 @@ export function AnalysisMode(props) {
             <div className="item-sidebar">
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
-                content="Checkout Kanaverse"
+                content={
+                  <div style={{ width: "250px" }}>
+                    Kana is developed by Jayaram Kancherla (
+                    <a href="https://github.com/jkanche" target="_blank">
+                      <strong>@jkanche</strong>
+                    </a>
+                    ), Aaron Lun (
+                    <a href="https://github.com/LTLA" target="_blank">
+                      <strong>@LTLA</strong>
+                    </a>
+                    ). Checkout Kanaverse for more details.
+                  </div>
+                }
                 minimal={false}
                 placement={"right"}
               >
