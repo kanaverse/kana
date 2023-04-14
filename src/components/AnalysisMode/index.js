@@ -1554,8 +1554,7 @@ export function AnalysisMode(props) {
                       onClick={() => setShowLogs(true)}
                       intent={showPanel === "logs" ? "primary" : "none"}
                     ></Button>
-                  ) : !showQCLoader &&
-                    !showPCALoader &&
+                  ) : !showPCALoader &&
                     !showNClusLoader &&
                     !showMarkerLoader &&
                     !showDimPlotLoader ? (
