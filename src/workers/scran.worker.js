@@ -242,7 +242,9 @@ function getMarkerStandAloneForAnnot(annotation, annotation_vec) {
 
 const getAnnotation = (annotation, unfiltered = true) => {
   let vec;
-  if (annotation.startsWith(`${code}::QC::`)) {
+  if (annotation === "__batch__") {
+    vec = superstate.inputs.fetchBlock().slice();
+  } else if (annotation.startsWith(`${code}::QC::`)) {
     let metric = annotation.replace(`${code}::QC::`, "");
     let split_metric = metric.split("_");
     let metrics =
@@ -264,7 +266,7 @@ const getAnnotation = (annotation, unfiltered = true) => {
       }
     }
   } else {
-    vec = superstate.inputs.fetchAnnotations(annotation);
+    vec = superstate.inputs.fetchCellAnnotations().column(annotation);
   }
 
   if (!unfiltered) {
