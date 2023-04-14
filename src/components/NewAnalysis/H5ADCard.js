@@ -123,23 +123,28 @@ export function H5AD({
         }Name`
       ];
 
-    let remaining_modalities = MODALITIES.filter((x) => x !== modality).map(
-      (x) =>
-        options?.[
-          `featureType${
-            x.toLowerCase().charAt(0).toUpperCase() + x.toLowerCase().slice(1)
-          }Name`
-        ]
-    );
+    let remaining_modalities = MODALITIES.filter((x) => x !== modality)
+      .map(
+        (x) =>
+          options?.[
+            `featureType${
+              x.toLowerCase().charAt(0).toUpperCase() + x.toLowerCase().slice(1)
+            }Name`
+          ]
+      )
+      .filter((x) => x !== undefined && x !== null);
 
     let list = [
-      curr_mod_sel,
       ...dsMeta.all_features.columns[
         options["featureTypeColumnName"]
       ].values.filter((x) => x !== curr_mod_sel),
     ].filter((x) => !remaining_modalities.includes(x));
 
-    return list.filter((x) => !!x);
+    if (curr_mod_sel !== null && curr_mod_sel !== undefined) {
+      list = [curr_mod_sel, ...list];
+    }
+
+    return list;
   };
 
   const handleRemove = () => {
@@ -243,7 +248,10 @@ export function H5AD({
                         <HTMLSelect
                           defaultValue="none"
                           onChange={(e) => {
-                            if (e.target.value) {
+                            if (
+                              e.target.value !== undefined &&
+                              e.target.value !== null
+                            ) {
                               let tmpOptions = { ...options };
                               if (e.target.value === "none") {
                                 tmpOptions[`primaryRnaFeatureIdColumn`] = null;
@@ -285,7 +293,13 @@ export function H5AD({
                                   mod.toLowerCase().charAt(0).toUpperCase() +
                                   mod.toLowerCase().slice(1)
                                 }Name`
-                              ] !== null
+                              ] !== null &&
+                              options[
+                                `featureType${
+                                  mod.toLowerCase().charAt(0).toUpperCase() +
+                                  mod.toLowerCase().slice(1)
+                                }Name`
+                              ] !== undefined
                                 ? options[
                                     `featureType${
                                       mod
@@ -298,7 +312,10 @@ export function H5AD({
                                 : "none"
                             }
                             onChange={(e) => {
-                              if (e.target.value) {
+                              if (
+                                e.target.value !== undefined &&
+                                e.target.value !== null
+                              ) {
                                 let tmpOptions = { ...options };
                                 if (e.target.value === "none") {
                                   tmpOptions[

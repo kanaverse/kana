@@ -82,14 +82,16 @@ export function MatrixMarket({
         }Name`
       ];
 
-    let remaining_modalities = MODALITIES.filter((x) => x !== modality).map(
-      (x) =>
-        options?.[
-          `featureType${
-            x.toLowerCase().charAt(0).toUpperCase() + x.toLowerCase().slice(1)
-          }Name`
-        ]
-    );
+    let remaining_modalities = MODALITIES.filter((x) => x !== modality)
+      .map(
+        (x) =>
+          options?.[
+            `featureType${
+              x.toLowerCase().charAt(0).toUpperCase() + x.toLowerCase().slice(1)
+            }Name`
+          ]
+      )
+      .filter((x) => x !== undefined && x !== null);
 
     let list = [
       ...Object.keys(dsMeta.modality_features).filter(
@@ -97,13 +99,11 @@ export function MatrixMarket({
       ),
     ].filter((x) => !remaining_modalities.includes(x));
 
-    const flist = list.filter((x) => x !== undefined || x !== null);
-    let fflist = flist;
-    if (curr_mod_sel !== undefined && curr_mod_sel !== null) {
-      fflist = [curr_mod_sel, ...flist];
+    if (curr_mod_sel !== null && curr_mod_sel !== undefined) {
+      list = [curr_mod_sel, ...list];
     }
 
-    return fflist;
+    return list;
   };
 
   const handleRemove = () => {
@@ -172,7 +172,10 @@ export function MatrixMarket({
                             : "none"
                         }
                         onChange={(e) => {
-                          if (e.target.value) {
+                          if (
+                            e.target.value !== undefined &&
+                            e.target.value !== null
+                          ) {
                             let tmpOptions = { ...options };
                             if (e.target.value === "none") {
                               tmpOptions[

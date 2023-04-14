@@ -123,7 +123,10 @@ export function ExperimentHub({
                 <HTMLSelect
                   defaultValue="none"
                   onChange={(e) => {
-                    if (e.target.value) {
+                    if (
+                      e.target.value !== undefined &&
+                      e.target.value !== null
+                    ) {
                       let tmpOptions = { ...options };
                       if (e.target.value === "none") {
                         tmpOptions["primaryRnaFeatureIdColumn"] = null;
