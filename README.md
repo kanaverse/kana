@@ -26,7 +26,7 @@ Our client-side approach has a number of advantages:
 
 If you have a Matrix Market (`.mtx`) file or HDF5 (tenx V3 or `AnnData` representation stored as h5ad), or `SummarizedExperiment` (or derivatives like `SingleCellExperiment`) stored as an RDS file, or an [ExperimentHub](https://bioconductor.org/packages/release/bioc/html/ExperimentHub.html) id, you're ready to go.
 
-1. Launch the application by clicking [**here**](https://www.jkanche.com/kana/).
+1. Launch the application by clicking [**here**](https://www.kanaverse.org/kana/).
 2. Select the Matrix Market file (this may be Gzip-compressed).
    We recommend also providing the corresponding `genes.tsv` or `features.tsv` file to identify marker genes properly.
 3. Click the "Analyze" button, and we'll run a standard scRNA-seq analysis for you.
@@ -72,14 +72,14 @@ and diagnostic plots from the individual analysis steps.
 ### Deployment 
 
 Deployment is as easy as serving the static files in this repository via HTTPS.
-Indeed, our [**deployment**](https://www.jkanche.com/kana/) is just being served via GitHub Pages.
+Indeed, our [**deployment**](https://kanaverse.org/kana/) is just being served via GitHub Pages.
 As promised, there's no need to set up a backend server.
 
 ### Architecture
 
 ***We have significantly revamped the entire application and the underlying infrastructure to support hybrid compute - either purely client-side with webassembly, or on backend systems through node, or both.***
 
-**kana** uses the [**scran.js**](https://github.com/jkanche/scran.js) library for efficient client-side execution of scRNA-seq analysis steps.
+**kana** uses the [**scran.js**](https://github.com/kanaverse/scran.js) library for efficient client-side execution of scRNA-seq analysis steps.
 This uses a variety of C/C++ libraries compiled to [WebAssembly](https://webassembly.org/) to enable heavy-duty calculations in the browser at near-native speed.
 
 <!--
@@ -104,8 +104,8 @@ We achieve this by using a service worker to cache the resources and load the bl
 
  
 - [ba***kana***](https://github.com/kanaverse/bakana): The core analysis workflow is refactored into an independent package to provide the same functionality in browser and node environments. The Kana front-end is now a wrapper around bakana.
-- [***kana***pi](https://github.com/jkanche/kanapi): provides a node API (using WebSockets) to run single-cell analysis in backend environments (extending `bakana`). One can extend **Kana** to interact to this API (#good-first-issue)
-- [***kana***-formats](https://github.com/jkanche/kana-formats): as we add new functionality and features, we need to store and read the exported analysis state (`.kana` files). This package specifies the formats and provides readers for parsing various versions.
+- [***kana***pi](https://github.com/kaanverse/kanapi): provides a node API (using WebSockets) to run single-cell analysis in backend environments (extending `bakana`). One can extend **Kana** to interact to this API (#good-first-issue)
+- [***kana***-formats](https://github.com/kanaverse/kana-formats): as we add new functionality and features, we need to store and read the exported analysis state (`.kana` files). This package specifies the formats and provides readers for parsing various versions.
 - [***kana***val](https://github.com/kanaverse/kanaval): validate the exported analysis results. 
 
 ![Kana Full Architecture](assets/kana.arch.png)
