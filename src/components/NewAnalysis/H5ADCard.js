@@ -74,6 +74,10 @@ export function H5AD({
   }, [options]);
 
   useEffect(() => {
+    setCollapse(props?.expand);
+  }, [props?.expand]);
+
+  useEffect(() => {
     if (
       dsMeta &&
       options?.["featureTypeColumnName"] !== null &&

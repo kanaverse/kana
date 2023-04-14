@@ -80,6 +80,10 @@ export function ExperimentHub({
     }
   }, [options]);
 
+  useEffect(() => {
+    setCollapse(props?.expand);
+  }, [props?.expand]);
+
   const handleRemove = () => {
     let tmpInputs = [...inputs];
     tmpInputs.splice(index, 1);
