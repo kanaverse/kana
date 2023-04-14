@@ -672,7 +672,7 @@ const FeatureSetEnrichment = (props) => {
             onChange={(x) => {
               props?.setFsetClusterRank(x.currentTarget.value);
             }}
-            defaultValue={"cohen-min-rank"}
+            defaultValue={props?.fsetClusterRank}
           >
             <option>cohen-min</option>
             <option>cohen-mean</option>

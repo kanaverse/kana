@@ -1176,6 +1176,7 @@ export function ExplorerMode() {
                             selectedVSCluster={selectedVSCluster}
                             setSelectedVSCluster={setSelectedVSCluster}
                             setClusterRank={setClusterRank}
+                            clusterRank={clusterRank}
                             customSelection={customSelection}
                             setGene={setGene}
                             gene={gene}

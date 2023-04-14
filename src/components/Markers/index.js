@@ -633,7 +633,7 @@ const MarkerPlot = (props) => {
             onChange={(x) => {
               props?.setClusterRank(x.currentTarget.value);
             }}
-            defaultValue={"cohen-min-rank"}
+            defaultValue={props?.clusterRank}
           >
             <option>cohen-min</option>
             <option>cohen-mean</option>

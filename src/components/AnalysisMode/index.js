@@ -1767,6 +1767,7 @@ export function AnalysisMode(props) {
                             selectedVSCluster={selectedVSCluster}
                             setSelectedVSCluster={setSelectedVSCluster}
                             setClusterRank={setClusterRank}
+                            clusterRank={clusterRank}
                             customSelection={customSelection}
                             setGene={setGene}
                             gene={gene}
