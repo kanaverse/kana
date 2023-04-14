@@ -41,14 +41,16 @@ function App() {
           <Navbar className={Classes.DARK}>
             <NavbarGroup align={Alignment.LEFT}>
               <NavbarHeading>
-                {<img height="20px" src={logo}></img>}{" "}
-                <span
-                  style={{
-                    fontSize: "8px",
-                  }}
-                >
-                  v{pkgVersion.version}
-                </span>
+                <div style={{ cursor: "pointer" }} onClick={setAppMode(null)}>
+                  <img height="20px" src={logo}></img>{" "}
+                  <span
+                    style={{
+                      fontSize: "8px",
+                    }}
+                  >
+                    v{pkgVersion.version}
+                  </span>
+                </div>
               </NavbarHeading>
               <NavbarDivider />
               <span>Single cell analysis in the browser</span>
@@ -160,8 +162,8 @@ function App() {
                 style={{ cursor: "pointer" }}
               >
                 <p>
-                  If you really want to use <strong>kana</strong> <em>2.x</em>, you are stuck in the
-                  past like a dinosaur.
+                  If you really want to use <strong>kana</strong> <em>2.x</em>,
+                  you are stuck in the past like a dinosaur.
                 </p>
               </Callout>
             </div>

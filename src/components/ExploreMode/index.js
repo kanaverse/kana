@@ -110,6 +110,7 @@ export function ExplorerMode() {
     exploreFiles,
     setExploreFiles,
     preInputFiles,
+    setAppMode,
   } = useContext(AppContext);
 
   // modalities
@@ -840,14 +841,21 @@ export function ExplorerMode() {
       <Navbar className={Classes.DARK}>
         <NavbarGroup align={Alignment.LEFT}>
           <NavbarHeading>
-            {<img height="20px" src={logo}></img>}{" "}
-            <span
-              style={{
-                fontSize: "8px",
+            <div
+              style={{ cursor: "pointer" }}
+              onClick={() => {
+                setAppMode(null);
               }}
             >
-              v{pkgVersion.version}
-            </span>
+              <img height="20px" src={logo}></img>{" "}
+              <span
+                style={{
+                  fontSize: "8px",
+                }}
+              >
+                v{pkgVersion.version}
+              </span>
+            </div>
           </NavbarHeading>
           <NavbarDivider />
           <span>Single cell analysis in the browser</span>
