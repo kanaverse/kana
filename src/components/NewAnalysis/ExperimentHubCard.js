@@ -81,8 +81,7 @@ export function ExperimentHub({
   }, [options]);
 
   useEffect(() => {
-    console.log(props?.expand);
-    setCollapse(!props?.expand);
+    setCollapse(props?.expand);
   }, [props?.expand]);
 
   const handleRemove = () => {

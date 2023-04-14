@@ -74,7 +74,7 @@ export function H5AD({
   }, [options]);
 
   useEffect(() => {
-    setCollapse(!props?.expand);
+    setCollapse(props?.expand);
   }, [props?.expand]);
 
   useEffect(() => {

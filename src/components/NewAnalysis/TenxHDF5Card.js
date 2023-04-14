@@ -75,7 +75,7 @@ export function TenxHDF5({
   }, [options]);
 
   useEffect(() => {
-    setCollapse(!props?.expand);
+    setCollapse(props?.expand);
   }, [props?.expand]);
 
   const getAvailableModalities = (modality) => {

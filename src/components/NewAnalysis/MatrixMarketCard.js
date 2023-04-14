@@ -74,7 +74,7 @@ export function MatrixMarket({
   }, [options]);
 
   useEffect(() => {
-    setCollapse(!props?.expand);
+    setCollapse(props?.expand);
   }, [props?.expand]);
 
   const getAvailableModalities = (modality) => {

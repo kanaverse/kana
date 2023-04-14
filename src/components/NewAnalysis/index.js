@@ -943,7 +943,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <ExperimentHub
                     key={i}
-                    expand={i === tmpFiles.length}
+                    expand={i+1 === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
@@ -959,7 +959,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <MatrixMarket
                     key={i}
-                    expand={i === tmpFiles.length}
+                    expand={i+1 === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
@@ -975,7 +975,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <TenxHDF5
                     key={i}
-                    expand={i === tmpFiles.length}
+                    expand={i+1 === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
@@ -991,7 +991,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <H5AD
                     key={i}
-                    expand={i === tmpFiles.length}
+                    expand={i+1 === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
@@ -1007,7 +1007,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <RDSSE
                     key={i}
-                    expand={i === tmpFiles.length}
+                    expand={i+1 === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
