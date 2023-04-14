@@ -92,15 +92,16 @@ function App() {
                 </a>{" "}
                 for more details.
               </p>
-                <p>
-                  Download some of our test datasets{" "}
-                  <a
-                    target="_blank"
-                    href="https://github.com/kanaverse/random-test-files/releases"
-                  >
-                    here
-                  </a> to try us out.
-                </p>
+              <p>
+                Download some of our test datasets{" "}
+                <a
+                  target="_blank"
+                  href="https://github.com/kanaverse/random-test-files/releases"
+                >
+                  here
+                </a>{" "}
+                to try us out.
+              </p>
             </div>
             <div className="frontpage-actions">
               <Callout
@@ -147,6 +148,20 @@ function App() {
                   Try out <strong>kana</strong> using the Zeisel mouse brain
                   dataset from Bioconductor's ExperimentHub. No lock-in
                   contract, no credit check required.
+                </p>
+              </Callout>
+              <Callout
+                title="looking for the old version?"
+                onClick={() => {
+                  window.open("https://jkanche.com/kana", "_blank");
+                }}
+                className="frontpage-rowitem"
+                icon="buggy"
+                style={{ cursor: "pointer" }}
+              >
+                <p>
+                  If you really want to use <strong>kana</strong> <em>2.x</em>, you are stuck in the
+                  past like a dinosaur.
                 </p>
               </Callout>
             </div>
