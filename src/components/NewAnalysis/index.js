@@ -932,10 +932,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
               </Callout>
             )}
           {preInputOptionsStatus && tmpFiles.length > 1 && (
-            <>
-              <Divider />
-              {render_multi_summary()}
-            </>
+            <>{render_multi_summary()}</>
           )}
           <div className="section-inputs">
             {tmpFiles.map((x, i) => {
@@ -943,7 +940,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <ExperimentHub
                     key={i}
-                    expand={i+1 === tmpFiles.length}
+                    expand={i + 1 === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
@@ -959,7 +956,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <MatrixMarket
                     key={i}
-                    expand={i+1 === tmpFiles.length}
+                    expand={i + 1 === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
@@ -975,7 +972,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <TenxHDF5
                     key={i}
-                    expand={i+1 === tmpFiles.length}
+                    expand={i + 1 === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
@@ -991,7 +988,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <H5AD
                     key={i}
-                    expand={i+1 === tmpFiles.length}
+                    expand={i + 1 === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
@@ -1007,7 +1004,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 return (
                   <RDSSE
                     key={i}
-                    expand={i+1 === tmpFiles.length}
+                    expand={i + 1 === tmpFiles.length}
                     resource={x}
                     index={i}
                     preflight={
