@@ -63,7 +63,7 @@ export function SECard({
       tmpOptions["isPrimaryNormalized"] = {};
       for (const [k, v] of Object.entries(preflight.modality_assay_names)) {
         tmpOptions["primaryAssay"][k] = v[0];
-        tmpOptions["isPrimaryNormalized"][k] = true;
+        tmpOptions["isPrimaryNormalized"][k] = v[0] === "counts" ? false : true;
       }
       tmpOptions["reducedDimensionNames"] = null;
       setOptions(tmpOptions);
@@ -181,11 +181,11 @@ export function SECard({
                         options["primaryAssay"][x] !== "none" && (
                           <Label className="row-input">
                             <Switch
-                              checked={options["isPrimaryNormalized"]}
+                              checked={options["isPrimaryNormalized"][x]}
                               label="Is this assay log-normalized?"
                               onChange={(e) => {
                                 let tmpOptions = { ...options };
-                                tmpOptions["isPrimaryNormalized"] =
+                                tmpOptions["isPrimaryNormalized"][x] =
                                   e.target.checked;
                                 setOptions(tmpOptions);
                               }}
