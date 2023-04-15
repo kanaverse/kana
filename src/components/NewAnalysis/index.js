@@ -29,6 +29,7 @@ import "./index.css";
 import { AppContext } from "../../context/AppContext";
 
 import { generateUID } from "../../utils/utils";
+import { v4 as uuidv4 } from "uuid";
 
 import { MatrixMarket } from "./MatrixMarketCard";
 import { ExperimentHub } from "./ExperimentHubCard";
@@ -54,7 +55,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
 
   const initTmpFile = () => {
     return {
-      name: `Dataset-${tmpFiles.length + 2}`,
+      name: uuidv4(),
       format: tabSelected,
     };
   };
@@ -98,7 +99,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
 
   // contains the tmp list of inputs so we can discard if needed
   const [tmpNewInputs, setTmpNewInputs] = useState({
-    name: `Dataset-1`,
+    name: uuidv4(),
     format: tabSelected,
   });
 
