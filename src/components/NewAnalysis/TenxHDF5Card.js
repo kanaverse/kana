@@ -78,37 +78,32 @@ export function TenxHDF5({
     setCollapse(props?.expand);
   }, [props?.expand]);
 
-  const getAvailableModalities = (modality) => {
-    let curr_mod_sel =
-      options?.[
-        `featureType${
-          modality.toLowerCase().charAt(0).toUpperCase() +
-          modality.toLowerCase().slice(1)
-        }Name`
-      ];
+  const getCamelCaseKey = (mod) => {
+    return (
+      mod.toLowerCase().charAt(0).toUpperCase() + mod.toLowerCase().slice(1)
+    );
+  };
 
-    let remaining_modalities = MODALITIES.filter((x) => x !== modality)
-      .map(
-        (x) =>
-          options?.[
-            `featureType${
-              x.toLowerCase().charAt(0).toUpperCase() + x.toLowerCase().slice(1)
-            }Name`
-          ]
-      )
-      .filter((x) => x !== undefined && x !== null);
+  const getFTypeKey = (mod) => {
+    return `featureType${getCamelCaseKey(mod)}Name`;
+  };
 
-    let list = [
-      ...Object.keys(dsMeta.modality_features).filter(
-        (x) => x !== curr_mod_sel
-      ),
-    ].filter((x) => !remaining_modalities.includes(x));
+  const resetModality = (mod, val) => {
+    let tmpOptions = { ...options };
 
-    if (curr_mod_sel !== null && curr_mod_sel !== undefined) {
-      list = [curr_mod_sel, ...list];
+    const remaining_modalities = MODALITIES.filter((x) => x !== mod);
+
+    for (const rm of remaining_modalities) {
+      if (val === tmpOptions?.[getFTypeKey(rm)]) {
+        tmpOptions[getFTypeKey(rm)] = null;
+      }
     }
 
-    return list;
+    return tmpOptions;
+  };
+
+  const getAvailableModalities = (modality) => {
+    return Object.keys(dsMeta.modality_features);
   };
 
   const handleRemove = () => {
@@ -148,7 +143,7 @@ export function TenxHDF5({
             {dsMeta &&
               MODALITIES.map((mod, i) => {
                 return (
-                  <div key={i}>
+                  <div key={options[getFTypeKey(mod)] + i}>
                     <Divider />
                     <Label className="row-input">
                       <Text>
@@ -156,18 +151,9 @@ export function TenxHDF5({
                       </Text>
                       <HTMLSelect
                         defaultValue={
-                          options[
-                            `featureType${
-                              mod.toLowerCase().charAt(0).toUpperCase() +
-                              mod.toLowerCase().slice(1)
-                            }Name`
-                          ] !== null
-                            ? options[
-                                `featureType${
-                                  mod.toLowerCase().charAt(0).toUpperCase() +
-                                  mod.toLowerCase().slice(1)
-                                }Name`
-                              ]
+                          options[getFTypeKey(mod)] !== null &&
+                          options[getFTypeKey(mod)] !== undefined
+                            ? options[getFTypeKey(mod)]
                             : "none"
                         }
                         onChange={(e) => {
@@ -175,21 +161,14 @@ export function TenxHDF5({
                             e.target.value !== undefined &&
                             e.target.value !== null
                           ) {
-                            let tmpOptions = { ...options };
+                            let tmpOptions = resetModality(
+                              mod,
+                              e.target.value === "none" ? null : e.target.value
+                            );
                             if (e.target.value === "none") {
-                              tmpOptions[
-                                `featureType${
-                                  mod.toLowerCase().charAt(0).toUpperCase() +
-                                  mod.toLowerCase().slice(1)
-                                }Name`
-                              ] = null;
+                              tmpOptions[getFTypeKey(mod)] = null;
                             } else {
-                              tmpOptions[
-                                `featureType${
-                                  mod.toLowerCase().charAt(0).toUpperCase() +
-                                  mod.toLowerCase().slice(1)
-                                }Name`
-                              ] = e.target.value;
+                              tmpOptions[getFTypeKey(mod)] = e.target.value;
                             }
                             setOptions(tmpOptions);
                           }
@@ -205,24 +184,9 @@ export function TenxHDF5({
                     </Label>
                     <FormGroup
                       disabled={
-                        options?.[
-                          `featureType${
-                            mod.toLowerCase().charAt(0).toUpperCase() +
-                            mod.toLowerCase().slice(1)
-                          }Name`
-                        ] === undefined ||
-                        options?.[
-                          `featureType${
-                            mod.toLowerCase().charAt(0).toUpperCase() +
-                            mod.toLowerCase().slice(1)
-                          }Name`
-                        ] === null ||
-                        options?.[
-                          `featureType${
-                            mod.toLowerCase().charAt(0).toUpperCase() +
-                            mod.toLowerCase().slice(1)
-                          }Name`
-                        ] === "none"
+                        options?.[getFTypeKey(mod)] === undefined ||
+                        options?.[getFTypeKey(mod)] === null ||
+                        options?.[getFTypeKey(mod)] === "none"
                       }
                     >
                       <Label className="row-input">
@@ -231,24 +195,9 @@ export function TenxHDF5({
                         </Text>
                         <HTMLSelect
                           disabled={
-                            options?.[
-                              `featureType${
-                                mod.toLowerCase().charAt(0).toUpperCase() +
-                                mod.toLowerCase().slice(1)
-                              }Name`
-                            ] === undefined ||
-                            options?.[
-                              `featureType${
-                                mod.toLowerCase().charAt(0).toUpperCase() +
-                                mod.toLowerCase().slice(1)
-                              }Name`
-                            ] === null ||
-                            options?.[
-                              `featureType${
-                                mod.toLowerCase().charAt(0).toUpperCase() +
-                                mod.toLowerCase().slice(1)
-                              }Name`
-                            ] === "none"
+                            options?.[getFTypeKey(mod)] === undefined ||
+                            options?.[getFTypeKey(mod)] === null ||
+                            options?.[getFTypeKey(mod)] === "none"
                           }
                           defaultValue="none"
                           onChange={(e) => {
@@ -275,21 +224,11 @@ export function TenxHDF5({
                         >
                           <option value="none">rownames</option>
                           {dsMeta.modality_features[
-                            options?.[
-                              `featureType${
-                                mod.toLowerCase().charAt(0).toUpperCase() +
-                                mod.toLowerCase().slice(1)
-                              }Name`
-                            ]
+                            options?.[getFTypeKey(mod)]
                           ]?.["columns"] &&
                             Object.keys(
                               dsMeta.modality_features[
-                                options[
-                                  `featureType${
-                                    mod.toLowerCase().charAt(0).toUpperCase() +
-                                    mod.toLowerCase().slice(1)
-                                  }Name`
-                                ]
+                                options[getFTypeKey(mod)]
                               ]["columns"]
                             ).map((x, i) => (
                               <option key={i} value={x}>

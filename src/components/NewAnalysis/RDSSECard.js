@@ -142,23 +142,31 @@ export function RDSSE({
   }, [props?.expand]);
 
   const getAvailableModalities = (modality) => {
-    let curr_mod_sel = options?.[`${modality.toLowerCase()}Experiment`];
+    return Object.keys(dsMeta.modality_features);
+  };
 
-    let remaining_modalities = MODALITIES.filter((x) => x !== modality)
-      .map((x) => options?.[`${x.toLowerCase()}Experiment`])
-      .filter((x) => x !== undefined && x !== null);
+  const getCamelCaseKey = (mod) => {
+    return (
+      mod.toLowerCase().charAt(0).toUpperCase() + mod.toLowerCase().slice(1)
+    );
+  };
 
-    let list = [
-      ...Object.keys(dsMeta.modality_features).filter(
-        (x) => x !== curr_mod_sel
-      ),
-    ].filter((x) => !remaining_modalities.includes(x));
+  const getFTypeKey = (mod) => {
+    return `${mod.toLowerCase()}Experiment`;
+  };
 
-    if (curr_mod_sel !== null && curr_mod_sel !== undefined) {
-      list = [curr_mod_sel, ...list];
+  const resetModality = (mod, val) => {
+    let tmpOptions = { ...options };
+
+    const remaining_modalities = MODALITIES.filter((x) => x !== mod);
+
+    for (const rm of remaining_modalities) {
+      if (val === tmpOptions?.[getFTypeKey(rm)]) {
+        tmpOptions[getFTypeKey(rm)] = null;
+      }
     }
 
-    return list;
+    return tmpOptions;
   };
 
   function guessModalities(preflight) {
@@ -225,7 +233,7 @@ export function RDSSE({
             {dsMeta &&
               MODALITIES.map((mod, i) => {
                 return (
-                  <div key={i}>
+                  <div key={options[getFTypeKey(mod)] + i}>
                     <Divider />
                     <Label className="row-input">
                       <Text>
@@ -233,8 +241,9 @@ export function RDSSE({
                       </Text>
                       <HTMLSelect
                         defaultValue={
-                          options[`${mod.toLowerCase()}Experiment`] !== null
-                            ? options[`${mod.toLowerCase()}Experiment`]
+                          options[getFTypeKey(mod)] !== null &&
+                          options[getFTypeKey(mod)] !== undefined
+                            ? options[getFTypeKey(mod)]
                             : "none"
                         }
                         onChange={(e) => {
@@ -242,13 +251,14 @@ export function RDSSE({
                             e.target.value !== undefined &&
                             e.target.value !== null
                           ) {
-                            let tmpOptions = { ...options };
+                            let tmpOptions = resetModality(
+                              mod,
+                              e.target.value === "none" ? null : e.target.value
+                            );
                             if (e.target.value === "none") {
-                              tmpOptions[`${mod.toLowerCase()}Experiment`] =
-                                null;
+                              tmpOptions[getFTypeKey(mod)] = null;
                             } else {
-                              tmpOptions[`${mod.toLowerCase()}Experiment`] =
-                                e.target.value;
+                              tmpOptions[getFTypeKey(mod)] = e.target.value;
                             }
                             setOptions(tmpOptions);
                           }
@@ -264,10 +274,9 @@ export function RDSSE({
                     </Label>
                     <FormGroup
                       disabled={
-                        options?.[`${mod.toLowerCase()}Experiment`] ===
-                          undefined ||
-                        options?.[`${mod.toLowerCase()}Experiment`] === null ||
-                        options?.[`${mod.toLowerCase()}Experiment`] === "none"
+                        options?.[getFTypeKey(mod)] === undefined ||
+                        options?.[getFTypeKey(mod)] === null ||
+                        options?.[getFTypeKey(mod)] === "none"
                       }
                     >
                       <Label className="row-input">
@@ -276,9 +285,9 @@ export function RDSSE({
                         </Text>
                         <HTMLSelect
                           defaultValue={
-                            options?.[`${mod.toLowerCase()}Experiment`]
+                            options?.[getFTypeKey(mod)]
                               ? dsMeta.modality_assay_names[
-                                  options?.[`${mod.toLowerCase()}Experiment`]
+                                  options?.[getFTypeKey(mod)]
                                 ][0]
                               : null
                           }
@@ -300,10 +309,10 @@ export function RDSSE({
                           }}
                         >
                           {dsMeta.modality_assay_names[
-                            options?.[`${mod.toLowerCase()}Experiment`]
+                            options?.[getFTypeKey(mod)]
                           ] &&
                             dsMeta.modality_assay_names[
-                              options[`${mod.toLowerCase()}Experiment`]
+                              options[getFTypeKey(mod)]
                             ].map((x, i) => (
                               <option key={i} value={x}>
                                 {x}
@@ -314,10 +323,9 @@ export function RDSSE({
                     </FormGroup>
                     <FormGroup
                       disabled={
-                        options?.[`${mod.toLowerCase()}Experiment`] ===
-                          undefined ||
-                        options?.[`${mod.toLowerCase()}Experiment`] === null ||
-                        options?.[`${mod.toLowerCase()}Experiment`] === "none"
+                        options?.[getFTypeKey(mod)] === undefined ||
+                        options?.[getFTypeKey(mod)] === null ||
+                        options?.[getFTypeKey(mod)] === "none"
                       }
                     >
                       <Label className="row-input">
@@ -326,12 +334,9 @@ export function RDSSE({
                         </Text>
                         <HTMLSelect
                           disabled={
-                            options?.[`${mod.toLowerCase()}Experiment`] ===
-                              undefined ||
-                            options?.[`${mod.toLowerCase()}Experiment`] ===
-                              null ||
-                            options?.[`${mod.toLowerCase()}Experiment`] ===
-                              "none"
+                            options?.[getFTypeKey(mod)] === undefined ||
+                            options?.[getFTypeKey(mod)] === null ||
+                            options?.[getFTypeKey(mod)] === "none"
                           }
                           defaultValue="none"
                           onChange={(e) => {
@@ -358,11 +363,11 @@ export function RDSSE({
                         >
                           <option value="none">rownames</option>
                           {dsMeta.modality_features[
-                            options?.[`${mod.toLowerCase()}Experiment`]
+                            options?.[getFTypeKey(mod)]
                           ]?.["columns"] &&
                             Object.keys(
                               dsMeta.modality_features[
-                                options[`${mod.toLowerCase()}Experiment`]
+                                options[getFTypeKey(mod)]
                               ]["columns"]
                             ).map((x, i) => (
                               <option key={i} value={x}>
