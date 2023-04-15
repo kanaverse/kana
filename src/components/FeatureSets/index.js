@@ -524,12 +524,18 @@ const FeatureSetEnrichment = (props) => {
         });
       });
 
+      let fname = `${datasetName}_${props?.selectedFsetAnnotation}_${props?.selectedFsetCluster}`;
+
+      if (props?.selectedFsetVSCluster) {
+        fname += `${fname}_vs_${props?.selectedFsetVSCluster}`;
+      }
+
       return (
-        <div style={{ padidngTop: "5px" }}>
+        <div>
           <CSVLink
             data={dRows}
             target="_blank"
-            filename={`${datasetName}_gene_sets.csv`}
+            filename={`${fname}_gene_sets.csv`}
           >
             <div>
               <Button minimal={true} icon="download" small={true} />

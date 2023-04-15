@@ -391,22 +391,29 @@ const MarkerPlot = (props) => {
     let dRows = [];
 
     sortedRows.forEach((x) => {
-      dRows.push({
-        gene: genesInfo?.[geneColSel?.[props?.selectedModality]]?.[x.gene],
+      let tmp = {
         mean: x.mean,
         delta_detected: x.delta,
         lfc: x.lfc,
         detected: x.detected,
-      });
+      };
+
+      for (const [k, v] of Object.entries(genesInfo)) {
+        tmp[k] = v[x.gene];
+      }
+
+      dRows.push(tmp);
     });
 
+    let fname = `${datasetName}_${props?.selectedModality}_${props?.selectedMarkerAnnotation}_${props?.selectedCluster}`;
+
+    if (props?.selectedVSCluster) {
+      fname += `${fname}_vs_${props?.selectedVSCluster}`;
+    }
+
     return (
-      <div style={{ padidngTop: "5px" }}>
-        <CSVLink
-          data={dRows}
-          target="_blank"
-          filename={`${datasetName}_markers.csv`}
-        >
+      <div>
+        <CSVLink data={dRows} target="_blank" filename={`${fname}_markers.csv`}>
           <div>
             <Button minimal={true} icon="download" small={true} />
           </div>
