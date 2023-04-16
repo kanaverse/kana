@@ -142,23 +142,19 @@ export async function fetchStepSummary(state, step) {
 
     return output;
   } else if (step === "rna_quality_control") {
+    let metrics = {
+      sums: state[step].fetchMetrics().sums(),
+      detected: state[step].fetchMetrics().detected(),
+      proportion: state[step].fetchMetrics().subsetProportions(0),
+    };
+
     let output = {};
     var blocks = state["inputs"].fetchBlockLevels();
+
     if (blocks === null) {
       blocks = ["default"];
-      output.data = {
-        default: {
-          sums: state[step].fetchMetrics().sums(),
-          detected: state[step].fetchMetrics().detected(),
-          proportion: state[step].fetchMetrics().subsetProportions(0),
-        },
-      };
+      output.data = { default: metrics };
     } else {
-      let metrics = {
-        sums: state[step].fetchMetrics().sums(),
-        detected: state[step].fetchMetrics().detected(),
-        proportion: state[step].fetchMetrics().subsetProportions(0),
-      };
       let bids = state["inputs"].fetchBlock();
       output.data = splitMetricsByBlock(metrics, blocks, bids);
     }
@@ -172,24 +168,18 @@ export async function fetchStepSummary(state, step) {
 
     return output;
   } else if (step === "adt_quality_control") {
-    var output = {};
+    let metrics = {
+      sums: state[step].fetchMetrics().sums(),
+      detected: state[step].fetchMetrics().detected(),
+      proportion: state[step].fetchMetrics().subsetTotals(0)
+    };
 
+    var output = {};
     var blocks = state["inputs"].fetchBlockLevels();
     if (blocks === null) {
       blocks = ["default"];
-      output.data = {
-        default: {
-          sums: state[step].fetchMetrics().sums(),
-          detected: state[step].fetchMetrics().detected(),
-          proportion: state[step].fetchMetrics().subsetTotals(0),
-        },
-      };
+      output.data = { default: metrics };
     } else {
-      let metrics = {
-        sums: state[step].fetchMetrics().sums(),
-        detected: state[step].fetchMetrics().detected(),
-        proportion: state[step].fetchMetrics().maxProportions(),
-      };
       let bids = state["inputs"].fetchBlock();
       output.data = splitMetricsByBlock(metrics, blocks, bids);
     }
@@ -208,23 +198,18 @@ export async function fetchStepSummary(state, step) {
 
     return output;
   } else if (step === "crispr_quality_control") {
+    let metrics = {
+      sums: state[step].fetchMetrics().sums(),
+      detected: state[step].fetchMetrics().detected(),
+      proportion: state[step].fetchMetrics().maxProportions(),
+    };
+
     let output = {};
     var blocks = state["inputs"].fetchBlockLevels();
     if (blocks === null) {
       blocks = ["default"];
-      output.data = {
-        default: {
-          sums: state[step].fetchMetrics().sums(),
-          detected: state[step].fetchMetrics().detected(),
-          proportion: state[step].fetchMetrics().maxProportions(),
-        },
-      };
+      output.data = { default: metrics };
     } else {
-      let metrics = {
-        sums: state[step].fetchMetrics().sums(),
-        detected: state[step].fetchMetrics().detected(),
-        proportion: state[step].fetchMetrics().maxProportions(),
-      };
       let bids = state["inputs"].fetchBlock();
       output.data = splitMetricsByBlock(metrics, blocks, bids);
     }
