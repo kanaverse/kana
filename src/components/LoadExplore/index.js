@@ -245,7 +245,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                 <Callout intent="primary">
                   <p>
                     Load an <code>*.zip</code> file containing the saved results
-                    from <strong>kana</strong>'s analysis mode. This should
+                    from <strong>kana</strong>'s analysis mode, via the <em>Download analysis results (as ZIP)</em> option. This should
                     include reduced dimensions and clusterings.
                   </p>
                 </Callout>

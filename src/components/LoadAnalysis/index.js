@@ -120,12 +120,20 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
         <Tab
           id="kana"
           title="Load from file"
-          panel={
+          panel={<>
             <div>
+              <div className="row">
+                <Callout intent="primary">
+                  <p>
+                    Load analysis parameters from a <code>*.zip</code> file,
+                    created by clicking <em>Download analysis parameters</em> during a previous <strong>kana</strong> session.
+                  </p>
+                </Callout>
+              </div>
               <div className="row">
                 <Label className="row-input">
                   <Text className="text-100">
-                    <span>Load analysis from Kana file</span>
+                    <span>Load parameters from ZIP file</span>
                   </Text>
                   <FileInput
                     style={{
@@ -148,13 +156,21 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
                 </Label>
               </div>
             </div>
-          }
+            </>}
         />
         {
           <Tab
             id="kanadb"
             title="Load from browser"
-            panel={
+            panel={<>
+              <div className="row">
+                <Callout intent="primary">
+                  <p>
+                    Load analysis parameters from the browser's cache,
+                    created by clicking <em>Save analysis parameters (to browser)</em> during a previous <strong>kana</strong> session.
+                  </p>
+                </Callout>
+              </div>
               <div>
                 {props?.kanaIDBRecs.length > 0 ? (
                   <div className="row">
@@ -165,7 +181,7 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
                           paddingBottom: "10px",
                         }}
                       >
-                        <span>Load analysis saved to browser</span>
+                        <span>Load parameters from browser</span>
                       </Text>
                       <RadioGroup
                         onChange={(x) => {
@@ -224,7 +240,7 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
                   </div>
                 )}
               </div>
-            }
+            </>}
           />
         }
       </Tabs>
@@ -234,51 +250,20 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
   return (
     <Card className="section" interactive={false} elevation={Elevation.ZERO}>
       <div className="section-header">
-        <H2 className="section-header-title">Load Saved Analysis</H2>
+        <H2 className="section-header-title">Load Analysis Parameters</H2>
       </div>
       <Divider />
       <div className="section-content">
         <div className="section-content-body">
           <Callout>
             <p>
-              <strong> Import a saved analysis to get started. </strong>
+              <strong>
+                Recover an analysis using saved parameters from a previous kana session. 
+              </strong>
             </p>
           </Callout>
           <Divider />
           {render_inputs()}
-        </div>
-        <div className="section-info">
-          <div>
-            {openInfo && (
-              <Button
-                outlined={true}
-                fill={true}
-                intent="warning"
-                text="Hide Info"
-                onClick={() => setOpenInfo(false)}
-              />
-            )}
-            {!openInfo && (
-              <Button
-                outlined={true}
-                fill={true}
-                intent="warning"
-                text="Show Info"
-                onClick={() => setOpenInfo(true)}
-              />
-            )}
-            <Collapse isOpen={openInfo}>
-              <Callout intent="primary">
-                <p>
-                  These files are stored as{" "}
-                  <strong>
-                    <code>*.kana</code>
-                  </strong>
-                  . files.
-                </p>
-              </Callout>
-            </Collapse>
-          </div>
         </div>
       </div>
       <Divider />
