@@ -1,4 +1,38 @@
 import * as bakana from "bakana";
+import * as gesel from "gesel";
+import * as remotes from "bakana-remotes";
+import * as downloads from "./DownloadsDBHandler.js";
+
+// Evade CORS problems and enable caching.
+const proxy = "https://cors-proxy.aaron-lun.workers.dev";
+async function proxyAndCache(url) {
+  let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
+  return new Uint8Array(buffer);
+}
+
+bakana.CellLabellingState.setDownload(proxyAndCache);
+gesel.setGeneDownload(proxyAndCache);
+bakana.RnaQualityControlState.setDownload(proxyAndCache);
+
+gesel.referenceDownload(async (file, start, end) => {
+  let url = gesel.referenceBaseUrl() + "/" + file;
+  let full = proxy + "/" + encodeURIComponent(url);
+  if (start == null && end == null) {
+    let buffer = await downloads.get(full);
+    return new Response(buffer);
+  } else {
+    return fetch(full + "?start=" + String(start) + "&end=" + String(end));
+  }
+});
+
+gesel.geneDownload(async (file) => {
+  let url = gesel.geneBaseUrl() + "/" + file;
+  let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
+  return new Response(buffer);
+});
+
+remotes.ExperimentHubDataset.setDownloadFun(proxyAndCache);
+bakana.availableReaders["ExperimentHub"] = remotes.ExperimentHubDataset;
 
 export function extractBuffers(object, store) {
   if (!object) {
