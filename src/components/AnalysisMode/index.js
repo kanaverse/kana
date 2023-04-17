@@ -705,7 +705,8 @@ export function AnalysisMode(props) {
     setSelectedFsetIndex(null);
   }, [markersORFSets]);
 
-  // autoload an example dataset
+  // I want to try it out!!
+  // autoload the ziesel dataset
   useEffect(() => {
     if (loadZiesel && wasmInitialized) {
       let files = {
@@ -730,15 +731,16 @@ export function AnalysisMode(props) {
         batch: null,
       });
 
-      setPreInputOptions({
-        options: [options],
-      });
-
       setInputFiles({
         batch: null,
         subset: null,
         files: files,
       });
+
+      // Hard coding the response
+      // so we do not have to time
+      // the options request
+      setPreInputOptionsStatus({ RNA: 21135 });
     }
   }, [loadZiesel, wasmInitialized]);
 
