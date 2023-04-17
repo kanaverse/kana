@@ -372,7 +372,7 @@ export function AnalysisMode(props) {
             payload: {
               inputs: {
                 files: null,
-                batch: loadParams?.inputs?.batch,
+                batch: loadParams?.inputs?.block_factor,
                 subset: loadParams?.inputs?.subset,
               },
               params: params,
