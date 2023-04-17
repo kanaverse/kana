@@ -117,7 +117,7 @@ function App() {
                       <p>
                         Use at your own risk. If you run into any issues, please
                         use the latest version of the Safari browser (version
-                        16.4 or above) or switch to Chrome.
+                        16.4 or above) or switch to Chrome or Firefox.
                       </p>
                     </Callout>
                     {window.location.href.startsWith("http://") && (
