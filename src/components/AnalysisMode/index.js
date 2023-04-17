@@ -363,6 +363,7 @@ export function AnalysisMode(props) {
             },
           });
 
+          setAllLoaders();
           add_to_logs("info", `--- Reloading saved analysis ---`);
           setInitLoadState(true);
         } else {
@@ -1562,7 +1563,7 @@ export function AnalysisMode(props) {
                 intent={showPanel === "logs" ? "primary" : "none"}
               >
                 <div className="item-button-group">
-                  {inputFiles?.files === null ? (
+                  {inputFiles?.files === null && loadFiles?.files === null ? (
                     <Button
                       outlined={false}
                       large={false}
