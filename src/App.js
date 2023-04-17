@@ -98,6 +98,45 @@ function App() {
               </p>
             </div>
             <div className="frontpage-actions">
+              {window.navigator.userAgent.toLowerCase().indexOf("macintosh") !==
+                -1 &&
+                window.navigator.userAgent.toLowerCase().indexOf("safari") !==
+                  -1 &&
+                window.navigator.userAgent.toLowerCase().indexOf("firefox") ===
+                  -1 &&
+                window.navigator.userAgent.toLowerCase().indexOf("chrome") ===
+                  -1 && (
+                  <>
+                    <Callout
+                      title="Looks like you are using Safari"
+                      className="frontpage-rowitem"
+                      icon="warning-sign"
+                      intent="warning"
+                      style={{ cursor: "pointer" }}
+                    >
+                      <p>
+                        Use at your own risk. If you run into any issues, please
+                        use the latest version of the Safari browser (version
+                        16.4 or above) or switch to Chrome.
+                      </p>
+                    </Callout>
+                    {window.location.href.startsWith("http://") && (
+                      <Callout
+                        title="Thou shall not use http"
+                        className="frontpage-rowitem"
+                        icon="warning-sign"
+                        intent="danger"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <p>
+                          <strong>Kana</strong> does not work in this mode,{" "}
+                          <a href="https://kanaverse.org/kana">Click here</a> to
+                          redirect to the https version.
+                        </p>
+                      </Callout>
+                    )}
+                  </>
+                )}
               <Callout
                 title="I want to analyze a new dataset"
                 onClick={() => setAppMode("analysis")}
@@ -154,7 +193,8 @@ function App() {
                 style={{ cursor: "pointer" }}
               >
                 <p>
-                  Sometimes it's time to move on, but for all other times, there's <strong>kana</strong> <em>2.0</em>.
+                  Sometimes it's time to move on, but for all other times,
+                  there's <strong>kana</strong> <em>2.0</em>.
                 </p>
               </Callout>
             </div>
