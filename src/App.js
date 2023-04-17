@@ -109,10 +109,9 @@ function App() {
                   <>
                     <Callout
                       title="For Safari users"
-                      className="frontpage-rowitem"
+                      className="frontpage-rowitem-danger"
                       icon="warning-sign"
                       intent="danger"
-                      style={{ width: "80%", marginLeft: "auto", marginRight: "auto" }}
                     >
                       <p>
                         <strong>Kana</strong> relies on some web standards that are not supported by old versions of Safari.
@@ -122,10 +121,9 @@ function App() {
                     {window.location.href.startsWith("http://") && (
                       <Callout
                         title="Detected HTTP access"
-                        className="frontpage-rowitem"
+                        className="frontpage-rowitem-danger"
                         icon="warning-sign"
                         intent="danger"
-                        style={{ width: "80%", marginLeft: "auto", marginRight: "auto" }}
                       >
                         <p>
                           <strong>Kana</strong> does not work in HTTP mode.{" "}
