@@ -108,30 +108,29 @@ function App() {
                   -1 && (
                   <>
                     <Callout
-                      title="Looks like you are using Safari"
+                      title="For Safari users"
                       className="frontpage-rowitem"
                       icon="warning-sign"
-                      intent="warning"
-                      style={{ cursor: "pointer" }}
+                      intent="danger"
+                      style={{ width: "80%", marginLeft: "auto", marginRight: "auto" }}
                     >
                       <p>
-                        Use at your own risk. If you run into any issues, please
-                        use the latest version of the Safari browser (version
-                        16.4 or above) or switch to Chrome or Firefox.
+                        <strong>Kana</strong> relies on some web standards that are not supported by old versions of Safari.
+                        If you run into any issues, try updating Safari to version 16.4 or higher, or switch to Chrome or Firefox.
                       </p>
                     </Callout>
                     {window.location.href.startsWith("http://") && (
                       <Callout
-                        title="Thou shall not use http"
+                        title="Detected HTTP access"
                         className="frontpage-rowitem"
                         icon="warning-sign"
                         intent="danger"
-                        style={{ cursor: "pointer" }}
+                        style={{ width: "80%", marginLeft: "auto", marginRight: "auto" }}
                       >
                         <p>
-                          <strong>Kana</strong> does not work in this mode,{" "}
+                          <strong>Kana</strong> does not work in HTTP mode.{" "}
                           <a href="https://kanaverse.org/kana">Click here</a> to
-                          redirect to the https version.
+                          manually redirect to the HTTPS version.
                         </p>
                       </Callout>
                     )}
