@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/kana/static/css/main.7bc12016.css",
-    "main.js": "/kana/static/js/main.8e684934.js",
+    "main.css": "/kana/static/css/main.9f908a37.css",
+    "main.js": "/kana/static/js/main.0bd512a5.js",
     "static/js/612.a2069751.chunk.js": "/kana/static/js/612.a2069751.chunk.js",
     "static/js/90.fafc17d7.chunk.js": "/kana/static/js/90.fafc17d7.chunk.js",
     "static/js/238.ae5d0e41.chunk.js": "/kana/static/js/238.ae5d0e41.chunk.js",
@@ -31,8 +31,8 @@
     "static/media/blueprint-icons-20.woff2?": "/kana/static/media/blueprint-icons-20.5dc21856f85f91c945a1.woff2",
     "static/media/blueprint-icons-16.woff2?": "/kana/static/media/blueprint-icons-16.5a0658c2b025e421ebc2.woff2",
     "index.html": "/kana/index.html",
-    "main.7bc12016.css.map": "/kana/static/css/main.7bc12016.css.map",
-    "main.8e684934.js.map": "/kana/static/js/main.8e684934.js.map",
+    "main.9f908a37.css.map": "/kana/static/css/main.9f908a37.css.map",
+    "main.0bd512a5.js.map": "/kana/static/js/main.0bd512a5.js.map",
     "612.a2069751.chunk.js.map": "/kana/static/js/612.a2069751.chunk.js.map",
     "90.fafc17d7.chunk.js.map": "/kana/static/js/90.fafc17d7.chunk.js.map",
     "238.ae5d0e41.chunk.js.map": "/kana/static/js/238.ae5d0e41.chunk.js.map",
@@ -51,7 +51,7 @@
     "377.581a4400.chunk.js.map": "/kana/static/js/377.581a4400.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.7bc12016.css",
-    "static/js/main.8e684934.js"
+    "static/css/main.9f908a37.css",
+    "static/js/main.0bd512a5.js"
   ]
 }
