@@ -285,8 +285,10 @@ export async function removeAnalysis(id) {
 
   // Removing all files as well.
   var meta = await loadContent(id, meta_store);
-  for (const f of meta["files"]) {
-    promises.push(removeFile(f));
+  for (const [k, v] of Object.entries(meta["files"]["datasets"])) {
+    for (const f of v["files"]) {
+      promises.push(removeFile(f["id"]));
+    }
   }
 
   promises.push(

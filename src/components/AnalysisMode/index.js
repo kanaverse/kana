@@ -623,6 +623,22 @@ export function AnalysisMode(props) {
     }
   }, [indexedDBState]);
 
+  // remove an analysis from idxdb
+  useEffect(() => {
+    if (deletekdb !== null && deletekdb !== undefined) {
+      scranWorker.postMessage({
+        type: "REMOVEKDB",
+        payload: {
+          id: deletekdb,
+        },
+      });
+      add_to_logs(
+        "info",
+        `--- Remove analysis state (to browser) initialized ---`
+      );
+    }
+  }, [deletekdb]);
+
   // compute feature set scores
   useEffect(() => {
     if (selectedFsetCluster !== null && fsetClusterRank !== null) {
