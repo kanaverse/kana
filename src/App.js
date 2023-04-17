@@ -98,6 +98,42 @@ function App() {
               </p>
             </div>
             <div className="frontpage-actions">
+              {window.navigator.userAgent.toLowerCase().indexOf("macintosh") !==
+                -1 &&
+                window.navigator.userAgent.toLowerCase().indexOf("safari") !==
+                  -1 &&
+                window.navigator.userAgent.toLowerCase().indexOf("firefox") ===
+                  -1 &&
+                window.navigator.userAgent.toLowerCase().indexOf("chrome") ===
+                  -1 && (
+                  <>
+                    <Callout
+                      title="For Safari users"
+                      className="frontpage-rowitem-danger"
+                      icon="warning-sign"
+                      intent="danger"
+                    >
+                      <p>
+                        <strong>Kana</strong> relies on some web standards that are not supported by old versions of Safari.
+                        If you run into any issues, try updating Safari to version 16.4 or higher, or switch to Chrome or Firefox.
+                      </p>
+                    </Callout>
+                    {window.location.href.startsWith("http://") && (
+                      <Callout
+                        title="Detected HTTP access"
+                        className="frontpage-rowitem-danger"
+                        icon="warning-sign"
+                        intent="danger"
+                      >
+                        <p>
+                          <strong>Kana</strong> does not work in HTTP mode.{" "}
+                          <a href="https://kanaverse.org/kana">Click here</a> to
+                          manually redirect to the HTTPS version.
+                        </p>
+                      </Callout>
+                    )}
+                  </>
+                )}
               <Callout
                 title="I want to analyze a new dataset"
                 onClick={() => setAppMode("analysis")}
@@ -154,7 +190,8 @@ function App() {
                 style={{ cursor: "pointer" }}
               >
                 <p>
-                  Sometimes it's time to move on, but for all other times, there's <strong>kana</strong> <em>2.0</em>.
+                  Sometimes it's time to move on, but for all other times,
+                  there's <strong>kana</strong> <em>2.0</em>.
                 </p>
               </Callout>
             </div>
