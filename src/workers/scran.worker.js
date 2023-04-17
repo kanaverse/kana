@@ -216,9 +216,7 @@ async function postStepSummary(step) {
   try {
     let output = await fetchStepSummary(superstate, step);
 
-    if (output) {
-      postSuccess(step, output);
-    }
+    postSuccess(step, output);
   } catch (err) {
     console.error(err);
     postError(step, err, true);

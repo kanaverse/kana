@@ -167,18 +167,18 @@ export function ExplorerMode() {
   const [showDimPlotLoader, setShowDimPlotLoader] = useState(true);
   const [showMarkerLoader, setShowMarkerLoader] = useState(true);
   const [showQCLoader, setShowQCLoader] = useState(true);
-  const [showPCALoader, setShowPCALoader] = useState(true);
-  const [showNClusLoader, setShowNClusLoader] = useState(true);
-  const [showCellLabelLoader, setShowCellLabelLoader] = useState(true);
+  const [showPCALoader, setShowPCALoader] = useState(false);
+  const [showNClusLoader, setShowNClusLoader] = useState(false);
+  const [showCellLabelLoader, setShowCellLabelLoader] = useState(false);
   const [showFsetLoader, setShowFsetLoader] = useState(true);
 
   function setAllLoaders() {
     setShowDimPlotLoader(true);
     setShowMarkerLoader(true);
     setShowQCLoader(true);
-    setShowPCALoader(true);
-    setShowNClusLoader(true);
-    setShowCellLabelLoader(true);
+    // setShowPCALoader(true);
+    // setShowNClusLoader(true);
+    // setShowCellLabelLoader(true);
     setShowFsetLoader(true);
   }
 
@@ -773,6 +773,10 @@ export function ExplorerMode() {
       setShowMarkerLoader(false);
     } else if (payload.type === "choose_clustering_CACHE") {
       setShowNClusLoader(false);
+    } else if (type === "feature_set_enrichment_START") {
+      setShowFsetLoader(true);
+    } else if (type === "feature_set_enrichment_CACHE") {
+      setShowFsetLoader(false);
     } else if (type == "feature_set_enrichment_DATA") {
       setFsetEnrichDetails(resp);
       setShowFsetLoader(false);

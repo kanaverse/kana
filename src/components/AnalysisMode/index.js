@@ -196,7 +196,7 @@ export function AnalysisMode(props) {
     setShowQCLoader(true);
     setShowPCALoader(true);
     setShowNClusLoader(true);
-    setShowCellLabelLoader(true);
+    // setShowCellLabelLoader(true);
     setShowFsetLoader(true);
   }
 
@@ -1031,6 +1031,12 @@ export function AnalysisMode(props) {
     } else if (type === "crispr_pca_DATA") {
       setPcaVarExp({ ...pcaVarExp, CRISPR: resp["var_exp"] });
       setShowPCALoader(false);
+    } else if (
+      type === "rna_pca_CACHE" ||
+      type === "adt_pca_CACHE" ||
+      type === "crispr_pca_CACHE"
+    ) {
+      setShowPCALoader(false);
     } else if (type === "choose_clustering_DATA") {
       let t_annots = { ...annotationCols };
       if (Object.keys(t_annots).indexOf(default_cluster) == -1) {
@@ -1210,6 +1216,10 @@ export function AnalysisMode(props) {
       setExportState(false);
     } else if (type === "KanaDB") {
       setIndexedDBState(false);
+    } else if (type === "feature_set_enrichment_START") {
+      setShowFsetLoader(true);
+    } else if (type === "feature_set_enrichment_CACHE") {
+      setShowFsetLoader(false);
     } else if (type == "feature_set_enrichment_DATA") {
       setFsetEnrichDetails(resp);
       setShowFsetLoader(false);

@@ -86,7 +86,7 @@ export function splitThresholdsByBlock(thresholds, blockLevels) {
 export async function fetchStepSummary(state, step) {
   // do not send any response to UI if they have not changed
   if (!state[step].changed) {
-    return null;
+    return undefined;
   }
 
   if (step === "inputs") {
