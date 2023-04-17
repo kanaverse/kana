@@ -1,0 +1,99 @@
+.section {
+  /* text-align: center; */
+  width: 100%;
+  margin-top: 6px;
+}
+
+.section .section-header {
+  color: #c87619;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items:first baseline;
+}
+
+.section .section-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.section .section-header-title {
+  color: #c87619;
+}
+
+.section .section-content {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-around;
+}
+
+.section .section-content-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 40vw;
+}
+
+.section .section-info {
+  width: 39vw;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: stretch;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.row-input {
+  margin: 5px;
+}
+
+.row-tooltip {
+  margin-left: 5px;
+  display: inline;
+  text-decoration: underline;
+  cursor: help;
+  font-style: normal;
+}
+
+.row-tooltip-highlight {
+  color: #137CBD;
+  font-style: italic;
+}
+
+.text-100 {
+  /* color: #C87619; */
+  font-weight: 500;
+}
+
+.section-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.section-input-item .section-input-item-header-title {
+  color: #C87619;
+  font-size: medium;
+  font-weight: 400;
+  text-transform: capitalize;
+}
+
+.section-input-item .section-input-item-header {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  justify-content: space-between;
+}

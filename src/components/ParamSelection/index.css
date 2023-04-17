@@ -1,0 +1,86 @@
+.param-section {
+  /* text-align: center; */
+  width: 100%;
+  margin-top: 6px;
+}
+
+.col {
+  margin-top: 10px;
+}
+
+.param-section .param-section-header {
+  color: #c87619;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items:first baseline;
+}
+
+.param-section .param-section-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.param-section .param-section-header-title {
+  color: #c87619;
+}
+
+.param-section .param-section-content {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-around;
+}
+
+.param-section .param-section-content-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 85vw;
+}
+
+.param-section .param-section-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.param-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: stretch;
+  align-items: stretch;
+  gap: 5px;
+}
+
+.param-row-input {
+  margin: 5px;
+}
+
+.param-row-tooltip {
+  margin-left: 5px;
+  display: inline;
+  /* text-decoration: underline; */
+  cursor: help;
+  /* font-style: normal; */
+}
+
+.param-row-tooltip-highlight {
+  color: #137CBD;
+  font-style: italic;
+}
+
+.param-text-100 {
+  font-style: italic;
+}
+
+.param-section-title {
+    color: #C87619;
+
+}

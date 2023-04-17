@@ -8,7 +8,7 @@ import { AppContext } from "./../../context/AppContext";
 import { Card, Elevation, Classes } from "@blueprintjs/core";
 import QCPlotMgr from "../Plots/QCPlotMgr";
 
-import { code, isObject } from "../../context/utils.js";
+import { code, isObject } from "../../utils/utils";
 
 import "./Gallery.css";
 import UDimPlot from "../Plots/uDimPlot";
@@ -25,10 +25,12 @@ import { SortableItem } from "./SortableItem";
 import { Popover2 } from "@blueprintjs/popover2";
 
 const Gallery = (props) => {
+  const [defaultItems, setDefaultItems] = useState([]);
   const [items, setItems] = useState([]);
   const [itemContent, setItemContent] = useState({});
-  const { datasetName } = useContext(AppContext);
+  const { datasetName, annotationObj } = useContext(AppContext);
   const [qcids, setQCids] = useState([]);
+  const default_cluster = `${code}::CLUSTERS`;
 
   function get_image_title(data) {
     let text = ` ${data?.config?.embedding} `;
@@ -39,27 +41,31 @@ const Gallery = (props) => {
     let set = false;
 
     if (data?.config?.annotation) {
-      text += `⊃ ${data.config?.annotation.toLowerCase()} `;
+      const sanitized_anno = data.config?.annotation.replace(`${code}::`, "");
+      text += `⊃ ${sanitized_anno.toLowerCase()} `;
 
       if (data?.config?.highlight) {
         if (String(data?.config?.highlight).startsWith("cs")) {
-          text += `(custom selection ${data?.config?.highlight.replace(
-            "cs",
-            ""
-          )}) `;
+          text += `(selection ${data?.config?.highlight.replace("cs", "")}) `;
         } else {
-          text += `(${data?.config?.highlight.replace("Cluster ", "").replace(`${code}::`, "")}) `;
+          text += `(${data?.config?.highlight
+            .replace("Cluster ", "")
+            .replace(`${code}::`, "")}) `;
         }
       }
 
       set = true;
     }
 
-    if (props?.clusHighlightLabel != null) {
+    if (props?.clusHighlightLabel !== null) {
       if (
         !(
-          ((data.config?.highlight != null && props?.clusHighlightLabel != null) && data.config?.highlight == props?.clusHighlightLabel) &&
-          ((data.config?.annotation != null && props?.colorByAnnotation != null) && data.config?.annotation == props?.colorByAnnotation)
+          data.config?.highlight !== null &&
+          props?.clusHighlightLabel !== null &&
+          data.config?.highlight === props?.clusHighlightLabel &&
+          data.config?.annotation !== null &&
+          props?.colorByAnnotation !== null &&
+          data.config?.annotation === props?.colorByAnnotation
         )
       ) {
         if (set) {
@@ -69,14 +75,18 @@ const Gallery = (props) => {
         }
 
         if (props?.colorByAnnotation) {
-          text += `${props?.colorByAnnotation.toLowerCase()} `;
+          text += `${props?.colorByAnnotation
+            .replace(`${code}::`, "")
+            .toLowerCase()} `;
         }
 
-        text += `(${props?.clusHighlightLabel.replace("Cluster ", "").replace(`${code}::`, "")})`;
+        text += `(${props?.clusHighlightLabel
+          .replace("Cluster ", "")
+          .replace(`${code}::`, "")})`;
       }
     }
 
-    if (props?.clusHighlight == null && props?.selectedPoints) {
+    if (props?.clusHighlight === null && props?.selectedPoints) {
       text += "⊃ (unsaved selection)";
     }
 
@@ -85,12 +95,60 @@ const Gallery = (props) => {
 
   useEffect(() => {
     get_children();
-  }, [props]);
+  }, [
+    props?.qcData,
+    props?.pcaVarExp,
+    props?.clusterColors,
+    props?.cellLabelData,
+    props?.redDimsData,
+  ]);
+
+  useEffect(() => {
+    if (props?.savedPlot && Array.isArray(props?.savedPlot)) {
+      let tmpItems = [...defaultItems];
+      tmpItems.reverse();
+      let tmpItemContent = { ...itemContent };
+
+      let actions = ["select", "download", "trash"];
+      if (props?.selectedPoints && props?.selectedPoints.length > 0) {
+        actions = ["highlight", "select", "download", "trash"];
+      }
+
+      if (props?.savedPlot.length === 0) {
+        tmpItems = tmpItems.filter((x) => parseInt(x) < 100);
+      }
+
+      props?.savedPlot.map((x, i) => {
+        if (!tmpItems.includes(`${100 + i}`)) {
+          tmpItems.push(`${100 + i}`);
+        }
+        tmpItemContent[`${100 + i}`] = {
+          // id: 5 + i,
+          title: get_image_title(x),
+          className: "gitem",
+          actions: actions,
+          data: x,
+          content: (
+            <UDimPlot
+              embeddata={props?.redDimsData[x.config.embedding]}
+              selectedPoints={props?.selectedPoints}
+              setSelectedPoints={props?.setSelectedPoints}
+              highlightPoints={props?.highlightPoints}
+              colorByAnnotation={props?.colorByAnnotation}
+              data={x}
+            />
+          ),
+        };
+      });
+
+      setItems(tmpItems.reverse());
+      setItemContent(tmpItemContent);
+    }
+  }, [props?.savedPlot]);
 
   function get_children() {
-    let tmpItems = [...items];
-    tmpItems.reverse();
-    let tmpItemContent = { ...itemContent };
+    let tmpItems = [];
+    let tmpItemContent = {};
 
     if (props?.qcData && isObject(props?.qcData?.data)) {
       let tqcid = [...qcids];
@@ -112,9 +170,13 @@ const Gallery = (props) => {
         } else if (x === "adt_default") {
           title = "QC metrics (ADT)";
         } else if (x.startsWith("adt") && x !== "adt_default") {
-          title = `QC for batch:${x.replace("adt_", "")} (ADT) `
+          title = `QC for batch:${x.replace("adt_", "")} (ADT) `;
+        } else if (x === "crispr_default") {
+          title = "QC metrics (CRISPR)";
+        } else if (x.startsWith("crispr") && x !== "crispr_default") {
+          title = `QC for batch:${x.replace("crispr_", "")} (CRISPR) `;
         } else {
-          title = `QC for batch:${x} (RNA) `
+          title = `QC for batch:${x} (RNA) `;
         }
 
         tmpItemContent[`${1 + qci}`] = {
@@ -124,14 +186,16 @@ const Gallery = (props) => {
             ? "gitem effect-opacitygrayscale"
             : "gitem",
           actions: ["download"],
-          content: <QCPlotMgr title={x} data={tqc} />,
+          content: (
+            <QCPlotMgr title={x} data={tqc} windowWidth={props?.windowWidth} />
+          ),
         };
       });
 
       setQCids(tqcid);
     } else {
       if (qcids && qcids.length > 0) {
-        qcids.map(x => {
+        qcids.map((x) => {
           tmpItems.splice(tmpItems.indexOf(x), 1);
           delete tmpItemContent[`${x}`];
         });
@@ -140,7 +204,7 @@ const Gallery = (props) => {
     }
 
     if (Object.keys(props?.pcaVarExp).length > 0) {
-      Object.keys(props?.pcaVarExp).map((x,i) => {
+      Object.keys(props?.pcaVarExp).map((x, i) => {
         if (!tmpItems.includes(`${20 + i}`)) {
           tmpItems.push(`${20 + i}`);
         }
@@ -161,7 +225,7 @@ const Gallery = (props) => {
       });
     }
 
-    if (props?.clusterData && props?.clusterColors) {
+    if (annotationObj[default_cluster] && props?.clusterColors) {
       if (!tmpItems.includes("30")) {
         tmpItems.push("30");
       }
@@ -174,7 +238,7 @@ const Gallery = (props) => {
         actions: ["download"],
         content: (
           <ClusterBarPlot
-            data={props?.clusterData}
+            data={annotationObj[default_cluster]}
             clusterColors={props?.clusterColors}
             setClusHighlight={props?.setClusHighlight}
             clusHighlight={props?.clusHighlight}
@@ -269,18 +333,18 @@ const Gallery = (props) => {
     }
 
     // default plots, tSNE and UMAP
-    if (props?.redDims && props?.redDims.length > 0) {
+    if (props?.redDimsData && Object.keys(props.redDimsData).length > 0) {
       let actions = ["select", "download"];
       if (props?.selectedPoints && props?.selectedPoints.length > 0) {
         actions = ["highlight", "select", "download"];
       }
 
       let colors = [];
-      props?.clusterData?.clusters?.forEach(
+      annotationObj[default_cluster]?.forEach(
         (x, i) => (colors[i] = props?.clusterColors[x])
       );
 
-      props?.redDims.map((x, i) => {
+      Object.keys(props.redDimsData).map((x, i) => {
         if (!tmpItems.includes(`${55 + i}`)) {
           tmpItems.push(`${55 + i}`);
         }
@@ -290,7 +354,7 @@ const Gallery = (props) => {
             color: colors,
             config: {
               embedding: x,
-              annotation: "clusters",
+              annotation: props?.selectedDimPlotCluster,
               highlight: null,
               gene: null,
             },
@@ -301,15 +365,14 @@ const Gallery = (props) => {
             color: colors,
             config: {
               embedding: x,
-              annotation: "clusters",
+              annotation: props?.selectedDimPlotCluster,
               highlight: null,
               gene: null,
             },
           },
           content: (
             <UDimPlot
-              tsneData={props?.tsneData}
-              umapData={props?.umapData}
+              embeddata={props?.redDimsData[x]}
               selectedPoints={props?.selectedPoints}
               setSelectedPoints={props?.setSelectedPoints}
               highlightPoints={props?.highlightPoints}
@@ -318,7 +381,7 @@ const Gallery = (props) => {
                 color: colors,
                 config: {
                   embedding: x,
-                  annotation: `${code}::clusters`,
+                  annotation: props?.selectedDimPlotCluster,
                   highlight: null,
                   gene: null,
                 },
@@ -329,42 +392,8 @@ const Gallery = (props) => {
       });
     }
 
-    if (props?.savedPlot) {
-      let actions = ["select", "download", "trash"];
-      if (props?.selectedPoints && props?.selectedPoints.length > 0) {
-        actions = ["highlight", "select", "download", "trash"];
-      }
-      
-      if (props?.savedPlot.length  == 0) {
-        tmpItems = tmpItems.filter(x => parseInt(x) < 100);
-      }
-
-      props?.savedPlot.map((x, i) => {
-        if (!tmpItems.includes(`${100 + i}`)) {
-          tmpItems.push(`${100 + i}`);
-        }
-        tmpItemContent[`${100 + i}`] = {
-          // id: 5 + i,
-          title: get_image_title(x),
-          className: "gitem",
-          actions: actions,
-          data: x,
-          content: (
-            <UDimPlot
-              tsneData={props?.tsneData}
-              umapData={props?.umapData}
-              selectedPoints={props?.selectedPoints}
-              setSelectedPoints={props?.setSelectedPoints}
-              highlightPoints={props?.highlightPoints}
-              colorByAnnotation={props?.colorByAnnotation}
-              data={x}
-            />
-          ),
-        };
-      });
-    }
-
     setItems(tmpItems.reverse());
+    setDefaultItems(tmpItems);
     setItemContent(tmpItemContent);
   }
 
@@ -394,7 +423,7 @@ const Gallery = (props) => {
   return (
     <DndContext modifiers={[restrictToWindowEdges]} onDragEnd={handleDragEnd}>
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
-        {items.map((x) => (
+        {items.map((x, i) => (
           <SortableItem
             setSelectedPoints={props?.setSelectedPoints}
             setRestoreState={props?.setRestoreState}
@@ -404,7 +433,7 @@ const Gallery = (props) => {
             setItems={setItems}
             itemContent={itemContent}
             setItemContent={setItemContent}
-            key={x}
+            key={i + x}
             id={x}
             {...itemContent[x]}
           />

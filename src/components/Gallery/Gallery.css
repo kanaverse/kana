@@ -61,10 +61,12 @@
   color: #5F6B7C;
   font-weight: bold;
   flex-grow: 4;
+  white-space: normal;
 }
 
 .gitem-content {
   display: flex;
+  justify-content: center;
 }
 
 .gitem-content > .bp3-card {

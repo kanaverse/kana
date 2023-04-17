@@ -1,7 +1,7 @@
 import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Button, Divider, Icon } from "@blueprintjs/core";
+import { Button, Divider } from "@blueprintjs/core";
 import { saveSVG } from "../Plots/utils.js";
 
 import { Tooltip2 } from "@blueprintjs/popover2";
@@ -25,7 +25,7 @@ export function SortableItem(props) {
     highlight: "Clear selection of cells",
     trash: "Remove plot",
     import: "Export CSV",
-    blank: "nothing yet"
+    blank: "nothing yet",
   };
 
   // TODO: Template for each item in the Gallery
@@ -72,7 +72,7 @@ export function SortableItem(props) {
           .querySelectorAll("svg");
         snode.forEach((sn) => {
           if (
-            sn.attributes["data-icon"] == undefined &&
+            sn.attributes["data-icon"] === undefined &&
             !["highlight", "select", "download", "trash", "import"].includes(
               sn.attributes["data-icon"]
             )
@@ -83,13 +83,13 @@ export function SortableItem(props) {
 
         break;
       case "trash":
+        // also remove items from list
+        // let titems = [...props?.items];
+        // titems.splice(titems.indexOf(props?.id), 1);
+        // props?.setItems(titems);
         let plots = [...props?.savedPlot];
         plots.splice(parseInt(props?.id) - 100, 1);
         props?.setSavedPlot(plots);
-        // also remove items from list
-        let titems = [...props?.items];
-        titems.splice(titems.indexOf(props?.id), 1);
-        props?.setItems(titems);
         break;
       case "import":
         props?.setSelectedPoints(null);
@@ -109,7 +109,8 @@ export function SortableItem(props) {
             <Tooltip2 key={x} content={tooltips[x]}>
               <Button
                 onClick={(e) => handleAction(x)}
-                icon={x === "download" ? "cloud-download": x}
+                minimal={true}
+                icon={x === "download" ? "download" : x}
                 small={true}
               />
             </Tooltip2>

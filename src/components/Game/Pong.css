@@ -1,0 +1,9 @@
+.pong-container {
+  text-align: center;
+  /* margin-top: 50px; */
+}
+
+.credit {
+  font-style: italic;
+  font-size: 10px;
+}
