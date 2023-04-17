@@ -28,26 +28,26 @@ let cache_matrix = null;
 let cache_anno_markers = {};
 
 function createDataset(args) {
-  if (args.format == "10X") {
+  if (args.format === "10X") {
     return new bakana.TenxHdf5Dataset(
       args.h5,
       args.options ? args.options : {}
     );
-  } else if (args.format == "MatrixMarket") {
+  } else if (args.format === "MatrixMarket") {
     return new bakana.TenxMatrixMarketDataset(
       args.mtx,
       args.genes || null,
       args.annotations || null,
       args.options ? args.options : {}
     );
-  } else if (args.format == "H5AD") {
+  } else if (args.format === "H5AD") {
     return new bakana.H5adDataset(args.h5, args.options ? args.options : {});
-  } else if (args.format == "SummarizedExperiment") {
+  } else if (args.format === "SummarizedExperiment") {
     return new bakana.SummarizedExperimentDataset(
       args.rds,
       args.options ? args.options : {}
     );
-  } else if (args.format == "ExperimentHub") {
+  } else if (args.format === "ExperimentHub") {
     return new remotes.ExperimentHubDataset(
       args.id,
       args.options ? args.options : {}
@@ -145,7 +145,7 @@ function linkKanaDb(collected) {
     var id = type + "_" + file.name() + "_" + buffer.length + "_" + md5;
     var ok = await kana_db.saveFile(id, buffer);
     if (!ok) {
-      throw "failed to save file '" + id + "' to KanaDB";
+      throw new Error("failed to save file '" + id + "' to KanaDB");
     }
     collected.push(id);
     return id;
@@ -271,7 +271,7 @@ onmessage = function (msg) {
   // console.log("WORKER::RCV::", type, payload);
 
   let fatal = false;
-  if (type == "INIT") {
+  if (type === "INIT") {
     fatal = true;
     let nthreads = Math.round((navigator.hardwareConcurrency * 2) / 3);
     let back_init = bakana.initialize({ numberOfThreads: nthreads });
@@ -354,7 +354,7 @@ onmessage = function (msg) {
       });
 
     /**************** RUNNING AN ANALYSIS *******************/
-  } else if (type == "RUN") {
+  } else if (type === "RUN") {
     fatal = true;
     loaded
       .then((x) => {
@@ -398,11 +398,11 @@ onmessage = function (msg) {
         postError(type, err, fatal);
       });
     /**************** LOADING EXISTING ANALYSES *******************/
-  } else if (type == "LOAD") {
+  } else if (type === "LOAD") {
     fatal = true;
     let fs = payload.inputs.files;
 
-    if (fs[Object.keys(fs)[0]].format == "kana") {
+    if (fs[Object.keys(fs)[0]].format === "kana") {
       let f = fs[Object.keys(fs)[0]].file;
       loaded
         .then(async (x) => {
@@ -480,7 +480,7 @@ onmessage = function (msg) {
           console.error(err);
           postError(type, err, fatal);
         });
-    } else if (fs[Object.keys(fs)[0]].format == "kanadb") {
+    } else if (fs[Object.keys(fs)[0]].format === "kanadb") {
       loaded
         .then(async (x) => {
           var id = fs[Object.keys(fs)[0]].file;
@@ -505,7 +505,7 @@ onmessage = function (msg) {
         });
     }
     /**************** SAVING EXISTING ANALYSES *******************/
-  } else if (type == "EXPORT") {
+  } else if (type === "EXPORT") {
     loaded
       .then(async (x) => {
         let buffers = [];
@@ -538,7 +538,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "EXPORT_RDS") {
+  } else if (type === "EXPORT_RDS") {
     loaded
       .then(async (x) => {
         let files = await bakana.saveSingleCellExperiment(
@@ -563,7 +563,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "SAVEKDB") {
+  } else if (type === "SAVEKDB") {
     // save analysis to inbrowser indexedDB
     var title = payload.title;
     loaded
@@ -576,7 +576,7 @@ onmessage = function (msg) {
           var id = type + "_" + file.name() + "_" + buffer.length + "_" + md5;
           var ok = await kana_db.saveFile(id, buffer);
           if (!ok) {
-            throw "failed to save file '" + id + "' to KanaDB";
+            throw new Error("failed to save file '" + id + "' to KanaDB");
           }
           buffers.push(id);
           return id;
@@ -607,7 +607,7 @@ onmessage = function (msg) {
       });
 
     /**************** KANADB EVENTS *******************/
-  } else if (type == "REMOVEKDB") {
+  } else if (type === "REMOVEKDB") {
     // remove a saved analysis
     var id = payload.id;
     kana_db
@@ -631,7 +631,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "PREFLIGHT_OPTIONS") {
+  } else if (type === "PREFLIGHT_OPTIONS") {
     loaded.then(async (x) => {
       let resp = {};
       try {
@@ -683,7 +683,7 @@ onmessage = function (msg) {
         msg: "Success: PREFLIGHT_OPTIONS done",
       });
     });
-  } else if (type == "PREFLIGHT_INPUT") {
+  } else if (type === "PREFLIGHT_INPUT") {
     loaded
       .then(async (x) => {
         let resp = {};
@@ -733,7 +733,7 @@ onmessage = function (msg) {
       });
 
     /**************** VERSUS MODE *******************/
-  } else if (type == "computeVersusClusters") {
+  } else if (type === "computeVersusClusters") {
     loaded
       .then((x) => {
         let rank_type = payload.rank_type;
@@ -782,7 +782,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "computeVersusSelections") {
+  } else if (type === "computeVersusSelections") {
     loaded
       .then((x) => {
         let rank_type = payload.rank_type;
@@ -813,7 +813,7 @@ onmessage = function (msg) {
       });
 
     /**************** OTHER EVENTS FROM UI *******************/
-  } else if (type == "getMarkersForCluster") {
+  } else if (type === "getMarkersForCluster") {
     loaded
       .then((x) => {
         let cluster = payload.cluster;
@@ -854,7 +854,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "getGeneExpression") {
+  } else if (type === "getGeneExpression") {
     loaded
       .then((x) => {
         let row_idx = payload.gene;
@@ -888,7 +888,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "computeCustomMarkers") {
+  } else if (type === "computeCustomMarkers") {
     loaded
       .then((x) => {
         superstate.custom_selections.addSelection(
@@ -904,7 +904,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "getMarkersForSelection") {
+  } else if (type === "getMarkersForSelection") {
     loaded
       .then((x) => {
         let raw_res = superstate.custom_selections.fetchResults(
@@ -931,7 +931,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "removeCustomMarkers") {
+  } else if (type === "removeCustomMarkers") {
     loaded
       .then((x) => {
         superstate.custom_selections.removeSelection(payload.id);
@@ -940,7 +940,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "animateTSNE") {
+  } else if (type === "animateTSNE") {
     loaded
       .then(async (x) => {
         await superstate.tsne.animate();
@@ -950,7 +950,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "animateUMAP") {
+  } else if (type === "animateUMAP") {
     loaded
       .then(async (x) => {
         await superstate.umap.animate();
@@ -960,7 +960,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "getAnnotation") {
+  } else if (type === "getAnnotation") {
     loaded
       .then((x) => {
         let annot = payload.annotation;
@@ -1010,7 +1010,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "computeFeaturesetSummary") {
+  } else if (type === "computeFeaturesetSummary") {
     loaded
       .then(async (x) => {
         let { annotation, rank_type, cluster } = payload;
@@ -1064,7 +1064,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "computeFeaturesetVSSummary") {
+  } else if (type === "computeFeaturesetVSSummary") {
     loaded
       .then(async (x) => {
         let { annotation, rank_type, left, right } = payload;

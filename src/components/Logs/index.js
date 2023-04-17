@@ -1,4 +1,4 @@
-import { Button, Classes, Drawer, Position, Spinner } from "@blueprintjs/core";
+import { Classes, Drawer, Position } from "@blueprintjs/core";
 import React, { useEffect, useState } from "react";
 
 import "./logs.css";
@@ -56,14 +56,14 @@ const Logs = ({ showLogs, setShowLogs, ...props }) => {
           <div className={Classes.DIALOG_BODY}>
             <div className="logs-container">
               {props?.logs.map((x, i) => {
-                if (x[0] == "info") {
+                if (x[0] === "info") {
                   return (
                     <pre className={`logs-${x[0]}`} key={i}>
                       {x[1] + ": "}
                       {x[2]}
                     </pre>
                   );
-                } else if (x[0] == "error") {
+                } else if (x[0] === "error") {
                   return (
                     <pre className={`logs-${x[0]}`} key={i}>
                       {x[1] + ": "}

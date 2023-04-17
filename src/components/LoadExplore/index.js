@@ -1,33 +1,18 @@
-import { useState, useCallback, useContext, useEffect } from "react";
+import { useState, useContext, useEffect } from "react";
 
 import {
   Tabs,
   Tab,
-  Classes,
-  Drawer,
   Label,
   Text,
   HTMLSelect,
   FileInput,
-  Icon,
   Card,
   Elevation,
   Button,
   Divider,
   Callout,
-  Code,
   H2,
-  Collapse,
-  Tag,
-  OverflowList,
-  H5,
-  H6,
-  FormGroup,
-  InputGroup,
-  EditableText,
-  ButtonGroup,
-  RadioGroup,
-  Radio,
 } from "@blueprintjs/core";
 
 import "./index.css";
@@ -35,22 +20,25 @@ import "./index.css";
 import { AppContext } from "../../context/AppContext";
 
 import { generateUID } from "../../utils/utils";
-import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
+import { Tooltip2 } from "@blueprintjs/popover2";
 
-import { MODALITIES } from "../../utils/utils";
 import { H5ADCard } from "./H5ADCard";
 import { SECard } from "./SECard";
 import { ZippedADBCard } from "./ZippedADBCard";
 import JSZip from "jszip";
 
-export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
-  // close the entire panel
+export function LoadExplore({ setShowPanel, ...props }) {
+  // clear the entire panel
   const handleClose = () => {
-    setOpen(false);
-  };
+    setTmpLoadInputs({
+      name: `explore-dataset-1`,
+      format: tabSelected,
+    });
 
-  // minimise info box on the right
-  const [openInfo, setOpenInfo] = useState(true);
+    setInputOptions([]);
+
+    setTmpStatusValid(true);
+  };
 
   // Access App Context
   const {
@@ -245,8 +233,9 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                 <Callout intent="primary">
                   <p>
                     Load an <code>*.zip</code> file containing the saved results
-                    from <strong>kana</strong>'s analysis mode, via the <em>Download analysis results (as ZIP)</em> option. This should
-                    include reduced dimensions and clusterings.
+                    from <strong>kana</strong>'s analysis mode, via the{" "}
+                    <em>Download analysis results (as ZIP)</em> option. This
+                    should include reduced dimensions and clusterings.
                   </p>
                 </Callout>
               </div>
@@ -272,7 +261,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                             zip.forEach(function (relativePath, zipEntry) {
                               if (
                                 zipEntry.name.endsWith("/") &&
-                                zipEntry.name.split("/").length == 2
+                                zipEntry.name.split("/").length === 2
                               ) {
                                 se_tld.push(zipEntry.name.split("/")[0]);
                               }
@@ -345,7 +334,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
         <div className="section-info">
           <div className="section-inputs">
             {exploreInputs.map((x, i) => {
-              if (x.format == "H5AD" && x.h5 !== null && x.h5 !== undefined) {
+              if (x.format === "H5AD" && x.h5 !== null && x.h5 !== undefined) {
                 return (
                   <H5ADCard
                     key={i}
@@ -362,7 +351,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                   />
                 );
               } else if (
-                x.format == "SummarizedExperiment" &&
+                x.format === "SummarizedExperiment" &&
                 x.rds !== null &&
                 x.rds !== undefined
               ) {
@@ -382,7 +371,7 @@ export function LoadExplore({ open, setOpen, setShowPanel, ...props }) {
                   />
                 );
               } else if (
-                x.format == "ZippedArtifactdb" &&
+                x.format === "ZippedArtifactdb" &&
                 x.zipfile !== null &&
                 x.zipfile !== undefined
               ) {

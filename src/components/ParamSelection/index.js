@@ -1,4 +1,4 @@
-import { useState, useCallback, useContext, useEffect } from "react";
+import { useState, useContext, useEffect } from "react";
 
 import {
   Label,
@@ -10,13 +10,11 @@ import {
   Divider,
   Callout,
   H2,
-  Collapse,
   H5,
   InputGroup,
   Switch,
   NumericInput,
   Checkbox,
-  ButtonGroup,
   Tabs,
   Tab,
 } from "@blueprintjs/core";
@@ -25,28 +23,20 @@ import "./index.css";
 
 import { AppContext } from "../../context/AppContext";
 
-import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
+import { Tooltip2 } from "@blueprintjs/popover2";
 
 export function ParameterSelection({
-  open,
-  setOpen,
   openIndex,
   setStateIndeterminate,
   setShowPanel,
   ...props
 }) {
-  const handleClose = () => setOpen(false);
-
-  // minimise info box on the right
-  const [openInfo, setOpenInfo] = useState(true);
+  const handleClose = () => {
+    setTmpParams(params);
+  };
 
   // which helper to show? (on the right info box)
   const [showStepHelper, setShowStepHelper] = useState("rnaqc");
-
-  // expand RNA section?
-  const [showRNA, setShowRNA] = useState(true);
-  const [showADT, setShowADT] = useState(true);
-  const [showCRISPR, setShowCRISPR] = useState(true);
 
   // access app context
   const {
@@ -78,10 +68,10 @@ export function ParameterSelection({
       return loadParams?.inputs?.batch === "string";
     }
     return !!inputFiles.files
-      ? Object.keys(inputFiles.files).length == 1 &&
+      ? Object.keys(inputFiles.files).length === 1 &&
           typeof inputFiles.batch !== "string"
       : !!preInputFiles &&
-          Object.keys(preInputFiles.files).length == 1 &&
+          Object.keys(preInputFiles.files).length === 1 &&
           typeof preInputFiles.batch !== "string";
   };
 
@@ -785,7 +775,7 @@ export function ParameterSelection({
                 <option value="snn_graph">SNN graph</option>
               </HTMLSelect>
             </Label>
-            {tmpParams["choose_clustering"]["method"] == "kmeans" && (
+            {tmpParams["choose_clustering"]["method"] === "kmeans" && (
               <Label className="param-row-input">
                 <Text className="param-text-100">Number of clusters</Text>
                 <NumericInput
@@ -804,7 +794,7 @@ export function ParameterSelection({
                 />
               </Label>
             )}
-            {tmpParams["choose_clustering"]["method"] == "snn_graph" && (
+            {tmpParams["choose_clustering"]["method"] === "snn_graph" && (
               <>
                 <Label className="param-row-input">
                   <Text className="param-text-100">Number of neighbors</Text>
@@ -860,7 +850,7 @@ export function ParameterSelection({
                     <option value="walktrap">Walktrap</option>
                   </HTMLSelect>
                 </Label>
-                {tmpParams["snn_graph_cluster"]["algorithm"] ==
+                {tmpParams["snn_graph_cluster"]["algorithm"] ===
                   "multilevel" && (
                   <>
                     <Label className="param-row-input">
@@ -913,7 +903,7 @@ export function ParameterSelection({
                     </Label>
                   </>
                 )}
-                {tmpParams["snn_graph_cluster"]["algorithm"] == "walktrap" && (
+                {tmpParams["snn_graph_cluster"]["algorithm"] === "walktrap" && (
                   <>
                     <Label className="param-row-input">
                       <Text className="param-text-100">Walktrap steps</Text>
@@ -1677,7 +1667,7 @@ export function ParameterSelection({
             <H5 className="param-section-title">
               <span
                 className={
-                  showStepHelper == "crisprqc"
+                  showStepHelper === "crisprqc"
                     ? "param-row-tooltip param-row-tooltip-highlight"
                     : "param-row-tooltip"
                 }
@@ -1842,7 +1832,7 @@ export function ParameterSelection({
               title="Combined embedding"
               disabled={
                 !!preInputOptionsStatus &&
-                Object.keys(preInputOptionsStatus).length == 1
+                Object.keys(preInputOptionsStatus).length === 1
               }
               panel={
                 <>
@@ -1945,9 +1935,8 @@ export function ParameterSelection({
             intent={"danger"}
             large={true}
             onClick={handleClose}
-          >
-            Discard
-          </Button>
+            text="Discard"
+          />
         </Tooltip2>
         <Tooltip2
           content="Update parameters and run analysis!"
@@ -1958,9 +1947,8 @@ export function ParameterSelection({
             onClick={handleRunAnalysis}
             intent={"primary"}
             large={true}
-          >
-            Analyze
-          </Button>
+            text="Analyze"
+          />
         </Tooltip2>
       </div>
     </Card>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 
 import {
   Alignment,
@@ -8,23 +8,13 @@ import {
   NavbarGroup,
   NavbarHeading,
   Divider,
-  ButtonGroup,
-  Drawer,
   Menu,
   Classes,
-  Text,
   MenuItem,
   EditableText,
   Position,
-  Icon,
-  Card,
-  Elevation,
-  H5,
   H3,
-  NonIdealState,
-  NonIdealStateIconSize,
   Alert,
-  ResizeEntry,
   ResizeSensor,
   Callout,
   Spinner,
@@ -125,7 +115,6 @@ export function AnalysisMode(props) {
     setLoadZiesel,
     preInputOptions,
     setPreInputOptionsStatus,
-    setPreInputOptions,
     setPreInputFiles,
     setAppMode,
   } = useContext(AppContext);
@@ -792,7 +781,7 @@ export function AnalysisMode(props) {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    // console.log("ON MAIN::RCV::", payload);
+    console.log("ON MAIN::RCV::", payload);
 
     // process any error messages
     if (payload) {
@@ -802,7 +791,7 @@ export function AnalysisMode(props) {
           payload.type.toLowerCase().replace("_start", ""),
           "started"
         );
-      } else if (payload.type.indexOf("_store") != -1) {
+      } else if (payload.type.indexOf("_store") !== -1) {
         add_to_logs(
           "info",
           `(${payload.type
@@ -901,7 +890,7 @@ export function AnalysisMode(props) {
         setQcData(null);
         setShowQCLoader(false);
       } else {
-        var ranges = {},
+        let ranges = {},
           data = resp["data"],
           all = {};
 
@@ -915,7 +904,7 @@ export function AnalysisMode(props) {
             if (max > all[key][1]) all[key][1] = max;
 
             if (
-              Object.keys(t_annots).indexOf(`${code}::QC::RNA_${key}`) == -1
+              Object.keys(t_annots).indexOf(`${code}::QC::RNA_${key}`) === -1
             ) {
               t_annots[`${code}::QC::RNA_${key}`] = {
                 name: `${code}::QC::RNA_${key}`,
@@ -935,7 +924,7 @@ export function AnalysisMode(props) {
       }
     } else if (type === "adt_quality_control_DATA") {
       if (resp) {
-        var ranges = {},
+        let ranges = {},
           data = resp["data"],
           all = {};
 
@@ -949,7 +938,7 @@ export function AnalysisMode(props) {
             if (max > all[key][1]) all[key][1] = max;
 
             if (
-              Object.keys(t_annots).indexOf(`${code}::QC::ADT_${key}`) == -1
+              Object.keys(t_annots).indexOf(`${code}::QC::ADT_${key}`) === -1
             ) {
               t_annots[`${code}::QC::ADT_${key}`] = {
                 name: `${code}::QC::ADT_${key}`,
@@ -995,7 +984,7 @@ export function AnalysisMode(props) {
             if (max > all[key][1]) all[key][1] = max;
 
             if (
-              Object.keys(t_annots).indexOf(`${code}::QC::CRISPR${key}`) == -1
+              Object.keys(t_annots).indexOf(`${code}::QC::CRISPR${key}`) === -1
             ) {
               t_annots[`${code}::QC::CRISPR_${key}`] = {
                 name: `${code}::QC::CRISPR_${key}`,
@@ -1032,10 +1021,10 @@ export function AnalysisMode(props) {
       for (let key in annotationObj) {
         if (
           key.startsWith(code) &&
-          (key.indexOf("RNA") != -1 || key.indexOf("ADT") != -1)
+          (key.indexOf("RNA") !== -1 || key.indexOf("ADT") !== -1)
         ) {
           annotationObj[key]["values"] = annotationObj[key]["values"].filter(
-            (_, i) => payload.resp.subset[i] == 0
+            (_, i) => payload.resp.subset[i] === 0
           );
         }
       }
@@ -1058,7 +1047,7 @@ export function AnalysisMode(props) {
       setShowPCALoader(false);
     } else if (type === "choose_clustering_DATA") {
       let t_annots = { ...annotationCols };
-      if (Object.keys(t_annots).indexOf(default_cluster) == -1) {
+      if (Object.keys(t_annots).indexOf(default_cluster) === -1) {
         t_annots[default_cluster] = {
           name: default_cluster,
           truncated: false,
@@ -1215,7 +1204,7 @@ export function AnalysisMode(props) {
       }, 1000);
     } else if (type === "exportState") {
       let tmpLink = document.createElement("a");
-      var fileNew = new Blob([resp], {
+      let fileNew = new Blob([resp], {
         type: "text/plain",
       });
       tmpLink.href = URL.createObjectURL(fileNew);
@@ -1225,7 +1214,7 @@ export function AnalysisMode(props) {
       setExportState(false);
     } else if (type === "exportRDSState") {
       let tmpLink = document.createElement("a");
-      var fileNew = new Blob([resp], {
+      let fileNew = new Blob([resp], {
         type: "text/plain",
       });
       tmpLink.href = URL.createObjectURL(fileNew);
@@ -1239,7 +1228,7 @@ export function AnalysisMode(props) {
       setShowFsetLoader(true);
     } else if (type === "feature_set_enrichment_CACHE") {
       setShowFsetLoader(false);
-    } else if (type == "feature_set_enrichment_DATA") {
+    } else if (type === "feature_set_enrichment_DATA") {
       setFsetEnrichDetails(resp);
       setShowFsetLoader(false);
     } else if (
@@ -1268,7 +1257,7 @@ export function AnalysisMode(props) {
       setFsetGeneIndxCache(tmp);
       setReqFsetGeneIndex(null);
     } else {
-      // console.info("unknown msg type", payload);
+      console.info("unknown msg type", payload);
     }
   };
 
@@ -1313,7 +1302,7 @@ export function AnalysisMode(props) {
                 setAppMode(null);
               }}
             >
-              <img height="20px" src={logo}></img>{" "}
+              <img height="20px" src={logo} alt="Kana"></img>{" "}
               <span
                 style={{
                   fontSize: "8px",
@@ -1949,6 +1938,7 @@ export function AnalysisMode(props) {
               setShowPanel={setShowPanel}
               setStateIndeterminate={setStateIndeterminate}
               kanaIDBRecs={kanaIDBRecs}
+              setDeletekdb={setDeletekdb}
             />
           )}
         </div>

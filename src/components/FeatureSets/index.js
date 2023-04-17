@@ -1,12 +1,10 @@
 import React, { useEffect, useContext, useState, useMemo } from "react";
 import {
   Button,
-  H4,
   H5,
   Icon,
   Collapse,
   InputGroup,
-  Text,
   Switch,
   RangeSlider,
   Tag,
@@ -16,23 +14,20 @@ import {
   Elevation,
   Label,
   Divider,
-  MenuItem,
   ButtonGroup,
 } from "@blueprintjs/core";
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
-import { Virtuoso, TableVirtuoso } from "react-virtuoso";
+import { TableVirtuoso } from "react-virtuoso";
 import * as d3 from "d3";
-import { CSVLink, CSVDownload } from "react-csv";
+import { CSVLink } from "react-csv";
 
 import { AppContext } from "../../context/AppContext";
 
-import PvalCell from "../Plots/PValCell";
 import HeatmapCell from "../Plots/HeatmapCell";
 import Cell from "../Plots/Cell";
 
-import { code, getMinMax, defaultColor } from "../../utils/utils";
+import { code, getMinMax } from "../../utils/utils";
 import "./fsea.css";
-import { Select2 } from "@blueprintjs/select";
 
 const FeatureSetEnrichment = (props) => {
   const {
@@ -41,7 +36,6 @@ const FeatureSetEnrichment = (props) => {
     setGeneColSel,
     annotationObj,
     annotationCols,
-    appMode,
     datasetName,
   } = useContext(AppContext);
 
@@ -903,8 +897,8 @@ const FeatureSetEnrichment = (props) => {
                   <option
                     selected={
                       String(props?.selectedFsetCluster).startsWith("cs")
-                        ? x == props?.selectedFsetCluster
-                        : parseInt(x) - 1 ==
+                        ? x === props?.selectedFsetCluster
+                        : parseInt(x) - 1 ===
                           parseInt(props?.selectedFsetCluster)
                     }
                     key={i}
@@ -916,7 +910,7 @@ const FeatureSetEnrichment = (props) => {
                   </option>
                 ))
               : clusSel.map((x, i) => (
-                  <option selected={x == props?.selectedFsetCluster} key={i}>
+                  <option selected={x === props?.selectedFsetCluster} key={i}>
                     {x}
                   </option>
                 ))}
@@ -983,8 +977,8 @@ const FeatureSetEnrichment = (props) => {
                             String(props?.selectedFsetVSCluster).startsWith(
                               "cs"
                             )
-                              ? x == props?.selectedFsetVSCluster
-                              : parseInt(x) - 1 ==
+                              ? x === props?.selectedFsetVSCluster
+                              : parseInt(x) - 1 ===
                                 parseInt(props?.selectedFsetVSCluster)
                           }
                           key={i}
@@ -996,10 +990,10 @@ const FeatureSetEnrichment = (props) => {
                         </option>
                       ))
                   : clusSel
-                      .filter((x, i) => x != props?.selectedFsetCluster)
+                      .filter((x, i) => x !== props?.selectedFsetCluster)
                       .map((x, i) => (
                         <option
-                          selected={x == props?.selectedFsetCluster}
+                          selected={x === props?.selectedFsetCluster}
                           key={i}
                         >
                           {x}
@@ -1545,9 +1539,6 @@ const FeatureSetEnrichment = (props) => {
               totalCount={sortedRows.length}
               itemContent={(index) => {
                 const row = sortedRows[index];
-                const rowexp = row.expanded;
-                const rowScores = row.fscores;
-                const rowGeneIndices = row.geneIndices;
 
                 return (
                   <div>

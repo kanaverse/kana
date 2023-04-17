@@ -57,15 +57,15 @@ const Gallery = (props) => {
       set = true;
     }
 
-    if (props?.clusHighlightLabel != null) {
+    if (props?.clusHighlightLabel !== null) {
       if (
         !(
-          data.config?.highlight != null &&
-          props?.clusHighlightLabel != null &&
-          data.config?.highlight == props?.clusHighlightLabel &&
-          data.config?.annotation != null &&
-          props?.colorByAnnotation != null &&
-          data.config?.annotation == props?.colorByAnnotation
+          data.config?.highlight !== null &&
+          props?.clusHighlightLabel !== null &&
+          data.config?.highlight === props?.clusHighlightLabel &&
+          data.config?.annotation !== null &&
+          props?.colorByAnnotation !== null &&
+          data.config?.annotation === props?.colorByAnnotation
         )
       ) {
         if (set) {
@@ -86,7 +86,7 @@ const Gallery = (props) => {
       }
     }
 
-    if (props?.clusHighlight == null && props?.selectedPoints) {
+    if (props?.clusHighlight === null && props?.selectedPoints) {
       text += "⊃ (unsaved selection)";
     }
 
@@ -114,7 +114,7 @@ const Gallery = (props) => {
         actions = ["highlight", "select", "download", "trash"];
       }
 
-      if (props?.savedPlot.length == 0) {
+      if (props?.savedPlot.length === 0) {
         tmpItems = tmpItems.filter((x) => parseInt(x) < 100);
       }
 

@@ -1,18 +1,9 @@
-import React, {
-  ReactDOM,
-  useEffect,
-  useContext,
-  useState,
-  useMemo,
-} from "react";
+import React, { useEffect, useContext, useState, useMemo } from "react";
 import {
   Button,
-  H4,
-  H5,
   Icon,
   Collapse,
   InputGroup,
-  Text,
   Switch,
   RangeSlider,
   Tag,
@@ -25,9 +16,9 @@ import {
   ButtonGroup,
 } from "@blueprintjs/core";
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
-import { Virtuoso, TableVirtuoso } from "react-virtuoso";
+import { TableVirtuoso } from "react-virtuoso";
 import * as d3 from "d3";
-import { CSVLink, CSVDownload } from "react-csv";
+import { CSVLink } from "react-csv";
 
 import { AppContext } from "../../context/AppContext";
 import StackedHistogram from "../Plots/StackedHistogram";
@@ -440,7 +431,7 @@ const MarkerPlot = (props) => {
             />
             {props?.selectedFsetModality !== null && (
               <Button
-                disabled={props?.selectedClusterSummary.length == 0}
+                disabled={props?.selectedClusterSummary.length === 0}
                 onClick={() => props?.setMarkersOrFsets("featuresets")}
                 intent={
                   props?.markersORFSets === "featuresets" ? "primary" : ""
@@ -827,8 +818,8 @@ const MarkerPlot = (props) => {
                   <option
                     selected={
                       String(props?.selectedCluster).startsWith("cs")
-                        ? x == props?.selectedCluster
-                        : parseInt(x) - 1 == parseInt(props?.selectedCluster)
+                        ? x === props?.selectedCluster
+                        : parseInt(x) - 1 === parseInt(props?.selectedCluster)
                     }
                     key={i}
                   >
@@ -839,7 +830,7 @@ const MarkerPlot = (props) => {
                   </option>
                 ))
               : clusSel.map((x, i) => (
-                  <option selected={x == props?.selectedCluster} key={i}>
+                  <option selected={x === props?.selectedCluster} key={i}>
                     {x}
                   </option>
                 ))}
@@ -903,8 +894,8 @@ const MarkerPlot = (props) => {
                         <option
                           selected={
                             String(props?.selectedVSCluster).startsWith("cs")
-                              ? x == props?.selectedVSCluster
-                              : parseInt(x) - 1 ==
+                              ? x === props?.selectedVSCluster
+                              : parseInt(x) - 1 ===
                                 parseInt(props?.selectedVSCluster)
                           }
                           key={i}
@@ -916,9 +907,9 @@ const MarkerPlot = (props) => {
                         </option>
                       ))
                   : clusSel
-                      .filter((x, i) => x != props?.selectedCluster)
+                      .filter((x, i) => x !== props?.selectedCluster)
                       .map((x, i) => (
-                        <option selected={x == props?.selectedCluster} key={i}>
+                        <option selected={x === props?.selectedCluster} key={i}>
                           {x}
                         </option>
                       ))}

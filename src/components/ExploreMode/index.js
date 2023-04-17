@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 
 import {
   Alignment,
@@ -8,29 +8,17 @@ import {
   NavbarGroup,
   NavbarHeading,
   Divider,
-  ButtonGroup,
-  Drawer,
-  Menu,
   Classes,
-  Text,
-  MenuItem,
   EditableText,
   Position,
-  Icon,
-  Card,
-  Elevation,
-  H5,
-  NonIdealState,
-  NonIdealStateIconSize,
   Alert,
-  ResizeEntry,
   ResizeSensor,
   H3,
   Callout,
   Spinner,
 } from "@blueprintjs/core";
 
-import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
+import { Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 
 import SplitPane from "react-split-pane";
 
@@ -43,12 +31,7 @@ import DimPlot from "../Plots/DimPlot";
 import MarkerPlot from "../Markers/index";
 import Gallery from "../Gallery/index";
 
-import { AppToaster } from "../../AppToaster";
-
 import { AppContext } from "../../context/AppContext";
-
-import { palette } from "../Plots/utils";
-import { randomColor } from "randomcolor";
 
 import pkgVersion from "../../../package.json";
 
@@ -69,19 +52,6 @@ export function ExplorerMode() {
 
   // show various components, reacts to left side bar clicks
   const [showPanel, setShowPanel] = useState("explore-import");
-
-  // if a user is transitioning from inputs to params, the state is indeterminate,
-  // let the user finish setting the params so we can finally run the analysis.
-  const [stateIndeterminate, setStateIndeterminate] = useState(false);
-
-  // app export state - store to indexedDB
-  const [indexedDBState, setIndexedDBState] = useState(false);
-  // list of saved analysis in the browser's indexeddb
-  const [kanaIDBRecs, setKanaIDBRecs] = useState([]);
-  // delete saved analysis in the browser's indexeddb
-  const [deletekdb, setDeletekdb] = useState(null);
-  // app export state - .kana file
-  const [exportState, setExportState] = useState(false);
 
   // Logs
   // const [logs, setLogs] = useState([]);
@@ -105,10 +75,7 @@ export function ExplorerMode() {
     setGenesInfo,
     geneColSel,
     setGeneColSel,
-    initLoadState,
-    setInitLoadState,
     exploreFiles,
-    setExploreFiles,
     preInputFiles,
     setAppMode,
   } = useContext(AppContext);
@@ -589,7 +556,7 @@ export function ExplorerMode() {
           payload.type.toLowerCase().replace("_start", ""),
           "started"
         );
-      } else if (payload.type.indexOf("_store") != -1) {
+      } else if (payload.type.indexOf("_store") !== -1) {
         add_to_logs(
           "info",
           `(${payload.type
@@ -777,7 +744,7 @@ export function ExplorerMode() {
       setShowFsetLoader(true);
     } else if (type === "feature_set_enrichment_CACHE") {
       setShowFsetLoader(false);
-    } else if (type == "feature_set_enrichment_DATA") {
+    } else if (type === "feature_set_enrichment_DATA") {
       setFsetEnrichDetails(resp);
       setShowFsetLoader(false);
     } else if (

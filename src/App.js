@@ -1,22 +1,14 @@
-import { useState, useContext } from "react";
+import { useContext } from "react";
 
 import {
   Alignment,
-  Button,
   Navbar,
   NavbarDivider,
   NavbarGroup,
   NavbarHeading,
-  ButtonGroup,
   Classes,
-  NonIdealState,
-  NonIdealStateIconSize,
   Callout,
-  Code,
   H2,
-  Card,
-  H5,
-  Elevation,
 } from "@blueprintjs/core";
 
 import pkgVersion from "../package.json";

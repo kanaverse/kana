@@ -219,7 +219,7 @@ export async function removeFile(id) {
   refcount--;
   var promises = [];
 
-  if (refcount == 0) {
+  if (refcount === 0) {
     promises.push(
       new Promise((resolve) => {
         let request = file_store.remove(id);

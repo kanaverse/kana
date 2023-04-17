@@ -1,16 +1,13 @@
 import * as bakana from "bakana";
 import * as scran from "scran.js";
-import * as gesel from "gesel";
 import * as downloads from "./DownloadsDBHandler.js";
 import {
   extractBuffers,
   postAttempt,
   postSuccess,
   postError,
-  fetchStepSummary,
 } from "./helpers.js";
 import { code } from "../utils/utils.js";
-import * as bioc from "bioconductor";
 /***************************************/
 
 const default_cluster = `${code}::CLUSTERS`;
@@ -25,14 +22,14 @@ let custom_selection_state = null;
 let feature_set_enrich_state = null;
 
 function createDataset(args, setOpts = false) {
-  if (args.format == "H5AD") {
+  if (args.format === "H5AD") {
     return new bakana.H5adResult(args.h5, setOpts ? args.options : {});
-  } else if (args.format == "SummarizedExperiment") {
+  } else if (args.format === "SummarizedExperiment") {
     return new bakana.SummarizedExperimentResult(
       args.rds,
       setOpts ? args.options : {}
     );
-  } else if (args.format == "ZippedArtifactdb") {
+  } else if (args.format === "ZippedArtifactdb") {
     return new bakana.ZippedArtifactdbResult(
       args.zipname,
       new bakana.SimpleFile(args.zipfile),
@@ -143,7 +140,7 @@ onmessage = function (msg) {
   // console.log("EXPLORE WORKER::RCV::", type, payload);
 
   let fatal = false;
-  if (type == "INIT") {
+  if (type === "INIT") {
     fatal = true;
     let nthreads = Math.round((navigator.hardwareConcurrency * 2) / 3);
     let back_init = bakana.initialize({ numberOfThreads: nthreads });
@@ -191,7 +188,7 @@ onmessage = function (msg) {
         postError(type, err, fatal);
       });
     /**************** EXPLORE AN ANALYSIS *******************/
-  } else if (type == "EXPLORE") {
+  } else if (type === "EXPLORE") {
     fatal = true;
     loaded
       .then(async (x) => {
@@ -301,7 +298,7 @@ onmessage = function (msg) {
         postError(type, err, fatal);
       });
     /**************** LOADING EXISTING ANALYSES *******************/
-  } else if (type == "PREFLIGHT_INPUT") {
+  } else if (type === "PREFLIGHT_INPUT") {
     loaded
       .then(async (x) => {
         let resp = {};
@@ -344,7 +341,7 @@ onmessage = function (msg) {
       });
 
     /**************** VERSUS MODE *******************/
-  } else if (type == "computeVersusClusters") {
+  } else if (type === "computeVersusClusters") {
     loaded
       .then((x) => {
         let rank_type = payload.rank_type;
@@ -379,7 +376,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "computeVersusSelections") {
+  } else if (type === "computeVersusSelections") {
     loaded
       .then((x) => {
         let rank_type = payload.rank_type;
@@ -410,7 +407,7 @@ onmessage = function (msg) {
       });
 
     //   /**************** OTHER EVENTS FROM UI *******************/
-  } else if (type == "getMarkersForCluster") {
+  } else if (type === "getMarkersForCluster") {
     loaded
       .then((x) => {
         let cluster = payload.cluster;
@@ -444,7 +441,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "getGeneExpression") {
+  } else if (type === "getGeneExpression") {
     loaded
       .then((x) => {
         let row_idx = payload.gene;
@@ -468,7 +465,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "computeCustomMarkers") {
+  } else if (type === "computeCustomMarkers") {
     loaded
       .then((x) => {
         custom_selection_state.addSelection(payload.id, payload.selection);
@@ -481,7 +478,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "getMarkersForSelection") {
+  } else if (type === "getMarkersForSelection") {
     loaded
       .then((x) => {
         let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
@@ -510,7 +507,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "removeCustomMarkers") {
+  } else if (type === "removeCustomMarkers") {
     loaded
       .then((x) => {
         custom_selection_state.removeSelection(payload.id);
@@ -519,7 +516,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "getAnnotation") {
+  } else if (type === "getAnnotation") {
     loaded
       .then((x) => {
         let annot = payload.annotation;
@@ -570,7 +567,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "computeFeaturesetSummary") {
+  } else if (type === "computeFeaturesetSummary") {
     loaded
       .then(async (x) => {
         let { annotation, rank_type, cluster, modality } = payload;
@@ -618,7 +615,7 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
-  } else if (type == "computeFeaturesetVSSummary") {
+  } else if (type === "computeFeaturesetVSSummary") {
     loaded
       .then(async (x) => {
         let { annotation, rank_type, left, right, modality } = payload;
@@ -663,7 +660,7 @@ onmessage = function (msg) {
   } else if (type === "getFeatureScores") {
     loaded
       .then((x) => {
-        let { collection, index } = payload;
+        let { index } = payload;
 
         let resp = feature_set_enrich_state.computePerCellScores(index);
         postSuccess("setFeatureScores", resp);

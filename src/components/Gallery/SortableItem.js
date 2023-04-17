@@ -1,7 +1,7 @@
 import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Button, Divider, Icon } from "@blueprintjs/core";
+import { Button, Divider } from "@blueprintjs/core";
 import { saveSVG } from "../Plots/utils.js";
 
 import { Tooltip2 } from "@blueprintjs/popover2";
@@ -72,7 +72,7 @@ export function SortableItem(props) {
           .querySelectorAll("svg");
         snode.forEach((sn) => {
           if (
-            sn.attributes["data-icon"] == undefined &&
+            sn.attributes["data-icon"] === undefined &&
             !["highlight", "select", "download", "trash", "import"].includes(
               sn.attributes["data-icon"]
             )

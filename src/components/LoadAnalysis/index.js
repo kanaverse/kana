@@ -1,13 +1,10 @@
-import { useState, useCallback, useContext, useEffect } from "react";
+import { useState, useContext, useEffect } from "react";
 
 import {
   Tabs,
   Tab,
-  Classes,
-  Drawer,
   Label,
   Text,
-  HTMLSelect,
   FileInput,
   Icon,
   Card,
@@ -15,17 +12,7 @@ import {
   Button,
   Divider,
   Callout,
-  Code,
   H2,
-  Collapse,
-  Tag,
-  OverflowList,
-  H5,
-  H6,
-  FormGroup,
-  InputGroup,
-  EditableText,
-  ButtonGroup,
   RadioGroup,
   Radio,
 } from "@blueprintjs/core";
@@ -34,19 +21,18 @@ import "./index.css";
 
 import { AppContext } from "../../context/AppContext";
 
-import { generateUID } from "../../utils/utils";
-import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
+import { Tooltip2 } from "@blueprintjs/popover2";
 
-import { MODALITIES } from "../../utils/utils";
-
-export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
-  // close the entire panel
+export function LoadAnalysis({ setShowPanel, ...props }) {
+  // clear the entire panel
   const handleClose = () => {
-    setOpen(false);
-  };
+    setTmpLoadInputs({
+      name: `load-dataset-1`,
+      format: tabSelected,
+    });
 
-  // minimise info box on the right
-  const [openInfo, setOpenInfo] = useState(true);
+    setTmpStatusValid(true);
+  };
 
   // Access App Context
   const { setLoadFiles } = useContext(AppContext);
@@ -120,127 +106,133 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
         <Tab
           id="kana"
           title="Load from file"
-          panel={<>
-            <div>
-              <div className="row">
-                <Callout intent="primary">
-                  <p>
-                    Load analysis parameters from a <code>*.zip</code> file,
-                    created by clicking <em>Download analysis parameters</em> during a previous <strong>kana</strong> session.
-                  </p>
-                </Callout>
-              </div>
-              <div className="row">
-                <Label className="row-input">
-                  <Text className="text-100">
-                    <span>Load parameters from ZIP file</span>
-                  </Text>
-                  <FileInput
-                    style={{
-                      marginTop: "5px",
-                    }}
-                    text={
-                      tmpLoadInputs?.file
-                        ? tmpLoadInputs?.file.name
-                        : ".kana or .kana.gz or .zip"
-                    }
-                    onInputChange={(msg) => {
-                      if (msg.target.files) {
-                        setTmpLoadInputs({
-                          ...tmpLoadInputs,
-                          file: msg.target.files[0],
-                        });
+          panel={
+            <>
+              <div>
+                <div className="row">
+                  <Callout intent="primary">
+                    <p>
+                      Load analysis parameters from a <code>*.zip</code> file,
+                      created by clicking <em>Download analysis parameters</em>{" "}
+                      during a previous <strong>kana</strong> session.
+                    </p>
+                  </Callout>
+                </div>
+                <div className="row">
+                  <Label className="row-input">
+                    <Text className="text-100">
+                      <span>Load parameters from ZIP file</span>
+                    </Text>
+                    <FileInput
+                      style={{
+                        marginTop: "5px",
+                      }}
+                      text={
+                        tmpLoadInputs?.file
+                          ? tmpLoadInputs?.file.name
+                          : ".kana or .kana.gz or .zip"
                       }
-                    }}
-                  />
-                </Label>
+                      onInputChange={(msg) => {
+                        if (msg.target.files) {
+                          setTmpLoadInputs({
+                            ...tmpLoadInputs,
+                            file: msg.target.files[0],
+                          });
+                        }
+                      }}
+                    />
+                  </Label>
+                </div>
               </div>
-            </div>
-            </>}
+            </>
+          }
         />
         {
           <Tab
             id="kanadb"
             title="Load from browser"
-            panel={<>
-              <div className="row">
-                <Callout intent="primary">
-                  <p>
-                    Load analysis parameters from the browser's cache,
-                    created by clicking <em>Save analysis parameters (to browser)</em> during a previous <strong>kana</strong> session.
-                  </p>
-                </Callout>
-              </div>
-              <div>
-                {props?.kanaIDBRecs.length > 0 ? (
-                  <div className="row">
-                    <Label className="row-input">
-                      <Text
-                        className="text-100"
-                        style={{
-                          paddingBottom: "10px",
-                        }}
-                      >
-                        <span>Load parameters from browser</span>
-                      </Text>
-                      <RadioGroup
-                        onChange={(x) => {
-                          let tmp = { ...tmpLoadInputs };
-                          tmp["file"] = x.currentTarget?.value;
-                          setTmpLoadInputs(tmp);
+            panel={
+              <>
+                <div className="row">
+                  <Callout intent="primary">
+                    <p>
+                      Load analysis parameters from the browser's cache, created
+                      by clicking <em>Save analysis parameters (to browser)</em>{" "}
+                      during a previous <strong>kana</strong> session.
+                    </p>
+                  </Callout>
+                </div>
+                <div>
+                  {props?.kanaIDBRecs.length > 0 ? (
+                    <div className="row">
+                      <Label className="row-input">
+                        <Text
+                          className="text-100"
+                          style={{
+                            paddingBottom: "10px",
+                          }}
+                        >
+                          <span>Load parameters from browser</span>
+                        </Text>
+                        <RadioGroup
+                          onChange={(x) => {
+                            let tmp = { ...tmpLoadInputs };
+                            tmp["file"] = x.currentTarget?.value;
+                            setTmpLoadInputs(tmp);
 
-                          setTmpStatusValid(true);
-                        }}
-                        selectedValue={tmpLoadInputs?.file}
-                      >
-                        {props?.kanaIDBRecs.map((x, i) => {
-                          return (
-                            <Radio
-                              key={i}
-                              style={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                              }}
-                              label={<strong>{x.title}</strong>}
-                              value={x.id}
-                            >
-                              &nbsp;
-                              <span className="kana-date">
-                                {parseKanaDate(x.time)}
-                              </span>{" "}
-                              &nbsp;
-                              <Icon
-                                icon="trash"
-                                size="10"
+                            setTmpStatusValid(true);
+                          }}
+                          selectedValue={tmpLoadInputs?.file}
+                        >
+                          {props?.kanaIDBRecs.map((x, i) => {
+                            return (
+                              <Radio
+                                key={i}
                                 style={{
-                                  alignSelf: "baseline",
-                                  paddingTop: "4px",
-                                  paddingLeft: "5px",
+                                  display: "flex",
+                                  flexDirection: "row",
+                                  alignItems: "center",
                                 }}
-                                onClick={() => {
-                                  props?.setDeletekdb(x.id);
-                                }}
-                              ></Icon>
-                            </Radio>
-                          );
-                        })}
-                      </RadioGroup>
-                    </Label>
-                  </div>
-                ) : (
-                  <div className="row">
-                    <Label className="row-input">
-                      <Text className="text-100">
-                        <span>Load analysis saved to browser</span>
-                      </Text>
-                      <br />
-                      <span>No saved analysis found in the browser!</span>
-                    </Label>
-                  </div>
-                )}
-              </div>
-            </>}
+                                label={<strong>{x.title}</strong>}
+                                value={x.id}
+                              >
+                                &nbsp;
+                                <span className="kana-date">
+                                  {parseKanaDate(x.time)}
+                                </span>{" "}
+                                &nbsp;
+                                <Icon
+                                  icon="trash"
+                                  size="10"
+                                  style={{
+                                    alignSelf: "baseline",
+                                    paddingTop: "4px",
+                                    paddingLeft: "5px",
+                                  }}
+                                  onClick={() => {
+                                    props?.setDeletekdb(x.id);
+                                  }}
+                                ></Icon>
+                              </Radio>
+                            );
+                          })}
+                        </RadioGroup>
+                      </Label>
+                    </div>
+                  ) : (
+                    <div className="row">
+                      <Label className="row-input">
+                        <Text className="text-100">
+                          <span>Load analysis saved to browser</span>
+                        </Text>
+                        <br />
+                        <span>No saved analysis found in the browser!</span>
+                      </Label>
+                    </div>
+                  )}
+                </div>
+              </>
+            }
           />
         }
       </Tabs>
@@ -258,7 +250,8 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
           <Callout>
             <p>
               <strong>
-                Recover an analysis using saved parameters from a previous kana session. 
+                Recover an analysis using saved parameters from a previous kana
+                session.
               </strong>
             </p>
           </Callout>
@@ -268,13 +261,13 @@ export function LoadAnalysis({ open, setOpen, setShowPanel, ...props }) {
       </div>
       <Divider />
       <div className="section-footer">
-        <Tooltip2 content="Cancel Load" placement="left">
+        <Tooltip2 content="Clear selection" placement="left">
           <Button
             icon="cross"
             intent={"warning"}
             large={true}
             onClick={handleClose}
-            text="Cancel"
+            text="Clear"
           />
         </Tooltip2>
         <Tooltip2 content="Load Analysis" placement="right">

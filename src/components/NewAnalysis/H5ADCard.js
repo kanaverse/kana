@@ -1,36 +1,19 @@
-import { useState, useCallback, useContext, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 import {
-  Tabs,
-  Tab,
-  Classes,
-  Drawer,
   Label,
   Text,
   HTMLSelect,
   ButtonGroup,
-  FileInput,
-  Icon,
-  Card,
-  Elevation,
   Button,
   Divider,
   Callout,
-  Code,
-  H2,
   Collapse,
-  Tag,
-  OverflowList,
-  H5,
-  H6,
   FormGroup,
-  InputGroup,
   EditableText,
 } from "@blueprintjs/core";
 
 import "./index.css";
-
-import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 
 import { MODALITIES } from "../../utils/utils";
 
@@ -70,7 +53,7 @@ export function H5AD({
 
   // when options change
   useEffect(() => {
-    if (options != {}) {
+    if (options !== {}) {
       let tmpInputOpts = [...inputOpts];
       tmpInputOpts[index] = options;
       setInputOpts(tmpInputOpts);

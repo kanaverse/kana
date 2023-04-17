@@ -14,15 +14,12 @@ import {
   Callout,
   Code,
   H2,
-  Collapse,
   Checkbox,
   NumericInput,
-  Tag,
   H5,
-  Switch,
 } from "@blueprintjs/core";
-import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
-import { ItemRenderer, MultiSelect2 } from "@blueprintjs/select";
+
+import { Tooltip2 } from "@blueprintjs/popover2";
 
 import "./index.css";
 
@@ -49,8 +46,6 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
     setPreInputFilesStatus(null);
 
     setEhubSel("none");
-
-    setOpenInfo(true);
   };
 
   const initTmpFile = () => {
@@ -59,9 +54,6 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
       format: tabSelected,
     };
   };
-
-  // minimise info box on the right
-  const [openInfo, setOpenInfo] = useState(true);
 
   // default ehub dataset selection
   const [ehubSel, setEhubSel] = useState("none");
@@ -106,12 +98,6 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   // should i enable the add button?
   const [tmpStatusValid, setTmpStatusValid] = useState(null);
 
-  // show batch field?
-  const [showBatch, setShowBatch] = useState(false);
-
-  // show subset field?
-  const [showSubset, setShowSubset] = useState(false);
-
   // default code for none
   const default_none = `${code}::none`;
 
@@ -119,7 +105,6 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
     tmpNewInputs["uid"] = generateUID(tmpNewInputs);
 
     setTmpFiles([...tmpFiles, tmpNewInputs]);
-    setOpenInfo(false);
 
     setEhubSel("none");
 
@@ -128,7 +113,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
 
   const handleRunAnalysis = () => {
     if (Array.isArray(tmpFiles) && Array.isArray(inputOptions)) {
-      if (tmpFiles.length != inputOptions.length) {
+      if (tmpFiles.length !== inputOptions.length) {
         console.error("forgot to set options?");
       } else {
         let mapFiles = {};
@@ -173,7 +158,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
 
   const handleRunAndParams = () => {
     if (Array.isArray(tmpFiles) && Array.isArray(inputOptions)) {
-      if (tmpFiles.length != inputOptions.length) {
+      if (tmpFiles.length !== inputOptions.length) {
         console.error("forgot to set options?");
       } else {
         setStateIndeterminate(true);
@@ -730,7 +715,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 if (
                   preInputFilesStatus[tmpFiles[0].name].cells["columns"][
                     subset["subset"]
-                  ].type == "categorical"
+                  ].type === "categorical"
                 ) {
                   return (
                     <div className="subset-section">
@@ -937,7 +922,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           )}
           <div className="section-inputs">
             {tmpFiles.map((x, i) => {
-              if (x.format == "ExperimentHub") {
+              if (x.format === "ExperimentHub") {
                 return (
                   <ExperimentHub
                     key={i}
@@ -953,7 +938,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                     setInputs={setTmpFiles}
                   />
                 );
-              } else if (x.format == "MatrixMarket") {
+              } else if (x.format === "MatrixMarket") {
                 return (
                   <MatrixMarket
                     key={i}
@@ -969,7 +954,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                     setInputs={setTmpFiles}
                   />
                 );
-              } else if (x.format == "10X") {
+              } else if (x.format === "10X") {
                 return (
                   <TenxHDF5
                     key={i}
@@ -985,7 +970,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                     setInputs={setTmpFiles}
                   />
                 );
-              } else if (x.format == "H5AD") {
+              } else if (x.format === "H5AD") {
                 return (
                   <H5AD
                     key={i}
@@ -1001,7 +986,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                     setInputs={setTmpFiles}
                   />
                 );
-              } else if (x.format == "SummarizedExperiment") {
+              } else if (x.format === "SummarizedExperiment") {
                 return (
                   <RDSSE
                     key={i}
@@ -1041,7 +1026,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
               onClick={handleRunAnalysis}
               intent={"warning"}
               large={true}
-              disabled={tmpFiles.length == 0}
+              disabled={tmpFiles.length === 0}
             >
               Analyze
             </Button>
@@ -1056,7 +1041,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
               icon="arrow-right"
               onClick={handleRunAndParams}
               large={true}
-              disabled={tmpFiles.length == 0}
+              disabled={tmpFiles.length === 0}
             >
               Modify analysis parameters
             </Button>

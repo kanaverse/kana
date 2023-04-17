@@ -1,36 +1,19 @@
-import { useState, useCallback, useContext, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 import {
-  Tabs,
-  Tab,
-  Classes,
-  Drawer,
   Label,
   Text,
   HTMLSelect,
   ButtonGroup,
-  FileInput,
-  Icon,
-  Card,
-  Elevation,
   Button,
   Divider,
   Callout,
-  Code,
-  H2,
   Collapse,
-  Tag,
-  OverflowList,
-  H5,
-  H6,
   FormGroup,
-  InputGroup,
   EditableText,
 } from "@blueprintjs/core";
 
 import "./index.css";
-
-import { Popover2, Tooltip2, Classes as popclass } from "@blueprintjs/popover2";
 
 import { MODALITIES } from "../../utils/utils";
 
@@ -67,7 +50,7 @@ export function RDSSE({
 
   // when options change
   useEffect(() => {
-    if (options != {}) {
+    if (options !== {}) {
       let tmpInputOpts = [...inputOpts];
       tmpInputOpts[index] = options;
       setInputOpts(tmpInputOpts);
@@ -77,7 +60,7 @@ export function RDSSE({
   useEffect(() => {
     let tmpOptions = { ...options };
     if (
-      options != {} &&
+      options !== {} &&
       "adtExperiment" in options &&
       options["adtExperiment"] !== "none" &&
       options["adtExperiment"] !== null &&
@@ -98,7 +81,7 @@ export function RDSSE({
   useEffect(() => {
     let tmpOptions = { ...options };
     if (
-      options != {} &&
+      options !== {} &&
       "crisprExperiment" in options &&
       options["crisprExperiment"] !== "none" &&
       options["crisprExperiment"] !== null &&
@@ -119,7 +102,7 @@ export function RDSSE({
   useEffect(() => {
     let tmpOptions = { ...options };
     if (
-      options != {} &&
+      options !== {} &&
       "rnaExperiment" in options &&
       options["rnaExperiment"] !== "none" &&
       options["rnaExperiment"] !== null &&
@@ -176,7 +159,7 @@ export function RDSSE({
       crisprExperiment: null,
     };
     for (const [k, v] of Object.entries(preflight.modality_features)) {
-      if (k == "" || k.toLowerCase().indexOf("gene") > -1) {
+      if (k === "" || k.toLowerCase().indexOf("gene") > -1) {
         tmpOptions["rnaExperiment"] = k;
         tmpOptions["rnaCountAssay"] = preflight.modality_assay_names[k][0];
         tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
