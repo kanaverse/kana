@@ -13,34 +13,6 @@ import { code } from "../utils/utils.js";
 import * as bioc from "bioconductor";
 /***************************************/
 
-// Evade CORS problems and enable caching.
-const proxy = "https://cors-proxy.aaron-lun.workers.dev";
-async function proxyAndCache(url) {
-  let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
-  return new Uint8Array(buffer);
-}
-
-bakana.CellLabellingState.setDownload(proxyAndCache);
-gesel.setGeneDownload(proxyAndCache);
-bakana.RnaQualityControlState.setDownload(proxyAndCache);
-
-gesel.referenceDownload(async (file, start, end) => {
-  let url = gesel.referenceBaseUrl() + "/" + file;
-  let full = proxy + "/" + encodeURIComponent(url);
-  if (start == null && end == null) {
-    let buffer = await downloads.get(full);
-    return new Response(buffer);
-  } else {
-    return fetch(full + "?start=" + String(start) + "&end=" + String(end));
-  }
-});
-
-gesel.geneDownload(async (file) => {
-  let url = gesel.geneBaseUrl() + "/" + file;
-  let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
-  return new Response(buffer);
-});
-
 const default_cluster = `${code}::CLUSTERS`;
 const default_selection = `${code}::SELECTION`;
 
