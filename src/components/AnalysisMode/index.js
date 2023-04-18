@@ -1767,6 +1767,7 @@ export function AnalysisMode(props) {
                         featureScoreCache={featureScoreCache}
                         fsetEnirchDetails={fsetEnirchDetails}
                         selectedDimPlotCluster={selectedDimPlotCluster}
+                        setSelectedDimPlotCluster={setSelectedDimPlotCluster}
                       />
                     )}
                   </div>

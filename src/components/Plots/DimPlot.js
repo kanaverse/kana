@@ -866,6 +866,10 @@ const DimPlot = (props) => {
                           state = true;
                         }
                         setToggleFactorsGradient(state);
+
+                        props?.setSelectedDimPlotCluster(
+                          nval?.currentTarget?.value
+                        );
                       }}
                     >
                       <optgroup label="Supplied">

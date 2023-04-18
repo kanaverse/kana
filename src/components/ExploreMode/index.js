@@ -1143,6 +1143,7 @@ export function ExplorerMode() {
                         featureScoreCache={featureScoreCache}
                         fsetEnirchDetails={fsetEnirchDetails}
                         selectedDimPlotCluster={selectedDimPlotCluster}
+                        setSelectedDimPlotCluster={setSelectedDimPlotCluster}
                       />
                     )}
                   </div>
