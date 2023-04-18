@@ -64,7 +64,7 @@ export function ParameterSelection({
   };
 
   const hasMultipleBatches = () => {
-    if (!!loadFiles) {
+    if (!!loadFiles.files) {
       return loadParams?.inputs?.batch === "string";
     }
     return !!inputFiles.files
