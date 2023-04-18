@@ -1649,19 +1649,7 @@ export function AnalysisMode(props) {
             <div className="item-sidebar">
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
-                content={
-                  <div style={{ width: "250px" }}>
-                    Kana is developed by Jayaram Kancherla (
-                    <a href="https://github.com/jkanche" target="_blank">
-                      <strong>@jkanche</strong>
-                    </a>
-                    ), Aaron Lun (
-                    <a href="https://github.com/LTLA" target="_blank">
-                      <strong>@LTLA</strong>
-                    </a>
-                    ). Checkout Kanaverse for more details.
-                  </div>
-                }
+                content="View source code"
                 minimal={false}
                 placement={"right"}
               >
@@ -1673,12 +1661,12 @@ export function AnalysisMode(props) {
                     fill={true}
                     icon={"git-repo"}
                     onClick={() =>
-                      window.open("https://github.com/kanaverse", "_blank")
+                      window.open("https://github.com/kanaverse/kana", "_blank")
                     }
                   ></Button>
                   <span
                     onClick={() =>
-                      window.open("https://github.com/kanaverse", "_blank")
+                      window.open("https://github.com/kanaverse/kana", "_blank")
                     }
                     style={{
                       cursor: "pointer",

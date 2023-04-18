@@ -140,7 +140,7 @@
 .frontpage {
   display: grid;
   grid-template-columns: 250px auto;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto 25px;
   gap: 15px;
   padding: 5% 20%;
 }
@@ -172,4 +172,10 @@
 .frontpage-rowitem-danger {
   width: 80%;
   margin: 0 auto;
+}
+
+.frontpage-footer {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  text-align: center;
 }
