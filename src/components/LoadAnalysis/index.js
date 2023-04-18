@@ -73,11 +73,7 @@ export function LoadAnalysis({ setShowPanel, ...props }) {
         if (
           tabSelected === "kana" &&
           x?.file != null &&
-          !(
-            x.file.name.toLowerCase().endsWith("kana") ||
-            x.file.name.toLowerCase().endsWith("kana.gz") ||
-            x.file.name.toLowerCase().endsWith("zip")
-          )
+          !x.file.name.toLowerCase().endsWith("zip")
         ) {
           setTmpStatusValid(false);
         } else if (tabSelected === "kanadb" && x?.file === null) {
@@ -128,9 +124,7 @@ export function LoadAnalysis({ setShowPanel, ...props }) {
                         marginTop: "5px",
                       }}
                       text={
-                        tmpLoadInputs?.file
-                          ? tmpLoadInputs?.file.name
-                          : ".kana or .kana.gz or .zip"
+                        tmpLoadInputs?.file ? tmpLoadInputs?.file.name : ".zip"
                       }
                       onInputChange={(msg) => {
                         if (msg.target.files) {
