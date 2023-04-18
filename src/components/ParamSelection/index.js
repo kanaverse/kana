@@ -1213,7 +1213,7 @@ export function ParameterSelection({
                 <Checkbox
                   defaultChecked={isCheckIncluded("human", "BlueprintEncode")}
                   inline={true}
-                  label="Blueprint Encode"
+                  label="Blueprint/Encode"
                   onChange={(e) => {
                     handleCheckbox(e, "human", "BlueprintEncode");
                   }}
@@ -1224,7 +1224,7 @@ export function ParameterSelection({
                     "DatabaseImmuneCellExpression"
                   )}
                   inline={true}
-                  label="Database ImmuneCell Expression"
+                  label="Database Immune Cell Expression"
                   onChange={(e) => {
                     handleCheckbox(e, "human", "DatabaseImmuneCellExpression");
                   }}

@@ -47,6 +47,7 @@ import pkgVersion from "../../../package.json";
 import logo from "../../assets/kana-cropped.png";
 import "../../App.css";
 import FeatureSetEnrichment from "../FeatureSets";
+import CellAnnotation from "../CellAnnotation";
 
 const scranWorker = new Worker(
   new URL("../../workers/scran.worker.js", import.meta.url),
@@ -253,7 +254,7 @@ export function AnalysisMode(props) {
   // selected colorBy
   const [colorByAnnotation, setColorByAnnotation] = useState(default_cluster);
 
-  // are we showing markers or feature sets?
+  // are we showing markers or featuresets or celltypeannotations?
   const [markersORFSets, setMarkersOrFsets] = useState("markers");
   // set feature set rank-type
   const [fsetClusterRank, setFsetClusterRank] = useState("cohen-min-rank");
@@ -1162,7 +1163,9 @@ export function AnalysisMode(props) {
 
       setReqAnnotation(null);
     } else if (type === "cell_labelling_DATA") {
-      setCellLabelData(resp);
+      if ("integrated" in resp) {
+        setCellLabelData(resp);
+      }
       setShowCellLabelLoader(false);
     } else if (type === "custom_selections_DATA") {
     } else if (type === "tsne_CACHE" || payload.type === "umap_CACHE") {
@@ -1761,6 +1764,25 @@ export function AnalysisMode(props) {
                       />
                     )}
                   </div>
+                  {markersORFSets === "celltypeannotation" && (
+                    <div
+                      className={
+                        showMarkerLoader
+                          ? "results-celltype effect-opacitygrayscale"
+                          : "results-celltype"
+                      }
+                    >
+                      {annotationObj[default_cluster] && (
+                        <CellAnnotation
+                          markersORFSets={markersORFSets}
+                          setMarkersOrFsets={setMarkersOrFsets}
+                          selectedClusterSummary={selectedClusterSummary}
+                          cellLabelData={cellLabelData}
+                          windowWidth={windowWidth}
+                        />
+                      )}
+                    </div>
+                  )}
                   {markersORFSets === "markers" && (
                     <div
                       className={
@@ -1802,6 +1824,7 @@ export function AnalysisMode(props) {
                             }
                             setMarkersOrFsets={setMarkersOrFsets}
                             markersORFSets={markersORFSets}
+                            cellLabelData={cellLabelData}
                           />
                         )}
                     </div>
@@ -1848,6 +1871,7 @@ export function AnalysisMode(props) {
                           customSelection={customSelection}
                           setReqAnnotation={setReqAnnotation}
                           selectedFsetModality={selectedFsetModality}
+                          cellLabelData={cellLabelData}
                         />
                       )}
                     </div>

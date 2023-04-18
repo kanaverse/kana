@@ -566,6 +566,22 @@ const FeatureSetEnrichment = (props) => {
                 text="Gene sets"
               />
             )}
+
+            {props?.cellLabelData !== null && (
+              <Button
+                disabled={
+                  props?.cellLabelData === null ||
+                  props?.cellLabelData === undefined
+                }
+                onClick={() => props?.setMarkersOrFsets("celltypeannotation")}
+                intent={
+                  props?.markersORFSets === "celltypeannotation"
+                    ? "primary"
+                    : ""
+                }
+                text="Cell types"
+              />
+            )}
           </ButtonGroup>
         </div>
         <div>
