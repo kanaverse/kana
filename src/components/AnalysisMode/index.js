@@ -1570,7 +1570,8 @@ export function AnalysisMode(props) {
                 intent={showPanel === "logs" ? "primary" : "none"}
               >
                 <div className="item-button-group">
-                  {inputFiles?.files === null && loadFiles?.files === null ? (
+                  {(inputFiles?.files === null && loadFiles?.files === null) ||
+                  stateIndeterminate ? (
                     <Button
                       outlined={false}
                       large={false}
