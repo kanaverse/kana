@@ -185,7 +185,7 @@ export function AnalysisMode(props) {
     setShowQCLoader(true);
     setShowPCALoader(true);
     setShowNClusLoader(true);
-    // setShowCellLabelLoader(true);
+    setShowCellLabelLoader(true);
     setShowFsetLoader(true);
   }
 
@@ -1584,6 +1584,7 @@ export function AnalysisMode(props) {
                   ) : !showPCALoader &&
                     !showNClusLoader &&
                     !showMarkerLoader &&
+                    !showCellLabelLoader &&
                     !showDimPlotLoader ? (
                     <Button
                       outlined={false}
