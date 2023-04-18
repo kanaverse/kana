@@ -1199,6 +1199,8 @@ export function ParameterSelection({
               <div
                 style={{
                   marginTop: "10px",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
                 <span
@@ -1260,7 +1262,13 @@ export function ParameterSelection({
                   }}
                 />
               </div>
-              <div>
+              <div
+                style={{
+                  marginTop: "10px",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
                 <span
                   style={{
                     marginRight: "10px",
