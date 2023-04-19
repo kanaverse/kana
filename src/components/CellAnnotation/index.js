@@ -1,12 +1,6 @@
-import React, { useEffect, useContext, useState, useMemo } from "react";
+import React, { useEffect, useContext, useState } from "react";
 import {
   Button,
-  Icon,
-  Collapse,
-  InputGroup,
-  Switch,
-  RangeSlider,
-  Tag,
   HTMLSelect,
   Classes,
   Card,
@@ -15,13 +9,12 @@ import {
   Divider,
   ButtonGroup,
 } from "@blueprintjs/core";
-import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
+import { Popover2 } from "@blueprintjs/popover2";
 import { TableVirtuoso } from "react-virtuoso";
-import { CSVLink } from "react-csv";
 
 import { AppContext } from "../../context/AppContext";
 
-import { code, getMinMax, defaultColor } from "../../utils/utils";
+import { code, getMinMax } from "../../utils/utils";
 // import Histogram from '../Plots/Histogram';
 import "./cellanno.css";
 
@@ -32,9 +25,6 @@ const CellAnnotation = (props) => {
 
   // what clusters are available
   const [clusSel, setClusSel] = useState(null);
-
-  // what cluster is selected
-  const [selectedClus, setSelectedClus] = useState(null);
 
   // records to show in the table
   const [prosRecords, setProsRecords] = useState(null);
@@ -51,8 +41,8 @@ const CellAnnotation = (props) => {
         }
 
         setClusSel(clus);
-        if (selectedClus === null) {
-          setSelectedClus(0);
+        if (props?.selectedCellAnnCluster === null) {
+          props?.setSelectedCellAnnCluster(0);
         }
       }
 
@@ -64,7 +54,7 @@ const CellAnnotation = (props) => {
     if (
       props?.cellLabelData !== null &&
       props?.cellLabelData !== undefined &&
-      selectedClus !== null
+      props?.selectedCellAnnCluster !== null
     ) {
       const recs = [];
       for (const [k, v] of Object.entries(
@@ -72,13 +62,13 @@ const CellAnnotation = (props) => {
       )) {
         recs.push({
           reference: k,
-          value: v[selectedClus],
+          value: v[props?.selectedCellAnnCluster],
         });
       }
 
       setProsRecords(recs);
     }
-  }, [props?.cellLabelData, selectedClus]);
+  }, [props?.cellLabelData, props?.selectedCellAnnCluster]);
 
   const getTableHeight = () => {
     let defheight = 340;
@@ -207,15 +197,16 @@ const CellAnnotation = (props) => {
             onChange={(x) => {
               let tmpselection = x.currentTarget?.value;
               tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1;
-              setSelectedClus(tmpselection);
+              props?.setSelectedCellAnnCluster(tmpselection);
             }}
           >
             {clusSel.map((x, i) => (
               <option
                 selected={
-                  String(selectedClus).startsWith("cs")
-                    ? x === selectedClus
-                    : parseInt(x) - 1 === parseInt(selectedClus)
+                  String(props?.selectedCellAnnCluster).startsWith("cs")
+                    ? x === props?.selectedCellAnnCluster
+                    : parseInt(x) - 1 ===
+                      parseInt(props?.selectedCellAnnCluster)
                 }
                 key={i}
               >
@@ -271,8 +262,9 @@ const CellAnnotation = (props) => {
               <>
                 <td
                   className={
-                    props?.cellLabelData["integrated"][selectedClus] ===
-                    row.reference
+                    props?.cellLabelData["integrated"][
+                      props?.selectedCellAnnCluster
+                    ] === row.reference
                       ? "td-highlight"
                       : ""
                   }

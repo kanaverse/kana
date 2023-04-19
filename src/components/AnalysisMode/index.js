@@ -284,6 +284,9 @@ export function AnalysisMode(props) {
   // modality in feature set
   const [selectedFsetModality, setSelectedFsetModality] = useState("RNA");
 
+  // which cluster is selected in the celltype table
+  const [selectedCellAnnCluster, setSelectedCellAnnCluster] = useState(null);
+
   /*******
    * USER REQUESTS - END
    ******/
@@ -761,6 +764,10 @@ export function AnalysisMode(props) {
     ) {
       if (selectedFsetCluster !== selectedCluster)
         setSelectedFsetCluster(selectedCluster);
+
+      if (selectedCellAnnCluster !== selectedCluster) {
+        setSelectedCellAnnCluster(selectedCluster);
+      }
     }
   }, [selectedCluster]);
 
@@ -768,8 +775,21 @@ export function AnalysisMode(props) {
     if (selectedModality === "RNA" && markersORFSets === "featuresets") {
       if (selectedFsetCluster !== selectedCluster)
         setSelectedCluster(selectedFsetCluster);
+
+      if (selectedFsetCluster !== selectedCellAnnCluster)
+        setSelectedCellAnnCluster(selectedFsetCluster);
     }
   }, [selectedFsetCluster]);
+
+  useEffect(() => {
+    if (selectedModality === "RNA" && markersORFSets === "celltypeannotation") {
+      if (selectedCellAnnCluster !== selectedFsetCluster)
+        setSelectedFsetCluster(selectedCellAnnCluster);
+
+      if (selectedCellAnnCluster !== selectedCluster)
+        setSelectedCluster(selectedCellAnnCluster);
+    }
+  }, [selectedCellAnnCluster]);
 
   function add_to_logs(type, msg, status) {
     // let tmp = [...logs];
@@ -782,7 +802,7 @@ export function AnalysisMode(props) {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    // console.log("ON MAIN::RCV::", payload);
+    console.log("ON MAIN::RCV::", payload);
 
     // process any error messages
     if (payload) {
@@ -1779,6 +1799,8 @@ export function AnalysisMode(props) {
                           selectedClusterSummary={selectedClusterSummary}
                           cellLabelData={cellLabelData}
                           windowWidth={windowWidth}
+                          selectedCellAnnCluster={selectedCellAnnCluster}
+                          setSelectedCellAnnCluster={setSelectedCellAnnCluster}
                         />
                       )}
                     </div>
