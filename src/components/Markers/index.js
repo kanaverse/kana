@@ -439,6 +439,22 @@ const MarkerPlot = (props) => {
                 text="Gene sets"
               />
             )}
+
+            {props?.cellLabelData !== null && (
+              <Button
+                disabled={
+                  props?.cellLabelData === null ||
+                  props?.cellLabelData === undefined
+                }
+                onClick={() => props?.setMarkersOrFsets("celltypeannotation")}
+                intent={
+                  props?.markersORFSets === "celltypeannotation"
+                    ? "primary"
+                    : ""
+                }
+                text="Cell types"
+              />
+            )}
           </ButtonGroup>
         </div>
         <div>
@@ -475,7 +491,7 @@ const MarkerPlot = (props) => {
             <Button minimal={true} icon="info-sign" small={true} />
           </Popover2>
 
-          <Tooltip2 content={isExpanded ? "Maximize" : "Minimize"}>
+          {/* <Tooltip2 content={isExpanded ? "Maximize" : "Minimize"}>
             <Button
               onClick={() => setIsExpanded(!isExpanded)}
               minimal={true}
@@ -483,7 +499,7 @@ const MarkerPlot = (props) => {
               small={true}
               intent={isExpanded ? "none" : "none"}
             />
-          </Tooltip2>
+          </Tooltip2> */}
 
           <Tooltip2 content="Download markers as CSV">
             {render_download_link()}

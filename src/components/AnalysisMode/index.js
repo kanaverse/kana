@@ -47,6 +47,7 @@ import pkgVersion from "../../../package.json";
 import logo from "../../assets/kana-cropped.png";
 import "../../App.css";
 import FeatureSetEnrichment from "../FeatureSets";
+import CellAnnotation from "../CellAnnotation";
 
 const scranWorker = new Worker(
   new URL("../../workers/scran.worker.js", import.meta.url),
@@ -185,7 +186,7 @@ export function AnalysisMode(props) {
     setShowQCLoader(true);
     setShowPCALoader(true);
     setShowNClusLoader(true);
-    // setShowCellLabelLoader(true);
+    setShowCellLabelLoader(true);
     setShowFsetLoader(true);
   }
 
@@ -253,7 +254,7 @@ export function AnalysisMode(props) {
   // selected colorBy
   const [colorByAnnotation, setColorByAnnotation] = useState(default_cluster);
 
-  // are we showing markers or feature sets?
+  // are we showing markers or featuresets or celltypeannotations?
   const [markersORFSets, setMarkersOrFsets] = useState("markers");
   // set feature set rank-type
   const [fsetClusterRank, setFsetClusterRank] = useState("cohen-min-rank");
@@ -282,6 +283,9 @@ export function AnalysisMode(props) {
   const [selectedFsetVSCluster, setSelectedFsetVSCluster] = useState(null);
   // modality in feature set
   const [selectedFsetModality, setSelectedFsetModality] = useState("RNA");
+
+  // which cluster is selected in the celltype table
+  const [selectedCellAnnCluster, setSelectedCellAnnCluster] = useState(null);
 
   /*******
    * USER REQUESTS - END
@@ -760,6 +764,10 @@ export function AnalysisMode(props) {
     ) {
       if (selectedFsetCluster !== selectedCluster)
         setSelectedFsetCluster(selectedCluster);
+
+      if (selectedCellAnnCluster !== selectedCluster) {
+        setSelectedCellAnnCluster(selectedCluster);
+      }
     }
   }, [selectedCluster]);
 
@@ -767,8 +775,21 @@ export function AnalysisMode(props) {
     if (selectedModality === "RNA" && markersORFSets === "featuresets") {
       if (selectedFsetCluster !== selectedCluster)
         setSelectedCluster(selectedFsetCluster);
+
+      if (selectedFsetCluster !== selectedCellAnnCluster)
+        setSelectedCellAnnCluster(selectedFsetCluster);
     }
   }, [selectedFsetCluster]);
+
+  useEffect(() => {
+    if (selectedModality === "RNA" && markersORFSets === "celltypeannotation") {
+      if (selectedCellAnnCluster !== selectedFsetCluster)
+        setSelectedFsetCluster(selectedCellAnnCluster);
+
+      if (selectedCellAnnCluster !== selectedCluster)
+        setSelectedCluster(selectedCellAnnCluster);
+    }
+  }, [selectedCellAnnCluster]);
 
   function add_to_logs(type, msg, status) {
     // let tmp = [...logs];
@@ -781,7 +802,7 @@ export function AnalysisMode(props) {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    // console.log("ON MAIN::RCV::", payload);
+    console.log("ON MAIN::RCV::", payload);
 
     // process any error messages
     if (payload) {
@@ -1162,7 +1183,9 @@ export function AnalysisMode(props) {
 
       setReqAnnotation(null);
     } else if (type === "cell_labelling_DATA") {
-      setCellLabelData(resp);
+      if ("integrated" in resp) {
+        setCellLabelData(resp);
+      }
       setShowCellLabelLoader(false);
     } else if (type === "custom_selections_DATA") {
     } else if (type === "tsne_CACHE" || payload.type === "umap_CACHE") {
@@ -1570,7 +1593,8 @@ export function AnalysisMode(props) {
                 intent={showPanel === "logs" ? "primary" : "none"}
               >
                 <div className="item-button-group">
-                  {inputFiles?.files === null && loadFiles?.files === null ? (
+                  {(inputFiles?.files === null && loadFiles?.files === null) ||
+                  stateIndeterminate ? (
                     <Button
                       outlined={false}
                       large={false}
@@ -1583,6 +1607,7 @@ export function AnalysisMode(props) {
                   ) : !showPCALoader &&
                     !showNClusLoader &&
                     !showMarkerLoader &&
+                    !showCellLabelLoader &&
                     !showDimPlotLoader ? (
                     <Button
                       outlined={false}
@@ -1647,19 +1672,7 @@ export function AnalysisMode(props) {
             <div className="item-sidebar">
               <Tooltip2
                 className={popclass.TOOLTIP2_INDICATOR}
-                content={
-                  <div style={{ width: "250px" }}>
-                    Kana is developed by Jayaram Kancherla (
-                    <a href="https://github.com/jkanche" target="_blank">
-                      <strong>@jkanche</strong>
-                    </a>
-                    ), Aaron Lun (
-                    <a href="https://github.com/LTLA" target="_blank">
-                      <strong>@LTLA</strong>
-                    </a>
-                    ). Checkout Kanaverse for more details.
-                  </div>
-                }
+                content="View source code"
                 minimal={false}
                 placement={"right"}
               >
@@ -1671,12 +1684,12 @@ export function AnalysisMode(props) {
                     fill={true}
                     icon={"git-repo"}
                     onClick={() =>
-                      window.open("https://github.com/kanaverse", "_blank")
+                      window.open("https://github.com/kanaverse/kana", "_blank")
                     }
                   ></Button>
                   <span
                     onClick={() =>
-                      window.open("https://github.com/kanaverse", "_blank")
+                      window.open("https://github.com/kanaverse/kana", "_blank")
                     }
                     style={{
                       cursor: "pointer",
@@ -1767,9 +1780,31 @@ export function AnalysisMode(props) {
                         featureScoreCache={featureScoreCache}
                         fsetEnirchDetails={fsetEnirchDetails}
                         selectedDimPlotCluster={selectedDimPlotCluster}
+                        setSelectedDimPlotCluster={setSelectedDimPlotCluster}
                       />
                     )}
                   </div>
+                  {markersORFSets === "celltypeannotation" && (
+                    <div
+                      className={
+                        showMarkerLoader
+                          ? "results-celltype effect-opacitygrayscale"
+                          : "results-celltype"
+                      }
+                    >
+                      {annotationObj[default_cluster] && (
+                        <CellAnnotation
+                          markersORFSets={markersORFSets}
+                          setMarkersOrFsets={setMarkersOrFsets}
+                          selectedClusterSummary={selectedClusterSummary}
+                          cellLabelData={cellLabelData}
+                          windowWidth={windowWidth}
+                          selectedCellAnnCluster={selectedCellAnnCluster}
+                          setSelectedCellAnnCluster={setSelectedCellAnnCluster}
+                        />
+                      )}
+                    </div>
+                  )}
                   {markersORFSets === "markers" && (
                     <div
                       className={
@@ -1811,6 +1846,7 @@ export function AnalysisMode(props) {
                             }
                             setMarkersOrFsets={setMarkersOrFsets}
                             markersORFSets={markersORFSets}
+                            cellLabelData={cellLabelData}
                           />
                         )}
                     </div>
@@ -1857,6 +1893,7 @@ export function AnalysisMode(props) {
                           customSelection={customSelection}
                           setReqAnnotation={setReqAnnotation}
                           selectedFsetModality={selectedFsetModality}
+                          cellLabelData={cellLabelData}
                         />
                       )}
                     </div>

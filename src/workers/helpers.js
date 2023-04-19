@@ -167,6 +167,17 @@ export async function fetchStepSummary(state, step) {
       }
     }
 
+    var blocks = state[step].fetchBlockLevels();
+    if (blocks !== null) {
+      const col = state[step].fetchBlock().slice();
+      const ksumm = bakana.summarizeArray(col);
+      cell_info["__batch__"] = {
+        name: "__batch__",
+        truncated: new Set(col).size >= 50,
+        type: "continuous",
+      };
+    }
+
     output = {
       num_cells: state[step].fetchCountMatrix().numberOfColumns(),
       num_genes: ngenes,
@@ -205,7 +216,7 @@ export async function fetchStepSummary(state, step) {
     let metrics = {
       sums: state[step].fetchMetrics().sums(),
       detected: state[step].fetchMetrics().detected(),
-      proportion: state[step].fetchMetrics().subsetTotals(0)
+      proportion: state[step].fetchMetrics().subsetTotals(0),
     };
 
     var output = {};

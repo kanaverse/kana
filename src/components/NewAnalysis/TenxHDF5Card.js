@@ -93,6 +93,10 @@ export function TenxHDF5({
     let tmpInputs = [...inputs];
     tmpInputs.splice(index, 1);
     setInputs(tmpInputs);
+
+    let tmpInputOpts = [...inputOpts];
+    tmpInputOpts.splice(index, 1);
+    setInputOpts(tmpInputOpts);
   };
 
   return (

@@ -64,7 +64,7 @@ export function ParameterSelection({
   };
 
   const hasMultipleBatches = () => {
-    if (!!loadFiles) {
+    if (!!loadFiles.files) {
       return loadParams?.inputs?.batch === "string";
     }
     return !!inputFiles.files
@@ -1199,6 +1199,8 @@ export function ParameterSelection({
               <div
                 style={{
                   marginTop: "10px",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
                 <span
@@ -1213,7 +1215,7 @@ export function ParameterSelection({
                 <Checkbox
                   defaultChecked={isCheckIncluded("human", "BlueprintEncode")}
                   inline={true}
-                  label="Blueprint Encode"
+                  label="Blueprint/Encode"
                   onChange={(e) => {
                     handleCheckbox(e, "human", "BlueprintEncode");
                   }}
@@ -1224,7 +1226,7 @@ export function ParameterSelection({
                     "DatabaseImmuneCellExpression"
                   )}
                   inline={true}
-                  label="Database ImmuneCell Expression"
+                  label="Database Immune Cell Expression"
                   onChange={(e) => {
                     handleCheckbox(e, "human", "DatabaseImmuneCellExpression");
                   }}
@@ -1260,7 +1262,13 @@ export function ParameterSelection({
                   }}
                 />
               </div>
-              <div>
+              <div
+                style={{
+                  marginTop: "10px",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
                 <span
                   style={{
                     marginRight: "10px",

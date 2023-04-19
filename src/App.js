@@ -114,8 +114,10 @@ function App() {
                       intent="danger"
                     >
                       <p>
-                        <strong>Kana</strong> relies on some web standards that are not supported by old versions of Safari.
-                        If you run into any issues, try updating Safari to version 16.4 or higher, or switch to Chrome or Firefox.
+                        <strong>Kana</strong> relies on some web standards that
+                        are not supported by old versions of Safari. If you run
+                        into any issues, try updating Safari to version 16.4 or
+                        higher, or switch to Chrome or Firefox.
                       </p>
                     </Callout>
                     {window.location.href.startsWith("http://") && (
@@ -194,6 +196,17 @@ function App() {
                   there's <strong>kana</strong> <em>2.0</em>.
                 </p>
               </Callout>
+            </div>
+            <div className="frontpage-footer">
+              Kana is developed by Jayaram Kancherla (
+              <a href="https://github.com/jkanche" target="_blank">
+                <strong>@jkanche</strong>
+              </a>
+              ), Aaron Lun (
+              <a href="https://github.com/LTLA" target="_blank">
+                <strong>@LTLA</strong>
+              </a>
+              ).
             </div>
           </div>
         </div>
