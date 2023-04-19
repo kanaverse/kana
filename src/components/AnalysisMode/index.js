@@ -802,7 +802,7 @@ export function AnalysisMode(props) {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    console.log("ON MAIN::RCV::", payload);
+    // console.log("ON MAIN::RCV::", payload);
 
     // process any error messages
     if (payload) {

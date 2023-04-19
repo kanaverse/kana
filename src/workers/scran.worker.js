@@ -208,7 +208,7 @@ function getMarkerStandAloneForAnnot(annotation, annotation_vec) {
   return cache_anno_markers[annotation];
 }
 
-const getAnnotation = (annotation, unfiltered = true) => {
+const getAnnotation = (annotation, unfiltered = false) => {
   let vec;
   if (annotation === "__batch__") {
     vec = superstate.inputs.fetchBlock().slice();
