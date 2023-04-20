@@ -755,41 +755,59 @@ export function AnalysisMode(props) {
 
   // use effects to sync between markers and gene set cluster selection
   // only sync from markers table if modality is "RNA"
-
   useEffect(() => {
-    if (
-      selectedModality === "RNA" &&
-      markersORFSets === "markers" &&
-      selectedClusterSummary.length > 0
-    ) {
-      if (selectedFsetCluster !== selectedCluster)
-        setSelectedFsetCluster(selectedCluster);
+    if (selectedModality === "RNA") {
+      if (markersORFSets === "markers" && selectedClusterSummary.length > 0) {
+        if (Object.keys(fsetEnirchDetails).length > 0) {
+          setSelectedFsetAnnotation(selectedMarkerAnnotation);
+          setSelectedFsetCluster(selectedCluster);
+        }
 
-      if (selectedCellAnnCluster !== selectedCluster) {
-        setSelectedCellAnnCluster(selectedCluster);
+        if (
+          cellLabelData !== null &&
+          selectedMarkerAnnotation === default_cluster
+        ) {
+          setSelectedCellAnnCluster(selectedCluster);
+        }
+      } else if (
+        markersORFSets === "featuresets" &&
+        Object.keys(fsetEnirchDetails).length > 0
+      ) {
+        if (selectedClusterSummary.length > 0) {
+          setSelectedMarkerAnnotation(selectedFsetAnnotation);
+          setSelectedCluster(selectedFsetCluster);
+        }
+
+        if (
+          cellLabelData !== null &&
+          selectedFsetAnnotation === default_cluster
+        ) {
+          setSelectedCellAnnCluster(selectedCluster);
+        }
+      } else if (
+        markersORFSets === "celltypeannotation" &&
+        cellLabelData !== null
+      ) {
+        if (selectedClusterSummary.length > 0) {
+          setSelectedModality("RNA");
+          setSelectedMarkerAnnotation(default_cluster);
+          setSelectedCluster(selectedCellAnnCluster);
+        }
+
+        if (Object.keys(fsetEnirchDetails).length > 0) {
+          setSelectedFsetModality("RNA");
+          setSelectedFsetAnnotation(default_cluster);
+          setSelectedFsetCluster(selectedCellAnnCluster);
+        }
       }
     }
-  }, [selectedCluster]);
-
-  useEffect(() => {
-    if (selectedModality === "RNA" && markersORFSets === "featuresets") {
-      if (selectedFsetCluster !== selectedCluster)
-        setSelectedCluster(selectedFsetCluster);
-
-      if (selectedFsetCluster !== selectedCellAnnCluster)
-        setSelectedCellAnnCluster(selectedFsetCluster);
-    }
-  }, [selectedFsetCluster]);
-
-  useEffect(() => {
-    if (selectedModality === "RNA" && markersORFSets === "celltypeannotation") {
-      if (selectedCellAnnCluster !== selectedFsetCluster)
-        setSelectedFsetCluster(selectedCellAnnCluster);
-
-      if (selectedCellAnnCluster !== selectedCluster)
-        setSelectedCluster(selectedCellAnnCluster);
-    }
-  }, [selectedCellAnnCluster]);
+  }, [
+    selectedMarkerAnnotation,
+    selectedCluster,
+    selectedFsetAnnotation,
+    selectedFsetCluster,
+    selectedCellAnnCluster,
+  ]);
 
   function add_to_logs(type, msg, status) {
     // let tmp = [...logs];
