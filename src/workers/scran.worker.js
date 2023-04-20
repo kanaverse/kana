@@ -47,6 +47,12 @@ function createDataset(args) {
       args.rds,
       args.options ? args.options : {}
     );
+  } else if (args.format === "ZippedADB") {
+    return new bakana.ZippedArtifactdbDataset(
+      "results", // TODO: add choice of name.
+      args.zip,
+      args.options ? args.options : {}
+    );
   } else if (args.format === "ExperimentHub") {
     return new remotes.ExperimentHubDataset(
       args.id,

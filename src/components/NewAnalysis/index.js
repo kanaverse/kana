@@ -35,6 +35,7 @@ import { TenxHDF5 } from "./TenxHDF5Card";
 import { code } from "../../utils/utils";
 import { H5AD } from "./H5ADCard";
 import { RDSSE } from "./RDSSECard";
+import { ZippedADB } from "./ZippedADBCard";
 
 export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   // close the entire panel
@@ -253,6 +254,12 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
         }
 
         if (!x.rds) all_valid = false;
+      } else if (x.format === "ZippedADB") {
+        if (x?.zip && !x?.zip.name.toLowerCase().endsWith("zip")) {
+          all_valid = false;
+        }
+
+        if (!x.zip) all_valid = false;
       } else if (x.format === "ExperimentHub") {
         if (x?.id && !(ehubDatasets.indexOf(x?.id) !== -1)) {
           all_valid = false;
@@ -590,6 +597,45 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                         setTmpNewInputs({
                           ...tmpNewInputs,
                           rds: msg.target.files[0],
+                        });
+                      }
+                    }}
+                  />
+                </Label>
+              </div>
+            </>
+          }
+        />
+        <Tab
+          id="ZippedADB"
+          title="ZIP"
+          panel={
+            <>
+              <div className="row">
+                <Callout intent="primary">
+                  <p>
+                    Load a ZIP (<Code>*.zip</Code>) file containing an ArtifactDB-formatted
+                    <Code>SummarizedExperiment</Code> object. For example, users may 
+                    provide the ZIP file created from a previous <strong>kana</strong>{" "} 
+                    session via the <em>Save analysis results</em> option.
+                  </p>
+                </Callout>
+              </div>
+              <div className="row">
+                <Label className="row-input">
+                  <Text className="text-100">
+                    <span>Choose a ZIP File</span>
+                  </Text>
+                  <FileInput
+                    style={{
+                      marginTop: "5px",
+                    }}
+                    text={tmpNewInputs?.zip ? tmpNewInputs?.zip.name : ".zip"}
+                    onInputChange={(msg) => {
+                      if (msg.target.files) {
+                        setTmpNewInputs({
+                          ...tmpNewInputs,
+                          zip: msg.target.files[0],
                         });
                       }
                     }}
@@ -989,6 +1035,22 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
               } else if (x.format === "SummarizedExperiment") {
                 return (
                   <RDSSE
+                    key={i}
+                    expand={i + 1 === tmpFiles.length}
+                    resource={x}
+                    index={i}
+                    preflight={
+                      preInputFilesStatus && preInputFilesStatus[x.name]
+                    }
+                    inputOpts={inputOptions}
+                    setInputOpts={setInputOptions}
+                    inputs={tmpFiles}
+                    setInputs={setTmpFiles}
+                  />
+                );
+              } else if (x.format === "ZippedADB") {
+                return (
+                  <ZippedADB
                     key={i}
                     expand={i + 1 === tmpFiles.length}
                     resource={x}
