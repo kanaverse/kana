@@ -262,6 +262,14 @@ const getMatrix = () => {
   return cache_matrix;
 };
 
+const resetMarkerState = () => {
+  for (const [k, v] of Object.entries(cache_anno_markers)) {
+    v.free();
+  }
+
+  cache_anno_markers = {};
+};
+
 /***************************************/
 
 var loaded;
@@ -381,6 +389,8 @@ onmessage = function (msg) {
 
           files = current;
         }
+
+        resetMarkerState();
 
         let formatted = translate.fromUI(inputs, payload.params);
         bakana
@@ -845,7 +855,7 @@ onmessage = function (msg) {
           {
             type: "setMarkersForCluster",
             resp: resp,
-            msg: "Success: GET_MARKER_GENE done",
+            msg: "Success: GET_MARKERS_FOR_CLUSTER done",
           },
           transferrable
         );
@@ -922,7 +932,7 @@ onmessage = function (msg) {
           {
             type: "setMarkersForCustomSelection",
             resp: resp,
-            msg: "Success: GET_MARKER_GENE done",
+            msg: "Success: GET_MARKERS_FOR_SELECTION done",
           },
           transferrable
         );
