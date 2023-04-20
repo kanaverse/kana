@@ -1298,7 +1298,7 @@ export function AnalysisMode(props) {
       setFsetGeneIndxCache(tmp);
       setReqFsetGeneIndex(null);
     } else {
-      console.info("unknown msg type", payload);
+      // console.info("unknown msg type", payload);
     }
   };
 

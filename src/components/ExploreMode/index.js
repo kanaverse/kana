@@ -242,6 +242,10 @@ export function ExplorerMode() {
   const [selectedFsetModality, setSelectedFsetModality] = useState(null);
   // was feature set initialized?
   const [initFset, setInitFset] = useState(false);
+
+  // which cluster is selected in the celltype table
+  const [selectedCellAnnCluster, setSelectedCellAnnCluster] = useState(null);
+
   /*******
    * USER REQUESTS - END
    ******/
@@ -542,6 +546,62 @@ export function ExplorerMode() {
       add_to_logs("info", `--- initFeaturesetEnrich sent ---`);
     }
   }
+
+  // use effects to sync between markers and gene set cluster selection
+  // only sync from markers table if modality is "RNA"
+  // useEffect(() => {
+  //   if (selectedModality === "RNA") {
+  //     if (markersORFSets === "markers" && selectedClusterSummary.length > 0) {
+  //       if (Object.keys(fsetEnirchDetails).length > 0) {
+  //         setSelectedFsetAnnotation(selectedMarkerAnnotation);
+  //         setSelectedFsetCluster(selectedCluster);
+  //       }
+
+  //       if (
+  //         cellLabelData !== null &&
+  //         selectedMarkerAnnotation === default_cluster
+  //       ) {
+  //         setSelectedCellAnnCluster(selectedCluster);
+  //       }
+  //     } else if (
+  //       markersORFSets === "featuresets" &&
+  //       Object.keys(fsetEnirchDetails).length > 0
+  //     ) {
+  //       if (selectedClusterSummary.length > 0) {
+  //         setSelectedMarkerAnnotation(selectedFsetAnnotation);
+  //         setSelectedCluster(selectedFsetCluster);
+  //       }
+
+  //       if (
+  //         cellLabelData !== null &&
+  //         selectedFsetAnnotation === default_cluster
+  //       ) {
+  //         setSelectedCellAnnCluster(selectedCluster);
+  //       }
+  //     } else if (
+  //       markersORFSets === "celltypeannotation" &&
+  //       cellLabelData !== null
+  //     ) {
+  //       if (selectedClusterSummary.length > 0) {
+  //         setSelectedModality("RNA");
+  //         setSelectedMarkerAnnotation(default_cluster);
+  //         setSelectedCluster(selectedCellAnnCluster);
+  //       }
+
+  //       if (Object.keys(fsetEnirchDetails).length > 0) {
+  //         setSelectedFsetModality("RNA");
+  //         setSelectedFsetAnnotation(default_cluster);
+  //         setSelectedFsetCluster(selectedCellAnnCluster);
+  //       }
+  //     }
+  //   }
+  // }, [
+  //   selectedMarkerAnnotation,
+  //   selectedCluster,
+  //   selectedFsetAnnotation,
+  //   selectedFsetCluster,
+  //   selectedCellAnnCluster,
+  // ]);
 
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
@@ -1175,6 +1235,7 @@ export function ExplorerMode() {
                             setMarkersOrFsets={setMarkersOrFsets}
                             markersORFSets={markersORFSets}
                             selectedFsetModality={selectedFsetModality}
+                            cellLabelData={cellLabelData}
                           />
                         )}
                     </div>
@@ -1223,6 +1284,7 @@ export function ExplorerMode() {
                           modality={modality}
                           selectedFsetModality={selectedFsetModality}
                           setSelectedFsetModality={setSelectedFsetModality}
+                          cellLabelData={cellLabelData}
                         />
                       )}
                     </div>
