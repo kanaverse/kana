@@ -893,13 +893,12 @@ const FeatureSetEnrichment = (props) => {
               let tmpselection = x.currentTarget?.value;
 
               if (default_cluster === props?.selectedFsetAnnotation) {
-                if (tmpselection.startsWith("Cluster")) {
-                  tmpselection =
-                    parseInt(tmpselection.replace("Cluster ", "")) - 1;
-                } else if (tmpselection.startsWith("Custom")) {
-                  tmpselection = tmpselection.replace("Custom Selection ", "");
-                }
+                tmpselection =
+                  parseInt(tmpselection.replace("Cluster ", "")) - 1;
+              } else if (default_selection === props?.selectedFsetAnnotation) {
+                tmpselection = tmpselection.replace("Custom Selection ", "");
               }
+
               props?.setSelectedFsetCluster(tmpselection);
 
               setFsetFilter({});
@@ -952,19 +951,16 @@ const FeatureSetEnrichment = (props) => {
                 className="fsetenrich-cluster-selection-width"
                 onChange={(x) => {
                   let tmpselection = x.currentTarget?.value;
-                  if (
-                    default_cluster === props?.selectedFsetAnnotation ||
+                  if (default_cluster === props?.selectedFsetAnnotation) {
+                    tmpselection =
+                      parseInt(tmpselection.replace("Cluster ", "")) - 1;
+                  } else if (
                     default_selection === props?.selectedFsetAnnotation
                   ) {
-                    if (tmpselection.startsWith("Cluster")) {
-                      tmpselection =
-                        parseInt(tmpselection.replace("Cluster ", "")) - 1;
-                    } else if (tmpselection.startsWith("Custom")) {
-                      tmpselection = tmpselection.replace(
-                        "Custom Selection ",
-                        ""
-                      );
-                    }
+                    tmpselection = tmpselection.replace(
+                      "Custom Selection ",
+                      ""
+                    );
                   }
                   props?.setSelectedFsetVSCluster(tmpselection);
 

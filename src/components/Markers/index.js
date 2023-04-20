@@ -813,12 +813,12 @@ const MarkerPlot = (props) => {
               let tmpselection = x.currentTarget?.value;
 
               if (default_cluster === props?.selectedMarkerAnnotation) {
-                if (tmpselection.startsWith("Cluster")) {
-                  tmpselection =
-                    parseInt(tmpselection.replace("Cluster ", "")) - 1;
-                } else if (tmpselection.startsWith("Custom")) {
-                  tmpselection = tmpselection.replace("Custom Selection ", "");
-                }
+                tmpselection =
+                  parseInt(tmpselection.replace("Cluster ", "")) - 1;
+              } else if (
+                default_selection === props?.selectedMarkerAnnotation
+              ) {
+                tmpselection = tmpselection.replace("Custom Selection ", "");
               }
 
               props?.setSelectedCluster(tmpselection);
@@ -872,19 +872,16 @@ const MarkerPlot = (props) => {
                 className="marker-cluster-selection-width"
                 onChange={(x) => {
                   let tmpselection = x.currentTarget?.value;
-                  if (
-                    default_cluster === props?.selectedMarkerAnnotation ||
+                  if (default_cluster === props?.selectedMarkerAnnotation) {
+                    tmpselection =
+                      parseInt(tmpselection.replace("Cluster ", "")) - 1;
+                  } else if (
                     default_selection === props?.selectedMarkerAnnotation
                   ) {
-                    if (tmpselection.startsWith("Cluster")) {
-                      tmpselection =
-                        parseInt(tmpselection.replace("Cluster ", "")) - 1;
-                    } else if (tmpselection.startsWith("Custom")) {
-                      tmpselection = tmpselection.replace(
-                        "Custom Selection ",
-                        ""
-                      );
-                    }
+                    tmpselection = tmpselection.replace(
+                      "Custom Selection ",
+                      ""
+                    );
                   }
                   props?.setSelectedVSCluster(tmpselection);
 
