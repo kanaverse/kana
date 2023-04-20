@@ -855,7 +855,7 @@ onmessage = function (msg) {
           {
             type: "setMarkersForCluster",
             resp: resp,
-            msg: "Success: GET_MARKER_GENE done",
+            msg: "Success: GET_MARKERS_FOR_CLUSTER done",
           },
           transferrable
         );
@@ -932,7 +932,7 @@ onmessage = function (msg) {
           {
             type: "setMarkersForCustomSelection",
             resp: resp,
-            msg: "Success: GET_MARKER_GENE done",
+            msg: "Success: GET_MARKERS_FOR_SELECTION done",
           },
           transferrable
         );
