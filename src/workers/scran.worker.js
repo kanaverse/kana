@@ -1156,7 +1156,7 @@ onmessage = function (msg) {
           ];
           marker_resp = bakana.formatMarkerResults(
             raw_res,
-            payload.cluster,
+            1,
             payload.rank_type
           );
         } else {
