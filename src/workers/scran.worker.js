@@ -559,11 +559,23 @@ onmessage = function (msg) {
       .then(async (x) => {
         let files = await bakana.saveSingleCellExperiment(
           superstate,
-          "results",
+          "sce",
           {
             forceBuffer: true,
           }
         );
+
+        let gene_files = await bakana.saveGenewiseResults(
+          superstate,
+          "",
+          {
+            forceBuffer: true,
+          }
+        );
+
+        for (const f of gene_files) {
+          files.push(f);
+        }
         let zipbuffer = await bakana.zipFiles(files);
 
         postMessage(
