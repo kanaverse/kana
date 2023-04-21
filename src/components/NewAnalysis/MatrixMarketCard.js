@@ -89,6 +89,63 @@ export function MatrixMarket({
     return Object.keys(dsMeta.modality_features);
   };
 
+  useEffect(() => {
+    if (init2 && dsMeta && "modality_features" in dsMeta) {
+      let tmpOptions = { ...options };
+      if (
+        dsMeta?.modality_features[options?.[getFTypeKey("RNA")]]?.rownames ===
+        true
+      ) {
+        tmpOptions[`primary${getCamelCaseKey("RNA")}FeatureIdColumn`] = "none";
+      } else {
+        tmpOptions[`primary${getCamelCaseKey("RNA")}FeatureIdColumn`] =
+          Object.keys(
+            dsMeta?.modality_features[options?.[getFTypeKey("RNA")]].columns
+          )[0];
+      }
+
+      setOptions(tmpOptions);
+    }
+  }, [options?.[getFTypeKey("RNA")]]);
+
+  useEffect(() => {
+    if (init2 && dsMeta && "modality_features" in dsMeta) {
+      let tmpOptions = { ...options };
+      if (
+        dsMeta?.modality_features[options?.[getFTypeKey("ADT")]]?.rownames ===
+        true
+      ) {
+        tmpOptions[`primary${getCamelCaseKey("ADT")}FeatureIdColumn`] = "none";
+      } else {
+        tmpOptions[`primary${getCamelCaseKey("ADT")}FeatureIdColumn`] =
+          Object.keys(
+            dsMeta?.modality_features[options?.[getFTypeKey("ADT")]].columns
+          )[0];
+      }
+      setOptions(tmpOptions);
+    }
+  }, [options?.[getFTypeKey("ADT")]]);
+
+  useEffect(() => {
+    if (init2 && dsMeta && "modality_features" in dsMeta) {
+      let tmpOptions = { ...options };
+      if (
+        init2 &&
+        dsMeta?.modality_features[options?.[getFTypeKey("CRISPR")]]
+          ?.rownames === true
+      ) {
+        tmpOptions[`primary${getCamelCaseKey("CRISPR")}FeatureIdColumn`] =
+          "none";
+      } else {
+        tmpOptions[`primary${getCamelCaseKey("CRISPR")}FeatureIdColumn`] =
+          Object.keys(
+            dsMeta?.modality_features[options?.[getFTypeKey("CRISPR")]].columns
+          )[0];
+      }
+      setOptions(tmpOptions);
+    }
+  }, [options?.[getFTypeKey("CRISPR")]]);
+
   const handleRemove = () => {
     let tmpInputs = [...inputs];
     tmpInputs.splice(index, 1);
@@ -191,7 +248,11 @@ export function MatrixMarket({
                             options?.[getFTypeKey(mod)] === null ||
                             options?.[getFTypeKey(mod)] === "none"
                           }
-                          defaultValue="none"
+                          defaultValue={
+                            options[
+                              `primary${getCamelCaseKey(mod)}FeatureIdColumn`
+                            ]
+                          }
                           onChange={(e) => {
                             if (e.target.value) {
                               let tmpOptions = { ...options };
@@ -212,7 +273,11 @@ export function MatrixMarket({
                             }
                           }}
                         >
-                          <option value="none">rownames</option>
+                          {dsMeta.modality_features[options?.[getFTypeKey(mod)]]
+                            ?.rownames === true && (
+                            <option value="none">rownames</option>
+                          )}
+
                           {dsMeta.modality_features[
                             options?.[getFTypeKey(mod)]
                           ]?.["columns"] &&

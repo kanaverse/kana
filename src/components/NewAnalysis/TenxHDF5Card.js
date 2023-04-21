@@ -17,7 +17,7 @@ import "./index.css";
 
 import { MODALITIES } from "../../utils/utils";
 
-import { guessModalities, reportFeatureTypes } from "./utils";
+import { reportFeatureTypes } from "./utils";
 
 export function TenxHDF5({
   resource,
@@ -88,6 +88,102 @@ export function TenxHDF5({
   const getAvailableModalities = (modality) => {
     return Object.keys(dsMeta.modality_features);
   };
+
+  function guessModalities(preflight) {
+    let tmpOptions = {
+      featureTypeRnaName: null,
+      featureTypeAdtName: null,
+      featureTypeCrisprName: null,
+    };
+    for (const [k, v] of Object.entries(preflight.modality_features)) {
+      if (k.toLowerCase() === "" || k.toLowerCase().indexOf("gene") > -1) {
+        tmpOptions["featureTypeRnaName"] = k;
+        if (v.rownames === true) {
+          tmpOptions["primaryRnaFeatureIdColumn"] = "none";
+        } else {
+          tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
+        }
+      } else if (
+        k.toLowerCase().indexOf("antibody") > -1 ||
+        k.toLowerCase().indexOf("adt") > -1
+      ) {
+        tmpOptions["featureTypeAdtName"] = k;
+        if (v.rownames === true) {
+          tmpOptions["primaryAdtFeatureIdColumn"] = "none";
+        } else {
+          tmpOptions["primaryAdtFeatureIdColumn"] = Object.keys(v.columns)[0];
+        }
+      } else if (k.toLowerCase().indexOf("crispr") > -1) {
+        tmpOptions["featureTypeCrisprName"] = k;
+        if (v.rownames === true) {
+          tmpOptions["primaryCrisprFeatureIdColumn"] = "none";
+        } else {
+          tmpOptions["primaryCrisprFeatureIdColumn"] = Object.keys(
+            v.columns
+          )[0];
+        }
+      }
+    }
+
+    return tmpOptions;
+  }
+
+  useEffect(() => {
+    if (init2 && dsMeta && "modality_features" in dsMeta) {
+      let tmpOptions = { ...options };
+      if (
+        dsMeta?.modality_features[options?.[getFTypeKey("RNA")]]?.rownames ===
+        true
+      ) {
+        tmpOptions[`primary${getCamelCaseKey("RNA")}FeatureIdColumn`] = "none";
+      } else {
+        tmpOptions[`primary${getCamelCaseKey("RNA")}FeatureIdColumn`] =
+          Object.keys(
+            dsMeta?.modality_features[options?.[getFTypeKey("RNA")]].columns
+          )[0];
+      }
+
+      setOptions(tmpOptions);
+    }
+  }, [options?.[getFTypeKey("RNA")]]);
+
+  useEffect(() => {
+    if (init2 && dsMeta && "modality_features" in dsMeta) {
+      let tmpOptions = { ...options };
+      if (
+        dsMeta?.modality_features[options?.[getFTypeKey("ADT")]]?.rownames ===
+        true
+      ) {
+        tmpOptions[`primary${getCamelCaseKey("ADT")}FeatureIdColumn`] = "none";
+      } else {
+        tmpOptions[`primary${getCamelCaseKey("ADT")}FeatureIdColumn`] =
+          Object.keys(
+            dsMeta?.modality_features[options?.[getFTypeKey("ADT")]].columns
+          )[0];
+      }
+      setOptions(tmpOptions);
+    }
+  }, [options?.[getFTypeKey("ADT")]]);
+
+  useEffect(() => {
+    if (init2 && dsMeta && "modality_features" in dsMeta) {
+      let tmpOptions = { ...options };
+      if (
+        init2 &&
+        dsMeta?.modality_features[options?.[getFTypeKey("CRISPR")]]
+          ?.rownames === true
+      ) {
+        tmpOptions[`primary${getCamelCaseKey("CRISPR")}FeatureIdColumn`] =
+          "none";
+      } else {
+        tmpOptions[`primary${getCamelCaseKey("CRISPR")}FeatureIdColumn`] =
+          Object.keys(
+            dsMeta?.modality_features[options?.[getFTypeKey("CRISPR")]].columns
+          )[0];
+      }
+      setOptions(tmpOptions);
+    }
+  }, [options?.[getFTypeKey("CRISPR")]]);
 
   const handleRemove = () => {
     let tmpInputs = [...inputs];
@@ -186,7 +282,14 @@ export function TenxHDF5({
                             options?.[getFTypeKey(mod)] === null ||
                             options?.[getFTypeKey(mod)] === "none"
                           }
-                          defaultValue="none"
+                          defaultValue={
+                            options[
+                              `primary${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }FeatureIdColumn`
+                            ]
+                          }
                           onChange={(e) => {
                             if (e.target.value) {
                               let tmpOptions = { ...options };
@@ -209,7 +312,11 @@ export function TenxHDF5({
                             }
                           }}
                         >
-                          <option value="none">rownames</option>
+                          {dsMeta.modality_features[options?.[getFTypeKey(mod)]]
+                            ?.rownames === true && (
+                            <option value="none">rownames</option>
+                          )}
+
                           {dsMeta.modality_features[
                             options?.[getFTypeKey(mod)]
                           ]?.["columns"] &&
