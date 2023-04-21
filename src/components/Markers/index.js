@@ -749,7 +749,10 @@ const MarkerPlot = (props) => {
             marginBottom: "0",
           }}
         >
-          Select Cluster
+          Select{" "}
+          {default_selection === props?.selectedMarkerAnnotation
+            ? "Selection"
+            : "Cluster"}
         </Label>
         <div className="marker-vsmode">
           <Popover2
@@ -896,7 +899,12 @@ const MarkerPlot = (props) => {
                 }}
               >
                 {props?.selectedVSCluster == null && (
-                  <option selected={true}>Choose a Cluster</option>
+                  <option selected={true}>
+                    Choose a{" "}
+                    {default_selection === props?.selectedMarkerAnnotation
+                      ? "Selection"
+                      : "Cluster"}
+                  </option>
                 )}
                 {default_cluster === props?.selectedMarkerAnnotation ||
                 default_selection === props?.selectedMarkerAnnotation
