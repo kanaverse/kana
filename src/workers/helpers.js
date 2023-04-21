@@ -142,6 +142,11 @@ export async function fetchStepSummary(state, step) {
           info[c] = col;
         }
       }
+
+      if (Array.isArray(v.rowNames())) {
+        info["rownames"] = v.rowNames();
+      }
+
       gene_info[k] = info;
     }
 
