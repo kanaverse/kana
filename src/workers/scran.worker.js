@@ -802,7 +802,7 @@ onmessage = function (msg) {
         );
         let resp = bakana.formatMarkerResults(
           res["results"][payload.modality],
-          payload.left,
+          res.left,
           rank_type
         );
 
@@ -920,11 +920,7 @@ onmessage = function (msg) {
         let raw_res = superstate.custom_selections.fetchResults(
           payload.cluster
         )[payload.modality];
-        let resp = bakana.formatMarkerResults(
-          raw_res,
-          1,
-          payload.rank_type
-        );
+        let resp = bakana.formatMarkerResults(raw_res, 1, payload.rank_type);
 
         var transferrable = [];
         extractBuffers(resp, transferrable);
