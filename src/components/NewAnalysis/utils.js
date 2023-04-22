@@ -40,3 +40,11 @@ export function reportFeatureTypes(modality_features) {
     </>
   ));
 }
+
+export function getDefaultFeature(obj) {
+  if (obj.rownames === true) {
+    return "none";
+  }
+
+  return Object.keys(obj.columns)[0];
+}

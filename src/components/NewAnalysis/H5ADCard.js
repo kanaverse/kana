@@ -16,6 +16,7 @@ import {
 import "./index.css";
 
 import { MODALITIES } from "../../utils/utils";
+import { getDefaultFeature } from "./utils";
 
 export function H5AD({
   resource,
@@ -44,7 +45,13 @@ export function H5AD({
           featureTypeAdtName: null,
           featureTypeCrisprName: null,
         };
+
+        tmpOptions["primaryRnaFeatureIdColumn"] = getDefaultFeature(
+          preflight.all_features
+        );
+
         tmpOptions["countMatrixName"] = preflight.all_assay_names[0];
+
         setOptions(tmpOptions);
         setInit2(false);
       }
@@ -53,7 +60,7 @@ export function H5AD({
 
   // when options change
   useEffect(() => {
-    if (options !== {}) {
+    if (options !== null && options !== undefined && options !== {}) {
       let tmpInputOpts = [...inputOpts];
       tmpInputOpts[index] = options;
       setInputOpts(tmpInputOpts);
@@ -236,7 +243,7 @@ export function H5AD({
                           </small>
                         </Text>
                         <HTMLSelect
-                          defaultValue="none"
+                          defaultValue={options["primaryRnaFeatureIdColumn"]}
                           onChange={(e) => {
                             if (
                               e.target.value !== undefined &&
@@ -253,7 +260,9 @@ export function H5AD({
                             }
                           }}
                         >
-                          <option value="none">rownames</option>
+                          {dsMeta.all_features.rownames === true && (
+                            <option value="none">rownames</option>
+                          )}
                           {dsMeta.all_features &&
                             Object.keys(dsMeta.all_features["columns"]).map(
                               (x, i) => (
@@ -351,7 +360,9 @@ export function H5AD({
                                 }
                               }}
                             >
-                              <option value="none">rownames</option>
+                              {dsMeta.all_features.rownames === true && (
+                                <option value="none">rownames</option>
+                              )}
                               {dsMeta.all_features &&
                                 Object.keys(dsMeta.all_features["columns"]).map(
                                   (x, i) => (
