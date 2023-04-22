@@ -17,7 +17,7 @@ import "./index.css";
 
 import { MODALITIES } from "../../utils/utils";
 
-import { reportFeatureTypes } from "./utils";
+import { getDefaultFeature, reportFeatureTypes } from "./utils";
 
 export function RDSSE({
   resource,
@@ -69,16 +69,9 @@ export function RDSSE({
       tmpOptions["adtCountAssay"] =
         preflight.modality_assay_names[options?.["adtExperiment"]][0];
 
-      if (
-        preflight.modality_features[options?.["adtExperiment"]].rownames ===
-        true
-      ) {
-        tmpOptions["primaryAdtFeatureIdColumn"] = "none";
-      } else {
-        tmpOptions["primaryAdtFeatureIdColumn"] = Object.keys(
-          preflight.modality_features[options?.["adtExperiment"]].columns
-        )[0];
-      }
+      tmpOptions["primaryAdtFeatureIdColumn"] = getDefaultFeature(
+        preflight.modality_features[options?.["adtExperiment"]]
+      );
     } else {
       delete tmpOptions["adtCountAssay"];
       delete tmpOptions["primaryAdtFeatureIdColumn"];
@@ -98,16 +91,9 @@ export function RDSSE({
       tmpOptions["crisprCountAssay"] =
         preflight.modality_assay_names[options?.["crisprExperiment"]][0];
 
-      if (
-        preflight.modality_features[options?.["crisprExperiment"]].rownames ===
-        true
-      ) {
-        tmpOptions["primaryCrisprFeatureIdColumn"] = "none";
-      } else {
-        tmpOptions["primaryCrisprFeatureIdColumn"] = Object.keys(
-          preflight.modality_features[options?.["crisprExperiment"]].columns
-        )[0];
-      }
+      tmpOptions["primaryCrisprFeatureIdColumn"] = getDefaultFeature(
+        preflight.modality_features[options?.["crisprExperiment"]]
+      );
     } else {
       delete tmpOptions["crisprCountAssay"];
       delete tmpOptions["primaryCrisprFeatureIdColumn"];
@@ -127,16 +113,9 @@ export function RDSSE({
       tmpOptions["rnaCountAssay"] =
         preflight.modality_assay_names[options?.["rnaExperiment"]][0];
 
-      if (
-        preflight.modality_features[options?.["rnaExperiment"]].rownames ===
-        true
-      ) {
-        tmpOptions["primaryRnaFeatureIdColumn"] = "none";
-      } else {
-        tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(
-          preflight.modality_features[options?.["rnaExperiment"]].columns
-        )[0];
-      }
+      tmpOptions["primaryRnaFeatureIdColumn"] = getDefaultFeature(
+        preflight.modality_features[options?.["rnaExperiment"]]
+      );
     } else {
       delete tmpOptions["rnaCountAssay"];
       delete tmpOptions["primaryRnaFeatureIdColumn"];
@@ -186,34 +165,19 @@ export function RDSSE({
       if (k === "" || k.toLowerCase().indexOf("gene") > -1) {
         tmpOptions["rnaExperiment"] = k;
         tmpOptions["rnaCountAssay"] = preflight.modality_assay_names[k][0];
-        if (v.rownames === true) {
-          tmpOptions["primaryRnaFeatureIdColumn"] = "none";
-        } else {
-          tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
-        }
+
+        tmpOptions["primaryRnaFeatureIdColumn"] = getDefaultFeature(v);
       } else if (
         k.toLowerCase().indexOf("antibody") > -1 ||
         k.toLowerCase().indexOf("adt") > -1
       ) {
         tmpOptions["adtExperiment"] = k;
         tmpOptions["adtCountAssay"] = preflight.modality_assay_names[k][0];
-
-        if (v.rownames === true) {
-          tmpOptions["primaryAdtFeatureIdColumn"] = "none";
-        } else {
-          tmpOptions["primaryAdtFeatureIdColumn"] = Object.keys(v.columns)[0];
-        }
+        tmpOptions["primaryAdtFeatureIdColumn"] = getDefaultFeature(v);
       } else if (k.toLowerCase().indexOf("crispr") > -1) {
         tmpOptions["crisprExperiment"] = k;
         tmpOptions["crisprCountAssay"] = preflight.modality_assay_names[k][0];
-
-        if (v.rownames === true) {
-          tmpOptions["primaryCrisprFeatureIdColumn"] = "none";
-        } else {
-          tmpOptions["primaryCrisprFeatureIdColumn"] = Object.keys(
-            v.columns
-          )[0];
-        }
+        tmpOptions["primaryCrisprFeatureIdColumn"] = getDefaultFeature(v);
       }
     }
     return tmpOptions;

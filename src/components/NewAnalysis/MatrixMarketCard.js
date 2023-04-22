@@ -17,7 +17,7 @@ import {
 import "./index.css";
 
 import { MODALITIES } from "../../utils/utils";
-import { guessModalities } from "./utils";
+import { getDefaultFeature, guessModalities } from "./utils";
 
 export function MatrixMarket({
   resource,
@@ -92,17 +92,11 @@ export function MatrixMarket({
   useEffect(() => {
     if (init2 && dsMeta && "modality_features" in dsMeta) {
       let tmpOptions = { ...options };
-      if (
-        dsMeta?.modality_features[options?.[getFTypeKey("RNA")]]?.rownames ===
-        true
-      ) {
-        tmpOptions[`primary${getCamelCaseKey("RNA")}FeatureIdColumn`] = "none";
-      } else {
-        tmpOptions[`primary${getCamelCaseKey("RNA")}FeatureIdColumn`] =
-          Object.keys(
-            dsMeta?.modality_features[options?.[getFTypeKey("RNA")]].columns
-          )[0];
-      }
+
+      tmpOptions[`primary${getCamelCaseKey("RNA")}FeatureIdColumn`] =
+        getDefaultFeature(
+          dsMeta?.modality_features[options?.[getFTypeKey("RNA")]]
+        );
 
       setOptions(tmpOptions);
     }
@@ -111,17 +105,11 @@ export function MatrixMarket({
   useEffect(() => {
     if (init2 && dsMeta && "modality_features" in dsMeta) {
       let tmpOptions = { ...options };
-      if (
-        dsMeta?.modality_features[options?.[getFTypeKey("ADT")]]?.rownames ===
-        true
-      ) {
-        tmpOptions[`primary${getCamelCaseKey("ADT")}FeatureIdColumn`] = "none";
-      } else {
-        tmpOptions[`primary${getCamelCaseKey("ADT")}FeatureIdColumn`] =
-          Object.keys(
-            dsMeta?.modality_features[options?.[getFTypeKey("ADT")]].columns
-          )[0];
-      }
+      tmpOptions[`primary${getCamelCaseKey("ADT")}FeatureIdColumn`] =
+        getDefaultFeature(
+          dsMeta?.modality_features[options?.[getFTypeKey("ADT")]]
+        );
+
       setOptions(tmpOptions);
     }
   }, [options?.[getFTypeKey("ADT")]]);
@@ -129,19 +117,11 @@ export function MatrixMarket({
   useEffect(() => {
     if (init2 && dsMeta && "modality_features" in dsMeta) {
       let tmpOptions = { ...options };
-      if (
-        init2 &&
-        dsMeta?.modality_features[options?.[getFTypeKey("CRISPR")]]
-          ?.rownames === true
-      ) {
-        tmpOptions[`primary${getCamelCaseKey("CRISPR")}FeatureIdColumn`] =
-          "none";
-      } else {
-        tmpOptions[`primary${getCamelCaseKey("CRISPR")}FeatureIdColumn`] =
-          Object.keys(
-            dsMeta?.modality_features[options?.[getFTypeKey("CRISPR")]].columns
-          )[0];
-      }
+      tmpOptions[`primary${getCamelCaseKey("CRISPR")}FeatureIdColumn`] =
+        getDefaultFeature(
+          dsMeta?.modality_features[options?.[getFTypeKey("CRISPR")]]
+        );
+
       setOptions(tmpOptions);
     }
   }, [options?.[getFTypeKey("CRISPR")]]);

@@ -14,7 +14,7 @@ import {
 
 import "./index.css";
 
-import { reportFeatureTypes } from "./utils";
+import { reportFeatureTypes, getDefaultFeature } from "./utils";
 
 export function ExperimentHub({
   resource,
@@ -39,13 +39,10 @@ export function ExperimentHub({
       // set some defaults
       if (init2) {
         let tmpOptions = {};
-        if (preflight.modality_features["RNA"].rownames === true) {
-          tmpOptions["primaryRnaFeatureIdColumn"] = "none";
-        } else {
-          tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(
-            preflight.modality_features["RNA"]["columns"]
-          )[0];
-        }
+
+        tmpOptions["primaryRnaFeatureIdColumn"] = getDefaultFeature(
+          preflight.modality_features["RNA"]
+        );
         // for (const [k, v] of Object.entries(preflight.modality_features)) {
         //   if (k.toLowerCase().indexOf("rna") > -1) {
         //     tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];

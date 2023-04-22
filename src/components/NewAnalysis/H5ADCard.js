@@ -16,6 +16,7 @@ import {
 import "./index.css";
 
 import { MODALITIES } from "../../utils/utils";
+import { getDefaultFeature } from "./utils";
 
 export function H5AD({
   resource,
@@ -45,13 +46,9 @@ export function H5AD({
           featureTypeCrisprName: null,
         };
 
-        if (preflight.all_features.rownames === true) {
-          tmpOptions["primaryRnaFeatureIdColumn"] = "none";
-        } else {
-          tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(
-            preflight.all_features["columns"]
-          )[0];
-        }
+        tmpOptions["primaryRnaFeatureIdColumn"] = getDefaultFeature(
+          preflight.all_features
+        );
 
         tmpOptions["countMatrixName"] = preflight.all_assay_names[0];
 

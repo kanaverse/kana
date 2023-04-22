@@ -17,7 +17,7 @@ import "./index.css";
 
 import { MODALITIES } from "../../utils/utils";
 
-import { reportFeatureTypes } from "./utils";
+import { getDefaultFeature, reportFeatureTypes } from "./utils";
 
 export function TenxHDF5({
   resource,
@@ -98,30 +98,16 @@ export function TenxHDF5({
     for (const [k, v] of Object.entries(preflight.modality_features)) {
       if (k.toLowerCase() === "" || k.toLowerCase().indexOf("gene") > -1) {
         tmpOptions["featureTypeRnaName"] = k;
-        if (v.rownames === true) {
-          tmpOptions["primaryRnaFeatureIdColumn"] = "none";
-        } else {
-          tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
-        }
+        tmpOptions["primaryRnaFeatureIdColumn"] = getDefaultFeature(v);
       } else if (
         k.toLowerCase().indexOf("antibody") > -1 ||
         k.toLowerCase().indexOf("adt") > -1
       ) {
         tmpOptions["featureTypeAdtName"] = k;
-        if (v.rownames === true) {
-          tmpOptions["primaryAdtFeatureIdColumn"] = "none";
-        } else {
-          tmpOptions["primaryAdtFeatureIdColumn"] = Object.keys(v.columns)[0];
-        }
+        tmpOptions["primaryAdtFeatureIdColumn"] = getDefaultFeature(v);
       } else if (k.toLowerCase().indexOf("crispr") > -1) {
         tmpOptions["featureTypeCrisprName"] = k;
-        if (v.rownames === true) {
-          tmpOptions["primaryCrisprFeatureIdColumn"] = "none";
-        } else {
-          tmpOptions["primaryCrisprFeatureIdColumn"] = Object.keys(
-            v.columns
-          )[0];
-        }
+        tmpOptions["primaryCrisprFeatureIdColumn"] = getDefaultFeature(v);
       }
     }
 
@@ -131,17 +117,11 @@ export function TenxHDF5({
   useEffect(() => {
     if (init2 && dsMeta && "modality_features" in dsMeta) {
       let tmpOptions = { ...options };
-      if (
-        dsMeta?.modality_features[options?.[getFTypeKey("RNA")]]?.rownames ===
-        true
-      ) {
-        tmpOptions[`primary${getCamelCaseKey("RNA")}FeatureIdColumn`] = "none";
-      } else {
-        tmpOptions[`primary${getCamelCaseKey("RNA")}FeatureIdColumn`] =
-          Object.keys(
-            dsMeta?.modality_features[options?.[getFTypeKey("RNA")]].columns
-          )[0];
-      }
+
+      tmpOptions[`primary${getCamelCaseKey("RNA")}FeatureIdColumn`] =
+        getDefaultFeature(
+          dsMeta?.modality_features[options?.[getFTypeKey("RNA")]]
+        );
 
       setOptions(tmpOptions);
     }
@@ -150,17 +130,11 @@ export function TenxHDF5({
   useEffect(() => {
     if (init2 && dsMeta && "modality_features" in dsMeta) {
       let tmpOptions = { ...options };
-      if (
-        dsMeta?.modality_features[options?.[getFTypeKey("ADT")]]?.rownames ===
-        true
-      ) {
-        tmpOptions[`primary${getCamelCaseKey("ADT")}FeatureIdColumn`] = "none";
-      } else {
-        tmpOptions[`primary${getCamelCaseKey("ADT")}FeatureIdColumn`] =
-          Object.keys(
-            dsMeta?.modality_features[options?.[getFTypeKey("ADT")]].columns
-          )[0];
-      }
+
+      tmpOptions[`primary${getCamelCaseKey("ADT")}FeatureIdColumn`] =
+        getDefaultFeature(
+          dsMeta?.modality_features[options?.[getFTypeKey("ADT")]]
+        );
       setOptions(tmpOptions);
     }
   }, [options?.[getFTypeKey("ADT")]]);
@@ -168,19 +142,12 @@ export function TenxHDF5({
   useEffect(() => {
     if (init2 && dsMeta && "modality_features" in dsMeta) {
       let tmpOptions = { ...options };
-      if (
-        init2 &&
-        dsMeta?.modality_features[options?.[getFTypeKey("CRISPR")]]
-          ?.rownames === true
-      ) {
-        tmpOptions[`primary${getCamelCaseKey("CRISPR")}FeatureIdColumn`] =
-          "none";
-      } else {
-        tmpOptions[`primary${getCamelCaseKey("CRISPR")}FeatureIdColumn`] =
-          Object.keys(
-            dsMeta?.modality_features[options?.[getFTypeKey("CRISPR")]].columns
-          )[0];
-      }
+
+      tmpOptions[`primary${getCamelCaseKey("CRISPR")}FeatureIdColumn`] =
+        getDefaultFeature(
+          dsMeta?.modality_features[options?.[getFTypeKey("CRISPR")]]
+        );
+
       setOptions(tmpOptions);
     }
   }, [options?.[getFTypeKey("CRISPR")]]);
