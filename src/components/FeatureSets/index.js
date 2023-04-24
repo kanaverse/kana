@@ -830,12 +830,7 @@ const FeatureSetEnrichment = (props) => {
           marginTop: "5px",
         }}
       >
-        <Label>
-          Select{" "}
-          {default_selection === props?.selectedFsetAnnotation
-            ? "Selection"
-            : "Cluster"}
-        </Label>
+        <Label>Select Cluster</Label>
         <div className="fsetenrich-vsmode">
           <Popover2
             popoverClassName={Classes.POPOVER_CONTENT_SIZING}

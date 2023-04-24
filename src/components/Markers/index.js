@@ -749,10 +749,7 @@ const MarkerPlot = (props) => {
             marginBottom: "0",
           }}
         >
-          Select{" "}
-          {default_selection === props?.selectedMarkerAnnotation
-            ? "Selection"
-            : "Cluster"}
+          Select Cluster
         </Label>
         <div className="marker-vsmode">
           <Popover2
