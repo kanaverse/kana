@@ -211,7 +211,7 @@ export function ZippedADB({
       </div>
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
-          This <strong>RDS</strong> dataset contains{" "}
+          This <strong>ZIP</strong> dataset contains{" "}
           {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature
           types: {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
