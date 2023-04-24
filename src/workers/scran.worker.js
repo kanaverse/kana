@@ -64,9 +64,13 @@ function createDataset(args) {
 }
 
 function summarizeDataset(summary, args) {
+  // TODO: figure out a way to deal with nested dataframes later
   let cells_summary = {};
   for (const k of summary.cells.columnNames()) {
-    cells_summary[k] = bakana.summarizeArray(summary.cells.column(k));
+    const kcol = summary.cells.column(k);
+    if (Array.isArray(kcol)) {
+      cells_summary[k] = bakana.summarizeArray(kcol);
+    }
   }
   let tmp_meta = {
     cells: {
@@ -79,10 +83,11 @@ function summarizeDataset(summary, args) {
     tmp_meta["all_features"] = {};
     let tmod_summary = {};
     for (const k of summary["all_features"].columnNames()) {
-      tmod_summary[k] = bakana.summarizeArray(
-        summary["all_features"].column(k)
-      );
-      tmod_summary[k]["_all_"] = summary["all_features"].column(k);
+      const kcol = summary["all_features"].column(k);
+      if (Array.isArray(kcol)) {
+        tmod_summary[k] = bakana.summarizeArray(kcol);
+        tmod_summary[k]["_all_"] = kcol;
+      }
     }
     tmp_meta["all_features"] = {
       columns: tmod_summary,
@@ -94,12 +99,11 @@ function summarizeDataset(summary, args) {
       for (const [k, v] of Object.entries(summary.modality_features)) {
         let tmod_summary = {};
         for (const k of v.columnNames()) {
-          // TODO: figure out a way to deal with these later
-          if (!Array.isArray(v.column(k))) {
-            continue;
+          const kcol = v.column(k);
+          if (Array.isArray(kcol)) {
+            tmod_summary[k] = bakana.summarizeArray(kcol);
+            tmod_summary[k]["_all_"] = kcol;
           }
-          tmod_summary[k] = bakana.summarizeArray(v.column(k));
-          tmod_summary[k]["_all_"] = v.column(k);
         }
         tmp_meta["modality_features"][k] = {
           columns: tmod_summary,
@@ -113,8 +117,11 @@ function summarizeDataset(summary, args) {
       for (const [k, v] of Object.entries(summary.modality_features)) {
         let tmod_summary = {};
         for (const k of v.columnNames()) {
-          tmod_summary[k] = bakana.summarizeArray(v.column(k));
-          tmod_summary[k]["_all_"] = v.column(k);
+          const kcol = v.column(k);
+          if (Array.isArray(kcol)) {
+            tmod_summary[k] = bakana.summarizeArray(kcol);
+            tmod_summary[k]["_all_"] = kcol;
+          }
         }
         tmp_meta["modality_features"][k] = {
           columns: tmod_summary,
