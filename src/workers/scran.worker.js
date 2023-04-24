@@ -81,6 +81,7 @@ function summarizeDataset(summary, args) {
     tmp_meta["all_features"] = {
       columns: tmod_summary,
       numberOfFeatures: summary["all_features"].numberOfRows(),
+      rownames: Array.isArray(summary["all_features"].rowNames()),
     };
   } else if (args.format === "SummarizedExperiment") {
     tmp_meta["modality_features"] = {};
@@ -98,6 +99,7 @@ function summarizeDataset(summary, args) {
         tmp_meta["modality_features"][k] = {
           columns: tmod_summary,
           numberOfFeatures: v.numberOfRows(),
+          rownames: Array.isArray(v.rowNames()),
         };
       }
     }
@@ -113,6 +115,7 @@ function summarizeDataset(summary, args) {
         tmp_meta["modality_features"][k] = {
           columns: tmod_summary,
           numberOfFeatures: v.numberOfRows(),
+          rownames: Array.isArray(v.rowNames()),
         };
       }
     }

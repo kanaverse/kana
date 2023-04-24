@@ -17,7 +17,7 @@ import {
 import "./index.css";
 
 import { MODALITIES } from "../../utils/utils";
-import { guessModalities } from "./utils";
+import { getDefaultFeature, guessModalities } from "./utils";
 
 export function MatrixMarket({
   resource,
@@ -88,6 +88,43 @@ export function MatrixMarket({
   const getAvailableModalities = (modality) => {
     return Object.keys(dsMeta.modality_features);
   };
+
+  useEffect(() => {
+    if (init2 && dsMeta && "modality_features" in dsMeta) {
+      let tmpOptions = { ...options };
+
+      tmpOptions[`primary${getCamelCaseKey("RNA")}FeatureIdColumn`] =
+        getDefaultFeature(
+          dsMeta?.modality_features[options?.[getFTypeKey("RNA")]]
+        );
+
+      setOptions(tmpOptions);
+    }
+  }, [options?.[getFTypeKey("RNA")]]);
+
+  useEffect(() => {
+    if (init2 && dsMeta && "modality_features" in dsMeta) {
+      let tmpOptions = { ...options };
+      tmpOptions[`primary${getCamelCaseKey("ADT")}FeatureIdColumn`] =
+        getDefaultFeature(
+          dsMeta?.modality_features[options?.[getFTypeKey("ADT")]]
+        );
+
+      setOptions(tmpOptions);
+    }
+  }, [options?.[getFTypeKey("ADT")]]);
+
+  useEffect(() => {
+    if (init2 && dsMeta && "modality_features" in dsMeta) {
+      let tmpOptions = { ...options };
+      tmpOptions[`primary${getCamelCaseKey("CRISPR")}FeatureIdColumn`] =
+        getDefaultFeature(
+          dsMeta?.modality_features[options?.[getFTypeKey("CRISPR")]]
+        );
+
+      setOptions(tmpOptions);
+    }
+  }, [options?.[getFTypeKey("CRISPR")]]);
 
   const handleRemove = () => {
     let tmpInputs = [...inputs];
@@ -191,7 +228,11 @@ export function MatrixMarket({
                             options?.[getFTypeKey(mod)] === null ||
                             options?.[getFTypeKey(mod)] === "none"
                           }
-                          defaultValue="none"
+                          defaultValue={
+                            options[
+                              `primary${getCamelCaseKey(mod)}FeatureIdColumn`
+                            ]
+                          }
                           onChange={(e) => {
                             if (e.target.value) {
                               let tmpOptions = { ...options };
@@ -212,7 +253,11 @@ export function MatrixMarket({
                             }
                           }}
                         >
-                          <option value="none">rownames</option>
+                          {dsMeta.modality_features[options?.[getFTypeKey(mod)]]
+                            ?.rownames === true && (
+                            <option value="none">rownames</option>
+                          )}
+
                           {dsMeta.modality_features[
                             options?.[getFTypeKey(mod)]
                           ]?.["columns"] &&
