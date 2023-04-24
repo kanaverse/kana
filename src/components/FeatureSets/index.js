@@ -917,15 +917,21 @@ const FeatureSetEnrichment = (props) => {
                           parseInt(props?.selectedFsetCluster)
                     }
                     key={i}
+                    value={
+                      String(x).startsWith("cs")
+                        ? `Custom Selection ${x}`
+                        : `Cluster ${x}`
+                    }
                   >
-                    {String(x).startsWith("cs")
-                      ? "Custom Selection"
-                      : "Cluster"}{" "}
-                    {x}
+                    {String(x).startsWith("cs") ? "Selection" : "Cluster"} {x}
                   </option>
                 ))
               : clusSel.map((x, i) => (
-                  <option selected={x === props?.selectedFsetCluster} key={i}>
+                  <option
+                    selected={x === props?.selectedFsetCluster}
+                    key={i}
+                    value={x}
+                  >
                     {x}
                   </option>
                 ))}
@@ -969,7 +975,12 @@ const FeatureSetEnrichment = (props) => {
                 }}
               >
                 {props?.selectedFsetVSCluster == null && (
-                  <option selected={true}>Choose a Cluster</option>
+                  <option selected={true}>
+                    Choose a{" "}
+                    {default_selection === props?.selectedFsetAnnotation
+                      ? "Selection"
+                      : "Cluster"}
+                  </option>
                 )}
                 {default_cluster === props?.selectedFsetAnnotation ||
                 default_selection === props?.selectedFsetAnnotation
@@ -994,10 +1005,13 @@ const FeatureSetEnrichment = (props) => {
                                 parseInt(props?.selectedFsetVSCluster)
                           }
                           key={i}
+                          value={
+                            String(x).startsWith("cs")
+                              ? `Custom Selection ${x}`
+                              : `Cluster ${x}`
+                          }
                         >
-                          {String(x).startsWith("cs")
-                            ? "Custom Selection"
-                            : "Cluster"}{" "}
+                          {String(x).startsWith("cs") ? "Selection" : "Cluster"}{" "}
                           {x}
                         </option>
                       ))
@@ -1007,6 +1021,7 @@ const FeatureSetEnrichment = (props) => {
                         <option
                           selected={x === props?.selectedFsetCluster}
                           key={i}
+                          value={x}
                         >
                           {x}
                         </option>
