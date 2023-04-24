@@ -838,15 +838,21 @@ const MarkerPlot = (props) => {
                         : parseInt(x) - 1 === parseInt(props?.selectedCluster)
                     }
                     key={i}
+                    value={
+                      String(x).startsWith("cs")
+                        ? `Custom Selection ${x}`
+                        : `Cluster ${x}`
+                    }
                   >
-                    {String(x).startsWith("cs")
-                      ? "Custom Selection"
-                      : "Cluster"}{" "}
-                    {x}
+                    {String(x).startsWith("cs") ? "Selection" : "Cluster"} {x}
                   </option>
                 ))
               : clusSel.map((x, i) => (
-                  <option selected={x === props?.selectedCluster} key={i}>
+                  <option
+                    selected={x === props?.selectedCluster}
+                    key={i}
+                    value={x}
+                  >
                     {x}
                   </option>
                 ))}
@@ -890,7 +896,12 @@ const MarkerPlot = (props) => {
                 }}
               >
                 {props?.selectedVSCluster == null && (
-                  <option selected={true}>Choose a Cluster</option>
+                  <option selected={true}>
+                    Choose a{" "}
+                    {default_selection === props?.selectedMarkerAnnotation
+                      ? "Selection"
+                      : "Cluster"}
+                  </option>
                 )}
                 {default_cluster === props?.selectedMarkerAnnotation ||
                 default_selection === props?.selectedMarkerAnnotation
@@ -912,17 +923,24 @@ const MarkerPlot = (props) => {
                                 parseInt(props?.selectedVSCluster)
                           }
                           key={i}
+                          value={
+                            String(x).startsWith("cs")
+                              ? `Custom Selection ${x}`
+                              : `Cluster ${x}`
+                          }
                         >
-                          {String(x).startsWith("cs")
-                            ? "Custom Selection"
-                            : "Cluster"}{" "}
+                          {String(x).startsWith("cs") ? "Selection" : "Cluster"}{" "}
                           {x}
                         </option>
                       ))
                   : clusSel
                       .filter((x, i) => x !== props?.selectedCluster)
                       .map((x, i) => (
-                        <option selected={x === props?.selectedCluster} key={i}>
+                        <option
+                          selected={x === props?.selectedCluster}
+                          key={i}
+                          value={x}
+                        >
                           {x}
                         </option>
                       ))}

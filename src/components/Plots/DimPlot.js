@@ -189,8 +189,8 @@ const DimPlot = (props) => {
 
       // if dimensions are available
       if (data && plotFactors && plotColorMappings) {
-        const cluster_mappings = plotFactors;
-        const cluster_colors = plotColorMappings;
+        const cluster_mappings = [...plotFactors];
+        const cluster_colors = [...plotColorMappings];
 
         let tmp_scatterplot = scatterplot;
         // only create the plot object once
@@ -264,10 +264,33 @@ const DimPlot = (props) => {
         // an initial implementation also used a per cluster gradient to color cells
         // by expression, commmented out
         let plot_colors = [];
+
+        function get_dot_color(i) {
+          let color;
+          if (
+            props?.clusHighlight != null &&
+            String(props?.clusHighlight).startsWith("cs")
+          ) {
+            let tmpclus = parseInt(props?.clusHighlight.replace("cs", ""));
+            color = cluster_colors[max + tmpclus - 1];
+          } else {
+            if (showToggleFactors) {
+              if (toggleFactorsGradient && factorGradient) {
+                color =
+                  "#" + factorGradient.colorAt(parseFloat(cluster_mappings[i]));
+                return color;
+              }
+            }
+            color = cluster_colors[cluster_mappings[i]];
+          }
+
+          return color;
+        }
+
         for (let i = 0; i < data.x.length; i++) {
           if (props?.selectedPoints && props?.selectedPoints.length > 0) {
             if (props?.selectedPoints.includes(i)) {
-              plot_colors[i] = cluster_colors[cluster_mappings[i]];
+              plot_colors[i] = get_dot_color(i);
             } else {
               plot_colors[i] = "#EDEFF2";
             }
@@ -324,22 +347,7 @@ const DimPlot = (props) => {
             }
           }
 
-          if (
-            props?.clusHighlight != null &&
-            String(props?.clusHighlight).startsWith("cs")
-          ) {
-            let tmpclus = parseInt(props?.clusHighlight.replace("cs", ""));
-            plot_colors[i] = cluster_colors[max + tmpclus - 1];
-          } else {
-            if (showToggleFactors) {
-              if (toggleFactorsGradient && factorGradient) {
-                plot_colors[i] =
-                  "#" + factorGradient.colorAt(parseFloat(cluster_mappings[i]));
-                continue;
-              }
-            }
-            plot_colors[i] = cluster_colors[cluster_mappings[i]];
-          }
+          plot_colors[i] = get_dot_color(i);
         }
 
         setCellColorArray(plot_colors);

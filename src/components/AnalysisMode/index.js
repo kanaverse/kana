@@ -520,9 +520,13 @@ export function AnalysisMode(props) {
         geneColSel[selectedModality] === undefined
       ) {
         let tmp = geneColSel;
-        tmp[selectedModality] = Object.keys(
-          inputData.genes[selectedModality]
-        )[0];
+        const all_cols = Object.keys(inputData.genes[selectedModality]);
+
+        tmp[selectedModality] = all_cols[0];
+        if (all_cols.includes("rownames")) {
+          tmp[selectedModality] = "rownames";
+        }
+
         setGeneColSel(tmp);
       }
       setGenesInfo(inputData.genes[selectedModality]);

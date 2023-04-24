@@ -716,9 +716,10 @@ export function ExplorerMode() {
           def_anno = "cluster";
         }
 
-        setSelectedDimPlotCluster(def_anno);
+        setColorByAnnotation(def_anno);
         setSelectedMarkerAnnotation(def_anno);
         setReqAnnotation(def_anno);
+        setSelectedDimPlotCluster(def_anno);
       }
       // setSelectedCluster(resp.annotations[0]);
       // setSelectedFsetModality(tmodality);
