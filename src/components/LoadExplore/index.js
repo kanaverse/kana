@@ -306,7 +306,7 @@ export function LoadExplore({ setShowPanel, ...props }) {
                       {jsZipNames.map((x, i) => {
                         return (
                           <option key={i} value={x}>
-                            {x} ({jsZipObjs.get(x)[0]}, {jsZipObjs.get(x)[1]})
+                            {x} ({jsZipObjs.get(x)[0]} x {jsZipObjs.get(x)[1]})
                           </option>
                         );
                       })}
