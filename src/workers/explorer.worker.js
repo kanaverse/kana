@@ -41,9 +41,10 @@ function createDataset(args, setOpts = false) {
 }
 
 function summarizeResult(summary, args) {
+  // TODO: figure out a way to deal with nested objects later
   let cells_summary = {};
   for (const k of summary.cells.columnNames()) {
-    let kcol = summary.cells.column(k);
+    const kcol = summary.cells.column(k);
     if (Array.isArray(kcol) || ArrayBuffer.isView(kcol))
       cells_summary[k] = bakana.summarizeArray(kcol);
   }
@@ -63,12 +64,11 @@ function summarizeResult(summary, args) {
       for (const [k, v] of Object.entries(summary.modality_features)) {
         let tmod_summary = {};
         for (const k of v.columnNames()) {
-          // TODO: figure out a way to deal with these later
-          if (!Array.isArray(v.column(k))) {
-            continue;
+          const kcol = v.column(k);
+          if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
+            tmod_summary[k] = bakana.summarizeArray(kcol);
+            tmod_summary[k]["_all_"] = kcol;
           }
-          tmod_summary[k] = bakana.summarizeArray(v.column(k));
-          tmod_summary[k]["_all_"] = v.column(k);
         }
         tmp_meta["modality_features"][k] = {
           columns: tmod_summary,
@@ -81,10 +81,11 @@ function summarizeResult(summary, args) {
     tmp_meta["all_features"] = {};
     let tmod_summary = {};
     for (const k of summary["all_features"].columnNames()) {
-      tmod_summary[k] = bakana.summarizeArray(
-        summary["all_features"].column(k)
-      );
-      tmod_summary[k]["_all_"] = summary["all_features"].column(k);
+      const kcol = summary["all_features"].column(k);
+      if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
+        tmod_summary[k] = bakana.summarizeArray(kcol);
+        tmod_summary[k]["_all_"] = kcol;
+      }
     }
     tmp_meta["all_features"] = {
       columns: tmod_summary,
