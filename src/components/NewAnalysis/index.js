@@ -37,6 +37,9 @@ import { H5AD } from "./H5ADCard";
 import { RDSSE } from "./RDSSECard";
 import { ZippedADB } from "./ZippedADBCard";
 
+import JSZip from "jszip";
+import { searchZippedArtifactdb } from "bakana";
+
 export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   // close the entire panel
   const handleClose = () => {
@@ -101,6 +104,10 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
 
   // default code for none
   const default_none = `${code}::none`;
+
+  // final jszipnames for confirmation with options
+  const [jsZipNames, setJsZipNames] = useState(null);
+  const [jsZipObjs, setJSZipObjs] = useState(null);
 
   const handleAddDataset = () => {
     tmpNewInputs["uid"] = generateUID(tmpNewInputs);
@@ -255,11 +262,11 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
 
         if (!x.rds) all_valid = false;
       } else if (x.format === "ZippedADB") {
-        if (x?.zip && !x?.zip.name.toLowerCase().endsWith("zip")) {
+        if (x?.zipfile && !x?.zipfile.name.toLowerCase().endsWith("zip")) {
           all_valid = false;
         }
 
-        if (!x.zip) all_valid = false;
+        if (!x.zipfile) all_valid = false;
       } else if (x.format === "ExperimentHub") {
         if (x?.id && !(ehubDatasets.indexOf(x?.id) !== -1)) {
           all_valid = false;
@@ -614,10 +621,12 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
               <div className="row">
                 <Callout intent="primary">
                   <p>
-                    Load a ZIP (<Code>*.zip</Code>) file containing an ArtifactDB-formatted
-                    <Code>SummarizedExperiment</Code> object. For example, users may 
-                    provide the ZIP file created from a previous <strong>kana</strong>{" "} 
-                    session via the <em>Save analysis results</em> option.
+                    Load a ZIP (<Code>*.zip</Code>) file containing an
+                    ArtifactDB-formatted
+                    <Code>SummarizedExperiment</Code> object. For example, users
+                    may provide the ZIP file created from a previous{" "}
+                    <strong>kana</strong> session via the{" "}
+                    <em>Save analysis results</em> option.
                   </p>
                 </Callout>
               </div>
@@ -633,14 +642,61 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                     text={tmpNewInputs?.zip ? tmpNewInputs?.zip.name : ".zip"}
                     onInputChange={(msg) => {
                       if (msg.target.files) {
-                        setTmpNewInputs({
-                          ...tmpNewInputs,
-                          zip: msg.target.files[0],
-                        });
+                        JSZip.loadAsync(msg.target.files[0]).then(
+                          async (zip) => {
+                            const objs = await searchZippedArtifactdb(zip);
+                            setJSZipObjs(objs);
+
+                            const objNames = Array.from(objs.keys());
+                            setJsZipNames(objNames);
+
+                            setTmpStatusValid(true);
+
+                            setTmpNewInputs({
+                              ...tmpNewInputs,
+                              zipfile: msg.target.files[0],
+                              zipname: objNames[0],
+                            });
+                          },
+                          function (e) {
+                            console.error(
+                              "Error reading " +
+                                msg.target.files[0].name +
+                                ": " +
+                                e.message
+                            );
+
+                            setTmpStatusValid(false);
+                          }
+                        );
                       }
                     }}
                   />
                 </Label>
+                {jsZipNames && jsZipNames.length > 0 && (
+                  <Label className="row-input">
+                    <Text className="text-100">
+                      <span>Choose an experiment to load</span>
+                    </Text>
+                    <HTMLSelect
+                      defaultValue={jsZipNames[0]}
+                      onChange={(e) => {
+                        setTmpNewInputs({
+                          ...tmpNewInputs,
+                          zipname: e.currentTarget.value,
+                        });
+                      }}
+                    >
+                      {jsZipNames.map((x, i) => {
+                        return (
+                          <option key={i} value={x}>
+                            {x} ({jsZipObjs.get(x)[0]}, {jsZipObjs.get(x)[1]})
+                          </option>
+                        );
+                      })}
+                    </HTMLSelect>
+                  </Label>
+                )}
               </div>
             </>
           }

@@ -49,8 +49,8 @@ function createDataset(args) {
     );
   } else if (args.format === "ZippedADB") {
     return new bakana.ZippedArtifactdbDataset(
-      "results", // TODO: add choice of name.
-      args.zip,
+      args.zipname,
+      args.zipfile,
       args.options ? args.options : {}
     );
   } else if (args.format === "ExperimentHub") {
@@ -126,7 +126,10 @@ function summarizeDataset(summary, args) {
 
   if (args.format === "H5AD") {
     tmp_meta["all_assay_names"] = summary.all_assay_names;
-  } else if (args.format === "SummarizedExperiment") {
+  } else if (
+    args.format === "SummarizedExperiment" ||
+    args.format === "ZippedADB"
+  ) {
     tmp_meta["modality_assay_names"] = summary.modality_assay_names;
   }
   return tmp_meta;
@@ -557,21 +560,13 @@ onmessage = function (msg) {
   } else if (type === "EXPORT_RDS") {
     loaded
       .then(async (x) => {
-        let files = await bakana.saveSingleCellExperiment(
-          superstate,
-          "sce",
-          {
-            forceBuffer: true,
-          }
-        );
+        let files = await bakana.saveSingleCellExperiment(superstate, "sce", {
+          forceBuffer: true,
+        });
 
-        let gene_files = await bakana.saveGenewiseResults(
-          superstate,
-          "",
-          {
-            forceBuffer: true,
-          }
-        );
+        let gene_files = await bakana.saveGenewiseResults(superstate, "", {
+          forceBuffer: true,
+        });
 
         for (const f of gene_files) {
           files.push(f);
