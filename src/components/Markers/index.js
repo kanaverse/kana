@@ -703,7 +703,7 @@ const MarkerPlot = (props) => {
                 (x) =>
                   !annotationCols[x].name.startsWith(code) &&
                   annotationCols[x].name !== "__batch__" &&
-                  annotationCols[x].truncated === false
+                  annotationCols[x].type !== "continuous"
               )
               .map((x) => (
                 <option value={x} key={x}>
@@ -717,7 +717,7 @@ const MarkerPlot = (props) => {
                 (x) =>
                   (annotationCols[x].name.startsWith(code) ||
                     annotationCols[x].name === "__batch__") &&
-                  annotationCols[x].truncated === false
+                  annotationCols[x].type !== "continuous"
               )
               .filter(
                 (x) =>
