@@ -347,3 +347,30 @@ export async function fetchStepSummary(state, step) {
     };
   }
 }
+
+export function isArrayOrView(col) {
+  return Array.isArray(col) || ArrayBuffer.isView(col);
+}
+
+export function describeColumn(
+  col,
+  { all = false, unique = false, colname = null } = {}
+) {
+  let res;
+  if (isArrayOrView(col)) {
+    res = bakana.summarizeArray(col);
+    const uqVals = new Set(col);
+    res["num_unique"] = uqVals.size;
+
+    if ((uqVals.size <= 50) & unique) res["__unique__"] = [...uqVals];
+    if (all) res["_all_"] = col;
+
+    // if type is continous and unique values is less than 50, type is both
+    if (res["type"] === "continuous" && uqVals.size <= 50) res["type"] = "both";
+
+    if (typeof colname === "string" || colname instanceof String)
+      res["name"] = colname;
+  }
+
+  return res;
+}
