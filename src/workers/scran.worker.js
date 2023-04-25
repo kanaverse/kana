@@ -47,6 +47,12 @@ function createDataset(args) {
       args.rds,
       args.options ? args.options : {}
     );
+  } else if (args.format === "ZippedADB") {
+    return new bakana.ZippedArtifactdbDataset(
+      args.zipname,
+      args.zipfile,
+      args.options ? args.options : {}
+    );
   } else if (args.format === "ExperimentHub") {
     return new remotes.ExperimentHubDataset(
       args.id,
@@ -58,9 +64,13 @@ function createDataset(args) {
 }
 
 function summarizeDataset(summary, args) {
+  // TODO: figure out a way to deal with nested dataframes later
   let cells_summary = {};
   for (const k of summary.cells.columnNames()) {
-    cells_summary[k] = bakana.summarizeArray(summary.cells.column(k));
+    const kcol = summary.cells.column(k);
+    if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
+      cells_summary[k] = bakana.summarizeArray(kcol);
+    }
   }
   let tmp_meta = {
     cells: {
@@ -73,10 +83,11 @@ function summarizeDataset(summary, args) {
     tmp_meta["all_features"] = {};
     let tmod_summary = {};
     for (const k of summary["all_features"].columnNames()) {
-      tmod_summary[k] = bakana.summarizeArray(
-        summary["all_features"].column(k)
-      );
-      tmod_summary[k]["_all_"] = summary["all_features"].column(k);
+      const kcol = summary["all_features"].column(k);
+      if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
+        tmod_summary[k] = bakana.summarizeArray(kcol);
+        tmod_summary[k]["_all_"] = kcol;
+      }
     }
     tmp_meta["all_features"] = {
       columns: tmod_summary,
@@ -89,12 +100,11 @@ function summarizeDataset(summary, args) {
       for (const [k, v] of Object.entries(summary.modality_features)) {
         let tmod_summary = {};
         for (const k of v.columnNames()) {
-          // TODO: figure out a way to deal with these later
-          if (!Array.isArray(v.column(k))) {
-            continue;
+          const kcol = v.column(k);
+          if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
+            tmod_summary[k] = bakana.summarizeArray(kcol);
+            tmod_summary[k]["_all_"] = kcol;
           }
-          tmod_summary[k] = bakana.summarizeArray(v.column(k));
-          tmod_summary[k]["_all_"] = v.column(k);
         }
         tmp_meta["modality_features"][k] = {
           columns: tmod_summary,
@@ -109,8 +119,11 @@ function summarizeDataset(summary, args) {
       for (const [k, v] of Object.entries(summary.modality_features)) {
         let tmod_summary = {};
         for (const k of v.columnNames()) {
-          tmod_summary[k] = bakana.summarizeArray(v.column(k));
-          tmod_summary[k]["_all_"] = v.column(k);
+          const kcol = v.column(k);
+          if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
+            tmod_summary[k] = bakana.summarizeArray(kcol);
+            tmod_summary[k]["_all_"] = kcol;
+          }
         }
         tmp_meta["modality_features"][k] = {
           columns: tmod_summary,
@@ -123,7 +136,10 @@ function summarizeDataset(summary, args) {
 
   if (args.format === "H5AD") {
     tmp_meta["all_assay_names"] = summary.all_assay_names;
-  } else if (args.format === "SummarizedExperiment") {
+  } else if (
+    args.format === "SummarizedExperiment" ||
+    args.format === "ZippedADB"
+  ) {
     tmp_meta["modality_assay_names"] = summary.modality_assay_names;
   }
   return tmp_meta;
@@ -554,13 +570,17 @@ onmessage = function (msg) {
   } else if (type === "EXPORT_RDS") {
     loaded
       .then(async (x) => {
-        let files = await bakana.saveSingleCellExperiment(
-          superstate,
-          "results",
-          {
-            forceBuffer: true,
-          }
-        );
+        let files = await bakana.saveSingleCellExperiment(superstate, "sce", {
+          forceBuffer: true,
+        });
+
+        let gene_files = await bakana.saveGenewiseResults(superstate, "", {
+          forceBuffer: true,
+        });
+
+        for (const f of gene_files) {
+          files.push(f);
+        }
         let zipbuffer = await bakana.zipFiles(files);
 
         postMessage(

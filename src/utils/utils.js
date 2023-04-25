@@ -127,6 +127,9 @@ export function generateUID(resource) {
     case "ZippedArtifactdb":
       base += `::${resource.zipname}::${resource.zipfile}`;
       return utf8_to_b64(base);
+    case "ZippedADB":
+      base += `::${resource.zipname}::${resource.zipfile}`;
+      return utf8_to_b64(base);
     default:
       throw Error(`format: ${resource.format} does not exist`);
       break;

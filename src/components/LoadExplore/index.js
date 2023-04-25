@@ -25,7 +25,9 @@ import { Tooltip2 } from "@blueprintjs/popover2";
 import { H5ADCard } from "./H5ADCard";
 import { SECard } from "./SECard";
 import { ZippedADBCard } from "./ZippedADBCard";
+
 import JSZip from "jszip";
+import { searchZippedArtifactdb } from "bakana";
 
 export function LoadExplore({ setShowPanel, ...props }) {
   // clear the entire panel
@@ -76,8 +78,9 @@ export function LoadExplore({ setShowPanel, ...props }) {
     setShowPanel("explore");
   };
 
-  // final inputs for confirmation with options
+  // final jszipnames for confirmation with options
   const [jsZipNames, setJsZipNames] = useState(null);
+  const [jsZipObjs, setJSZipObjs] = useState(null);
 
   // making sure tmpNewInputs are valid as the user chooses datasets
   useEffect(() => {
@@ -256,24 +259,19 @@ export function LoadExplore({ setShowPanel, ...props }) {
                     onInputChange={(msg) => {
                       if (msg.target.files) {
                         JSZip.loadAsync(msg.target.files[0]).then(
-                          function (zip) {
-                            let se_tld = [];
-                            zip.forEach(function (relativePath, zipEntry) {
-                              if (
-                                zipEntry.name.endsWith("/") &&
-                                zipEntry.name.split("/").length === 2
-                              ) {
-                                se_tld.push(zipEntry.name.split("/")[0]);
-                              }
-                            });
+                          async (zip) => {
+                            const objs = await searchZippedArtifactdb(zip);
+                            setJSZipObjs(objs);
+
+                            const objNames = Array.from(objs.keys());
+                            setJsZipNames(objNames);
 
                             setTmpStatusValid(true);
-                            setJsZipNames(se_tld);
 
                             setTmpLoadInputs({
                               ...tmpLoadInputs,
                               zipfile: msg.target.files[0],
-                              zipname: se_tld[0],
+                              zipname: objNames[0],
                             });
                           },
                           function (e) {
@@ -294,7 +292,7 @@ export function LoadExplore({ setShowPanel, ...props }) {
                 {jsZipNames && jsZipNames.length > 0 && (
                   <Label className="row-input">
                     <Text className="text-100">
-                      <span>Choose a summarized experiment to load</span>
+                      <span>Choose an experiment to load</span>
                     </Text>
                     <HTMLSelect
                       defaultValue={jsZipNames[0]}
@@ -308,7 +306,7 @@ export function LoadExplore({ setShowPanel, ...props }) {
                       {jsZipNames.map((x, i) => {
                         return (
                           <option key={i} value={x}>
-                            {x}
+                            {x} ({jsZipObjs.get(x)[0]} x {jsZipObjs.get(x)[1]})
                           </option>
                         );
                       })}

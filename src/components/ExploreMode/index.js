@@ -709,11 +709,18 @@ export function ExplorerMode() {
       if (resp?.annotations) {
         setAnnotationCols(resp.annotations);
 
-        let def_anno = Object.keys(resp.annotations)[0];
-        if (Object.keys(resp.annotations).indexOf("clusters") !== -1) {
-          def_anno = "clusters";
-        } else if (Object.keys(resp.annotations).indexOf("cluster") !== -1) {
-          def_anno = "cluster";
+        let def_anno = resp.annotations[0];
+        const categorical_annos = Object.keys(resp.annotations);
+        if (categorical_annos.length > 1) {
+          if (categorical_annos.indexOf(default_cluster) !== -1) {
+            def_anno = default_cluster;
+          } else if (categorical_annos.indexOf("kana::clusters") !== -1) {
+            def_anno = "kana::clusters";
+          } else if (categorical_annos.indexOf("cluster") !== -1) {
+            def_anno = "cluster";
+          } else if (categorical_annos.indexOf("clusters") !== -1) {
+            def_anno = "clusters";
+          }
         }
 
         setColorByAnnotation(def_anno);
