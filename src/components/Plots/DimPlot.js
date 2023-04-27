@@ -15,7 +15,7 @@ import {
 import { Tooltip2 } from "@blueprintjs/popover2";
 
 import { AppContext } from "../../context/AppContext";
-import { getMinMax } from "./utils";
+import { getFactorsFromArray, getGradient, getMinMax } from "./utils";
 
 import Rainbow from "./rainbowvis";
 import { randomColor } from "randomcolor";
@@ -59,6 +59,7 @@ const DimPlot = (props) => {
   // the gradient
   const [factorGradient, setFactorGradient] = useState(null);
   const [factorsMinMax, setFactorsMinMax] = useState(null);
+  const [sliderFactorsMinMax, setSliderFactorsMinMax] = useState(null);
   // capture state across annotations
   const [factorState, setFactorState] = useState({});
 
@@ -164,7 +165,7 @@ const DimPlot = (props) => {
     props?.featureScoreCache?.[props?.selectedFsetIndex],
   ]);
 
-  // hook to also react when user changes the slider
+  // hook to also react when user changes the slider for expression
   useEffect(() => {
     if (Array.isArray(sliderMinMax)) {
       let tmpgradient = new Rainbow();
@@ -174,6 +175,21 @@ const DimPlot = (props) => {
       setShowGradient(true);
     }
   }, [sliderMinMax]);
+
+  // hook to also react when user changes the slider for annotations
+  useEffect(() => {
+    if (Array.isArray(sliderFactorsMinMax)) {
+      let tmpgradient = getGradient(
+        sliderFactorsMinMax[0],
+        sliderFactorsMinMax[1] + 0.00001
+      );
+      setFactorGradient(tmpgradient);
+    }
+  }, [sliderFactorsMinMax]);
+
+  useEffect(() => {
+    if (Array.isArray(factorsMinMax)) setSliderFactorsMinMax(factorsMinMax);
+  }, [factorsMinMax]);
 
   useEffect(() => {
     const containerEl = container.current;
@@ -274,12 +290,10 @@ const DimPlot = (props) => {
             let tmpclus = parseInt(props?.clusHighlight.replace("cs", ""));
             color = cluster_colors[max + tmpclus - 1];
           } else {
-            if (showToggleFactors) {
-              if (toggleFactorsGradient && factorGradient) {
-                color =
-                  "#" + factorGradient.colorAt(parseFloat(cluster_mappings[i]));
-                return color;
-              }
+            if (toggleFactorsGradient && factorGradient) {
+              color =
+                "#" + factorGradient.colorAt(parseFloat(cluster_mappings[i]));
+              return color;
             }
             color = cluster_colors[cluster_mappings[i]];
           }
@@ -475,6 +489,7 @@ const DimPlot = (props) => {
     props?.animateData,
     props?.selectedRedDim,
     gradient,
+    factorGradient,
     props?.clusHighlight,
     plotColorMappings,
     plotGroups,
@@ -500,79 +515,34 @@ const DimPlot = (props) => {
         let tmp = annotationObj[props?.colorByAnnotation];
         let cluster_colors;
 
-        if (tmp.type === "array") {
-          let state = factorState[props?.colorByAnnotation];
-          if (state == undefined || state == null) {
-            state = true;
-          }
-          setToggleFactorsGradient(state);
+        if (annotationCols[props?.colorByAnnotation].type !== "continuous") {
+          let levels, indices;
+          if (tmp.type === "array") {
+            let state = factorState[props?.colorByAnnotation];
+            if (state == undefined || state == null) {
+              state = true;
+            }
+            setToggleFactorsGradient(state);
 
-          if (props?.colorByAnnotation.indexOf("cluster") !== -1) {
-            setShowToggleFactors(false);
-          } else {
+            if (state) {
+              const [minTmp, maxTmp] = getMinMax(tmp.values);
+              setFactorsMinMax([minTmp, maxTmp]);
+
+              let tmpgradient = getGradient(minTmp, maxTmp);
+              setFactorGradient(tmpgradient);
+            }
+
             setShowToggleFactors(true);
+
+            let result = getFactorsFromArray(tmp.values);
+            levels = result.levels;
+            indices = result.indices;
+          } else {
+            setShowToggleFactors(false);
+            setToggleFactorsGradient(false);
+            levels = tmp.levels;
+            indices = tmp.index;
           }
-
-          // convert array to factors
-          const [minTmp, maxTmp] = getMinMax(tmp.values);
-          setFactorsMinMax([minTmp, maxTmp]);
-          const uniqueTmp = [...new Set(tmp.values)];
-          let bins = 25;
-
-          let type = "ranges";
-          let binWidth = 1;
-          let levels = [];
-          if (uniqueTmp.length < bins) {
-            type = "unique";
-            bins = uniqueTmp.length;
-          } else if (maxTmp - minTmp < bins) {
-            type = "diff";
-            bins = maxTmp - minTmp;
-          }
-
-          if (type == "ranges") {
-            binWidth = Math.round((maxTmp - minTmp) / bins);
-          }
-
-          for (let i = 0; i < bins; i++) {
-            if (type === "ranges") {
-              levels.push(
-                `∈[${minTmp + (i + 1) * binWidth}, ${
-                  minTmp + (i + 2) * binWidth
-                }]`
-              );
-            } else if (type == "unique") {
-              levels.push(`${uniqueTmp[i]}`);
-            } else if (type == "diff") {
-              levels.push(`${minTmp + (i + 1) * binWidth}`);
-            }
-          }
-
-          let lvals = [];
-          tmp.values.map((x, i) => {
-            let flevel = x - minTmp;
-            if (type === "ranges") {
-              flevel = (x - minTmp) % bins;
-            } else if (type === "unique") {
-              flevel = levels.indexOf(String(x));
-            }
-            lvals.push(flevel);
-          });
-
-          if (toggleFactorsGradient && showToggleFactors) {
-            let tmpgradient = new Rainbow();
-            tmpgradient.setSpectrum(
-              "#edc775",
-              "#e09351",
-              "#df7e66",
-              "#b75347",
-              "#6d2f20"
-            );
-            tmpgradient.setNumberRange(minTmp, maxTmp);
-            setFactorGradient(tmpgradient);
-          }
-
-          setPlotGroups(levels);
 
           if (levels.length > Object.keys(palette).length) {
             cluster_colors = randomColor({
@@ -583,28 +553,33 @@ const DimPlot = (props) => {
             cluster_colors = palette[levels.length.toString()];
           }
 
+          setPlotGroups(levels);
+          setPlotFactors(indices);
           setPlotColorMappings(cluster_colors);
+        } else {
+          const [minTmp, maxTmp] = getMinMax(tmp.values);
+          setFactorsMinMax([minTmp, maxTmp]);
 
-          if (toggleFactorsGradient) {
-            setPlotFactors(tmp.values);
-          } else {
-            setPlotFactors(lvals);
-          }
-        } else if (tmp.type === "factor") {
+          let tmpgradient = getGradient(minTmp, maxTmp);
+          setFactorGradient(tmpgradient);
+
           setShowToggleFactors(false);
+          setToggleFactorsGradient(true);
 
-          if (tmp.levels.length > Object.keys(palette).length) {
+          let { levels, indices } = getFactorsFromArray(tmp.values);
+
+          if (levels.length > Object.keys(palette).length) {
             cluster_colors = randomColor({
               luminosity: "dark",
-              count: tmp.levels.length + 1,
+              count: levels.length + 1,
             });
           } else {
-            cluster_colors = palette[tmp.levels.length.toString()];
+            cluster_colors = palette[levels.length.toString()];
           }
 
-          setPlotGroups(tmp.levels);
+          setPlotGroups(levels);
+          setPlotFactors(indices);
           setPlotColorMappings(cluster_colors);
-          setPlotFactors(tmp.index);
         }
       }
     }
@@ -932,37 +907,49 @@ const DimPlot = (props) => {
                   </>
                 )}
               </div>
-              {showToggleFactors && toggleFactorsGradient ? (
-                <div className="dim-slider-container">
-                  <div className="dim-slider-gradient">
-                    <span
-                      style={{
-                        marginRight: "3px",
-                        marginTop: "0px",
-                        fontSize: "x-small",
-                      }}
-                    >
-                      {Math.round(factorsMinMax[0])}
-                    </span>
-                    <div
-                      style={{
-                        backgroundImage: `linear-gradient(to right, #edc775, #e09351, #df7e66, #b75347, #6d2f20)`,
-                        width: "125px",
-                        height: "15px",
-                      }}
-                    ></div>
-                    &nbsp;
-                    <span
-                      style={{
-                        marginLeft: "3px",
-                        marginTop: "0px",
-                        fontSize: "x-small",
-                      }}
-                    >
-                      {Math.round(factorsMinMax[1])}
-                    </span>
+              {toggleFactorsGradient ? (
+                factorsMinMax &&
+                sliderFactorsMinMax &&
+                showGradient !== true && (
+                  <div className="dim-slider-container">
+                    <div className="dim-slider-gradient">
+                      <div
+                        style={{
+                          backgroundImage: `linear-gradient(to right, #edc775 ${
+                            ((sliderFactorsMinMax[0] - factorsMinMax[0]) *
+                              100) /
+                            (factorsMinMax[1] - factorsMinMax[0])
+                          }%, #e09351, #df7e66, #b75347, #6d2f20 ${
+                            100 -
+                            ((factorsMinMax[1] - sliderFactorsMinMax[1]) *
+                              100) /
+                              (factorsMinMax[1] - factorsMinMax[0])
+                          }%)`,
+                          width: "145px",
+                          height: "15px",
+                          marginLeft: "4px",
+                        }}
+                      ></div>
+                      &nbsp;
+                    </div>
+                    <div className="dim-range-slider">
+                      <RangeSlider
+                        min={factorsMinMax[0]}
+                        max={factorsMinMax[1]}
+                        stepSize={Math.max(
+                          Math.round(factorsMinMax[1] - factorsMinMax[0]) / 50,
+                          0.1
+                        )}
+                        labelValues={factorsMinMax}
+                        onChange={(range) => {
+                          setSliderFactorsMinMax(range);
+                        }}
+                        value={sliderFactorsMinMax}
+                        vertical={false}
+                      />
+                    </div>
                   </div>
-                </div>
+                )
               ) : (
                 <ul style={{ fontSize: "small" }}>
                   {plotGroups &&
