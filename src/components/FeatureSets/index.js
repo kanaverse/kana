@@ -788,7 +788,10 @@ const FeatureSetEnrichment = (props) => {
                   (x, i) =>
                     !annotationCols[x].name.startsWith(code) &&
                     annotationCols[x].name !== "__batch__" &&
-                    annotationCols[x].type !== "continuous"
+                    annotationCols[x].type !== "continuous" &&
+                    (annotationCols[x]["type"] === "both" ||
+                      (annotationCols[x]["type"] === "categorical" &&
+                        annotationCols[x]["truncated"] === false))
                 )
                 .map((x) => (
                   <option value={x} key={x}>
@@ -802,7 +805,10 @@ const FeatureSetEnrichment = (props) => {
                   (x) =>
                     (annotationCols[x].name.startsWith(code) ||
                       annotationCols[x].name === "__batch__") &&
-                    annotationCols[x].type !== "continuous"
+                    annotationCols[x].type !== "continuous" &&
+                    (annotationCols[x]["type"] === "both" ||
+                      (annotationCols[x]["type"] === "categorical" &&
+                        annotationCols[x]["truncated"] === false))
                 )
                 .filter(
                   (x) =>
