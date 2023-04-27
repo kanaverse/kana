@@ -14,6 +14,8 @@ import {
   postSuccess,
   postError,
   fetchStepSummary,
+  describeColumn,
+  isArrayOrView,
 } from "./helpers.js";
 import { code } from "../utils/utils.js";
 /***************************************/
@@ -68,9 +70,8 @@ function summarizeDataset(summary, args) {
   let cells_summary = {};
   for (const k of summary.cells.columnNames()) {
     const kcol = summary.cells.column(k);
-    if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
-      cells_summary[k] = bakana.summarizeArray(kcol);
-    }
+    if (isArrayOrView(kcol))
+      cells_summary[k] = describeColumn(kcol, { all: true, colname: k });
   }
   let tmp_meta = {
     cells: {
@@ -84,9 +85,8 @@ function summarizeDataset(summary, args) {
     let tmod_summary = {};
     for (const k of summary["all_features"].columnNames()) {
       const kcol = summary["all_features"].column(k);
-      if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
-        tmod_summary[k] = bakana.summarizeArray(kcol);
-        tmod_summary[k]["_all_"] = kcol;
+      if (isArrayOrView(kcol)) {
+        tmod_summary[k] = describeColumn(kcol, { all: true, colname: k });
       }
     }
     tmp_meta["all_features"] = {
@@ -101,9 +101,8 @@ function summarizeDataset(summary, args) {
         let tmod_summary = {};
         for (const k of v.columnNames()) {
           const kcol = v.column(k);
-          if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
-            tmod_summary[k] = bakana.summarizeArray(kcol);
-            tmod_summary[k]["_all_"] = kcol;
+          if (isArrayOrView(kcol)) {
+            tmod_summary[k] = describeColumn(kcol, { all: true, colname: k });
           }
         }
         tmp_meta["modality_features"][k] = {
@@ -120,9 +119,8 @@ function summarizeDataset(summary, args) {
         let tmod_summary = {};
         for (const k of v.columnNames()) {
           const kcol = v.column(k);
-          if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
-            tmod_summary[k] = bakana.summarizeArray(kcol);
-            tmod_summary[k]["_all_"] = kcol;
+          if (isArrayOrView(kcol)) {
+            tmod_summary[k] = describeColumn(kcol, { all: true, colname: k });
           }
         }
         tmp_meta["modality_features"][k] = {

@@ -153,34 +153,27 @@ export async function fetchStepSummary(state, step) {
     let cell_info = {};
     for (const c of state[step].fetchCellAnnotations().columnNames()) {
       let col = state[step].fetchCellAnnotations().column(c);
-
-      if (Array.isArray(col) || ArrayBuffer.isView(col)) {
-        const ksumm = bakana.summarizeArray(col);
-        if (ksumm.type === "continuous") {
-          cell_info[c] = {
-            name: c,
-            truncated: new Set(col).size >= 50,
-            type: ksumm.type,
-          };
-        } else if (ksumm.type === "categorical") {
-          cell_info[c] = {
-            name: c,
-            truncated: ksumm.truncated === true,
-            type: ksumm.type,
-          };
-        }
+      if (isArrayOrView(col)) {
+        const ksumm = describeColumn(col, {
+          all: false,
+          unique: true,
+          colname: c,
+        });
+        cell_info[c] = ksumm;
       }
     }
 
     var blocks = state[step].fetchBlockLevels();
     if (blocks !== null) {
       const col = state[step].fetchBlock().slice();
-      const ksumm = bakana.summarizeArray(col);
-      cell_info["__batch__"] = {
-        name: "__batch__",
-        truncated: new Set(col).size >= 50,
-        type: "continuous",
-      };
+      if (isArrayOrView(col)) {
+        const ksumm = describeColumn(col, {
+          all: false,
+          unique: true,
+          colname: "__batch__",
+        });
+        cell_info["__batch__"] = ksumm;
+      }
     }
 
     output = {

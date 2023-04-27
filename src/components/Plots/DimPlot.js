@@ -508,6 +508,9 @@ const DimPlot = (props) => {
       }
       setPlotGroups(clus_names);
       setPlotFactors(annotationObj[default_cluster]);
+
+      setShowToggleFactors(false);
+      setToggleFactorsGradient(false);
     } else {
       if (!(props?.colorByAnnotation in annotationObj)) {
         props?.setReqAnnotation(props?.colorByAnnotation);
