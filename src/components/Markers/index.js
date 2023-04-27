@@ -718,12 +718,13 @@ const MarkerPlot = (props) => {
             {Object.keys(annotationCols)
               .filter(
                 (x) =>
-                  (annotationCols[x].name.startsWith(code) ||
+                  annotationCols[x].name === default_cluster ||
+                  ((annotationCols[x].name.startsWith(code) ||
                     annotationCols[x].name === "__batch__") &&
-                  annotationCols[x].type !== "continuous" &&
-                  (annotationCols[x]["type"] === "both" ||
-                    (annotationCols[x]["type"] === "categorical" &&
-                      annotationCols[x]["truncated"] === false))
+                    annotationCols[x].type !== "continuous" &&
+                    (annotationCols[x]["type"] === "both" ||
+                      (annotationCols[x]["type"] === "categorical" &&
+                        annotationCols[x]["truncated"] === false)))
               )
               .filter(
                 (x) =>
