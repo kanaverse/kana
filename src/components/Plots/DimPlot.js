@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useContext, useState } from "react";
+import React, { useEffect, useRef, useContext, useState, useMemo } from "react";
 import {
   ControlGroup,
   Button,
@@ -726,6 +726,22 @@ const DimPlot = (props) => {
   //   }
   // }, [props?.clusHighlight]);
 
+  const suppliedCols = useMemo(() => {
+    return Object.keys(annotationCols).filter(
+      (x) =>
+        !annotationCols[x].name.startsWith(code) &&
+        annotationCols[x].name !== "__batch__"
+    );
+  }, [annotationCols]);
+
+  const computedCols = useMemo(() => {
+    return Object.keys(annotationCols).filter(
+      (x) =>
+        annotationCols[x].name.startsWith(code) ||
+        annotationCols[x].name === "__batch__"
+    );
+  }, [annotationCols]);
+
   return (
     <div className="scatter-plot">
       <div className="dimplot-top-header">
@@ -859,32 +875,29 @@ const DimPlot = (props) => {
                         );
                       }}
                     >
-                      <optgroup label="Supplied">
-                        {Object.keys(annotationCols)
-                          .filter(
-                            (x) =>
-                              !annotationCols[x].name.startsWith(code) &&
-                              annotationCols[x].name !== "__batch__"
-                          )
-                          .map((x) => (
-                            <option value={x} key={x}>
-                              {x}
-                            </option>
-                          ))}
-                      </optgroup>
-                      <optgroup label="Computed">
-                        {Object.keys(annotationCols)
-                          .filter(
-                            (x) =>
-                              annotationCols[x].name.startsWith(code) ||
-                              annotationCols[x].name === "__batch__"
-                          )
-                          .map((x) => (
-                            <option value={x} key={x}>
-                              {x.replace(`${code}::`, "")}
-                            </option>
-                          ))}
-                      </optgroup>
+                      {suppliedCols &&
+                        Array.isArray(suppliedCols) &&
+                        suppliedCols.length > 0 && (
+                          <optgroup label="Supplied">
+                            {suppliedCols.map((x) => (
+                              <option value={x} key={x}>
+                                {x}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+
+                      {computedCols &&
+                        Array.isArray(computedCols) &&
+                        computedCols.length > 0 && (
+                          <optgroup label="Supplied">
+                            {computedCols.map((x) => (
+                              <option value={x} key={x}>
+                                {x.replace(`${code}::`, "")}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
                     </HTMLSelect>
                   )}
                 </Label>
