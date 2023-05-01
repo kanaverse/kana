@@ -26,7 +26,15 @@ import StackedHistogram from "../Plots/StackedHistogram";
 import Cell from "../Plots/Cell.js";
 import HeatmapCell from "../Plots/HeatmapCell";
 
-import { code, getMinMax, defaultColor } from "../../utils/utils";
+import {
+  code,
+  getMinMax,
+  defaultColor,
+  default_cluster,
+  default_selection,
+  getComputedCols,
+  getSuppliedCols,
+} from "../../utils/utils";
 // import Histogram from '../Plots/Histogram';
 import "./markers.css";
 
@@ -39,9 +47,6 @@ const MarkerPlot = (props) => {
     annotationCols,
     datasetName,
   } = useContext(AppContext);
-
-  const default_cluster = `${code}::CLUSTERS`;
-  const default_selection = `${code}::SELECTION`;
 
   const [showSettings, setShowSettings] = useState(false);
   const [showLogFC, setShowLogFC] = useState(true);
@@ -697,52 +702,29 @@ const MarkerPlot = (props) => {
             props?.setSelectedMarkerAnnotation(nval?.currentTarget?.value);
           }}
         >
-          <optgroup label="Supplied">
-            {Object.keys(annotationCols)
-              .filter(
-                (x) =>
-                  !annotationCols[x].name.startsWith(code) &&
-                  annotationCols[x].name !== "__batch__" &&
-                  annotationCols[x].type !== "continuous" &&
-                  (annotationCols[x]["type"] === "both" ||
-                    (annotationCols[x]["type"] === "categorical" &&
-                      annotationCols[x]["truncated"] === false))
-              )
-              .map((x) => (
+          {getSuppliedCols(annotationCols).length > 0 && (
+            <optgroup label="Supplied">
+              {getSuppliedCols(annotationCols).map((x) => (
                 <option value={x} key={x}>
                   {x}
                 </option>
               ))}
-          </optgroup>
-          <optgroup label="Computed">
-            {Object.keys(annotationCols)
-              .filter(
-                (x) =>
-                  annotationCols[x].name === default_cluster ||
-                  ((annotationCols[x].name.startsWith(code) ||
-                    annotationCols[x].name === "__batch__") &&
-                    annotationCols[x].type !== "continuous" &&
-                    (annotationCols[x]["type"] === "both" ||
-                      (annotationCols[x]["type"] === "categorical" &&
-                        annotationCols[x]["truncated"] === false)))
-              )
-              .filter(
-                (x) =>
-                  !annotationCols[x].name
-                    .replace(`${code}::`, "")
-                    .startsWith("QC")
-              )
-              .map((x) => (
+            </optgroup>
+          )}
+          {getComputedCols(annotationCols).length > 0 && (
+            <optgroup label="Computed">
+              {getComputedCols(annotationCols).map((x) => (
                 <option value={x} key={x}>
                   {x.replace(`${code}::`, "")}
                 </option>
               ))}
-            {Object.keys(props?.customSelection).length > 0 && (
-              <option value={default_selection} key={default_selection}>
-                CUSTOM SELECTIONS
-              </option>
-            )}
-          </optgroup>
+              {Object.keys(props?.customSelection).length > 0 && (
+                <option value={default_selection} key={default_selection}>
+                  CUSTOM SELECTIONS
+                </option>
+              )}
+            </optgroup>
+          )}
         </HTMLSelect>
       </Label>
       <div
