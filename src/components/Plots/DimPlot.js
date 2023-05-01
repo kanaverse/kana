@@ -835,6 +835,7 @@ const DimPlot = (props) => {
                   Choose annotation
                   {props?.selectedDimPlotCluster && (
                     <HTMLSelect
+                      disabled={showGradient === true}
                       elementRef={selector}
                       large={false}
                       minimal={true}
@@ -891,6 +892,7 @@ const DimPlot = (props) => {
                   <>
                     <Divider />
                     <Switch
+                      disabled={showGradient === true}
                       large={false}
                       inline={true}
                       checked={toggleFactorsGradient}
@@ -912,8 +914,7 @@ const DimPlot = (props) => {
               </div>
               {toggleFactorsGradient ? (
                 factorsMinMax &&
-                sliderFactorsMinMax &&
-                showGradient !== true && (
+                sliderFactorsMinMax && (
                   <div className="dim-slider-container">
                     <div className="dim-slider-gradient">
                       <div
@@ -937,6 +938,7 @@ const DimPlot = (props) => {
                     </div>
                     <div className="dim-range-slider">
                       <RangeSlider
+                        disabled={showGradient === true}
                         min={factorsMinMax[0]}
                         max={factorsMinMax[1]}
                         stepSize={Math.max(
@@ -992,8 +994,7 @@ const DimPlot = (props) => {
                               }
                             }}
                           >
-                            {" "}
-                            {x ? x : "NA"}{" "}
+                            {x !== null && x !== undefined ? x : "NA"}
                           </li>
                         );
                       })}
