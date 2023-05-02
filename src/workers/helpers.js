@@ -153,34 +153,27 @@ export async function fetchStepSummary(state, step) {
     let cell_info = {};
     for (const c of state[step].fetchCellAnnotations().columnNames()) {
       let col = state[step].fetchCellAnnotations().column(c);
-
-      if (Array.isArray(col) || ArrayBuffer.isView(col)) {
-        const ksumm = bakana.summarizeArray(col);
-        if (ksumm.type === "continuous") {
-          cell_info[c] = {
-            name: c,
-            truncated: new Set(col).size >= 50,
-            type: ksumm.type,
-          };
-        } else if (ksumm.type === "categorical") {
-          cell_info[c] = {
-            name: c,
-            truncated: ksumm.truncated === true,
-            type: ksumm.type,
-          };
-        }
+      if (isArrayOrView(col)) {
+        const ksumm = describeColumn(col, {
+          all: false,
+          unique: true,
+          colname: c,
+        });
+        cell_info[c] = ksumm;
       }
     }
 
     var blocks = state[step].fetchBlockLevels();
     if (blocks !== null) {
       const col = state[step].fetchBlock().slice();
-      const ksumm = bakana.summarizeArray(col);
-      cell_info["__batch__"] = {
-        name: "__batch__",
-        truncated: new Set(col).size >= 50,
-        type: "continuous",
-      };
+      if (isArrayOrView(col)) {
+        const ksumm = describeColumn(col, {
+          all: false,
+          unique: true,
+          colname: "__batch__",
+        });
+        cell_info["__batch__"] = ksumm;
+      }
     }
 
     output = {
@@ -346,4 +339,31 @@ export async function fetchStepSummary(state, step) {
       },
     };
   }
+}
+
+export function isArrayOrView(col) {
+  return Array.isArray(col) || ArrayBuffer.isView(col);
+}
+
+export function describeColumn(
+  col,
+  { all = false, unique = false, colname = null } = {}
+) {
+  let res;
+  if (isArrayOrView(col)) {
+    res = bakana.summarizeArray(col);
+    const uqVals = new Set(col);
+    res["num_unique"] = uqVals.size;
+
+    if ((uqVals.size <= 50) & unique) res["__unique__"] = [...uqVals];
+    if (all) res["_all_"] = col;
+
+    // if type is continous and unique values is less than 50, type is both
+    if (res["type"] === "continuous" && uqVals.size <= 50) res["type"] = "both";
+
+    if (typeof colname === "string" || colname instanceof String)
+      res["name"] = colname;
+  }
+
+  return res;
 }

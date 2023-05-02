@@ -17,6 +17,7 @@ import {
   Checkbox,
   NumericInput,
   H5,
+  Switch,
 } from "@blueprintjs/core";
 
 import { Tooltip2 } from "@blueprintjs/popover2";
@@ -108,6 +109,9 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   // final jszipnames for confirmation with options
   const [jsZipNames, setJsZipNames] = useState(null);
   const [jsZipObjs, setJSZipObjs] = useState(null);
+
+  // show a gradient for subset selection
+  const [toggleFactorsGradient, setToggleFactorsGradient] = useState(true);
 
   const handleAddDataset = () => {
     tmpNewInputs["uid"] = generateUID(tmpNewInputs);
@@ -705,6 +709,36 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
     );
   };
 
+  const getBatchColumns = () => {
+    const cols = preInputFilesStatus[tmpFiles[0].name].cells["columns"];
+
+    return Object.keys(cols).filter(
+      (x) =>
+        cols[x].type !== "continuous" &&
+        (cols[x]["type"] === "both" ||
+          (cols[x]["type"] === "categorical" && cols[x]["truncated"] === false))
+    );
+  };
+
+  const getSubsetColumns = () => {
+    const cols = preInputFilesStatus[tmpFiles[0].name].cells["columns"];
+
+    return Object.keys(cols);
+  };
+
+  // useEffect(() => {
+  //   let tmpSubset = {};
+
+  //   if (toggleFactorsGradient === true) {
+  //     tmpSubset["values"] = [];
+  //   } else {
+  //     tmpSubset["minmax"] = [col.min, col.max];
+  //     tmpSubset["chosen_minmax"] = [col.min, col.max];
+  //   }
+
+  //   setSubset(tmpSubset);
+  // }, [toggleFactorsGradient]);
+
   const render_batch_correction = () => {
     return (
       <>
@@ -735,9 +769,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
               <option key={default_none} value={default_none}>
                 --- no selection ---
               </option>
-              {Object.keys(
-                preInputFilesStatus[tmpFiles[0].name].cells["columns"]
-              ).map((x, i) => (
+              {getBatchColumns().map((x, i) => (
                 <option key={i} value={x}>
                   {x}
                 </option>
@@ -755,7 +787,8 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
             If you upload a single dataset, you can optionally tell{" "}
             <strong>kana</strong> to subset the cells based on a single
             annotation column. You can select groups of interest (for
-            categorical fields) or a range of values (for continuous fields) to
+            categorical fields) or a range of values (for continuous fields) or
+            both (for continuous fields with less than 50 unique levels) to
             define a subset of cells that will be used in the downstream
             analysis. For categorical fields, only the first 50 levels are
             shown.
@@ -770,29 +803,19 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 if (e.target.value === default_none) {
                   tmpSubset["subset"] = null;
                 } else {
-                  if (
+                  const col =
                     preInputFilesStatus[tmpFiles[0].name].cells["columns"][
                       tmpSubset["subset"]
-                    ].type === "categorical"
-                  ) {
+                    ];
+
+                  if (col.type === "categorical") {
                     tmpSubset["values"] = [];
-                  } else {
-                    tmpSubset["minmax"] = [
-                      preInputFilesStatus[tmpFiles[0].name].cells["columns"][
-                        tmpSubset["subset"]
-                      ].min,
-                      preInputFilesStatus[tmpFiles[0].name].cells["columns"][
-                        tmpSubset["subset"]
-                      ].max,
-                    ];
-                    tmpSubset["chosen_minmax"] = [
-                      preInputFilesStatus[tmpFiles[0].name].cells["columns"][
-                        tmpSubset["subset"]
-                      ].min,
-                      preInputFilesStatus[tmpFiles[0].name].cells["columns"][
-                        tmpSubset["subset"]
-                      ].max,
-                    ];
+                  } else if (col.type === "continuous") {
+                    tmpSubset["minmax"] = [col.min, col.max];
+                    tmpSubset["chosen_minmax"] = [col.min, col.max];
+                  } else if (col.type === "both") {
+                    setToggleFactorsGradient(true);
+                    tmpSubset["values"] = [];
                   }
                 }
 
@@ -802,9 +825,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
               <option key={default_none} value={default_none}>
                 --- no selection ---
               </option>
-              {Object.keys(
-                preInputFilesStatus[tmpFiles[0].name].cells["columns"]
-              ).map((x, i) => (
+              {getSubsetColumns().map((x, i) => (
                 <option key={i} value={x}>
                   {x}
                 </option>
@@ -814,16 +835,15 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
           {subset?.["subset"] !== null && (
             <>
               {(() => {
-                if (
+                const col =
                   preInputFilesStatus[tmpFiles[0].name].cells["columns"][
                     subset["subset"]
-                  ].type === "categorical"
-                ) {
+                  ];
+
+                if (col.type === "categorical") {
                   return (
                     <div className="subset-section">
-                      {preInputFilesStatus[tmpFiles[0].name].cells["columns"][
-                        subset["subset"]
-                      ].values.map((x) => (
+                      {col.__unique__.map((x) => (
                         <Checkbox
                           key={"subset-" + x}
                           checked={subset.values.includes(x)}
@@ -843,67 +863,176 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                           }}
                         />
                       ))}
-                      {preInputFilesStatus[tmpFiles[0].name].cells["columns"][
-                        subset["subset"]
-                      ].truncated && "... and more"}
+                      {col.truncated && "... and more"}
                     </div>
                   );
-                } else {
+                } else if (col.type === "continuous") {
                   return (
-                    <>
-                      <div className="subset-section">
-                        <div className="subset-range-field">
-                          <H5>from</H5>
-                          <NumericInput
-                            min={
-                              isFinite(subset.minmax[0])
-                                ? subset.minmax[0]
-                                : undefined
-                            }
-                            max={
-                              isFinite(subset.minmax[1])
-                                ? subset.minmax[1]
-                                : undefined
-                            }
-                            value={
-                              isFinite(subset.chosen_minmax[0])
-                                ? subset.chosen_minmax[0]
-                                : undefined
-                            }
-                            onValueChange={(e) => {
-                              let gip = { ...subset };
-                              gip["chosen_minmax"][0] = e;
-                              setSubset(gip);
-                            }}
-                          />
-                        </div>
-                        <div className="subset-range-field">
-                          <H5>to</H5>
-                          <NumericInput
-                            min={
-                              isFinite(subset.minmax[0])
-                                ? subset.minmax[0]
-                                : undefined
-                            }
-                            max={
-                              isFinite(subset.minmax[1])
-                                ? subset.minmax[1]
-                                : undefined
-                            }
-                            value={
-                              isFinite(subset.chosen_minmax[1])
-                                ? subset.chosen_minmax[1]
-                                : undefined
-                            }
-                            onValueChange={(e) => {
-                              let gip = { ...subset };
-                              gip["chosen_minmax"][1] = e;
-                              setSubset(gip);
-                            }}
-                          />
-                        </div>
+                    <div className="subset-section">
+                      <div className="subset-range-field">
+                        <H5>from</H5>
+                        <NumericInput
+                          min={
+                            isFinite(subset.minmax[0])
+                              ? subset.minmax[0]
+                              : undefined
+                          }
+                          max={
+                            isFinite(subset.minmax[1])
+                              ? subset.minmax[1]
+                              : undefined
+                          }
+                          value={
+                            isFinite(subset.chosen_minmax[0])
+                              ? subset.chosen_minmax[0]
+                              : undefined
+                          }
+                          onValueChange={(e) => {
+                            let gip = { ...subset };
+                            gip["chosen_minmax"][0] = e;
+                            setSubset(gip);
+                          }}
+                        />
                       </div>
-                    </>
+                      <div className="subset-range-field">
+                        <H5>to</H5>
+                        <NumericInput
+                          min={
+                            isFinite(subset.minmax[0])
+                              ? subset.minmax[0]
+                              : undefined
+                          }
+                          max={
+                            isFinite(subset.minmax[1])
+                              ? subset.minmax[1]
+                              : undefined
+                          }
+                          value={
+                            isFinite(subset.chosen_minmax[1])
+                              ? subset.chosen_minmax[1]
+                              : undefined
+                          }
+                          onValueChange={(e) => {
+                            let gip = { ...subset };
+                            gip["chosen_minmax"][1] = e;
+                            setSubset(gip);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                } else if (col.type === "both") {
+                  return (
+                    <div>
+                      <Switch
+                        large={false}
+                        inline={true}
+                        checked={toggleFactorsGradient}
+                        innerLabelChecked="yes"
+                        innerLabel="no"
+                        label="categorical"
+                        onChange={(e) => {
+                          let tmpSubset = { subset: subset["subset"] };
+                          if (e.target.checked) {
+                            tmpSubset["values"] = [];
+                          } else {
+                            tmpSubset["minmax"] = [col.min, col.max];
+                            tmpSubset["chosen_minmax"] = [col.min, col.max];
+                          }
+
+                          setSubset(tmpSubset);
+                          setToggleFactorsGradient(e.target.checked);
+                        }}
+                      />
+                      {toggleFactorsGradient === true && (
+                        <>
+                          <Divider />
+                          <div className="subset-section">
+                            {col.__unique__.map((x) => (
+                              <Checkbox
+                                key={"subset-" + x}
+                                checked={subset.values.includes(x)}
+                                label={x}
+                                inline={true}
+                                onChange={(e) => {
+                                  let gip = { ...subset };
+
+                                  if (e.target.checked) {
+                                    if (!gip.values.includes(x))
+                                      gip.values.push(x);
+                                  } else {
+                                    if (gip.values.includes(x))
+                                      gip.values = gip.values.filter(
+                                        (y) => y !== x
+                                      );
+                                  }
+
+                                  setSubset(gip);
+                                }}
+                              />
+                            ))}
+                            {col.truncated && "... and more"}
+                          </div>
+                        </>
+                      )}
+                      {toggleFactorsGradient === false && (
+                        <>
+                          <Divider />
+                          <div className="subset-section">
+                            <div className="subset-range-field">
+                              <H5>from</H5>
+                              <NumericInput
+                                min={
+                                  isFinite(subset.minmax[0])
+                                    ? subset.minmax[0]
+                                    : undefined
+                                }
+                                max={
+                                  isFinite(subset.minmax[1])
+                                    ? subset.minmax[1]
+                                    : undefined
+                                }
+                                value={
+                                  isFinite(subset.chosen_minmax[0])
+                                    ? subset.chosen_minmax[0]
+                                    : undefined
+                                }
+                                onValueChange={(e) => {
+                                  let gip = { ...subset };
+                                  gip["chosen_minmax"][0] = e;
+                                  setSubset(gip);
+                                }}
+                              />
+                            </div>
+                            <div className="subset-range-field">
+                              <H5>to</H5>
+                              <NumericInput
+                                min={
+                                  isFinite(subset.minmax[0])
+                                    ? subset.minmax[0]
+                                    : undefined
+                                }
+                                max={
+                                  isFinite(subset.minmax[1])
+                                    ? subset.minmax[1]
+                                    : undefined
+                                }
+                                value={
+                                  isFinite(subset.chosen_minmax[1])
+                                    ? subset.chosen_minmax[1]
+                                    : undefined
+                                }
+                                onValueChange={(e) => {
+                                  let gip = { ...subset };
+                                  gip["chosen_minmax"][1] = e;
+                                  setSubset(gip);
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   );
                 }
               })()}

@@ -6,6 +6,8 @@ import {
   postAttempt,
   postSuccess,
   postError,
+  describeColumn,
+  isArrayOrView,
 } from "./helpers.js";
 import { code } from "../utils/utils.js";
 /***************************************/
@@ -45,8 +47,8 @@ function summarizeResult(summary, args) {
   let cells_summary = {};
   for (const k of summary.cells.columnNames()) {
     const kcol = summary.cells.column(k);
-    if (Array.isArray(kcol) || ArrayBuffer.isView(kcol))
-      cells_summary[k] = bakana.summarizeArray(kcol);
+    if (isArrayOrView(kcol))
+      cells_summary[k] = describeColumn(kcol, { all: true, colname: k });
   }
   let tmp_meta = {
     cells: {
@@ -65,9 +67,8 @@ function summarizeResult(summary, args) {
         let tmod_summary = {};
         for (const k of v.columnNames()) {
           const kcol = v.column(k);
-          if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
-            tmod_summary[k] = bakana.summarizeArray(kcol);
-            tmod_summary[k]["_all_"] = kcol;
+          if (isArrayOrView(kcol)) {
+            tmod_summary[k] = describeColumn(kcol, { all: true, colname: k });
           }
         }
         tmp_meta["modality_features"][k] = {
@@ -82,9 +83,8 @@ function summarizeResult(summary, args) {
     let tmod_summary = {};
     for (const k of summary["all_features"].columnNames()) {
       const kcol = summary["all_features"].column(k);
-      if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
-        tmod_summary[k] = bakana.summarizeArray(kcol);
-        tmod_summary[k]["_all_"] = kcol;
+      if (isArrayOrView(kcol)) {
+        tmod_summary[k] = describeColumn(kcol, { all: true, colname: k });
       }
     }
     tmp_meta["all_features"] = {
@@ -230,21 +230,13 @@ onmessage = function (msg) {
             let annotation_keys = {};
             for (const k of dataset.cells.columnNames()) {
               let kcol = dataset.cells.column(k);
-              if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
-                const ksumm = bakana.summarizeArray(kcol);
-                if (ksumm.type === "continuous") {
-                  annotation_keys[k] = {
-                    name: k,
-                    truncated: new Set(kcol).size >= 50,
-                    type: ksumm.type,
-                  };
-                } else if (ksumm.type === "categorical") {
-                  annotation_keys[k] = {
-                    name: k,
-                    truncated: ksumm.truncated === true,
-                    type: ksumm.type,
-                  };
-                }
+              if (isArrayOrView(kcol)) {
+                const ksumm = describeColumn(kcol, {
+                  all: false,
+                  unique: true,
+                  colname: k,
+                });
+                annotation_keys[k] = ksumm;
               }
             }
 
@@ -260,7 +252,7 @@ onmessage = function (msg) {
               step_inputs_resp["num_genes"][k] = v.numberOfRows();
               for (const col of v.columnNames()) {
                 let kcol = v.column(col);
-                if (Array.isArray(kcol) || ArrayBuffer.isView(kcol)) {
+                if (isArrayOrView(kcol)) {
                   step_inputs_resp["genes"][k][col] = kcol;
                 }
               }

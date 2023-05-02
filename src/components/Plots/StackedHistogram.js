@@ -119,7 +119,7 @@ const StackedHistogram = (props) => {
       .style("font-size", "10px")
       .attr("alignment-baseline", "middle");
 
-    if (clusterlabel.startsWith("Custom")) {
+    if (String(clusterlabel).startsWith("Custom")) {
       let text = clusterlabel.split(" ");
       text.forEach((t, i) => {
         svg
