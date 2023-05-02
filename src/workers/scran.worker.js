@@ -71,7 +71,11 @@ function summarizeDataset(summary, args) {
   for (const k of summary.cells.columnNames()) {
     const kcol = summary.cells.column(k);
     if (isArrayOrView(kcol))
-      cells_summary[k] = describeColumn(kcol, { all: true, colname: k });
+      cells_summary[k] = describeColumn(kcol, {
+        all: true,
+        unique: true,
+        colname: k,
+      });
   }
   let tmp_meta = {
     cells: {
@@ -86,7 +90,11 @@ function summarizeDataset(summary, args) {
     for (const k of summary["all_features"].columnNames()) {
       const kcol = summary["all_features"].column(k);
       if (isArrayOrView(kcol)) {
-        tmod_summary[k] = describeColumn(kcol, { all: true, colname: k });
+        tmod_summary[k] = describeColumn(kcol, {
+          all: true,
+          unique: true,
+          colname: k,
+        });
       }
     }
     tmp_meta["all_features"] = {
@@ -102,7 +110,11 @@ function summarizeDataset(summary, args) {
         for (const k of v.columnNames()) {
           const kcol = v.column(k);
           if (isArrayOrView(kcol)) {
-            tmod_summary[k] = describeColumn(kcol, { all: true, colname: k });
+            tmod_summary[k] = describeColumn(kcol, {
+              all: true,
+              unique: true,
+              colname: k,
+            });
           }
         }
         tmp_meta["modality_features"][k] = {
@@ -120,7 +132,11 @@ function summarizeDataset(summary, args) {
         for (const k of v.columnNames()) {
           const kcol = v.column(k);
           if (isArrayOrView(kcol)) {
-            tmod_summary[k] = describeColumn(kcol, { all: true, colname: k });
+            tmod_summary[k] = describeColumn(kcol, {
+              all: true,
+              unique: true,
+              colname: k,
+            });
           }
         }
         tmp_meta["modality_features"][k] = {
