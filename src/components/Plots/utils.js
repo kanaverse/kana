@@ -1,4 +1,6 @@
-const getMinMax = (arr) => {
+import Rainbow from "./rainbowvis";
+
+export const getMinMax = (arr) => {
   var max = -Number.MAX_VALUE,
     min = Number.MAX_VALUE;
   arr.forEach(function (x) {
@@ -14,7 +16,7 @@ const getMinMax = (arr) => {
 
 // saving svg's from https://observablehq.com/@mbostock/saving-svg
 // ource credits : https://www.demo2s.com/javascript/javascript-d3-js-save-svg-to-png-image.html
-function serialize(svgNode) {
+export function serialize(svgNode) {
   svgNode.setAttribute("xlink", "http://www.w3.org/1999/xlink");
   var cssStyleText = getCSSStyles(svgNode);
   appendCSS(cssStyleText, svgNode);
@@ -78,7 +80,7 @@ function serialize(svgNode) {
   }
 }
 
-function saveSVG(svgNode, width, height, filename) {
+export function saveSVG(svgNode, width, height, filename) {
   let svgString = serialize(svgNode);
   var imgsrc =
     "data:image/svg+xml;base64," +
@@ -100,7 +102,7 @@ function saveSVG(svgNode, width, height, filename) {
   image.src = imgsrc;
 }
 
-const palette = {
+export const palette = {
   1: ["#1b9e77"],
   2: ["#1b9e77", "#d95f02"],
   3: ["#1b9e77", "#d95f02", "#7570b3"],
@@ -178,6 +180,28 @@ const palette = {
   ],
 };
 
-const defaultColor = "#5F6B7C";
+export const defaultColor = "#5F6B7C";
 
-export { getMinMax, saveSVG, palette, defaultColor };
+export function getFactorsFromArray(col) {
+  const levels = [...new Set(col)];
+  let indices = [];
+  col.map((x, i) => {
+    indices[i] = levels.indexOf(x);
+  });
+
+  return { levels: levels, indices: indices };
+}
+
+export function getGradient(min, max) {
+  let tmpgradient = new Rainbow();
+  tmpgradient.setSpectrum(
+    "#edc775",
+    "#e09351",
+    "#df7e66",
+    "#b75347",
+    "#6d2f20"
+  );
+  tmpgradient.setNumberRange(min, max);
+
+  return tmpgradient
+}

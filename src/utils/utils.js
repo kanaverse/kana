@@ -153,3 +153,31 @@ export const getMinMax = (arr) => {
 };
 
 export const defaultColor = "#5F6B7C";
+
+export const default_cluster = `${code}::CLUSTERS`;
+export const default_selection = `${code}::SELECTION`;
+
+export const getComputedCols = (cols) => {
+  return Object.keys(cols)
+    .filter(
+      (x) =>
+        cols[x].name === default_cluster ||
+        ((cols[x].name.startsWith(code) || cols[x].name === "__batch__") &&
+          cols[x].type !== "continuous" &&
+          (cols[x]["type"] === "both" ||
+            (cols[x]["type"] === "categorical" &&
+              cols[x]["truncated"] === false)))
+    )
+    .filter((x) => !cols[x].name.replace(`${code}::`, "").startsWith("QC"));
+};
+
+export const getSuppliedCols = (cols) => {
+  return Object.keys(cols).filter(
+    (x) =>
+      !cols[x].name.startsWith(code) &&
+      cols[x].name !== "__batch__" &&
+      cols[x].type !== "continuous" &&
+      (cols[x]["type"] === "both" ||
+        (cols[x]["type"] === "categorical" && cols[x]["truncated"] === false))
+  );
+};

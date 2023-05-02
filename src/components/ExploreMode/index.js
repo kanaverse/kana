@@ -684,20 +684,6 @@ export function ExplorerMode() {
       setInitDims(info.join(", "));
       setInputData(resp);
 
-      if (resp?.annotations) {
-        setAnnotationCols(resp.annotations);
-
-        let def_anno = Object.keys(resp.annotations)[0];
-        if (Object.keys(resp.annotations).indexOf("clusters") !== -1) {
-          def_anno = "clusters";
-        } else if (Object.keys(resp.annotations).indexOf("cluster") !== -1) {
-          def_anno = "cluster";
-        }
-
-        setColorByAnnotation(def_anno);
-        setSelectedFsetAnnotation(def_anno);
-      }
-
       let pmods = Object.keys(resp.genes);
       setModality(pmods);
 
@@ -709,13 +695,19 @@ export function ExplorerMode() {
       if (resp?.annotations) {
         setAnnotationCols(resp.annotations);
 
-        let def_anno = resp.annotations[0];
-        const categorical_annos = Object.keys(resp.annotations);
+        const categorical_annos = Object.keys(resp.annotations)
+          .filter((x) => resp.annotations[x]["type"] !== "continuous")
+          .filter(
+            (x) =>
+              resp.annotations[x]["type"] === "both" ||
+              (resp.annotations[x]["type"] === "categorical" &&
+                resp.annotations[x]["truncated"] === false)
+          );
+
+        let def_anno = categorical_annos[0];
         if (categorical_annos.length > 1) {
           if (categorical_annos.indexOf(default_cluster) !== -1) {
             def_anno = default_cluster;
-          } else if (categorical_annos.indexOf("kana::clusters") !== -1) {
-            def_anno = "kana::clusters";
           } else if (categorical_annos.indexOf("cluster") !== -1) {
             def_anno = "cluster";
           } else if (categorical_annos.indexOf("clusters") !== -1) {
@@ -724,6 +716,7 @@ export function ExplorerMode() {
         }
 
         setColorByAnnotation(def_anno);
+        setSelectedFsetAnnotation(def_anno);
         setSelectedMarkerAnnotation(def_anno);
         setReqAnnotation(def_anno);
         setSelectedDimPlotCluster(def_anno);
