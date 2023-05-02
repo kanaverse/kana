@@ -930,7 +930,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                         checked={toggleFactorsGradient}
                         innerLabelChecked="yes"
                         innerLabel="no"
-                        label="subset by groups ?"
+                        label="categorical ?"
                         onChange={(e) => {
                           let tmpSubset = { subset: subset["subset"] };
                           if (e.target.checked) {
