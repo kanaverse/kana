@@ -290,7 +290,7 @@ const DimPlot = (props) => {
             let tmpclus = parseInt(props?.clusHighlight.replace("cs", ""));
             color = cluster_colors[max + tmpclus - 1];
           } else {
-            if (toggleFactorsGradient && factorGradient) {
+            if (!toggleFactorsGradient && factorGradient) {
               color =
                 "#" + factorGradient.colorAt(parseFloat(cluster_mappings[i]));
               return color;
@@ -510,7 +510,7 @@ const DimPlot = (props) => {
       setPlotFactors(annotationObj[default_cluster]);
 
       setShowToggleFactors(false);
-      setToggleFactorsGradient(false);
+      setToggleFactorsGradient(true);
     } else {
       if (!(props?.colorByAnnotation in annotationObj)) {
         props?.setReqAnnotation(props?.colorByAnnotation);
@@ -527,7 +527,7 @@ const DimPlot = (props) => {
             }
             setToggleFactorsGradient(state);
 
-            if (state) {
+            if (!state) {
               const [minTmp, maxTmp] = getMinMax(tmp.values);
               setFactorsMinMax([minTmp, maxTmp]);
 
@@ -536,13 +536,12 @@ const DimPlot = (props) => {
             }
 
             setShowToggleFactors(true);
-
             let result = getFactorsFromArray(tmp.values);
             levels = result.levels;
             indices = result.indices;
           } else {
             setShowToggleFactors(false);
-            setToggleFactorsGradient(false);
+            setToggleFactorsGradient(true);
             levels = tmp.levels;
             indices = tmp.index;
           }
@@ -567,7 +566,7 @@ const DimPlot = (props) => {
           setFactorGradient(tmpgradient);
 
           setShowToggleFactors(false);
-          setToggleFactorsGradient(true);
+          setToggleFactorsGradient(false);
 
           let { levels, indices } = getFactorsFromArray(tmp.values);
 
@@ -911,7 +910,7 @@ const DimPlot = (props) => {
                       checked={toggleFactorsGradient}
                       innerLabelChecked="yes"
                       innerLabel="no"
-                      label="show gradient ?"
+                      label="categorical"
                       onChange={(e) => {
                         setToggleFactorsGradient(e.target.checked);
                         let tmpState = { ...factorState };
@@ -926,49 +925,6 @@ const DimPlot = (props) => {
                 )}
               </div>
               {toggleFactorsGradient ? (
-                factorsMinMax &&
-                sliderFactorsMinMax && (
-                  <div className="dim-slider-container">
-                    <div className="dim-slider-gradient">
-                      <div
-                        style={{
-                          backgroundImage: `linear-gradient(to right, #edc775 ${
-                            ((sliderFactorsMinMax[0] - factorsMinMax[0]) *
-                              100) /
-                            (factorsMinMax[1] - factorsMinMax[0])
-                          }%, #e09351, #df7e66, #b75347, #6d2f20 ${
-                            100 -
-                            ((factorsMinMax[1] - sliderFactorsMinMax[1]) *
-                              100) /
-                              (factorsMinMax[1] - factorsMinMax[0])
-                          }%)`,
-                          width: "145px",
-                          height: "15px",
-                          marginLeft: "4px",
-                        }}
-                      ></div>
-                      &nbsp;
-                    </div>
-                    <div className="dim-range-slider">
-                      <RangeSlider
-                        disabled={showGradient === true}
-                        min={factorsMinMax[0]}
-                        max={factorsMinMax[1]}
-                        stepSize={Math.max(
-                          Math.round(factorsMinMax[1] - factorsMinMax[0]) / 50,
-                          0.0001
-                        )}
-                        labelValues={factorsMinMax}
-                        onChange={(range) => {
-                          setSliderFactorsMinMax(range);
-                        }}
-                        value={sliderFactorsMinMax}
-                        vertical={false}
-                      />
-                    </div>
-                  </div>
-                )
-              ) : (
                 <ul style={{ fontSize: "small" }}>
                   {plotGroups &&
                     [...plotGroups]
@@ -1012,6 +968,49 @@ const DimPlot = (props) => {
                         );
                       })}
                 </ul>
+              ) : (
+                factorsMinMax &&
+                sliderFactorsMinMax && (
+                  <div className="dim-slider-container">
+                    <div className="dim-slider-gradient">
+                      <div
+                        style={{
+                          backgroundImage: `linear-gradient(to right, #edc775 ${
+                            ((sliderFactorsMinMax[0] - factorsMinMax[0]) *
+                              100) /
+                            (factorsMinMax[1] - factorsMinMax[0])
+                          }%, #e09351, #df7e66, #b75347, #6d2f20 ${
+                            100 -
+                            ((factorsMinMax[1] - sliderFactorsMinMax[1]) *
+                              100) /
+                              (factorsMinMax[1] - factorsMinMax[0])
+                          }%)`,
+                          width: "145px",
+                          height: "15px",
+                          marginLeft: "4px",
+                        }}
+                      ></div>
+                      &nbsp;
+                    </div>
+                    <div className="dim-range-slider">
+                      <RangeSlider
+                        disabled={showGradient === true}
+                        min={factorsMinMax[0]}
+                        max={factorsMinMax[1]}
+                        stepSize={Math.max(
+                          Math.round(factorsMinMax[1] - factorsMinMax[0]) / 50,
+                          0.0001
+                        )}
+                        labelValues={factorsMinMax}
+                        onChange={(range) => {
+                          setSliderFactorsMinMax(range);
+                        }}
+                        value={sliderFactorsMinMax}
+                        vertical={false}
+                      />
+                    </div>
+                  </div>
+                )
               )}
             </Callout>
             {Object.keys(props?.customSelection).length > 0 ||
