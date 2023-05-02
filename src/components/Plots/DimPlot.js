@@ -956,7 +956,7 @@ const DimPlot = (props) => {
                         max={factorsMinMax[1]}
                         stepSize={Math.max(
                           Math.round(factorsMinMax[1] - factorsMinMax[0]) / 50,
-                          0.1
+                          0.0001
                         )}
                         labelValues={factorsMinMax}
                         onChange={(range) => {
@@ -1207,7 +1207,7 @@ const DimPlot = (props) => {
                       max={exprMinMax[1]}
                       stepSize={Math.max(
                         Math.round(exprMinMax[1] - exprMinMax[0]) / 50,
-                        0.1
+                        0.0001
                       )}
                       labelValues={exprMinMax}
                       onChange={(range) => {
