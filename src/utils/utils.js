@@ -185,3 +185,7 @@ export const getSuppliedCols = (cols) => {
         (cols[x]["type"] === "categorical" && cols[x]["truncated"] === false))
   );
 };
+
+export const resetApp = () => {
+  window.location.reload();
+};

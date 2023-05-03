@@ -355,7 +355,7 @@ export function describeColumn(
     const uqVals = new Set(col);
     res["num_unique"] = uqVals.size;
 
-    if ((uqVals.size <= 50) & unique) res["__unique__"] = [...uqVals];
+    if ((uqVals.size <= 50) & unique) res["__unique__"] = [...uqVals].sort();
     if (all) res["_all_"] = col;
 
     // if type is continous and unique values is less than 50, type is both
