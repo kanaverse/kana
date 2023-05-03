@@ -726,10 +726,13 @@ const DimPlot = (props) => {
   // }, [props?.clusHighlight]);
 
   const suppliedCols = useMemo(() => {
-    return Object.keys(annotationCols).filter(
-      (x) =>
-        !annotationCols[x].name.startsWith(code) &&
-        annotationCols[x].name !== "__batch__"
+    return Object.keys(annotationCols).filter((x) =>
+      !annotationCols[x].name.startsWith(code) &&
+      annotationCols[x].name !== "__batch__"
+        ? annotationCols[x]["type"] === "continuous"
+          ? true
+          : !annotationCols[x]["truncated"]
+        : false
     );
   }, [annotationCols]);
 
