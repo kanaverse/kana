@@ -927,46 +927,44 @@ const DimPlot = (props) => {
               {toggleFactorsGradient ? (
                 <ul style={{ fontSize: "small" }}>
                   {plotGroups &&
-                    [...plotGroups]
-                      .sort((a, b) => a - b)
-                      .map((x, i) => {
-                        return (
-                          <li
-                            key={i}
-                            className={
-                              clusHover === plotGroups.indexOf(x) ||
-                              props?.clusHighlight === plotGroups.indexOf(x)
-                                ? "legend-highlight"
-                                : ""
-                            }
-                            style={{
-                              color: plotColorMappings[plotGroups.indexOf(x)],
-                            }}
-                            onClick={() => {
-                              if (
-                                plotGroups.indexOf(x) === props?.clusHighlight
-                              ) {
-                                props?.setClusHighlight(null);
-                                props?.setHighlightPoints(null);
-                                props?.setClusHighlightLabel(null);
-                              } else {
-                                let tclus = plotGroups.indexOf(x);
-                                props?.setClusHighlight(tclus);
-                                let clus_indices = [];
-                                for (let i = 0; i < plotFactors.length; i++) {
-                                  if (tclus == plotFactors[i]) {
-                                    clus_indices.push(i);
-                                  }
+                    [...plotGroups].sort().map((x, i) => {
+                      return (
+                        <li
+                          key={i}
+                          className={
+                            clusHover === plotGroups.indexOf(x) ||
+                            props?.clusHighlight === plotGroups.indexOf(x)
+                              ? "legend-highlight"
+                              : ""
+                          }
+                          style={{
+                            color: plotColorMappings[plotGroups.indexOf(x)],
+                          }}
+                          onClick={() => {
+                            if (
+                              plotGroups.indexOf(x) === props?.clusHighlight
+                            ) {
+                              props?.setClusHighlight(null);
+                              props?.setHighlightPoints(null);
+                              props?.setClusHighlightLabel(null);
+                            } else {
+                              let tclus = plotGroups.indexOf(x);
+                              props?.setClusHighlight(tclus);
+                              let clus_indices = [];
+                              for (let i = 0; i < plotFactors.length; i++) {
+                                if (tclus == plotFactors[i]) {
+                                  clus_indices.push(i);
                                 }
-                                props?.setHighlightPoints(clus_indices);
-                                props?.setClusHighlightLabel(x);
                               }
-                            }}
-                          >
-                            {x !== null && x !== undefined ? x : "NA"}
-                          </li>
-                        );
-                      })}
+                              props?.setHighlightPoints(clus_indices);
+                              props?.setClusHighlightLabel(x);
+                            }
+                          }}
+                        >
+                          {x !== null && x !== undefined ? x : "NA"}
+                        </li>
+                      );
+                    })}
                 </ul>
               ) : (
                 factorsMinMax &&
