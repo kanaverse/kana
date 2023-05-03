@@ -34,6 +34,7 @@ import {
   default_selection,
   getComputedCols,
   getSuppliedCols,
+  showComputedSection,
 } from "../../utils/utils";
 import "./fsea.css";
 
@@ -796,7 +797,7 @@ const FeatureSetEnrichment = (props) => {
                 ))}
               </optgroup>
             )}
-            {getComputedCols(annotationCols).length > 0 && (
+            {showComputedSection(annotationCols, props?.customSelection) && (
               <optgroup label="Computed">
                 {getComputedCols(annotationCols).map((x) => (
                   <option value={x} key={x}>

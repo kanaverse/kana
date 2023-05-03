@@ -34,6 +34,7 @@ import {
   default_selection,
   getComputedCols,
   getSuppliedCols,
+  showComputedSection,
 } from "../../utils/utils";
 // import Histogram from '../Plots/Histogram';
 import "./markers.css";
@@ -711,7 +712,7 @@ const MarkerPlot = (props) => {
               ))}
             </optgroup>
           )}
-          {getComputedCols(annotationCols).length > 0 && (
+          {showComputedSection(annotationCols, props?.customSelection) && (
             <optgroup label="Computed">
               {getComputedCols(annotationCols).map((x) => (
                 <option value={x} key={x}>
