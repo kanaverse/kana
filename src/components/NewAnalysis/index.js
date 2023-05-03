@@ -723,7 +723,9 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   const getSubsetColumns = () => {
     const cols = preInputFilesStatus[tmpFiles[0].name].cells["columns"];
 
-    return Object.keys(cols);
+    return Object.keys(cols).filter((x) =>
+      cols[x]["type"] === "continuous" ? true : !cols[x]["truncated"]
+    );
   };
 
   // useEffect(() => {

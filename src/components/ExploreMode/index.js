@@ -26,7 +26,7 @@ import { LoadExplore } from "../LoadExplore";
 
 import Stats from "../Stats";
 import Logs from "../Logs";
-import { getMinMax, code } from "../../utils/utils";
+import { getMinMax, code, resetApp } from "../../utils/utils";
 import DimPlot from "../Plots/DimPlot";
 import MarkerPlot from "../Markers/index";
 import Gallery from "../Gallery/index";
@@ -77,7 +77,6 @@ export function ExplorerMode() {
     setGeneColSel,
     exploreFiles,
     preInputFiles,
-    setAppMode,
   } = useContext(AppContext);
 
   // modalities
@@ -873,12 +872,7 @@ export function ExplorerMode() {
       <Navbar className={Classes.DARK}>
         <NavbarGroup align={Alignment.LEFT}>
           <NavbarHeading>
-            <div
-              style={{ cursor: "pointer" }}
-              onClick={() => {
-                setAppMode(null);
-              }}
-            >
+            <div style={{ cursor: "pointer" }} onClick={resetApp}>
               <img height="20px" src={logo}></img>{" "}
               <span
                 style={{

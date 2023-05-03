@@ -171,6 +171,10 @@ export const getComputedCols = (cols) => {
     .filter((x) => !cols[x].name.replace(`${code}::`, "").startsWith("QC"));
 };
 
+export const showComputedSection = (cols, custom) => {
+  return getComputedCols(cols).length > 0 || Object.keys(custom).length > 0;
+};
+
 export const getSuppliedCols = (cols) => {
   return Object.keys(cols).filter(
     (x) =>
@@ -180,4 +184,8 @@ export const getSuppliedCols = (cols) => {
       (cols[x]["type"] === "both" ||
         (cols[x]["type"] === "categorical" && cols[x]["truncated"] === false))
   );
+};
+
+export const resetApp = () => {
+  window.location.reload();
 };
