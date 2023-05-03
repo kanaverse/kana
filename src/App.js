@@ -22,6 +22,7 @@ import { AnalysisMode } from "./components/AnalysisMode";
 import { ExplorerMode } from "./components/ExploreMode";
 
 import { AppContext } from "./context/AppContext";
+import { resetApp } from "./utils/utils";
 
 function App() {
   const { appMode, setAppMode, setLoadZiesel } = useContext(AppContext);
@@ -33,7 +34,7 @@ function App() {
           <Navbar className={Classes.DARK}>
             <NavbarGroup align={Alignment.LEFT}>
               <NavbarHeading>
-                <div style={{ cursor: "pointer" }} onClick={setAppMode(null)}>
+                <div style={{ cursor: "pointer" }} onClick={resetApp}>
                   <img height="20px" src={logo}></img>{" "}
                   <span
                     style={{
