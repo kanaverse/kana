@@ -476,7 +476,7 @@ onmessage = function (msg) {
   } else if (type === "getMarkersForSelection") {
     loaded
       .then((x) => {
-        let rank_type = payload.rank_type.replace(/-.*/, ""); // summary type doesn't matter for pairwise comparisons.
+        let rank_type = payload.rank_type;
 
         let raw_res = custom_selection_state.fetchResults(payload.cluster)[
           payload.modality
