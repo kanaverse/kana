@@ -66,6 +66,14 @@ const CellAnnotation = (props) => {
         });
       }
 
+      recs.sort(
+        (a, b) =>
+          (props?.cellLabelData["integrated"][props?.selectedCellAnnCluster] ===
+            b.reference) -
+          (props?.cellLabelData["integrated"][props?.selectedCellAnnCluster] ===
+            a.reference)
+      );
+
       setProsRecords(recs);
     }
   }, [props?.cellLabelData, props?.selectedCellAnnCluster]);
