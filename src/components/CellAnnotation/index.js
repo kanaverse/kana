@@ -226,7 +226,7 @@ const CellAnnotation = (props) => {
           <HTMLSelect
             defaultValue={props?.selectedCellAnnAnnotation}
             onChange={(nval) => {
-              props?.selectedCellAnnAnnotation(nval?.currentTarget?.value);
+              props?.setSelectedCellAnnAnnotation(nval?.currentTarget?.value);
             }}
           >
             {getSuppliedCols(annotationCols).length > 0 && (
@@ -274,20 +274,35 @@ const CellAnnotation = (props) => {
               props?.setSelectedCellAnnCluster(tmpselection);
             }}
           >
-            {clusSel.map((x, i) => (
-              <option
-                selected={
-                  String(props?.selectedCellAnnCluster).startsWith("cs")
-                    ? x === props?.selectedCellAnnCluster
-                    : parseInt(x) - 1 ===
-                      parseInt(props?.selectedCellAnnCluster)
-                }
-                key={i}
-              >
-                {String(x).startsWith("cs") ? "Custom Selection" : "Cluster"}{" "}
-                {x}
-              </option>
-            ))}
+            {default_cluster === props?.selectedFsetAnnotation ||
+            default_selection === props?.selectedFsetAnnotation
+              ? clusSel.map((x, i) => (
+                  <option
+                    selected={
+                      String(props?.selectedCellAnnCluster).startsWith("cs")
+                        ? x === props?.selectedCellAnnCluster
+                        : parseInt(x) - 1 ===
+                          parseInt(props?.selectedCellAnnCluster)
+                    }
+                    key={i}
+                    value={
+                      String(x).startsWith("cs")
+                        ? `Custom Selection ${x}`
+                        : `Cluster ${x}`
+                    }
+                  >
+                    {String(x).startsWith("cs") ? "Selection" : "Cluster"} {x}
+                  </option>
+                ))
+              : clusSel.map((x, i) => (
+                  <option
+                    selected={x === props?.selectedCellAnnCluster}
+                    key={i}
+                    value={x}
+                  >
+                    {x}
+                  </option>
+                ))}
           </HTMLSelect>
         </div>
       )}

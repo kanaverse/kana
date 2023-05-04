@@ -283,6 +283,9 @@ export function AnalysisMode(props) {
   // modality in feature set
   const [selectedFsetModality, setSelectedFsetModality] = useState("RNA");
 
+  // which annotation is selected
+  const [selectedCellAnnAnnotation, setSelectedCellAnnAnnotation] =
+    useState(default_cluster);
   // which cluster is selected in the celltype table
   const [selectedCellAnnCluster, setSelectedCellAnnCluster] = useState(null);
 
@@ -1817,6 +1820,9 @@ export function AnalysisMode(props) {
                           windowWidth={windowWidth}
                           selectedCellAnnCluster={selectedCellAnnCluster}
                           setSelectedCellAnnCluster={setSelectedCellAnnCluster}
+                          selectedCellAnnAnnotation={selectedCellAnnAnnotation}
+                          setSelectedCellAnnAnnotation={setSelectedCellAnnAnnotation}
+                          setReqAnnotation={setReqAnnotation}
                         />
                       )}
                     </div>
