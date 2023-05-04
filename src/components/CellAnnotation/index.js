@@ -52,7 +52,7 @@ const CellAnnotation = (props) => {
           props?.setSelectedCellAnnCluster(0);
         }
       }
-      // currently no custom selection allowed
+      // currently custom selection are not allowed
       // } else if (default_selection === props?.selectedCellAnnAnnotation) {
       //   let clus = [];
       //   clus = clus.concat(Object.keys(props?.customSelection));
