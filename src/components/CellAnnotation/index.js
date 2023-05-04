@@ -14,14 +14,21 @@ import { TableVirtuoso } from "react-virtuoso";
 
 import { AppContext } from "../../context/AppContext";
 
-import { code, getMinMax } from "../../utils/utils";
+import {
+  code,
+  getMinMax,
+  defaultColor,
+  default_cluster,
+  default_selection,
+  getComputedCols,
+  getSuppliedCols,
+  showComputedSection,
+} from "../../utils/utils";
 // import Histogram from '../Plots/Histogram';
 import "./cellanno.css";
 
 const CellAnnotation = (props) => {
-  const { annotationObj } = useContext(AppContext);
-
-  const default_cluster = `${code}::CLUSTERS`;
+  const { annotationObj, annotationCols } = useContext(AppContext);
 
   // what clusters are available
   const [clusSel, setClusSel] = useState(null);
@@ -31,8 +38,8 @@ const CellAnnotation = (props) => {
 
   // update clusters when custom selection is made in the UI
   useEffect(() => {
-    if (default_cluster in annotationObj) {
-      if (annotationObj[default_cluster]) {
+    if (default_cluster === props?.selectedCellAnnAnnotation) {
+      if (annotationObj[props?.selectedCellAnnAnnotation]) {
         let max_clusters = getMinMax(annotationObj[default_cluster])[1];
 
         let clus = [];
@@ -45,10 +52,39 @@ const CellAnnotation = (props) => {
           props?.setSelectedCellAnnCluster(0);
         }
       }
-
-      return;
+      // currently no custom selection allowed
+      // } else if (default_selection === props?.selectedCellAnnAnnotation) {
+      //   let clus = [];
+      //   clus = clus.concat(Object.keys(props?.customSelection));
+      //   if (props?.selectedCellAnnCluster === null) {
+      //     props?.setSelectedCellAnnCluster(Object.keys(props?.customSelection)[0]);
+      //   }
+      //   setClusSel(clus);
+    } else {
+      if (!(props?.selectedCellAnnAnnotation in annotationObj)) {
+        props?.setReqAnnotation(props?.selectedCellAnnAnnotation);
+        props?.setSelectedCellAnnCluster(null);
+      } else {
+        let tmp = annotationObj[props?.selectedCellAnnAnnotation];
+        if (tmp.type === "array") {
+          const uniqueTmp = [...new Set(tmp.values)];
+          setClusSel(uniqueTmp);
+          if (props?.selectedCellAnnCluster === null) {
+            props?.setSelectedCellAnnCluster(uniqueTmp[0]);
+          }
+        } else if (tmp.type === "factor") {
+          setClusSel(tmp.levels);
+          if (props?.selectedCellAnnCluster === null) {
+            props?.setSelectedCellAnnCluster(tmp.levels[0]);
+          }
+        }
+      }
     }
-  }, [annotationObj]);
+  }, [
+    annotationObj,
+    props?.selectedCellAnnAnnotation,
+    props?.setSelectedCellAnnCluster,
+  ]);
 
   useEffect(() => {
     if (
@@ -184,6 +220,36 @@ const CellAnnotation = (props) => {
         </div>
       </div>
       <Divider />
+      {annotationCols && (
+        <Label style={{ marginBottom: "0" }}>
+          Choose annotation
+          <HTMLSelect
+            defaultValue={props?.selectedCellAnnAnnotation}
+            onChange={(nval) => {
+              props?.selectedCellAnnAnnotation(nval?.currentTarget?.value);
+            }}
+          >
+            {getSuppliedCols(annotationCols).length > 0 && (
+              <optgroup label="Supplied">
+                {getSuppliedCols(annotationCols).map((x) => (
+                  <option value={x} key={x}>
+                    {x}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {showComputedSection(annotationCols) && (
+              <optgroup label="Computed">
+                {getComputedCols(annotationCols).map((x) => (
+                  <option value={x} key={x}>
+                    {x.replace(`${code}::`, "")}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </HTMLSelect>
+        </Label>
+      )}
       <div
         className="cellanno-cluster-header"
         style={{
