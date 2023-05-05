@@ -8,6 +8,7 @@ import {
   Label,
   Divider,
   ButtonGroup,
+  Collapse,
 } from "@blueprintjs/core";
 import { Popover2 } from "@blueprintjs/popover2";
 import { TableVirtuoso } from "react-virtuoso";
@@ -52,14 +53,15 @@ const CellAnnotation = (props) => {
           props?.setSelectedCellAnnCluster(0);
         }
       }
-      // currently custom selection are not allowed
-      // } else if (default_selection === props?.selectedCellAnnAnnotation) {
-      //   let clus = [];
-      //   clus = clus.concat(Object.keys(props?.customSelection));
-      //   if (props?.selectedCellAnnCluster === null) {
-      //     props?.setSelectedCellAnnCluster(Object.keys(props?.customSelection)[0]);
-      //   }
-      //   setClusSel(clus);
+    } else if (default_selection === props?.selectedCellAnnAnnotation) {
+      let clus = [];
+      clus = clus.concat(Object.keys(props?.customSelection));
+      if (props?.selectedCellAnnCluster === null) {
+        props?.setSelectedCellAnnCluster(
+          Object.keys(props?.customSelection)[0]
+        );
+      }
+      setClusSel(clus);
     } else {
       if (!(props?.selectedCellAnnAnnotation in annotationObj)) {
         props?.setReqAnnotation(props?.selectedCellAnnAnnotation);
@@ -99,14 +101,20 @@ const CellAnnotation = (props) => {
         recs.push({
           reference: k,
           value: v[props?.selectedCellAnnCluster],
+          expanded: false,
         });
       }
 
+      // sort by best
       recs.sort(
         (a, b) =>
-          (props?.cellLabelData["integrated"][props?.selectedCellAnnCluster] ===
+          (props?.cellLabelData["integrated"][props?.selectedCellAnnCluster][
+            "best"
+          ] ===
             b.reference) -
-          (props?.cellLabelData["integrated"][props?.selectedCellAnnCluster] ===
+          (props?.cellLabelData["integrated"][props?.selectedCellAnnCluster][
+            "best"
+          ] ===
             a.reference)
       );
 
@@ -115,13 +123,62 @@ const CellAnnotation = (props) => {
   }, [props?.cellLabelData, props?.selectedCellAnnCluster]);
 
   const getTableHeight = () => {
-    let defheight = 340;
+    let defheight = 270;
 
     if (props?.windowWidth < 1200) {
       defheight += 270;
     }
 
     return `35px calc(100vh - ${defheight}px)`;
+  };
+
+  const getRowWidths = () => {
+    // let def  = "25% 14% 17% 25% 17%";
+    let action = 52;
+    let rem_width = props?.cellAnnWidth - action;
+    let widths = [];
+    //reference name
+    widths.push(Math.ceil(rem_width * 0.43));
+    // best match
+    widths.push(Math.ceil(rem_width * 0.33));
+    // score
+    widths.push(Math.ceil(rem_width * 0.17));
+
+    return [widths.join("px "), `${action}px`].join("px ");
+  };
+
+  const render_all_celltypes = (allCellTypes) => {
+    let recs = [];
+    for (const [k, v] of Object.entries(allCellTypes)) {
+      recs.push({
+        name: k,
+        score: v,
+      });
+    }
+
+    recs.sort((a, b) => b.score - a.score);
+    return (
+      <TableVirtuoso
+        style={{ height: 400, margin: "0 20px", wordWrap: "break-word" }}
+        data={recs}
+        fixedHeaderContent={() => (
+          <tr style={{ wordWrap: "break-word" }}>
+            <th style={{ width: "200px", background: "white" }}>celltypes</th>
+            <th style={{ background: "white" }}>score</th>
+          </tr>
+        )}
+        itemContent={(index, ct) => (
+          <>
+            <td style={{ width: 100, wordWrap: "break-word" }}>{ct.name}</td>
+            <td>{formatFloat(ct.score)}</td>
+          </>
+        )}
+      />
+    );
+  };
+
+  const formatFloat = (val) => {
+    return parseFloat(val).toFixed(2);
   };
 
   return (
@@ -238,13 +295,18 @@ const CellAnnotation = (props) => {
                 ))}
               </optgroup>
             )}
-            {showComputedSection(annotationCols) && (
+            {showComputedSection(annotationCols, props?.customSelection) && (
               <optgroup label="Computed">
                 {getComputedCols(annotationCols).map((x) => (
                   <option value={x} key={x}>
                     {x.replace(`${code}::`, "")}
                   </option>
                 ))}
+                {Object.keys(props?.customSelection).length > 0 && (
+                  <option value={default_selection} key={default_selection}>
+                    CUSTOM SELECTIONS
+                  </option>
+                )}
               </optgroup>
             )}
           </HTMLSelect>
@@ -270,12 +332,19 @@ const CellAnnotation = (props) => {
             className="cellanno-cluster-selection-width"
             onChange={(x) => {
               let tmpselection = x.currentTarget?.value;
-              tmpselection = parseInt(tmpselection.replace("Cluster ", "")) - 1;
+              if (default_cluster === props?.selectedCellAnnAnnotation) {
+                tmpselection =
+                  parseInt(tmpselection.replace("Cluster ", "")) - 1;
+              } else if (
+                default_selection === props?.selectedCellAnnAnnotation
+              ) {
+                tmpselection = tmpselection.replace("Custom Selection ", "");
+              }
               props?.setSelectedCellAnnCluster(tmpselection);
             }}
           >
-            {default_cluster === props?.selectedFsetAnnotation ||
-            default_selection === props?.selectedFsetAnnotation
+            {default_cluster === props?.selectedCellAnnAnnotation ||
+            default_selection === props?.selectedCellAnnAnnotation
               ? clusSel.map((x, i) => (
                   <option
                     selected={
@@ -325,11 +394,28 @@ const CellAnnotation = (props) => {
                   style={{ ...style, width: "100%", borderSpacing: 5 }}
                 />
               ),
+              TableRow: (props) => {
+                return (
+                  <tr
+                    {...props}
+                    style={{
+                      background: "white",
+                      borderBottom: "1px solid black",
+                    }}
+                  />
+                );
+              },
             }}
             fixedHeaderContent={() => {
               return (
-                <tr>
-                  <th style={{ width: "45%" }}>
+                <div
+                  className="cellann-row-container cellann-row-header"
+                  style={{
+                    gridTemplateColumns: getRowWidths(),
+                    background: "white",
+                  }}
+                >
+                  <span>
                     Reference{" "}
                     <span
                       style={{
@@ -339,29 +425,67 @@ const CellAnnotation = (props) => {
                         fontSize: "xx-small",
                       }}
                     >
-                      {" "}
                       (best match)
                     </span>
-                  </th>
-                  <th>Cell type</th>
-                </tr>
+                  </span>
+                  <span>cell type</span>
+                  <span>score</span>
+                </div>
               );
             }}
             itemContent={(index, row) => (
-              <>
-                <td
-                  className={
-                    props?.cellLabelData["integrated"][
-                      props?.selectedCellAnnCluster
-                    ] === row.reference
-                      ? "td-highlight"
-                      : ""
-                  }
+              <div
+                style={{
+                  paddingLeft: "2px",
+                  wordWrap: "break-word",
+                  borderBottom: "1px solid gainsboro",
+                }}
+              >
+                <div
+                  className="row-container"
+                  style={{
+                    gridTemplateColumns: getRowWidths(),
+                  }}
                 >
-                  {row.reference}
-                </td>
-                <td>{row.value}</td>
-              </>
+                  <span
+                    className={
+                      props?.cellLabelData["integrated"][
+                        props?.selectedCellAnnCluster
+                      ]["best"] === row.reference
+                        ? "td-highlight"
+                        : ""
+                    }
+                  >
+                    {row.reference}
+                  </span>
+                  <span>{row.value.best}</span>
+                  <span>
+                    {formatFloat(
+                      props?.cellLabelData["integrated"][
+                        props?.selectedCellAnnCluster
+                      ]["all"][row.reference]
+                    )}
+                  </span>
+                  <div className="row-action">
+                    <Button
+                      icon={row.expanded ? "minus" : "plus"}
+                      small={true}
+                      fill={false}
+                      className="cellanno-row-action"
+                      outlined={row.expanded ? false : true}
+                      intent={row.expanded ? "primary" : null}
+                      onClick={() => {
+                        let tmprecs = [...prosRecords];
+                        tmprecs[index].expanded = !tmprecs[index].expanded;
+                        setProsRecords(tmprecs);
+                      }}
+                    ></Button>
+                  </div>
+                </div>
+                <Collapse isOpen={row.expanded}>
+                  {render_all_celltypes(row.value.all)}
+                </Collapse>
+              </div>
             )}
           />
         </div>

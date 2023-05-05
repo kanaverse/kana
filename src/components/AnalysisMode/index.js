@@ -1317,6 +1317,9 @@ export function AnalysisMode(props) {
   // resize fset width
   const [fsetWidth, setFsetWidth] = useState(360);
 
+  // set cellann width
+  const [cellAnnWidth, setCellAnnWidth] = useState(360);
+
   const handleResize = () => {
     setWindowWidth(window.innerWidth);
   };
@@ -1821,8 +1824,12 @@ export function AnalysisMode(props) {
                           selectedCellAnnCluster={selectedCellAnnCluster}
                           setSelectedCellAnnCluster={setSelectedCellAnnCluster}
                           selectedCellAnnAnnotation={selectedCellAnnAnnotation}
-                          setSelectedCellAnnAnnotation={setSelectedCellAnnAnnotation}
+                          setSelectedCellAnnAnnotation={
+                            setSelectedCellAnnAnnotation
+                          }
                           setReqAnnotation={setReqAnnotation}
+                          customSelection={customSelection}
+                          cellAnnWidth={cellAnnWidth}
                         />
                       )}
                     </div>
