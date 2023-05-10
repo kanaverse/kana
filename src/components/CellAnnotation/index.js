@@ -147,7 +147,7 @@ const CellAnnotation = (props) => {
     return [widths.join("px "), `${action}px`].join("px ");
   };
 
-  const render_all_celltypes = (allCellTypes) => {
+  const render_all_celltypes = (allCellTypes, best) => {
     let recs = [];
     for (const [k, v] of Object.entries(allCellTypes)) {
       recs.push({
@@ -158,22 +158,51 @@ const CellAnnotation = (props) => {
 
     recs.sort((a, b) => b.score - a.score);
     return (
-      <TableVirtuoso
-        style={{ height: 400, margin: "0 20px", wordWrap: "break-word" }}
-        data={recs}
-        fixedHeaderContent={() => (
-          <tr style={{ wordWrap: "break-word" }}>
-            <th style={{ width: "200px", background: "white" }}>celltypes</th>
-            <th style={{ background: "white" }}>score</th>
-          </tr>
-        )}
-        itemContent={(index, ct) => (
-          <>
-            <td style={{ width: 100, wordWrap: "break-word" }}>{ct.name}</td>
-            <td>{formatFloat(ct.score)}</td>
-          </>
-        )}
-      />
+      <>
+        <Divider />
+        <TableVirtuoso
+          style={{
+            height: 400,
+            width: 350,
+            margin: "0 10px",
+            wordWrap: "break-word",
+          }}
+          data={recs}
+          fixedHeaderContent={() => (
+            <tr style={{ wordWrap: "break-word" }}>
+              <th style={{ width: "200px", background: "white" }}>
+                <span>
+                  celltypes{" "}
+                  <span
+                    style={{
+                      fontStyle: "italic",
+                      color: "#2B95D6",
+                      fontWeight: "bold",
+                      fontSize: "xx-small",
+                    }}
+                  >
+                    (best match)
+                  </span>
+                </span>
+              </th>
+              <th style={{ width: "100px", background: "white" }}>
+                celltype score
+              </th>
+            </tr>
+          )}
+          itemContent={(index, ct) => (
+            <>
+              <td
+                style={{ width: 100, wordBreak: "break-all" }}
+                className={best === ct.name ? "td-highlight" : ""}
+              >
+                {ct.name}
+              </td>
+              <td style={{ textAlign: "center" }}>{formatFloat(ct.score)}</td>
+            </>
+          )}
+        />
+      </>
     );
   };
 
@@ -415,7 +444,7 @@ const CellAnnotation = (props) => {
                     background: "white",
                   }}
                 >
-                  <span>
+                  <span style={{ fontWeight: "bold" }}>
                     Reference{" "}
                     <span
                       style={{
@@ -428,8 +457,8 @@ const CellAnnotation = (props) => {
                       (best match)
                     </span>
                   </span>
-                  <span>cell type</span>
-                  <span>score</span>
+                  <span style={{ fontWeight: "bold" }}>cell type</span>
+                  <span style={{ fontWeight: "bold" }}>reference score</span>
                 </div>
               );
             }}
@@ -458,8 +487,8 @@ const CellAnnotation = (props) => {
                   >
                     {row.reference}
                   </span>
-                  <span>{row.value.best}</span>
-                  <span>
+                  <span style={{ textAlign: "center" }}>{row.value.best}</span>
+                  <span style={{ textAlign: "center" }}>
                     {formatFloat(
                       props?.cellLabelData["integrated"][
                         props?.selectedCellAnnCluster
@@ -483,7 +512,7 @@ const CellAnnotation = (props) => {
                   </div>
                 </div>
                 <Collapse isOpen={row.expanded}>
-                  {render_all_celltypes(row.value.all)}
+                  {render_all_celltypes(row.value.all, row.value.best)}
                 </Collapse>
               </div>
             )}
