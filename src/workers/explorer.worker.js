@@ -215,14 +215,6 @@ onmessage = function (msg) {
 
             let finput = files[k];
 
-            if (!finput.options.normalized) {
-              for (const k of dataset.matrix.available()) {
-                let mat = dataset.matrix.get(k);
-                let lnorm = scran.logNormCounts(mat, { allowZeros: true });
-                dataset.matrix.add(k, lnorm);
-              }
-            }
-
             let step_inputs = "inputs";
             postAttempt(step_inputs);
 
