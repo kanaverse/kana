@@ -30,7 +30,12 @@ import { ParameterSelection } from "../ParamSelection";
 
 import Stats from "../Stats";
 import Logs from "../Logs";
-import { getMinMax, code, resetApp } from "../../utils/utils";
+import {
+  getMinMax,
+  code,
+  resetApp,
+  default_selection,
+} from "../../utils/utils";
 import DimPlot from "../Plots/DimPlot";
 import MarkerPlot from "../Markers/index";
 import Gallery from "../Gallery/index";
@@ -815,6 +820,30 @@ export function AnalysisMode(props) {
     selectedCellAnnCluster,
   ]);
 
+  useEffect(() => {
+    if (selectedCellAnnAnnotation !== null && selectedCellAnnCluster !== null) {
+      if (
+        default_selection === selectedCellAnnAnnotation &&
+        !String(selectedCellAnnCluster).startsWith("cs")
+      ) {
+        return;
+      }
+
+      scranWorker.postMessage({
+        type: "computeCellAnnotation",
+        payload: {
+          cluster: selectedCellAnnCluster,
+          annotation: selectedCellAnnAnnotation,
+        },
+      });
+
+      add_to_logs(
+        "info",
+        `--- Request cell annotations for:${selectedCellAnnAnnotation} sent ---`
+      );
+    }
+  }, [selectedCellAnnAnnotation, selectedCellAnnCluster]);
+
   function add_to_logs(type, msg, status) {
     // let tmp = [...logs];
     let d = new Date();
@@ -1206,7 +1235,10 @@ export function AnalysisMode(props) {
       setAnnotationObj(tmp);
 
       setReqAnnotation(null);
-    } else if (type === "cell_labelling_DATA") {
+    } else if (
+      type === "cell_labelling_DATA" ||
+      type === "computeCellAnnotation_DATA"
+    ) {
       if ("integrated" in resp) {
         setCellLabelData(resp);
       }

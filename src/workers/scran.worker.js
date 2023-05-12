@@ -1223,6 +1223,23 @@ onmessage = function (msg) {
         console.error(err);
         postError(type, err, fatal);
       });
+  } else if (type === "computeCellAnnotation") {
+    let { annotation, cluster } = payload;
+    let result = { per_reference: {} };
+    let markers = null;
+    if (default_cluster === annotation) {
+      markers = superstate.marker_detection.fetchResults();
+    } else if (default_selection === annotation) {
+      markers = superstate.custom_selections.fetchResults(cluster);
+    } else {
+      let annotation_vec = scran.factorize(getAnnotation(annotation));
+      let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+      markers = mds.fetchResults();
+    }
+    if (markers !== null && "RNA" in markers) {
+      result = superstate.cell_labelling.computeLabels(markers["RNA"]);
+    }
+    postSuccess("computeCellAnnotation", result);
   } else {
     console.error(`Type: ${type} not defined`);
     postError(type, `Type: ${type} not defined`, fatal);

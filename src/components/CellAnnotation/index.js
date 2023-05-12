@@ -33,6 +33,7 @@ const CellAnnotation = (props) => {
 
   // what clusters are available
   const [clusSel, setClusSel] = useState(null);
+  const [clusIdx, setClusIdx] = useState(null);
 
   // records to show in the table
   const [prosRecords, setProsRecords] = useState(null);
@@ -51,6 +52,7 @@ const CellAnnotation = (props) => {
         setClusSel(clus);
         if (props?.selectedCellAnnCluster === null) {
           props?.setSelectedCellAnnCluster(0);
+          setClusIdx(0);
         }
       }
     } else if (default_selection === props?.selectedCellAnnAnnotation) {
@@ -60,6 +62,7 @@ const CellAnnotation = (props) => {
         props?.setSelectedCellAnnCluster(
           Object.keys(props?.customSelection)[0]
         );
+        setClusIdx(0);
       }
       setClusSel(clus);
     } else {
@@ -80,6 +83,7 @@ const CellAnnotation = (props) => {
             props?.setSelectedCellAnnCluster(tmp.levels[0]);
           }
         }
+        setClusIdx(0);
       }
     }
   }, [
@@ -92,35 +96,35 @@ const CellAnnotation = (props) => {
     if (
       props?.cellLabelData !== null &&
       props?.cellLabelData !== undefined &&
-      props?.selectedCellAnnCluster !== null
+      props?.selectedCellAnnCluster !== null &&
+      clusIdx !== -1
     ) {
-      const recs = [];
-      for (const [k, v] of Object.entries(
-        props.cellLabelData["per_reference"]
-      )) {
-        recs.push({
-          reference: k,
-          value: v[props?.selectedCellAnnCluster],
-          expanded: false,
-        });
+      let recs = null;
+
+      if ("integrated" in props?.cellLabelData) {
+        recs = [];
+        for (const [k, v] of Object.entries(
+          props.cellLabelData["per_reference"]
+        )) {
+          recs.push({
+            reference: k,
+            value: v[clusIdx],
+            expanded: false,
+          });
+        }
+
+        // sort by best
+        recs.sort(
+          (a, b) =>
+            (props?.cellLabelData["integrated"][clusIdx]["best"] ===
+              b.reference) -
+            (props?.cellLabelData["integrated"][clusIdx]["best"] ===
+              a.reference)
+        );
       }
-
-      // sort by best
-      recs.sort(
-        (a, b) =>
-          (props?.cellLabelData["integrated"][props?.selectedCellAnnCluster][
-            "best"
-          ] ===
-            b.reference) -
-          (props?.cellLabelData["integrated"][props?.selectedCellAnnCluster][
-            "best"
-          ] ===
-            a.reference)
-      );
-
       setProsRecords(recs);
     }
-  }, [props?.cellLabelData, props?.selectedCellAnnCluster]);
+  }, [props?.cellLabelData, props?.selectedCellAnnCluster, clusIdx]);
 
   const getTableHeight = () => {
     let defheight = 270;
@@ -203,6 +207,126 @@ const CellAnnotation = (props) => {
           )}
         />
       </>
+    );
+  };
+
+  const render_references = () => {
+    if (clusIdx === -1) {
+      return;
+    }
+
+    return (
+      <div
+        className="cellanno-table"
+        style={{
+          gridTemplateRows: getTableHeight(),
+        }}
+      >
+        <div className="cellanno-header"></div>
+        <TableVirtuoso
+          className="cellanno-list"
+          data={prosRecords}
+          components={{
+            Table: ({ style, ...props }) => (
+              <table
+                {...props}
+                style={{ ...style, width: "100%", borderSpacing: 5 }}
+              />
+            ),
+            TableRow: (props) => {
+              return (
+                <tr
+                  {...props}
+                  style={{
+                    background: "white",
+                    borderBottom: "1px solid black",
+                  }}
+                />
+              );
+            },
+          }}
+          fixedHeaderContent={() => {
+            return (
+              <div
+                className="cellann-row-container cellann-row-header"
+                style={{
+                  gridTemplateColumns: getRowWidths(),
+                  background: "white",
+                }}
+              >
+                <span style={{ fontWeight: "bold" }}>
+                  Reference{" "}
+                  <span
+                    style={{
+                      fontStyle: "italic",
+                      color: "#2B95D6",
+                      fontWeight: "bold",
+                      fontSize: "xx-small",
+                    }}
+                  >
+                    (best match)
+                  </span>
+                </span>
+                <span style={{ fontWeight: "bold" }}>cell type</span>
+                <span style={{ fontWeight: "bold" }}>reference score</span>
+              </div>
+            );
+          }}
+          itemContent={(index, row) => (
+            <div
+              style={{
+                paddingLeft: "2px",
+                wordWrap: "break-word",
+                borderBottom: "1px solid gainsboro",
+              }}
+            >
+              <div
+                className="row-container"
+                style={{
+                  gridTemplateColumns: getRowWidths(),
+                }}
+              >
+                <span
+                  className={
+                    props?.cellLabelData["integrated"][clusIdx]["best"] ===
+                    row.reference
+                      ? "td-highlight"
+                      : ""
+                  }
+                >
+                  {row.reference}
+                </span>
+                <span style={{ textAlign: "center" }}>{row.value.best}</span>
+                <span style={{ textAlign: "center" }}>
+                  {formatFloat(
+                    props?.cellLabelData["integrated"][clusIdx]["all"][
+                      row.reference
+                    ]
+                  )}
+                </span>
+                <div className="row-action">
+                  <Button
+                    icon={row.expanded ? "minus" : "plus"}
+                    small={true}
+                    fill={false}
+                    className="cellanno-row-action"
+                    outlined={row.expanded ? false : true}
+                    intent={row.expanded ? "primary" : null}
+                    onClick={() => {
+                      let tmprecs = [...prosRecords];
+                      tmprecs[index].expanded = !tmprecs[index].expanded;
+                      setProsRecords(tmprecs);
+                    }}
+                  ></Button>
+                </div>
+              </div>
+              <Collapse isOpen={row.expanded}>
+                {render_all_celltypes(row.value.all, row.value.best)}
+              </Collapse>
+            </div>
+          )}
+        />
+      </div>
     );
   };
 
@@ -313,6 +437,8 @@ const CellAnnotation = (props) => {
             defaultValue={props?.selectedCellAnnAnnotation}
             onChange={(nval) => {
               props?.setSelectedCellAnnAnnotation(nval?.currentTarget?.value);
+              setClusIdx(0);
+              setClusSel(null);
             }}
           >
             {getSuppliedCols(annotationCols).length > 0 && (
@@ -364,12 +490,18 @@ const CellAnnotation = (props) => {
               if (default_cluster === props?.selectedCellAnnAnnotation) {
                 tmpselection =
                   parseInt(tmpselection.replace("Cluster ", "")) - 1;
+                props?.setSelectedCellAnnCluster(tmpselection);
+                setClusIdx(tmpselection);
               } else if (
                 default_selection === props?.selectedCellAnnAnnotation
               ) {
                 tmpselection = tmpselection.replace("Custom Selection ", "");
+                props?.setSelectedCellAnnCluster(tmpselection);
+                setClusIdx(1);
+              } else {
+                props?.setSelectedCellAnnCluster(tmpselection);
+                setClusIdx(clusSel.map((x) => String(x)).indexOf(tmpselection));
               }
-              props?.setSelectedCellAnnCluster(tmpselection);
             }}
           >
             {default_cluster === props?.selectedCellAnnAnnotation ||
@@ -405,120 +537,7 @@ const CellAnnotation = (props) => {
         </div>
       )}
       <Divider />
-      {prosRecords !== null && (
-        <div
-          className="cellanno-table"
-          style={{
-            gridTemplateRows: getTableHeight(),
-          }}
-        >
-          <div className="cellanno-header"></div>
-          <TableVirtuoso
-            className="cellanno-list"
-            data={prosRecords}
-            components={{
-              Table: ({ style, ...props }) => (
-                <table
-                  {...props}
-                  style={{ ...style, width: "100%", borderSpacing: 5 }}
-                />
-              ),
-              TableRow: (props) => {
-                return (
-                  <tr
-                    {...props}
-                    style={{
-                      background: "white",
-                      borderBottom: "1px solid black",
-                    }}
-                  />
-                );
-              },
-            }}
-            fixedHeaderContent={() => {
-              return (
-                <div
-                  className="cellann-row-container cellann-row-header"
-                  style={{
-                    gridTemplateColumns: getRowWidths(),
-                    background: "white",
-                  }}
-                >
-                  <span style={{ fontWeight: "bold" }}>
-                    Reference{" "}
-                    <span
-                      style={{
-                        fontStyle: "italic",
-                        color: "#2B95D6",
-                        fontWeight: "bold",
-                        fontSize: "xx-small",
-                      }}
-                    >
-                      (best match)
-                    </span>
-                  </span>
-                  <span style={{ fontWeight: "bold" }}>cell type</span>
-                  <span style={{ fontWeight: "bold" }}>reference score</span>
-                </div>
-              );
-            }}
-            itemContent={(index, row) => (
-              <div
-                style={{
-                  paddingLeft: "2px",
-                  wordWrap: "break-word",
-                  borderBottom: "1px solid gainsboro",
-                }}
-              >
-                <div
-                  className="row-container"
-                  style={{
-                    gridTemplateColumns: getRowWidths(),
-                  }}
-                >
-                  <span
-                    className={
-                      props?.cellLabelData["integrated"][
-                        props?.selectedCellAnnCluster
-                      ]["best"] === row.reference
-                        ? "td-highlight"
-                        : ""
-                    }
-                  >
-                    {row.reference}
-                  </span>
-                  <span style={{ textAlign: "center" }}>{row.value.best}</span>
-                  <span style={{ textAlign: "center" }}>
-                    {formatFloat(
-                      props?.cellLabelData["integrated"][
-                        props?.selectedCellAnnCluster
-                      ]["all"][row.reference]
-                    )}
-                  </span>
-                  <div className="row-action">
-                    <Button
-                      icon={row.expanded ? "minus" : "plus"}
-                      small={true}
-                      fill={false}
-                      className="cellanno-row-action"
-                      outlined={row.expanded ? false : true}
-                      intent={row.expanded ? "primary" : null}
-                      onClick={() => {
-                        let tmprecs = [...prosRecords];
-                        tmprecs[index].expanded = !tmprecs[index].expanded;
-                        setProsRecords(tmprecs);
-                      }}
-                    ></Button>
-                  </div>
-                </div>
-                <Collapse isOpen={row.expanded}>
-                  {render_all_celltypes(row.value.all, row.value.best)}
-                </Collapse>
-              </div>
-            )}
-          />
-        </div>
-      )}
+      {prosRecords !== null && render_references()}
     </div>
   );
 };
