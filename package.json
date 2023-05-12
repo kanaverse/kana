@@ -1,7 +1,7 @@
 {
   "name": "kana",
   "description": "Single-cell data analysis in the browser",
-  "version": "3.0.11",
+  "version": "3.0.12",
   "author": {
     "name": "Jayaram Kancherla",
     "email": "jayaram.kancherla@gmail.com",
@@ -33,8 +33,8 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "bakana": "2.0.17",
     "bakana-remotes": "^1.0.3",
+    "bakana": "2.0.18",
     "bioconductor": "^0.3.1",
     "d3": "^7.8.2",
     "epiviz.gl": "^1.0.4",
