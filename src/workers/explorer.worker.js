@@ -559,21 +559,13 @@ onmessage = function (msg) {
         let resp;
 
         if (default_selection === annotation) {
-          let sel_indices =
-            custom_selection_state.fetchSelectionIndices(cluster);
-          let num_cells = dataset.cells.numberOfRows();
-
-          let arr_sel_indices = new Uint8Array(num_cells);
-          sel_indices.map((x) => arr_sel_indices.set([1], x));
-          let annotation_vec = scran.factorize(arr_sel_indices);
-
-          let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
-          let anno_markers = mds.fetchResults()[modality];
+          let anno_markers =
+            custom_selection_state.fetchResults(cluster)[modality];
 
           feature_set_enrich_state.ready().then((x) => {
             resp = feature_set_enrich_state.computeEnrichment(
               anno_markers,
-              annotation_vec.levels.indexOf(1),
+              1,
               rank_type.slice(0, index),
               rank_type.slice(index + 1)
             );
@@ -735,15 +727,7 @@ onmessage = function (msg) {
     let result = { per_reference: {} };
     let markers = null;
     if (default_selection === annotation) {
-      let sel_indices = custom_selection_state.fetchSelectionIndices(cluster);
-      let num_cells = dataset.cells.numberOfRows();
-
-      let arr_sel_indices = new Uint8Array(num_cells);
-      sel_indices.map((x) => arr_sel_indices.set([1], x));
-      let annotation_vec = scran.factorize(arr_sel_indices);
-
-      let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
-      markers = mds.fetchResults();
+      markers = custom_selection_state.fetchResults(cluster);
     } else {
       let annotation_vec = scran.factorize(getAnnotation(annotation));
       let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
