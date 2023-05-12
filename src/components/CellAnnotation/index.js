@@ -538,7 +538,7 @@ const CellAnnotation = (props) => {
         </div>
       )}
       <Divider />
-      {prosRecords !== null && render_references()}
+      {prosRecords !== null && clusIdx !== null && render_references()}
     </div>
   );
 };
