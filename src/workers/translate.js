@@ -37,6 +37,13 @@ const mappings = {
   combine_embeddings: {
     weights: ["combine_embeddings", "weights"],
   },
+  cell_labelling: {
+    references: null,
+    automatic: true,
+    species: [],
+    gene_id_column: null,
+    gene_id_type: "ENSEMBL",
+  },
   batch_correction: {
     // method is handled by configureBatchCorrection.
     num_neighbors: ["batch_correction", "num_neighbors"],
@@ -64,10 +71,10 @@ const mappings = {
     scheme: ["cluster", "clus-scheme"],
     resolution: ["cluster", "clus-res"],
   },
-  cell_labelling: {
-    human_references: ["annotateCells", "annotateCells-human_references"],
-    mouse_references: ["annotateCells", "annotateCells-mouse_references"],
-  },
+  // cell_labelling: {
+  //   human_references: ["annotateCells", "annotateCells-human_references"],
+  //   mouse_references: ["annotateCells", "annotateCells-mouse_references"],
+  // },
 };
 
 export function fromUI(inputs, params) {

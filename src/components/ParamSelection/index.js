@@ -1188,114 +1188,145 @@ export function ParameterSelection({
     return tmpParams["cell_labelling"]["references"].includes(key);
   }
 
+  function selectAllHuman() {
+    const human_refs = [
+      "BlueprintEncode",
+      "DatabaseImmuneCellExpression",
+      "HumanPrimaryCellAtlas",
+      "MonacoImmune",
+      "NovershternHematopoietic",
+    ];
+
+    let tmpAnno = {
+      ...tmpParams["cell_labelling"],
+    };
+
+    tmpAnno["references"] = tmpAnno["references"].concat(human_refs);
+
+    setTmpParams({
+      ...tmpParams,
+      cell_labelling: tmpAnno,
+    });
+  }
+
+  function selectAllMouse() {
+    const mouse_refs = ["ImmGen", "MouseRNAseq"];
+
+    let tmpAnno = {
+      ...tmpParams["cell_labelling"],
+    };
+
+    tmpAnno["references"] = tmpAnno["references"].concat(mouse_refs);
+
+    setTmpParams({
+      ...tmpParams,
+      cell_labelling: tmpAnno,
+    });
+  }
+
   const render_cellann = () => {
     return (
       <div className="col">
         <div>
           <H5 className="param-section-title">Cell type annotation</H5>
           <div className="param-row">
-            <Label className="param-row-input">
-              <Text className="param-text-100">Reference datasets:</Text>
-              <div
+            <Text className="param-text-100">Reference datasets</Text>
+          </div>
+          <div className="param-row">
+            <div
+              style={{
+                marginTop: "10px",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <span
                 style={{
-                  marginTop: "10px",
-                  display: "flex",
-                  flexDirection: "column",
+                  marginRight: "10px",
+                  textTransform: "capitalize",
+                  fontWeight: "bold",
                 }}
               >
-                <span
-                  style={{
-                    marginRight: "10px",
-                    textTransform: "capitalize",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Human:{" "}
+                Human{" "}
+                <span className="selectall" onClick={selectAllHuman}>
+                  select all
                 </span>
-                <Checkbox
-                  defaultChecked={isCheckIncluded("human", "BlueprintEncode")}
-                  inline={true}
-                  label="Blueprint/Encode"
-                  onChange={(e) => {
-                    handleCheckbox(e, "human", "BlueprintEncode");
-                  }}
-                />
-                <Checkbox
-                  defaultChecked={isCheckIncluded(
-                    "human",
-                    "DatabaseImmuneCellExpression"
-                  )}
-                  inline={true}
-                  label="Database Immune Cell Expression"
-                  onChange={(e) => {
-                    handleCheckbox(e, "human", "DatabaseImmuneCellExpression");
-                  }}
-                />
-                <Checkbox
-                  defaultChecked={isCheckIncluded(
-                    "human",
-                    "HumanPrimaryCellAtlas"
-                  )}
-                  inline={true}
-                  label="Human Primary Cell Atlas"
-                  onChange={(e) => {
-                    handleCheckbox(e, "human", "HumanPrimaryCellAtlas");
-                  }}
-                />
-                <Checkbox
-                  defaultChecked={isCheckIncluded("human", "MonacoImmune")}
-                  inline={true}
-                  label="Monaco Immune"
-                  onChange={(e) => {
-                    handleCheckbox(e, "human", "MonacoImmune");
-                  }}
-                />
-                <Checkbox
-                  defaultChecked={isCheckIncluded(
-                    "human",
-                    "NovershternHematopoietic"
-                  )}
-                  inline={true}
-                  label="Novershtern Hematopoietic"
-                  onChange={(e) => {
-                    handleCheckbox(e, "human", "NovershternHematopoietic");
-                  }}
-                />
-              </div>
-              <div
+              </span>
+              <Checkbox
+                checked={isCheckIncluded("human", "BlueprintEncode")}
+                label="Blueprint/Encode"
+                onChange={(e) => {
+                  handleCheckbox(e, "human", "BlueprintEncode");
+                }}
+              />
+              <Checkbox
+                checked={isCheckIncluded(
+                  "human",
+                  "DatabaseImmuneCellExpression"
+                )}
+                label="Database Immune Cell Expression"
+                onChange={(e) => {
+                  handleCheckbox(e, "human", "DatabaseImmuneCellExpression");
+                }}
+              />
+              <Checkbox
+                checked={isCheckIncluded("human", "HumanPrimaryCellAtlas")}
+                label="Human Primary Cell Atlas"
+                onChange={(e) => {
+                  handleCheckbox(e, "human", "HumanPrimaryCellAtlas");
+                }}
+              />
+              <Checkbox
+                checked={isCheckIncluded("human", "MonacoImmune")}
+                label="Monaco Immune"
+                onChange={(e) => {
+                  handleCheckbox(e, "human", "MonacoImmune");
+                }}
+              />
+              <Checkbox
+                checked={isCheckIncluded("human", "NovershternHematopoietic")}
+                label="Novershtern Hematopoietic"
+                onChange={(e) => {
+                  handleCheckbox(e, "human", "NovershternHematopoietic");
+                }}
+              />
+            </div>
+          </div>
+          <div className="param-row">
+            <div
+              style={{
+                marginTop: "10px",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <span
                 style={{
-                  marginTop: "10px",
-                  display: "flex",
-                  flexDirection: "column",
+                  marginRight: "10px",
+                  textTransform: "capitalize",
+                  fontWeight: "bold",
                 }}
               >
-                <span
-                  style={{
-                    marginRight: "10px",
-                    textTransform: "capitalize",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Mouse:{" "}
+                Mouse{" "}
+                <span className="selectall" onClick={selectAllMouse}>
+                  select all
                 </span>
-                <Checkbox
-                  defaultChecked={isCheckIncluded("mouse", "ImmGen")}
-                  inline={true}
-                  label="ImmGen"
-                  onChange={(e) => {
-                    handleCheckbox(e, "mouse", "ImmGen");
-                  }}
-                />
-                <Checkbox
-                  defaultChecked={isCheckIncluded("mouse", "MouseRNAseq")}
-                  inline={true}
-                  label="Mouse RNA-seq"
-                  onChange={(e) => {
-                    handleCheckbox(e, "mouse", "MouseRNAseq");
-                  }}
-                />
-              </div>
-            </Label>
+              </span>
+              <Checkbox
+                checked={isCheckIncluded("mouse", "ImmGen")}
+                label="ImmGen"
+                onChange={(e) => {
+                  handleCheckbox(e, "mouse", "ImmGen");
+                }}
+              />
+              <Checkbox
+                checked={isCheckIncluded("mouse", "MouseRNAseq")}
+                label="Mouse RNA-seq"
+                onChange={(e) => {
+                  handleCheckbox(e, "mouse", "MouseRNAseq");
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -1917,7 +1948,8 @@ export function ParameterSelection({
               panel={
                 <>
                   {render_stepinfo()}
-                  {render_cellann()}
+                  {tmpParams["cell_labelling"]["references"] &&
+                    render_cellann()}
                 </>
               }
             ></Tab>
