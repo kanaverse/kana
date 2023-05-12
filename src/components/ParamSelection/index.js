@@ -1188,20 +1188,36 @@ export function ParameterSelection({
     return tmpParams["cell_labelling"]["references"].includes(key);
   }
 
+  const HUMAN_REFS = [
+    "BlueprintEncode",
+    "DatabaseImmuneCellExpression",
+    "HumanPrimaryCellAtlas",
+    "MonacoImmune",
+    "NovershternHematopoietic",
+  ];
   function selectAllHuman() {
-    const human_refs = [
-      "BlueprintEncode",
-      "DatabaseImmuneCellExpression",
-      "HumanPrimaryCellAtlas",
-      "MonacoImmune",
-      "NovershternHematopoietic",
+    let tmpAnno = {
+      ...tmpParams["cell_labelling"],
+    };
+
+    tmpAnno["references"] = [
+      ...new Set(tmpAnno["references"].concat(HUMAN_REFS)),
     ];
 
+    setTmpParams({
+      ...tmpParams,
+      cell_labelling: tmpAnno,
+    });
+  }
+
+  function removeAllHuman() {
     let tmpAnno = {
       ...tmpParams["cell_labelling"],
     };
 
-    tmpAnno["references"] = tmpAnno["references"].concat(human_refs);
+    tmpAnno["references"] = tmpAnno["references"].filter((x) =>
+      HUMAN_REFS.includes(x)
+    );
 
     setTmpParams({
       ...tmpParams,
@@ -1209,20 +1225,42 @@ export function ParameterSelection({
     });
   }
 
+  const MOUSE_REFS = ["ImmGen", "MouseRNAseq"];
   function selectAllMouse() {
-    const mouse_refs = ["ImmGen", "MouseRNAseq"];
-
     let tmpAnno = {
       ...tmpParams["cell_labelling"],
     };
 
-    tmpAnno["references"] = tmpAnno["references"].concat(mouse_refs);
+    tmpAnno["references"] = [
+      ...new Set(tmpAnno["references"].concat(MOUSE_REFS)),
+    ];
 
     setTmpParams({
       ...tmpParams,
       cell_labelling: tmpAnno,
     });
   }
+
+  function removeAllMouse() {
+    let tmpAnno = {
+      ...tmpParams["cell_labelling"],
+    };
+
+    tmpAnno["references"] = tmpAnno["references"].filter((x) =>
+      MOUSE_REFS.includes(x)
+    );
+
+    setTmpParams({
+      ...tmpParams,
+      cell_labelling: tmpAnno,
+    });
+  }
+
+  // is human checked?
+  const [humanChecked, setHumanChecked] = useState(true);
+
+  // is mouse checked?
+  const [mouseChecked, setMouseChecked] = useState(true);
 
   const render_cellann = () => {
     return (
@@ -1247,13 +1285,31 @@ export function ParameterSelection({
                   fontWeight: "bold",
                 }}
               >
-                Human{" "}
-                <span className="selectall" onClick={selectAllHuman}>
-                  select all
-                </span>
+                Human
               </span>
+              <Label className="param-row-input">
+                <Text className="param-text-100">Select all</Text>
+                <Switch
+                  style={{ marginTop: "10px" }}
+                  large={true}
+                  checked={humanChecked}
+                  innerLabelChecked="yes"
+                  innerLabel="no"
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      selectAllHuman();
+                    }
+                    // else {
+                    //   removeAllHuman();
+                    // }
+
+                    setHumanChecked(e.target.checked);
+                  }}
+                />
+              </Label>
               <Checkbox
                 checked={isCheckIncluded("human", "BlueprintEncode")}
+                disabled={humanChecked}
                 label="Blueprint/Encode"
                 onChange={(e) => {
                   handleCheckbox(e, "human", "BlueprintEncode");
@@ -1264,6 +1320,7 @@ export function ParameterSelection({
                   "human",
                   "DatabaseImmuneCellExpression"
                 )}
+                disabled={humanChecked}
                 label="Database Immune Cell Expression"
                 onChange={(e) => {
                   handleCheckbox(e, "human", "DatabaseImmuneCellExpression");
@@ -1271,6 +1328,7 @@ export function ParameterSelection({
               />
               <Checkbox
                 checked={isCheckIncluded("human", "HumanPrimaryCellAtlas")}
+                disabled={humanChecked}
                 label="Human Primary Cell Atlas"
                 onChange={(e) => {
                   handleCheckbox(e, "human", "HumanPrimaryCellAtlas");
@@ -1278,6 +1336,7 @@ export function ParameterSelection({
               />
               <Checkbox
                 checked={isCheckIncluded("human", "MonacoImmune")}
+                disabled={humanChecked}
                 label="Monaco Immune"
                 onChange={(e) => {
                   handleCheckbox(e, "human", "MonacoImmune");
@@ -1285,6 +1344,7 @@ export function ParameterSelection({
               />
               <Checkbox
                 checked={isCheckIncluded("human", "NovershternHematopoietic")}
+                disabled={humanChecked}
                 label="Novershtern Hematopoietic"
                 onChange={(e) => {
                   handleCheckbox(e, "human", "NovershternHematopoietic");
@@ -1307,13 +1367,31 @@ export function ParameterSelection({
                   fontWeight: "bold",
                 }}
               >
-                Mouse{" "}
-                <span className="selectall" onClick={selectAllMouse}>
-                  select all
-                </span>
+                Mouse
               </span>
+              <Label className="param-row-input">
+                <Text className="param-text-100">Select all</Text>
+                <Switch
+                  style={{ marginTop: "10px" }}
+                  large={true}
+                  checked={mouseChecked}
+                  innerLabelChecked="yes"
+                  innerLabel="no"
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      selectAllMouse();
+                    }
+                    // else {
+                    //   removeAllMouse();
+                    // }
+
+                    setMouseChecked(e.target.checked);
+                  }}
+                />
+              </Label>
               <Checkbox
                 checked={isCheckIncluded("mouse", "ImmGen")}
+                disabled={mouseChecked}
                 label="ImmGen"
                 onChange={(e) => {
                   handleCheckbox(e, "mouse", "ImmGen");
@@ -1321,6 +1399,7 @@ export function ParameterSelection({
               />
               <Checkbox
                 checked={isCheckIncluded("mouse", "MouseRNAseq")}
+                disabled={mouseChecked}
                 label="Mouse RNA-seq"
                 onChange={(e) => {
                   handleCheckbox(e, "mouse", "MouseRNAseq");

@@ -106,7 +106,15 @@ const AppContextProvider = ({ children }) => {
       method: "snn_graph",
     },
     cell_labelling: {
-      references: [],
+      references: [
+        "BlueprintEncode",
+        "DatabaseImmuneCellExpression",
+        "HumanPrimaryCellAtlas",
+        "MonacoImmune",
+        "NovershternHematopoietic",
+        "ImmGen",
+        "MouseRNAseq",
+      ],
       automatic: true,
       species: [],
       gene_id_column: null,
