@@ -13,14 +13,14 @@
       "email": "infinite.monkeys.with.keyboards@gmail.com"
     }
   ],
-  "bugs": "https://github.com/jkanche/kana/issues",
+  "bugs": "https://github.com/kanaverse/kana/issues",
   "keywords": [
     "bioinformatics",
     "scRNA-seq",
     "webassembly",
     "single-cell"
   ],
-  "repository": "github:jkanche/kana",
+  "repository": "github:kanaverse/kana",
   "license": "MIT",
   "private": true,
   "dependencies": {
