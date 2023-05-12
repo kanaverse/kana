@@ -97,6 +97,7 @@ const CellAnnotation = (props) => {
       props?.cellLabelData !== null &&
       props?.cellLabelData !== undefined &&
       props?.selectedCellAnnCluster !== null &&
+      clusIdx !== null &&
       clusIdx !== -1
     ) {
       let recs = null;

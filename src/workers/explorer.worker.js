@@ -22,6 +22,7 @@ let dataset = null;
 let cache_anno_markers = {};
 let custom_selection_state = null;
 let feature_set_enrich_state = null;
+let cell_labelling_state = null;
 
 function createDataset(args, setOpts = false) {
   if (args.format === "H5AD") {
@@ -729,6 +730,42 @@ onmessage = function (msg) {
         postSuccess("feature_set_enrichment", resp);
       });
     });
+  } else if (type === "computeCellAnnotation") {
+    let { annotation, cluster, modality } = payload;
+    let result = { per_reference: {} };
+    let markers = null;
+    if (default_selection === annotation) {
+      let sel_indices = custom_selection_state.fetchSelectionIndices(cluster);
+      let num_cells = dataset.cells.numberOfRows();
+
+      let arr_sel_indices = new Uint8Array(num_cells);
+      sel_indices.map((x) => arr_sel_indices.set([1], x));
+      let annotation_vec = scran.factorize(arr_sel_indices);
+
+      let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+      markers = mds.fetchResults();
+    } else {
+      let annotation_vec = scran.factorize(getAnnotation(annotation));
+      let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
+      markers = mds.fetchResults();
+    }
+    if (markers !== null && modality in markers) {
+      if (cell_labelling_state === null) {
+        cell_labelling_state = new bakana.CellLabellingStandalone(
+          dataset.features[modality]
+        );
+      }
+      cell_labelling_state
+        .ready()
+        .then(() => {
+          result = cell_labelling_state.computeLabels(markers[modality]);
+          postSuccess("computeCellAnnotation", result);
+        })
+        .catch((err) => {
+          console.error(err);
+          postError(type, err, fatal);
+        });
+    }
   } else {
     console.error("MIM:::msg type incorrect");
     postError(type, "Type not defined", fatal);

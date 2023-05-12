@@ -834,12 +834,13 @@ export function AnalysisMode(props) {
         payload: {
           cluster: selectedCellAnnCluster,
           annotation: selectedCellAnnAnnotation,
+          modality: selectedFsetModality,
         },
       });
 
       add_to_logs(
         "info",
-        `--- Request cell annotations for:${selectedCellAnnAnnotation} sent ---`
+        `--- Request cell labels for:${selectedCellAnnAnnotation} sent ---`
       );
     }
   }, [selectedCellAnnAnnotation, selectedCellAnnCluster]);
