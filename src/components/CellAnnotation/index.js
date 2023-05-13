@@ -53,6 +53,8 @@ const CellAnnotation = (props) => {
         if (props?.selectedCellAnnCluster === null) {
           props?.setSelectedCellAnnCluster(0);
           setClusIdx(0);
+        } else {
+          setClusIdx(props?.selectedCellAnnCluster);
         }
       }
     } else if (default_selection === props?.selectedCellAnnAnnotation) {
@@ -62,8 +64,8 @@ const CellAnnotation = (props) => {
         props?.setSelectedCellAnnCluster(
           Object.keys(props?.customSelection)[0]
         );
-        setClusIdx(0);
       }
+      setClusIdx(0);
       setClusSel(clus);
     } else {
       if (!(props?.selectedCellAnnAnnotation in annotationObj)) {
@@ -76,14 +78,19 @@ const CellAnnotation = (props) => {
           setClusSel(uniqueTmp);
           if (props?.selectedCellAnnCluster === null) {
             props?.setSelectedCellAnnCluster(uniqueTmp[0]);
+            setClusIdx(0);
+          } else {
+            setClusIdx(uniqueTmp.indexOf(props?.selectedCellAnnCluster));
           }
         } else if (tmp.type === "factor") {
           setClusSel(tmp.levels);
           if (props?.selectedCellAnnCluster === null) {
             props?.setSelectedCellAnnCluster(tmp.levels[0]);
+            setClusIdx(0);
+          } else {
+            setClusIdx(tmp.levels.indexOf(props?.selectedCellAnnCluster));
           }
         }
-        setClusIdx(0);
       }
     }
   }, [
