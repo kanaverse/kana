@@ -1443,7 +1443,7 @@ export function ExplorerMode() {
         <Divider />
         <p>
           Please provide a reproducible example and report the issue on{" "}
-          <a href="https://github.com/jkanche/kana/issues" target="_blank">
+          <a href="https://github.com/kanaverse/kana/issues" target="_blank">
             GitHub
           </a>
           .

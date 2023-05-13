@@ -5,7 +5,7 @@ cff-version: 1.2.0
 title: Single-cell data analysis in the browser
 message: >-
   If you use this software, please cite it as below.
-url: "https://github.com/jkanche/kana"
+url: "https://github.com/kanaverse/kana"
 doi: "10.1101/2022.03.02.482701"
 authors:
   - given-names: Aaron
