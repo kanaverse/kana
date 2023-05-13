@@ -65,3 +65,10 @@
   text-align: center;
   align-items: center;
 }
+
+.cellann-row-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  margin-bottom: 3px;
+}

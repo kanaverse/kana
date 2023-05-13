@@ -238,7 +238,7 @@ const CellAnnotation = (props) => {
             Table: ({ style, ...props }) => (
               <table
                 {...props}
-                style={{ ...style, width: "100%", borderSpacing: 5 }}
+                style={{ ...style, width: "100%", borderSpacing: 2 }}
               />
             ),
             TableRow: (props) => {
@@ -312,7 +312,7 @@ const CellAnnotation = (props) => {
                     ]
                   )}
                 </span>
-                <div className="row-action">
+                <div className="cellann-row-action">
                   <Button
                     icon={row.expanded ? "minus" : "plus"}
                     small={true}
