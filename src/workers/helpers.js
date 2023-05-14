@@ -323,7 +323,19 @@ export async function fetchStepSummary(state, step) {
   } else if (step === "marker_detection") {
     return {};
   } else if (step === "cell_labelling") {
-    return await state[step].fetchResults();
+    let markers = state.marker_detection.fetchResults();
+    if ("RNA" in markers) {
+      let results = state[step].computeLabels(markers.RNA);
+      // for (const [k, v] of Object.entries(results.per_reference)) { // TODO: return scores.
+      //   results.per_reference[k] = v.map(x => x.best);
+      // }
+      // if ("integrated" in results) {
+      //   results.integrated = results.integrated.map(x => x.best);
+      // }
+      return results;
+    } else {
+      return { per_reference: {} };
+    }
   } else if (step === "custom_selections") {
     return {};
   } else if (step === "feature_set_enrichment") {

@@ -13,7 +13,7 @@
   display: flex;
   flex-direction: row;
   gap: 10px;
-  align-items:first baseline;
+  align-items: first baseline;
 }
 
 .param-section .param-section-footer {
@@ -72,7 +72,7 @@
 }
 
 .param-row-tooltip-highlight {
-  color: #137CBD;
+  color: #137cbd;
   font-style: italic;
 }
 
@@ -81,6 +81,13 @@
 }
 
 .param-section-title {
-    color: #C87619;
+  color: #c87619;
+}
 
+.selectall {
+  font-size: x-small;
+  font-style: italic;
+  font-weight: 400;
+  cursor: pointer;
+  color: #c87619;
 }

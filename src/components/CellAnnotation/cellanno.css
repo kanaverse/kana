@@ -52,3 +52,23 @@
   height: 100% !important;
   font-size: small;
 }
+
+.cellann-row-container {
+  display: grid;
+  /* grid-template-columns: 25% 14% 17% 25% 17%; */
+  gap: 2px;
+  align-items: center;
+}
+
+.cellann-row-header {
+  /* font-size: 12px; */
+  text-align: center;
+  align-items: center;
+}
+
+.cellann-row-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  margin-bottom: 3px;
+}

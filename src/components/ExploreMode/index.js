@@ -26,7 +26,12 @@ import { LoadExplore } from "../LoadExplore";
 
 import Stats from "../Stats";
 import Logs from "../Logs";
-import { getMinMax, code, resetApp } from "../../utils/utils";
+import {
+  getMinMax,
+  code,
+  resetApp,
+  default_selection,
+} from "../../utils/utils";
 import DimPlot from "../Plots/DimPlot";
 import MarkerPlot from "../Markers/index";
 import Gallery from "../Gallery/index";
@@ -38,6 +43,7 @@ import pkgVersion from "../../../package.json";
 import logo from "../../assets/kana-cropped.png";
 import "../../App.css";
 import FeatureSetEnrichment from "../FeatureSets";
+import CellAnnotation from "../CellAnnotation";
 
 const scranWorker = new Worker(
   new URL("../../workers/explorer.worker.js", import.meta.url),
@@ -242,6 +248,9 @@ export function ExplorerMode() {
   // was feature set initialized?
   const [initFset, setInitFset] = useState(false);
 
+  // which annotation is selected
+  const [selectedCellAnnAnnotation, setSelectedCellAnnAnnotation] =
+    useState(null);
   // which cluster is selected in the celltype table
   const [selectedCellAnnCluster, setSelectedCellAnnCluster] = useState(null);
 
@@ -521,6 +530,31 @@ export function ExplorerMode() {
     setSelectedFsetIndex(null);
   }, [markersORFSets]);
 
+  useEffect(() => {
+    if (selectedCellAnnAnnotation !== null && selectedCellAnnCluster !== null) {
+      if (
+        default_selection === selectedCellAnnAnnotation &&
+        !String(selectedCellAnnCluster).startsWith("cs")
+      ) {
+        return;
+      }
+
+      scranWorker.postMessage({
+        type: "computeCellAnnotation",
+        payload: {
+          cluster: selectedCellAnnCluster,
+          annotation: selectedCellAnnAnnotation,
+          modality: selectedFsetModality,
+        },
+      });
+
+      add_to_logs(
+        "info",
+        `--- Request cell labels for:${selectedCellAnnAnnotation} sent ---`
+      );
+    }
+  }, [selectedCellAnnAnnotation, selectedCellAnnCluster]);
+
   function add_to_logs(type, msg, status) {
     // let tmp = [...logs];
     let d = new Date();
@@ -605,7 +639,7 @@ export function ExplorerMode() {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    // console.log("ON EXPLORE MAIN::RCV::", payload);
+    console.log("ON EXPLORE MAIN::RCV::", payload);
 
     // process any error messages
     if (payload) {
@@ -719,6 +753,8 @@ export function ExplorerMode() {
         setSelectedMarkerAnnotation(def_anno);
         setReqAnnotation(def_anno);
         setSelectedDimPlotCluster(def_anno);
+        setSelectedCellAnnAnnotation(def_anno);
+        setSelectedCellAnnCluster(resp.annotations[def_anno].values[0]);
       }
       // setSelectedCluster(resp.annotations[0]);
       // setSelectedFsetModality(tmodality);
@@ -795,6 +831,16 @@ export function ExplorerMode() {
       setAnnotationObj(tmp);
 
       setReqAnnotation(null);
+    } else if (
+      type === "cell_labelling_DATA" ||
+      type === "computeCellAnnotation_DATA"
+    ) {
+      if ("integrated" in resp) {
+        setCellLabelData(resp);
+      }
+      setShowCellLabelLoader(false);
+    } else if (type === "cell_labelling_CACHE") {
+      setShowCellLabelLoader(false);
     } else if (payload.type === "custom_selections_DATA") {
     } else if (payload.type === "marker_detection_CACHE") {
       setShowMarkerLoader(false);
@@ -845,6 +891,9 @@ export function ExplorerMode() {
 
   // resize fset width
   const [fsetWidth, setFsetWidth] = useState(360);
+
+  // set cellann width
+  const [cellAnnWidth, setCellAnnWidth] = useState(360);
 
   const handleResize = () => {
     setWindowWidth(window.innerWidth);
@@ -1280,6 +1329,34 @@ export function ExplorerMode() {
                           selectedFsetModality={selectedFsetModality}
                           setSelectedFsetModality={setSelectedFsetModality}
                           cellLabelData={cellLabelData}
+                        />
+                      )}
+                    </div>
+                  )}
+                  {markersORFSets === "celltypeannotation" && (
+                    <div
+                      className={
+                        showMarkerLoader
+                          ? "results-celltype effect-opacitygrayscale"
+                          : "results-celltype"
+                      }
+                    >
+                      {selectedCellAnnAnnotation && (
+                        <CellAnnotation
+                          markersORFSets={markersORFSets}
+                          setMarkersOrFsets={setMarkersOrFsets}
+                          selectedClusterSummary={selectedClusterSummary}
+                          cellLabelData={cellLabelData}
+                          windowWidth={windowWidth}
+                          selectedCellAnnCluster={selectedCellAnnCluster}
+                          setSelectedCellAnnCluster={setSelectedCellAnnCluster}
+                          selectedCellAnnAnnotation={selectedCellAnnAnnotation}
+                          setSelectedCellAnnAnnotation={
+                            setSelectedCellAnnAnnotation
+                          }
+                          setReqAnnotation={setReqAnnotation}
+                          customSelection={customSelection}
+                          cellAnnWidth={cellAnnWidth}
                         />
                       )}
                     </div>

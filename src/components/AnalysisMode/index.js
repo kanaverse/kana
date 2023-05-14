@@ -30,7 +30,12 @@ import { ParameterSelection } from "../ParamSelection";
 
 import Stats from "../Stats";
 import Logs from "../Logs";
-import { getMinMax, code, resetApp } from "../../utils/utils";
+import {
+  getMinMax,
+  code,
+  resetApp,
+  default_selection,
+} from "../../utils/utils";
 import DimPlot from "../Plots/DimPlot";
 import MarkerPlot from "../Markers/index";
 import Gallery from "../Gallery/index";
@@ -283,6 +288,9 @@ export function AnalysisMode(props) {
   // modality in feature set
   const [selectedFsetModality, setSelectedFsetModality] = useState("RNA");
 
+  // which annotation is selected
+  const [selectedCellAnnAnnotation, setSelectedCellAnnAnnotation] =
+    useState(default_cluster);
   // which cluster is selected in the celltype table
   const [selectedCellAnnCluster, setSelectedCellAnnCluster] = useState(null);
 
@@ -812,6 +820,31 @@ export function AnalysisMode(props) {
     selectedCellAnnCluster,
   ]);
 
+  useEffect(() => {
+    if (selectedCellAnnAnnotation !== null && selectedCellAnnCluster !== null) {
+      if (
+        default_selection === selectedCellAnnAnnotation &&
+        !String(selectedCellAnnCluster).startsWith("cs")
+      ) {
+        return;
+      }
+
+      scranWorker.postMessage({
+        type: "computeCellAnnotation",
+        payload: {
+          cluster: selectedCellAnnCluster,
+          annotation: selectedCellAnnAnnotation,
+          modality: selectedFsetModality,
+        },
+      });
+
+      add_to_logs(
+        "info",
+        `--- Request cell labels for:${selectedCellAnnAnnotation} sent ---`
+      );
+    }
+  }, [selectedCellAnnAnnotation, selectedCellAnnCluster]);
+
   function add_to_logs(type, msg, status) {
     // let tmp = [...logs];
     let d = new Date();
@@ -1203,7 +1236,10 @@ export function AnalysisMode(props) {
       setAnnotationObj(tmp);
 
       setReqAnnotation(null);
-    } else if (type === "cell_labelling_DATA") {
+    } else if (
+      type === "cell_labelling_DATA" ||
+      type === "computeCellAnnotation_DATA"
+    ) {
       if ("integrated" in resp) {
         setCellLabelData(resp);
       }
@@ -1313,6 +1349,9 @@ export function AnalysisMode(props) {
 
   // resize fset width
   const [fsetWidth, setFsetWidth] = useState(360);
+
+  // set cellann width
+  const [cellAnnWidth, setCellAnnWidth] = useState(360);
 
   const handleResize = () => {
     setWindowWidth(window.innerWidth);
@@ -1817,6 +1856,13 @@ export function AnalysisMode(props) {
                           windowWidth={windowWidth}
                           selectedCellAnnCluster={selectedCellAnnCluster}
                           setSelectedCellAnnCluster={setSelectedCellAnnCluster}
+                          selectedCellAnnAnnotation={selectedCellAnnAnnotation}
+                          setSelectedCellAnnAnnotation={
+                            setSelectedCellAnnAnnotation
+                          }
+                          setReqAnnotation={setReqAnnotation}
+                          customSelection={customSelection}
+                          cellAnnWidth={cellAnnWidth}
                         />
                       )}
                     </div>
