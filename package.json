@@ -37,7 +37,7 @@
     "bakana": "2.0.19",
     "bioconductor": "^0.3.1",
     "d3": "^7.8.2",
-    "epiviz.gl": "^1.0.4",
+    "epiviz.gl": "1.0.4",
     "epiviz.heatmap.gl": "^0.0.4",
     "epiviz.scatter.gl": "^0.0.5",
     "gesel": "^0.3.0",
