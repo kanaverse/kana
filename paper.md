@@ -7,9 +7,11 @@ tags:
 authors:
   - name: Aaron T. L. Lun
     orcid: 0000-0002-3564-4813
+    equal-contrib: true
     affiliation: 1
   - name: Jayaram Kancherla
     orcid: 0000-0001-5855-5031
+    equal-contrib: true
     affiliation: 1
 affiliations:
   - name: Genentech Inc., South San Francisco, USA
