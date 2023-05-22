@@ -11,7 +11,7 @@ That's right - the calculations are performed client-side, by your browser, on y
 This differs from the usual paradigm of, e.g., Shiny applications where data needs to be sent to a backend server that does the actual analysis.
 Our client-side approach has a number of advantages:
 
-- Your data is never transferred anywhere, so you don't have have to worry about problems with data privacy.
+- Your data is never transferred anywhere, so you don't have to worry about problems with data privacy.
   These can be especially hairy when your backend server lies in a different jurisdiction from your data source.
   By performing the analysis on the client, we avoid all of these issues.
 - **kana** is super-cheap to run and deploy, just serve it as a static website.
