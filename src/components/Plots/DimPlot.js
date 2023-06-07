@@ -684,11 +684,11 @@ const DimPlot = (props) => {
     if (containerEl) {
       // const iData = scatterplot.canvas.toDataURL();
 
-      let tmp = [...props?.savedPlot];
-
-      tmp.push({
+      let config = {
         color: cellColorArray,
+        coords: props?.redDimsData[props?.selectedRedDim],
         config: {
+          colorArray: cellColorArray,
           embedding: JSON.parse(JSON.stringify(props?.selectedRedDim)),
           annotation: JSON.parse(JSON.stringify(props?.colorByAnnotation)),
           highlight: plotGroups[props?.clusHighlight]
@@ -703,7 +703,10 @@ const DimPlot = (props) => {
             : null,
           geneIdx: props?.gene,
         },
-      });
+      };
+
+      let tmp = [...props?.savedPlot];
+      tmp.push(config);
 
       props?.setSavedPlot(tmp);
     }

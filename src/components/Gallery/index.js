@@ -247,7 +247,6 @@ const Gallery = (props) => {
       };
     }
 
-
     // default plots, tSNE and UMAP
     if (props?.redDimsData && Object.keys(props.redDimsData).length > 0) {
       let actions = ["select", "download"];
@@ -279,6 +278,7 @@ const Gallery = (props) => {
           actions: actions,
           data: {
             color: colors,
+            coords: props?.redDimsData[x],
             config: {
               embedding: x,
               annotation: props?.selectedDimPlotCluster,
@@ -295,6 +295,7 @@ const Gallery = (props) => {
               colorByAnnotation={props?.colorByAnnotation}
               data={{
                 color: colors,
+                coords: props?.redDimsData[x],
                 config: {
                   embedding: x,
                   annotation: props?.selectedDimPlotCluster,

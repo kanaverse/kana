@@ -9,6 +9,7 @@ import { Tooltip2 } from "@blueprintjs/popover2";
 import * as d3 from "d3";
 
 import "./Gallery.css";
+import { SVGDimPlot } from "../Plots/SVGDimPlot.js";
 
 export function SortableItem(props) {
   const { attributes, listeners, node, setNodeRef, transform, transition } =
@@ -20,7 +21,7 @@ export function SortableItem(props) {
   };
 
   let tooltips = {
-    download: "Save plot as PNG",
+    download: "Save plot as SVG",
     select: "Restore this state",
     highlight: "Clear selection of cells",
     trash: "Remove plot",
@@ -55,15 +56,20 @@ export function SortableItem(props) {
         let dnode = node.current
           .querySelector(".gitem-content")
           .querySelector("canvas");
+
         if (dnode) {
-          let iData = dnode.toDataURL();
+          let tmpsvg = SVGDimPlot(props?.data?.color, props?.data?.coords);
+
           let tmpLink = document.createElement("a");
-          tmpLink.href = iData;
-          tmpLink.download = `${props?.title
-            .replace("⊃", "")
-            .split(" ")
-            .join("_")}.png`;
+          let fileNew = new Blob([tmpsvg], {
+            type: "text/svg",
+          });
+
+          tmpLink.href = URL.createObjectURL(fileNew);
+          tmpLink.download = "plot.svg";
           tmpLink.click();
+
+          tmpLink.remove();
           break;
         }
 
