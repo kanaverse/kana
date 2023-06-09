@@ -19,13 +19,14 @@ import { getFactorsFromArray, getGradient, getMinMax } from "./utils";
 
 import Rainbow from "./rainbowvis";
 import { randomColor } from "randomcolor";
-import { palette, defaultColor } from "./utils";
+import { defaultColor } from "./utils";
 
 import "./DimPlot.css";
 import { AppToaster } from "../../AppToaster";
 
 import WebGLVis from "epiviz.gl";
 import { code } from "../../utils/utils";
+import { generateColors } from "./colors";
 
 const DimPlot = (props) => {
   const container = useRef();
@@ -546,14 +547,7 @@ const DimPlot = (props) => {
             indices = tmp.index;
           }
 
-          if (levels.length > Object.keys(palette).length) {
-            cluster_colors = randomColor({
-              luminosity: "dark",
-              count: levels.length + 1,
-            });
-          } else {
-            cluster_colors = palette[levels.length.toString()];
-          }
+          cluster_colors = generateColors(levels.length + 1);
 
           setPlotGroups(levels);
           setPlotFactors(indices);
@@ -570,14 +564,7 @@ const DimPlot = (props) => {
 
           let { levels, indices } = getFactorsFromArray(tmp.values);
 
-          if (levels.length > Object.keys(palette).length) {
-            cluster_colors = randomColor({
-              luminosity: "dark",
-              count: levels.length + 1,
-            });
-          } else {
-            cluster_colors = palette[levels.length.toString()];
-          }
+          cluster_colors = generateColors(levels.length + 1);
 
           setPlotGroups(levels);
           setPlotFactors(indices);
