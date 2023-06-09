@@ -151,7 +151,7 @@ export const SVGDimPlot = (color, embeddata, plabels, pgradient) => {
       legend.push(
         `<text x="${460}" y="${100 + i * 20}" style="fill: ${
           colors[i]
-        }" style="font-family: sans-serif">${x}</text>`
+        };font-family: sans-serif">${x}</text>`
       );
     });
   }
