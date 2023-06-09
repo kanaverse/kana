@@ -894,9 +894,9 @@ const DimPlot = (props) => {
               Copy to gallery
             </Button>
           </Tooltip2>
-          <Tooltip2 content="Save plot as PNG">
+          <Tooltip2 content="Save as SVG">
             <Button icon="media" onClick={handleSavePNG}>
-              Save
+              Save as SVG
             </Button>
           </Tooltip2>
           <Tooltip2 content="Pan to move the plot">

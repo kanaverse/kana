@@ -21,6 +21,7 @@ export const SVGDimPlot = (color, embeddata, plabels, pgradient) => {
 
   function translateY(val) {
     let nval =
+      new_max_y -
       ((val - yMinMax[0]) / (yMinMax[1] - yMinMax[0])) * (new_max_y - new_min) +
       new_min;
 
@@ -57,13 +58,13 @@ export const SVGDimPlot = (color, embeddata, plabels, pgradient) => {
 
       defs.push(`
         <linearGradient id="grad" gradientTransform="rotate(90)">
-          <stop offset="0%" stop-color="#edc775" />
-          <stop offset="${minPerc}%" stop-color="#edc775" />
-          <stop offset="${minPerc + binsSize}%" stop-color="#e09351" />
+          <stop offset="0%" stop-color="#6d2f20" />
+          <stop offset="${minPerc}%" stop-color="#6d2f20" />
+          <stop offset="${minPerc + binsSize}%" stop-color="#b75347" />
           <stop offset="${minPerc + 2 * binsSize}%" stop-color="#df7e66" />
-          <stop offset="${minPerc + 3 * binsSize}%" stop-color="#b75347" />
-          <stop offset="${minPerc + 4 * binsSize}%" stop-color="#6d2f20" />
-          <stop offset="100%" stop-color="#6d2f20" />
+          <stop offset="${minPerc + 3 * binsSize}%" stop-color="#e09351" />
+          <stop offset="${minPerc + 4 * binsSize}%" stop-color="#edc775" />
+          <stop offset="100%" stop-color="#edc775" />
         </linearGradient>
       `);
 
@@ -73,25 +74,25 @@ export const SVGDimPlot = (color, embeddata, plabels, pgradient) => {
       );
 
       legend.push(
-        `<text x="${460}" y="${90}">${Math.round(factors[0])}</text>`
+        `<text x="${475}" y="${270}">${Math.round(factors[0])}</text>`
       );
 
       if (slider[0] !== factors[0]) {
         legend.push(
           `<text x="${500}" y="${
-            90 + (minPerc * 150) / 100
+            90 + ((minPerc + 4 * binsSize) * 150) / 100
           }">custom min: ${Math.round(slider[0])}</text>`
         );
       }
 
       legend.push(
-        `<text x="${460}" y="${270}">${Math.round(factors[1])}</text>`
+        `<text x="${475}" y="${90}">${Math.round(factors[1])}</text>`
       );
 
       if (slider[1] !== factors[1]) {
         legend.push(
           `<text x="${500}" y="${
-            90 + ((minPerc + 4 * binsSize) * 150) / 100
+            90 + (minPerc * 150) / 100
           }">custom max: ${Math.round(slider[1])}</text>`
         );
       }
@@ -100,10 +101,10 @@ export const SVGDimPlot = (color, embeddata, plabels, pgradient) => {
 
       defs.push(`
         <linearGradient id="grad" gradientTransform="rotate(90)">
-          <stop offset="$0%" stop-color="#F5F8FA" />
-          <stop offset="${minPerc}%" stop-color="#F5F8FA" />
-          <stop offset="${maxPerc}%" stop-color="#2965CC" />
-          <stop offset="$100%" stop-color="#2965CC" />
+          <stop offset="$0%" stop-color="#2965CC" />
+          <stop offset="${minPerc}%" stop-color="#2965CC" />
+          <stop offset="${maxPerc}%" stop-color="#F5F8FA" />
+          <stop offset="$100%" stop-color="#F5F8FA" />
         </linearGradient>
       `);
 
@@ -113,25 +114,25 @@ export const SVGDimPlot = (color, embeddata, plabels, pgradient) => {
       );
 
       legend.push(
-        `<text x="${460}" y="${90}">${Math.round(factors[0])}</text>`
+        `<text x="${475}" y="${270}">${Math.round(factors[0])}</text>`
       );
 
       if (slider[0] !== factors[0]) {
         legend.push(
           `<text x="${500}" y="${
-            90 + (minPerc * 150) / 100
+            270 - (minPerc * 150) / 100
           }">custom min: ${Math.round(slider[0])}</text>`
         );
       }
 
       legend.push(
-        `<text x="${460}" y="${270}">${Math.round(factors[1])}</text>`
+        `<text x="${475}" y="${90}">${Math.round(factors[1])}</text>`
       );
 
       if (slider[1] !== factors[1]) {
         legend.push(
           `<text x="${500}" y="${
-            90 + (maxPerc * 150) / 100
+            270 - (maxPerc * 150) / 100
           }">custom max: ${Math.round(slider[1])}</text>`
         );
       }
