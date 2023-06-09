@@ -10,6 +10,7 @@ import * as d3 from "d3";
 
 import "./Gallery.css";
 import { SVGDimPlot } from "../Plots/SVGDimPlot.js";
+import { get_image_title } from "./utils.js";
 
 export function SortableItem(props) {
   const { attributes, listeners, node, setNodeRef, transform, transition } =
@@ -71,7 +72,7 @@ export function SortableItem(props) {
           });
 
           tmpLink.href = URL.createObjectURL(fileNew);
-          tmpLink.download = `${props?.title}.svg`;
+          tmpLink.download = `${get_image_title(props?.data)}.svg`;
           tmpLink.click();
 
           tmpLink.remove();
