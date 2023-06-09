@@ -71,7 +71,7 @@ export function SortableItem(props) {
           });
 
           tmpLink.href = URL.createObjectURL(fileNew);
-          tmpLink.download = "plot.svg";
+          tmpLink.download = `${props?.title}.svg`;
           tmpLink.click();
 
           tmpLink.remove();

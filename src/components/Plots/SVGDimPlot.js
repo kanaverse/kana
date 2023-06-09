@@ -39,7 +39,7 @@ export const SVGDimPlot = (color, embeddata, plabels, pgradient) => {
   let legend = [];
   let defs = [];
   if (pgradient) {
-    const { factors, slider } = pgradient;
+    const { factors, slider, type } = pgradient;
 
     // defs.push(`linear-gradient(to right, #edc775 ${
     //   ((slider[0] - factors[0]) * 100) / (factors[1] - factors[0])
@@ -52,41 +52,89 @@ export const SVGDimPlot = (color, embeddata, plabels, pgradient) => {
       maxPerc =
         100 - ((factors[1] - slider[1]) * 100) / (factors[1] - factors[0]);
 
-    const binsSize = Math.round((maxPerc - minPerc) / 4);
+    if (type === "multi") {
+      const binsSize = Math.round((maxPerc - minPerc) / 5);
 
-    defs.push(`
-      <linearGradient id="grad" gradientTransform="rotate(90)">
-        <stop offset="${minPerc}%" stop-color="#edc775" />
-        <stop offset="${minPerc + binsSize}%" stop-color="#e09351" />
-        <stop offset="${minPerc + 2 * binsSize}%" stop-color="#df7e66" />
-        <stop offset="${minPerc + 3 * binsSize}%" stop-color="#b75347" />
-        <stop offset="100%" stop-color="#6d2f20" />
-      </linearGradient>
-    `);
+      defs.push(`
+        <linearGradient id="grad" gradientTransform="rotate(90)">
+          <stop offset="0%" stop-color="#edc775" />
+          <stop offset="${minPerc}%" stop-color="#edc775" />
+          <stop offset="${minPerc + binsSize}%" stop-color="#e09351" />
+          <stop offset="${minPerc + 2 * binsSize}%" stop-color="#df7e66" />
+          <stop offset="${minPerc + 3 * binsSize}%" stop-color="#b75347" />
+          <stop offset="${minPerc + 4 * binsSize}%" stop-color="#6d2f20" />
+          <stop offset="100%" stop-color="#6d2f20" />
+        </linearGradient>
+      `);
 
-    legend.push(
-      `<rect x="460" y="100" width="35" height="150" 
-      style="fill: url(#grad)" />`
-    );
-
-    legend.push(`<text x="${460}" y="${90}">${Math.round(factors[0])}</text>`);
-
-    if (slider[0] !== factors[0]) {
       legend.push(
-        `<text x="${500}" y="${
-          90 + ((minPerc + binsSize) * 150) / 100
-        }">custom min: ${Math.round(slider[0])}</text>`
+        `<rect x="460" y="100" width="35" height="150" 
+        style="fill: url(#grad)" />`
       );
-    }
 
-    legend.push(`<text x="${460}" y="${270}">${Math.round(factors[1])}</text>`);
-
-    if (slider[1] !== factors[1]) {
       legend.push(
-        `<text x="${500}" y="${
-          90 + ((minPerc + 3 * binsSize) * 150) / 100
-        }">custom max: ${Math.round(slider[1])}</text>`
+        `<text x="${460}" y="${90}">${Math.round(factors[0])}</text>`
       );
+
+      if (slider[0] !== factors[0]) {
+        legend.push(
+          `<text x="${500}" y="${
+            90 + (minPerc * 150) / 100
+          }">custom min: ${Math.round(slider[0])}</text>`
+        );
+      }
+
+      legend.push(
+        `<text x="${460}" y="${270}">${Math.round(factors[1])}</text>`
+      );
+
+      if (slider[1] !== factors[1]) {
+        legend.push(
+          `<text x="${500}" y="${
+            90 + ((minPerc + 4 * binsSize) * 150) / 100
+          }">custom max: ${Math.round(slider[1])}</text>`
+        );
+      }
+    } else {
+      // const binsSize = Math.round((maxPerc - minPerc) / 2);
+
+      defs.push(`
+        <linearGradient id="grad" gradientTransform="rotate(90)">
+          <stop offset="$0%" stop-color="#F5F8FA" />
+          <stop offset="${minPerc}%" stop-color="#F5F8FA" />
+          <stop offset="${maxPerc}%" stop-color="#2965CC" />
+          <stop offset="$100%" stop-color="#2965CC" />
+        </linearGradient>
+      `);
+
+      legend.push(
+        `<rect x="460" y="100" width="35" height="150" 
+        style="fill: url(#grad)" />`
+      );
+
+      legend.push(
+        `<text x="${460}" y="${90}">${Math.round(factors[0])}</text>`
+      );
+
+      if (slider[0] !== factors[0]) {
+        legend.push(
+          `<text x="${500}" y="${
+            90 + (minPerc * 150) / 100
+          }">custom min: ${Math.round(slider[0])}</text>`
+        );
+      }
+
+      legend.push(
+        `<text x="${460}" y="${270}">${Math.round(factors[1])}</text>`
+      );
+
+      if (slider[1] !== factors[1]) {
+        legend.push(
+          `<text x="${500}" y="${
+            90 + (maxPerc * 150) / 100
+          }">custom max: ${Math.round(slider[1])}</text>`
+        );
+      }
     }
   } else if (plabels) {
     const { labels, colors } = plabels;
