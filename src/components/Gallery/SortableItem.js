@@ -58,7 +58,12 @@ export function SortableItem(props) {
           .querySelector("canvas");
 
         if (dnode) {
-          let tmpsvg = SVGDimPlot(props?.data?.color, props?.data?.coords);
+          let tmpsvg = SVGDimPlot(
+            props?.data?.color,
+            props?.data?.coords,
+            props?.data?.labels,
+            props?.data?.gradient
+          );
 
           let tmpLink = document.createElement("a");
           let fileNew = new Blob([tmpsvg], {

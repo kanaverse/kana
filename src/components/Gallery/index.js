@@ -23,6 +23,7 @@ import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { SortableItem } from "./SortableItem";
 
 import { Popover2 } from "@blueprintjs/popover2";
+import { getMinMax } from "../Plots/utils";
 
 const Gallery = (props) => {
   const [defaultItems, setDefaultItems] = useState([]);
@@ -259,6 +260,13 @@ const Gallery = (props) => {
         (x, i) => (colors[i] = props?.clusterColors[x])
       );
 
+      const max_clus = getMinMax(annotationObj[default_cluster]);
+
+      let clus = [];
+      for (let p = 0; p < max_clus[1]; p++) {
+        clus.push(`Cluster ${p + 1}`);
+      }
+
       Object.keys(props.redDimsData).map((x, i) => {
         if (!tmpItems.includes(`${55 + i}`)) {
           tmpItems.push(`${55 + i}`);
@@ -267,6 +275,10 @@ const Gallery = (props) => {
           // id: 5 + i,
           title: get_image_title({
             color: colors,
+            labels: {
+              labels: clus,
+              colors: props?.clusterColors,
+            },
             config: {
               embedding: x,
               annotation: props?.selectedDimPlotCluster,
@@ -278,6 +290,10 @@ const Gallery = (props) => {
           actions: actions,
           data: {
             color: colors,
+            labels: {
+              labels: clus,
+              colors: props?.clusterColors,
+            },
             coords: props?.redDimsData[x],
             config: {
               embedding: x,
@@ -296,6 +312,10 @@ const Gallery = (props) => {
               data={{
                 color: colors,
                 coords: props?.redDimsData[x],
+                labels: {
+                  labels: clus,
+                  colors: props?.clusterColors,
+                },
                 config: {
                   embedding: x,
                   annotation: props?.selectedDimPlotCluster,

@@ -692,6 +692,18 @@ const DimPlot = (props) => {
         },
       };
 
+      if (!toggleFactorsGradient) {
+        config["gradient"] = {
+          factors: factorsMinMax,
+          slider: sliderFactorsMinMax,
+        };
+      } else {
+        config["labels"] = {
+          labels: plotGroups,
+          colors: plotColorMappings,
+        };
+      }
+
       let tmp = [...props?.savedPlot];
       tmp.push(config);
 
@@ -882,7 +894,7 @@ const DimPlot = (props) => {
                       {computedCols &&
                         Array.isArray(computedCols) &&
                         computedCols.length > 0 && (
-                          <optgroup label="Supplied">
+                          <optgroup label="Computed">
                             {computedCols.map((x) => (
                               <option value={x} key={x}>
                                 {x.replace(`${code}::`, "")}
