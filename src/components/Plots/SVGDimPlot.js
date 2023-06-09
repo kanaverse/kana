@@ -114,26 +114,34 @@ export const SVGDimPlot = (color, embeddata, plabels, pgradient) => {
       );
 
       legend.push(
-        `<text x="${475}" y="${270}">${Math.round(factors[0])}</text>`
+        `<text x="${475}" y="${270}" style="font-family: sans-serif">${Math.round(
+          factors[0]
+        )}</text>`
       );
 
       if (slider[0] !== factors[0]) {
         legend.push(
           `<text x="${500}" y="${
             270 - (minPerc * 150) / 100
-          }">custom min: ${Math.round(slider[0])}</text>`
+          }" style="font-family: sans-serif">custom min: ${Math.round(
+            slider[0]
+          )}</text>`
         );
       }
 
       legend.push(
-        `<text x="${475}" y="${90}">${Math.round(factors[1])}</text>`
+        `<text x="${475}" y="${90}" style="font-family: sans-serif">${Math.round(
+          factors[1]
+        )}</text>`
       );
 
       if (slider[1] !== factors[1]) {
         legend.push(
           `<text x="${500}" y="${
             270 - (maxPerc * 150) / 100
-          }">custom max: ${Math.round(slider[1])}</text>`
+          }" style="font-family: sans-serif">custom max: ${Math.round(
+            slider[1]
+          )}</text>`
         );
       }
     }
@@ -143,7 +151,7 @@ export const SVGDimPlot = (color, embeddata, plabels, pgradient) => {
       legend.push(
         `<text x="${460}" y="${100 + i * 20}" style="fill: ${
           colors[i]
-        }">${x}</text>`
+        }" style="font-family: sans-serif">${x}</text>`
       );
     });
   }
