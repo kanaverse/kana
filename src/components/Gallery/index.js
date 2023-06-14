@@ -29,7 +29,7 @@ const Gallery = (props) => {
   const [defaultItems, setDefaultItems] = useState([]);
   const [items, setItems] = useState([]);
   const [itemContent, setItemContent] = useState({});
-  const { datasetName, annotationObj } = useContext(AppContext);
+  const { datasetName, annotationObj, appMode } = useContext(AppContext);
   const [qcids, setQCids] = useState([]);
   const default_cluster = `${code}::CLUSTERS`;
 
@@ -256,18 +256,26 @@ const Gallery = (props) => {
       }
 
       let colors = [];
-      annotationObj[default_cluster]?.forEach(
-        (x, i) => (colors[i] = props?.clusterColors[x])
-      );
-
-      const max_clus = getMinMax(annotationObj[default_cluster]);
-
       let clus = [];
-      for (let p = 0; p < max_clus[1]; p++) {
-        clus.push(`Cluster ${p + 1}`);
+      if (appMode === "analysis") {
+        annotationObj[default_cluster]?.forEach(
+          (x, i) => (colors[i] = props?.clusterColors[x])
+        );
+
+        const max_clus = getMinMax(annotationObj[default_cluster]);
+
+        for (let p = 0; p < max_clus[1]; p++) {
+          clus.push(`Cluster ${p + 1}`);
+        }
       }
 
       Object.keys(props.redDimsData).map((x, i) => {
+        if (appMode === "explore") {
+          clus = ["all_cells"];
+          colors = [];
+          props.redDimsData[x]?.x?.forEach((x, i) => (colors[i] = "#8ABBFF"));
+        }
+
         if (!tmpItems.includes(`${55 + i}`)) {
           tmpItems.push(`${55 + i}`);
         }
