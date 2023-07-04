@@ -44,7 +44,7 @@ export function initialize() {
 
     // Send existing stored analyses, if available.
     kanaDB.onsuccess = () => {
-      getRecordsResolver(resolve);
+      resolve(getRecordsInternal());
     };
 
     kanaDB.onerror = () => {
@@ -55,60 +55,33 @@ export function initialize() {
   return init;
 }
 
-function getRecordsResolver(resolve, store = null) {
-  if (store === null) {
-    store = kanaDB.result
+function getRecordsInternal() {
+  let store = kanaDB.result
       .transaction(["analysis_meta"], "readonly")
       .objectStore("analysis_meta");
-  }
 
   var allAnalysis = store.getAll();
+  return new Promise(resolve => {
+    allAnalysis.onsuccess = event => {
+      let vals = allAnalysis.result;
 
-  allAnalysis.onsuccess = function () {
-    let vals = allAnalysis.result;
-    vals.forEach((x) => {
-      delete x.files;
-    }); // no need to transfer that.
-    resolve(vals);
-  };
-  allAnalysis.onerror = function () {
-    resolve(null);
-  };
-}
+      // no need to transfer the files themselves.
+      vals.forEach((x) => {
+        delete x.files;
+      }); 
 
-/** Helper functions **/
-async function loadContent(id, store) {
-  return new Promise((resolve) => {
-    let request = store.get(id);
-    request.onsuccess = function () {
-      if (request.result !== undefined) {
-        resolve(request.result);
-      } else {
-        resolve(null);
-      }
+      resolve(vals);
     };
-    request.onerror = function () {
-      resolve(null);
+  
+    allAnalysis.onerror = event => {
+      reject(new Error(`failed to query the analysis store in KanaDB: ${event.target.errorCode}`));
     };
-  });
-}
-
-function allOK(promises) {
-  return Promise.allSettled(promises).then((vals) => {
-    for (const x of vals) {
-      if (!x) {
-        return false;
-      }
-    }
-    return true;
   });
 }
 
 export async function getRecords() {
   await init;
-  return new Promise((resolve) => {
-    getRecordsResolver(resolve);
-  });
+  return getRecordsInternal();
 }
 
 /** Functions to save content **/
@@ -119,39 +92,47 @@ export async function saveFile(id, buffer) {
   let file_store = trans.objectStore("file");
   let meta_store = trans.objectStore("file_meta");
 
-  var meta = await loadContent(id, meta_store);
-  var refcount;
-  if (meta === null) {
-    refcount = 0;
-  } else {
-    refcount = meta["count"];
-  }
-  refcount++;
+  let request = store.get(id);
+  await (new Promise((resolve, reject) => {
+    request.onsuccess = event => {
+      let meta = request.result;
+      if (typeof meta === "undefined") {
+        meta = { count: 1, id: id };
+      } else {
+        meta.count++;
+      }
 
-  var data_saving = new Promise((resolve) => {
-    var putrequest = file_store.put({ id: id, payload: buffer.buffer });
-    putrequest.onsuccess = function (event) {
-      resolve(true);
+      var data_saving = new Promise((resolve) => {
+        var putrequest = file_store.put({ id: id, payload: buffer.buffer });
+        putrequest.onsuccess = event => {
+          resolve(true);
+        };
+        putrequest.onerror = event => {
+          reject(new Error(`failed to save file ${id} in KanaDB: ${event.target.errorCode}`));
+        };
+      });
+
+      var ref_saving = new Promise((resolve) => {
+        meta.count = refcount;
+        var putrequest = meta_store.put(meta);
+        putrequest.onsuccess = event => {
+          resolve(true);
+        };
+        putrequest.onerror = event => {
+          reject(new Error(`failed to save metadata for file ${id} in KanaDB: ${event.target.errorCode}`));
+        };
+      });
+
+      resolve(Promise.all([data_saving, ref_saving]));
     };
-    putrequest.onerror = function (event) {
-      resolve(false);
+
+    request.onerror = event => {
+      reject(new Error(`failed to save file ${id} in KanaDB: ${event.target.errorCode}`));
     };
   });
 
-  var ref_saving = new Promise((resolve) => {
-    meta.count = refcount;
-    var putrequest = meta_store.put(meta);
-    putrequest.onsuccess = function (event) {
-      resolve(true);
-    };
-    putrequest.onerror = function (event) {
-      resolve(false);
-    };
-  });
-
-  let output = allOK([data_saving, ref_saving]);
   await fin;
-  return output;
+  return;
 }
 
 export async function saveAnalysis(id, state, files, title) {
@@ -164,52 +145,78 @@ export async function saveAnalysis(id, state, files, title) {
   let analysis_store = trans.objectStore("analysis");
   let meta_store = trans.objectStore("analysis_meta");
 
-  if (id == null) {
-    let already = await new Promise((resolve) =>
-      getRecordsResolver(resolve, meta_store)
-    );
-    id = String(already.length);
+  let callback = new_id => {
+    var data_saving = new Promise((resolve, reject) => {
+      var putrequest = analysis_store.put({ id: new_id, payload: state.buffer });
+      putrequest.onsuccess = event => {
+        resolve(true);
+      };
+      putrequest.onerror = event => {
+        reject(new Error(`failed to save analysis file ${new_id} in KanaDB: ${event.target.errorCode}`));
+      };
+    });
+
+    var id_saving = new Promise((resolve, reject) => {
+      var putrequest = meta_store.put({
+        id: new_id,
+        files: files,
+        time: Number(new Date()),
+        title: title,
+      });
+      putrequest.onsuccess = event => {
+        resolve(true);
+      };
+      putrequest.onerror = event => {
+        reject(new Error(`failed to save analysis metadata ${new_id} in KanaDB: ${event.target.errorCode}`));
+      };
+    });
+
+    return Promise.all([data_saving, id_saving]);
+  };
+
+  if (id === null) {
+    let request = store.getAll();
+    await (new Promise((resolve, reject) => {
+      request.onsuccess = event => {
+        resolve(callback(String(request.result.length)));
+      };
+      request.onerror = event => {
+        reject(new Error(`failed to list existing analysis store in KanaDB: ${event.target.errorCode}`));
+      };
+    }));
+  } else {
+    await callback(id);
   }
 
-  var data_saving = new Promise((resolve) => {
-    var putrequest = analysis_store.put({ id: id, payload: state.buffer });
-    putrequest.onsuccess = function (event) {
-      resolve(true);
-    };
-    putrequest.onerror = function (event) {
-      resolve(false);
-    };
-  });
-
-  var id_saving = new Promise((resolve) => {
-    var putrequest = meta_store.put({
-      id: id,
-      files: files,
-      time: Number(new Date()),
-      title: title,
-    });
-    putrequest.onsuccess = function (event) {
-      resolve(true);
-    };
-    putrequest.onerror = function (event) {
-      resolve(false);
-    };
-  });
-
-  let found = await allOK([data_saving, id_saving]);
   await fin;
-  return (found ? id : null);
+  return;
 }
 
 /** Functions to load content **/
+}
+
 export async function loadFile(id) {
   await init;
   let file_store = kanaDB.result
     .transaction(["file"], "readonly")
     .objectStore("file");
 
-  var meta = await loadContent(id, file_store);
-  return new Uint8Array(meta["payload"]);
+  let meta_promise = new Promise((resolve, reject) => {
+    let request = store.get(id);
+    request.onsuccess = event => {
+      resolve(request.result !== undefined ? request.result : null);
+    };
+    request.onerror = event => {
+      reject(new Error(`failed to retrieve file ${id} from KanaDB: ${event.target.errorCode}`));
+    };
+  });
+
+  var meta = await meta_promise;
+  if (meta !== null) {
+    return new Uint8Array(meta["payload"]);
+  } else {
+    return null;
+  }
 }
 
 export async function loadAnalysis(id) {
@@ -217,8 +224,23 @@ export async function loadAnalysis(id) {
   let analysis_store = kanaDB.result
     .transaction(["analysis"], "readonly")
     .objectStore("analysis");
-  var meta = await loadContent(id, analysis_store);
-  return new Uint8Array(meta["payload"]);
+
+  let ana_promise = new Promise((resolve, reject) => {
+    let request = store.get(id);
+    request.onsuccess = event => {
+      resolve(request.result !== undefined ? request.result : null);
+    };
+    request.onerror = event => {
+      reject(new Error(`failed to retrieve analysis ${id} from KanaDB: ${event.target.errorCode}`));
+    };
+  });
+
+  var meta = await ana_promise;
+  if (meta !== null) {
+    return new Uint8Array(meta["payload"]);
+  } else {
+    return null;
+  }
 }
 
 /** Functions to load content **/
@@ -229,54 +251,65 @@ export async function removeFile(id) {
   let file_store = trans.objectStore("file");
   let meta_store = trans.objectStore("file_meta");
 
-  var meta = await loadContent(id, meta_store);
-  var refcount = meta["count"];
-  refcount--;
-  var promises = [];
+  let request = store.get(id);
+  await (new Promise((resolve, reject) => {
+    request.onsuccess = event => {
+      let meta = request.result;
 
-  if (refcount === 0) {
-    promises.push(
-      new Promise((resolve) => {
-        let request = file_store.remove(id);
-        request.onerror = function (event) {
-          resolve(false);
-        };
-        request.onsuccess = function (event) {
-          resolve(true);
-        };
-      })
-    );
+      var refcount = meta["count"];
+      refcount--;
+      var promises = [];
 
-    promises.push(
-      new Promise((resolve) => {
-        let request = meta_store.delete(id);
-        request.onerror = function (event) {
-          resolve(false);
-        };
-        request.onsuccess = function (event) {
-          resolve(true);
-        };
-      })
-    );
+      if (refcount === 0) {
+        promises.push(
+          new Promise((resolve) => {
+            let request = file_store.remove(id);
+            request.onsuccess = event => {
+              resolve(true);
+            };
+            request.onerror = event => {
+              reject(new Error(`failed to remove file ${id} from KanaDB: ${event.target.errorCode}`));
+            };
+          })
+        );
+    
+        promises.push(
+          new Promise((resolve) => {
+            let request = meta_store.delete(id);
+            request.onsuccess = event => {
+              resolve(true);
+            };
+            request.onerror = event => {
+              reject(new Error(`failed to remove file metadata ${id} from KanaDB: ${event.target.errorCode}`));
+            };
+          })
+        );
+  
+      } else {
+        promises.push(
+          new Promise((resolve) => {
+            meta.count = refcount;
+            let request = meta_store.put(meta);
+            request.onsuccess = event => {
+              resolve(true);
+            };
+            request.onerror = event => {
+              reject(new Error(`failed to update file metadata ${id} in KanaDB: ${event.target.errorCode}`));
+            };
+          })
+        );
+      }
 
-  } else {
-    promises.push(
-      new Promise((resolve) => {
-        meta.count = refcount;
-        let request = meta_store.put(meta);
-        request.onsuccess = function (event) {
-          resolve(true);
-        };
-        request.onerror = function (event) {
-          resolve(false);
-        };
-      })
-    );
-  }
+      resolve(Promise.all(promises));
+    };
 
-  let output = await allOK(promises);
+    request.onerror = event => {
+      reject(new Error(`failed to retrieve file metadata ${id} from KanaDB: ${event.target.errorCode}`));
+    };
+  });
+
   await fin;
-  return output;
+  return;
 }
 
 export async function removeAnalysis(id) {
@@ -294,36 +327,48 @@ export async function removeAnalysis(id) {
   promises.push(
     new Promise((resolve) => {
       let request = analysis_store.delete(id);
-      request.onsuccess = function (event) {
+      request.onsuccess = event => {
         resolve(true);
       };
-      request.onerror = function (event) {
-        resolve(false);
+      request.onerror = event => {
+        reject(new Error(`failed to delete analysis ${id} from KanaDB: ${event.target.errorCode}`));
       };
     })
   );
 
   // Removing all files as well.
-  var meta = await loadContent(id, meta_store);
-  for (const [k, v] of Object.entries(meta["files"]["datasets"])) {
-    for (const f of v["files"]) {
-      promises.push(removeFile(f["id"]));
-    }
-  }
+  let request = store.get(id);
+  await (new Promise((resolve, reject) => {
+    request.onsuccess = event => {
+      let meta = request.result;
 
-  promises.push(
-    new Promise((resolve) => {
-      let request = meta_store.delete(id);
-      request.onsuccess = function (event) {
-        resolve(true);
-      };
-      request.onerror = function (event) {
-        resolve(false);
-      };
-    })
-  );
+      for (const [k, v] of Object.entries(meta["files"]["datasets"])) {
+        for (const f of v["files"]) {
+          promises.push(removeFile(f["id"]));
+        }
+      }
+  
+      promises.push(
+        new Promise((resolve) => {
+          let request = meta_store.delete(id);
+          request.onsuccess = event => {
+            resolve(true);
+          };
+          request.onerror = event => {
+            reject(new Error(`failed to delete analysis metadata ${id} from KanaDB: ${event.target.errorCode}`));
+          };
+        })
+      );
 
-  let output = await allOK(promises);
+      resolve(true);
+    };
+
+    request.onerror = event => {
+      reject(new Error(`failed to retrieve analysis metadata ${id} from KanaDB: ${event.target.errorCode}`));
+    };
+  }));
+
+  await Promise.all(promises);
   await fin;
-  return output;
+  return;
 }
