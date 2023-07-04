@@ -176,10 +176,7 @@ function linkKanaDb(collected) {
     let buffer = file.buffer();
     var md5 = await hashwasm.md5(buffer);
     var id = type + "_" + file.name() + "_" + buffer.length + "_" + md5;
-    var ok = await kana_db.saveFile(id, buffer);
-    if (!ok) {
-      throw new Error("failed to save file '" + id + "' to KanaDB");
-    }
+    await kana_db.saveFile(id, buffer);
     collected.push(id);
     return id;
   };
@@ -621,10 +618,7 @@ onmessage = function (msg) {
           let buffer = file.buffer();
           var md5 = await hashwasm.md5(buffer);
           var id = type + "_" + file.name() + "_" + buffer.length + "_" + md5;
-          var ok = await kana_db.saveFile(id, buffer);
-          if (!ok) {
-            throw new Error("failed to save file '" + id + "' to KanaDB");
-          }
+          await kana_db.saveFile(id, buffer);
           buffers.push(id);
           return id;
         };

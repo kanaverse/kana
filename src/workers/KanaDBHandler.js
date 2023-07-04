@@ -126,7 +126,7 @@ export async function saveFile(id, buffer) {
     };
 
     request.onerror = event => {
-      reject(new Error(`failed to save file ${id} in KanaDB: ${event.target.errorCode}`));
+      reject(new Error(`failed to retrieve metadata ${id} in KanaDB: ${event.target.errorCode}`));
     };
   }));
 
@@ -170,12 +170,13 @@ export async function saveAnalysis(id, state, files, title) {
       };
     });
 
-    return Promise.all([data_saving, id_saving]);
+    return Promise.all([data_saving, id_saving]).then(x => new_id);
   };
 
+  let output;
   if (id === null) {
     let request = meta_store.getAll();
-    await (new Promise((resolve, reject) => {
+    output = await (new Promise((resolve, reject) => {
       request.onsuccess = event => {
         resolve(callback(String(request.result.length)));
       };
@@ -184,11 +185,11 @@ export async function saveAnalysis(id, state, files, title) {
       };
     }));
   } else {
-    await callback(id);
+    output = await callback(id);
   }
 
   await fin;
-  return;
+  return output;
 }
 
 /** Functions to load content **/
