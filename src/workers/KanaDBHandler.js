@@ -1,18 +1,6 @@
 var kanaDB;
 var init = null;
 
-function complete_write(trans) {
-  // See comments in DownloadsDB about the validity of wrapping this in a Promise.
-  return new Promise((resolve, reject) => {
-    trans.oncomplete = (event) => {
-      resolve(null);
-    };
-    trans.onerror = (event) => {
-      reject(new Error(`DownloadsDB transaction error: ${event.target.errorCode}`));
-    };
-  });
-}
-
 export function initialize() {
   init = new Promise((resolve) => {
     // initialize database on worker creation
@@ -88,12 +76,20 @@ export async function getRecords() {
 export async function saveFile(id, buffer) {
   await init;
   let trans = kanaDB.result.transaction(["file", "file_meta"], "readwrite");
-  let fin = complete_write(trans);
+  let fin = new Promise((resolve, reject) => {
+    trans.oncomplete = (event) => {
+      resolve(null);
+    };
+    trans.onerror = (event) => {
+      reject(new Error(`transaction error when saving file ${id} in DownloadsDB: ${event.target.errorCode}`));
+    };
+  });
+
   let file_store = trans.objectStore("file");
   let meta_store = trans.objectStore("file_meta");
 
   let request = meta_store.get(id);
-  await (new Promise((resolve, reject) => {
+  let saving = new Promise((resolve, reject) => {
     request.onsuccess = event => {
       let meta = request.result;
       if (typeof meta === "undefined") {
@@ -128,9 +124,11 @@ export async function saveFile(id, buffer) {
     request.onerror = event => {
       reject(new Error(`failed to retrieve metadata ${id} in KanaDB: ${event.target.errorCode}`));
     };
-  }));
+  });
 
+  // Only await after attaching all event handlers.
   await fin;
+  await saving;
   return;
 }
 
@@ -140,7 +138,15 @@ export async function saveAnalysis(id, state, files, title) {
     ["analysis", "analysis_meta"],
     "readwrite"
   );
-  let fin = complete_write(trans);
+  let fin = new Promise((resolve, reject) => {
+    trans.oncomplete = (event) => {
+      resolve(null);
+    };
+    trans.onerror = (event) => {
+      reject(new Error(`transaction error when saving analysis ${id} in DownloadsDB: ${event.target.errorCode}`));
+    };
+  });
+
   let analysis_store = trans.objectStore("analysis");
   let meta_store = trans.objectStore("analysis_meta");
 
@@ -173,21 +179,23 @@ export async function saveAnalysis(id, state, files, title) {
     return Promise.all([data_saving, id_saving]).then(x => new_id);
   };
 
-  let output;
+  let output_promise;
   if (id === null) {
     let request = meta_store.getAll();
-    output = await (new Promise((resolve, reject) => {
+    output_promise = new Promise((resolve, reject) => {
       request.onsuccess = event => {
         resolve(callback(String(request.result.length)));
       };
       request.onerror = event => {
         reject(new Error(`failed to list existing analysis store in KanaDB: ${event.target.errorCode}`));
       };
-    }));
+    });
   } else {
-    output = await callback(id);
+    output_promise = callback(id);
   }
 
+  // Only await after attaching all event handlers.
+  let output = await output_promise;
   await fin;
   return output;
 }
@@ -245,12 +253,20 @@ export async function loadAnalysis(id) {
 export async function removeFile(id) {
   await init;
   let trans = kanaDB.result.transaction(["file", "file_meta"], "readwrite");
-  let fin = complete_write(trans);
+  let fin = new Promise((resolve, reject) => {
+    trans.oncomplete = (event) => {
+      resolve(null);
+    };
+    trans.onerror = (event) => {
+      reject(new Error(`transaction error when removing file ${id} in DownloadsDB: ${event.target.errorCode}`));
+    };
+  });
+
   let file_store = trans.objectStore("file");
   let meta_store = trans.objectStore("file_meta");
 
   let request = meta_store.get(id);
-  await (new Promise((resolve, reject) => {
+  let removal = new Promise((resolve, reject) => {
     request.onsuccess = event => {
       let meta = request.result;
       var refcount = meta["count"] - 1;
@@ -302,8 +318,10 @@ export async function removeFile(id) {
     request.onerror = event => {
       reject(new Error(`failed to retrieve file metadata ${id} from KanaDB: ${event.target.errorCode}`));
     };
-  }));
+  });
 
+  // Only await after attaching all event handlers.
+  await removal;
   await fin;
   return;
 }
@@ -314,7 +332,15 @@ export async function removeAnalysis(id) {
     ["analysis", "analysis_meta"],
     "readwrite"
   );
-  let fin = complete_write(trans);
+  let fin = new Promise((resolve, reject) => {
+    trans.oncomplete = (event) => {
+      resolve(null);
+    };
+    trans.onerror = (event) => {
+      reject(new Error(`transaction error when removing analysis ${id} in DownloadsDB: ${event.target.errorCode}`));
+    };
+  });
+
   let analysis_store = trans.objectStore("analysis");
   let meta_store = trans.objectStore("analysis_meta");
 
@@ -334,7 +360,7 @@ export async function removeAnalysis(id) {
 
   // Removing all files as well.
   let request = meta_store.get(id);
-  await (new Promise((resolve, reject) => {
+  let removal = new Promise((resolve, reject) => {
     request.onsuccess = event => {
       let meta = request.result;
 
@@ -362,8 +388,10 @@ export async function removeAnalysis(id) {
     request.onerror = event => {
       reject(new Error(`failed to retrieve analysis metadata ${id} from KanaDB: ${event.target.errorCode}`));
     };
-  }));
+  });
 
+  // Only await after attaching all event handlers.
+  await removal;
   await Promise.all(promises);
   await fin;
   return;

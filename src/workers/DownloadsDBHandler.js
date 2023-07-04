@@ -1,20 +1,6 @@
 var DownloadsDB;
 var init = null;
 
-function complete_write(trans) {
-  // The Promise's function should evaluate immediately
-  // (see https://stackoverflow.com/questions/35177230/are-promises-lazily-evaluated) 
-  // so the callbacks should be attached to the transaction before we return to the event loop.
-  return new Promise((resolve, reject) => {
-    trans.oncomplete = (event) => {
-      resolve(null);
-    };
-    trans.onerror = (event) => {
-      reject(new Error(`DownloadsDB transaction error: ${event.target.errorCode}`));
-    };
-  });
-}
-
 export function initialize() {
   if (init === null) {
     init = new Promise((resolve, reject) => {
@@ -94,10 +80,21 @@ export async function get(url, params = null, force = false) {
   // we can't do an async fetch while the transaction is still open, because
   // it just closes before the fetch is done.)
   let trans = DownloadsDB.result.transaction(["downloads"], "readwrite");
-  let fin = complete_write(trans);
+
+  // The Promise's function should evaluate immediately
+  // (see https://stackoverflow.com/questions/35177230/are-promises-lazily-evaluated) 
+  // so the callbacks should be attached to the transaction before we return to the event loop.
+  let fin = new Promise((resolve, reject) => {
+    trans.oncomplete = (event) => {
+      resolve(null);
+    };
+    trans.onerror = (event) => {
+      reject(new Error(`transaction error for saving ${url} in DownloadsDB: ${event.target.errorCode}`));
+    };
+  });
 
   let download_store = trans.objectStore("downloads");
-  await (new Promise((resolve, reject) => {
+  let saving = new Promise((resolve, reject) => {
     var putrequest = download_store.put({ url: url, payload: buffer });
     putrequest.onsuccess = event => {
       resolve(true);
@@ -105,8 +102,10 @@ export async function get(url, params = null, force = false) {
     putrequest.onerror = event => {
       reject(new Error(`failed to cache ${url} in DownloadsDB: ${event.target.errorCode}`));
     };
-  }));
+  });
 
+  // Stack all awaits here, AFTER event handlers have been attached.
+  await saving;
   await fin;
   return buffer;
 }
@@ -114,10 +113,17 @@ export async function get(url, params = null, force = false) {
 export async function remove(url) {
   await init;
   let trans = DownloadsDB.result.transaction(["downloads"], "readwrite");
-  let fin = complete_write(trans);
+  let fin = new Promise((resolve, reject) => {
+    trans.oncomplete = (event) => {
+      resolve(null);
+    };
+    trans.onerror = (event) => {
+      reject(new Error(`transaction error for removing ${url} in DownloadsDB: ${event.target.errorCode}`));
+    };
+  });
 
   let download_store = trans.objectStore("downloads")
-  await (new Promise((resolve, reject) => {
+  let removal = new Promise((resolve, reject) => {
     let request = download_store.delete(url);
     request.onsuccess = event => {
       resolve(true);
@@ -125,8 +131,10 @@ export async function remove(url) {
     request.onerror = event => {
       reject(new Error(`failed to remove ${url} from DownloadsDB: ${event.target.errorCode}`));
     };
-  }));
+  });
 
+  // Only await after attaching event handlers.
+  await removal;
   await fin;
   return;
 }
