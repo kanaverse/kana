@@ -61,7 +61,7 @@ function getRecordsInternal() {
       .objectStore("analysis_meta");
 
   var allAnalysis = store.getAll();
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     allAnalysis.onsuccess = event => {
       let vals = allAnalysis.result;
 
@@ -92,7 +92,7 @@ export async function saveFile(id, buffer) {
   let file_store = trans.objectStore("file");
   let meta_store = trans.objectStore("file_meta");
 
-  let request = store.get(id);
+  let request = meta_store.get(id);
   await (new Promise((resolve, reject) => {
     request.onsuccess = event => {
       let meta = request.result;
@@ -113,7 +113,6 @@ export async function saveFile(id, buffer) {
       });
 
       var ref_saving = new Promise((resolve) => {
-        meta.count = refcount;
         var putrequest = meta_store.put(meta);
         putrequest.onsuccess = event => {
           resolve(true);
@@ -129,7 +128,7 @@ export async function saveFile(id, buffer) {
     request.onerror = event => {
       reject(new Error(`failed to save file ${id} in KanaDB: ${event.target.errorCode}`));
     };
-  });
+  }));
 
   await fin;
   return;
@@ -175,7 +174,7 @@ export async function saveAnalysis(id, state, files, title) {
   };
 
   if (id === null) {
-    let request = store.getAll();
+    let request = meta_store.getAll();
     await (new Promise((resolve, reject) => {
       request.onsuccess = event => {
         resolve(callback(String(request.result.length)));
@@ -193,8 +192,6 @@ export async function saveAnalysis(id, state, files, title) {
 }
 
 /** Functions to load content **/
-}
-
 export async function loadFile(id) {
   await init;
   let file_store = kanaDB.result
@@ -202,7 +199,7 @@ export async function loadFile(id) {
     .objectStore("file");
 
   let meta_promise = new Promise((resolve, reject) => {
-    let request = store.get(id);
+    let request = file_store.get(id);
     request.onsuccess = event => {
       resolve(request.result !== undefined ? request.result : null);
     };
@@ -226,7 +223,7 @@ export async function loadAnalysis(id) {
     .objectStore("analysis");
 
   let ana_promise = new Promise((resolve, reject) => {
-    let request = store.get(id);
+    let request = analysis_store.get(id);
     request.onsuccess = event => {
       resolve(request.result !== undefined ? request.result : null);
     };
@@ -251,13 +248,11 @@ export async function removeFile(id) {
   let file_store = trans.objectStore("file");
   let meta_store = trans.objectStore("file_meta");
 
-  let request = store.get(id);
+  let request = meta_store.get(id);
   await (new Promise((resolve, reject) => {
     request.onsuccess = event => {
       let meta = request.result;
-
-      var refcount = meta["count"];
-      refcount--;
+      var refcount = meta["count"] - 1;
       var promises = [];
 
       if (refcount === 0) {
@@ -306,7 +301,7 @@ export async function removeFile(id) {
     request.onerror = event => {
       reject(new Error(`failed to retrieve file metadata ${id} from KanaDB: ${event.target.errorCode}`));
     };
-  });
+  }));
 
   await fin;
   return;
@@ -325,7 +320,7 @@ export async function removeAnalysis(id) {
   var promises = [];
 
   promises.push(
-    new Promise((resolve) => {
+    new Promise((resolve, reject) => {
       let request = analysis_store.delete(id);
       request.onsuccess = event => {
         resolve(true);
@@ -337,12 +332,12 @@ export async function removeAnalysis(id) {
   );
 
   // Removing all files as well.
-  let request = store.get(id);
+  let request = meta_store.get(id);
   await (new Promise((resolve, reject) => {
     request.onsuccess = event => {
       let meta = request.result;
 
-      for (const [k, v] of Object.entries(meta["files"]["datasets"])) {
+      for (const v of Object.values(meta["files"]["datasets"])) {
         for (const f of v["files"]) {
           promises.push(removeFile(f["id"]));
         }

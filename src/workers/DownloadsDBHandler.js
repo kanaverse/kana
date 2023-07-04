@@ -53,17 +53,17 @@ export async function get(url, params = null, force = false) {
     let trans = DownloadsDB.result.transaction(["downloads"], "readonly");
     let download_store = trans.objectStore("downloads");
 
-    var data_check = new Promise((resolve) => {
+    var data_check = new Promise((resolve, reject) => {
       var already = download_store.get(url);
-      already.onsuccess = function (event) {
+      already.onsuccess = event => {
         if (already.result !== undefined) {
           resolve(already.result.payload);
         } else {
           resolve(null);
         }
       };
-      already.onerror = function (event) {
-        resolve(null);
+      already.onerror = event => {
+        reject(`failed to query DownloadsDB for ${url}: ${event.target.errorCode}`);
       };
     });
 
@@ -82,7 +82,7 @@ export async function get(url, params = null, force = false) {
 
   var res = await req;
   if (!res.ok) {
-    throw "failed to download '" + url + "' (" + res.status + ")";
+    throw new Error("failed to download '" + url + "' (" + res.status + ")");
   }
   var buffer = await res.arrayBuffer();
 
@@ -97,22 +97,17 @@ export async function get(url, params = null, force = false) {
   let fin = complete_write(trans);
 
   let download_store = trans.objectStore("downloads");
-  var data_saving = new Promise((resolve) => {
+  await (new Promise((resolve, reject) => {
     var putrequest = download_store.put({ url: url, payload: buffer });
-    putrequest.onsuccess = function (event) {
+    putrequest.onsuccess = event => {
       resolve(true);
     };
-    putrequest.onerror = function (event) {
-      resolve(false);
+    putrequest.onerror = event => {
+      reject(new Error(`failed to cache ${url} in DownloadsDB: ${event.target.errorCode}`));
     };
-  });
+  }));
 
-  let success = await data_saving;
   await fin;
-  if (!success) {
-    throw "failed to download resources for '" + url + "'";
-  }
-
   return buffer;
 }
 
@@ -121,18 +116,17 @@ export async function remove(url) {
   let trans = DownloadsDB.result.transaction(["downloads"], "readwrite");
   let fin = complete_write(trans);
 
-  let download_store = trans.objectStore("downloads");
-  var removal = new Promise((resolve) => {
+  let download_store = trans.objectStore("downloads")
+  await (new Promise((resolve, reject) => {
     let request = download_store.delete(url);
-    request.onsuccess = function (event) {
+    request.onsuccess = event => {
       resolve(true);
     };
-    request.onerror = function (event) {
-      resolve(false);
+    request.onerror = event => {
+      reject(new Error(`failed to remove ${url} from DownloadsDB: ${event.target.errorCode}`));
     };
-  });
+  }));
 
-  let output = await removal;
   await fin;
-  return output;
+  return;
 }
