@@ -1,6 +1,20 @@
 var DownloadsDB;
 var init = null;
 
+function complete(trans) {
+  // The Promise's function should evaluate immediately
+  // (see https://stackoverflow.com/questions/35177230/are-promises-lazily-evaluated) 
+  // and the callbacks should be attached to the transaction before we return to the event loop.
+  return new Promise((resolve, reject) => {
+    trans.oncomplete = (event) => {
+      resolve(null);
+    };
+    trans.onerror = (event) => {
+      reject(new Error(`DownloadsDB transaction error: ${event.target.errorCode}`));
+    };
+  });
+}
+
 export function initialize() {
   if (init === null) {
     init = new Promise((resolve, reject) => {
@@ -35,8 +49,13 @@ export function initialize() {
 export async function list() {
   await init;
   let trans = DownloadsDB.result.transaction(["downloads"], "readonly");
+  let fin = complete(trans);
+
   let download_store = trans.objectStore("downloads");
-  return download_store.getAllKeys();
+  let listing = download_store.getAllKeys();
+
+  await fin;
+  return listing;
 }
 
 export async function get(url, params = null, force = false) {
@@ -44,6 +63,8 @@ export async function get(url, params = null, force = false) {
 
   if (!force) {
     let trans = DownloadsDB.result.transaction(["downloads"], "readonly");
+    let fin = complete(trans);
+
     let download_store = trans.objectStore("downloads");
     var data_check = new Promise((resolve) => {
       var already = download_store.get(url);
@@ -60,6 +81,7 @@ export async function get(url, params = null, force = false) {
     });
 
     var found = await data_check;
+    await fin;
     if (found !== null) {
       return found;
     }
@@ -86,6 +108,8 @@ export async function get(url, params = null, force = false) {
   // we can't do an async fetch while the transaction is still open, because
   // it just closes before the fetch is done.)
   let trans = DownloadsDB.result.transaction(["downloads"], "readwrite");
+  let fin = complete(trans);
+
   let download_store = trans.objectStore("downloads");
   var data_saving = new Promise((resolve) => {
     var putrequest = download_store.put({ url: url, payload: buffer });
@@ -98,6 +122,7 @@ export async function get(url, params = null, force = false) {
   });
 
   let success = await data_saving;
+  await fin;
   if (!success) {
     throw "failed to download resources for '" + url + "'";
   }
@@ -108,8 +133,9 @@ export async function get(url, params = null, force = false) {
 export async function remove(url) {
   await init;
   let trans = DownloadsDB.result.transaction(["downloads"], "readwrite");
-  let download_store = trans.objectStore("downloads");
+  let fin = complete(trans);
 
+  let download_store = trans.objectStore("downloads");
   var removal = new Promise((resolve) => {
     let request = download_store.delete(url);
     request.onsuccess = function (event) {
@@ -120,5 +146,7 @@ export async function remove(url) {
     };
   });
 
-  return await removal;
+  let output = await removal;
+  await fin;
+  return output;
 }
