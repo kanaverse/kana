@@ -1,10 +1,10 @@
 var DownloadsDB;
 var init = null;
 
-function complete(trans) {
+function complete_write(trans) {
   // The Promise's function should evaluate immediately
   // (see https://stackoverflow.com/questions/35177230/are-promises-lazily-evaluated) 
-  // and the callbacks should be attached to the transaction before we return to the event loop.
+  // so the callbacks should be attached to the transaction before we return to the event loop.
   return new Promise((resolve, reject) => {
     trans.oncomplete = (event) => {
       resolve(null);
@@ -46,26 +46,13 @@ export function initialize() {
   return init;
 }
 
-export async function list() {
-  await init;
-  let trans = DownloadsDB.result.transaction(["downloads"], "readonly");
-  let fin = complete(trans);
-
-  let download_store = trans.objectStore("downloads");
-  let listing = download_store.getAllKeys();
-
-  await fin;
-  return listing;
-}
-
 export async function get(url, params = null, force = false) {
   await init;
 
   if (!force) {
     let trans = DownloadsDB.result.transaction(["downloads"], "readonly");
-    let fin = complete(trans);
-
     let download_store = trans.objectStore("downloads");
+
     var data_check = new Promise((resolve) => {
       var already = download_store.get(url);
       already.onsuccess = function (event) {
@@ -81,7 +68,6 @@ export async function get(url, params = null, force = false) {
     });
 
     var found = await data_check;
-    await fin;
     if (found !== null) {
       return found;
     }
@@ -108,7 +94,7 @@ export async function get(url, params = null, force = false) {
   // we can't do an async fetch while the transaction is still open, because
   // it just closes before the fetch is done.)
   let trans = DownloadsDB.result.transaction(["downloads"], "readwrite");
-  let fin = complete(trans);
+  let fin = complete_write(trans);
 
   let download_store = trans.objectStore("downloads");
   var data_saving = new Promise((resolve) => {
@@ -133,7 +119,7 @@ export async function get(url, params = null, force = false) {
 export async function remove(url) {
   await init;
   let trans = DownloadsDB.result.transaction(["downloads"], "readwrite");
-  let fin = complete(trans);
+  let fin = complete_write(trans);
 
   let download_store = trans.objectStore("downloads");
   var removal = new Promise((resolve) => {
