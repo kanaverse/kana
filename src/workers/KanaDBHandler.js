@@ -1,6 +1,18 @@
 var kanaDB;
 var init = null;
 
+function complete(trans) {
+  // See comments in DownloadsDB about the validity of wrapping this in a Promise.
+  return new Promise((resolve, reject) => {
+    trans.oncomplete = (event) => {
+      resolve(null);
+    };
+    trans.onerror = (event) => {
+      reject(new Error(`DownloadsDB transaction error: ${event.target.errorCode}`));
+    };
+  });
+}
+
 export function initialize() {
   init = new Promise((resolve) => {
     // initialize database on worker creation
@@ -103,6 +115,7 @@ export async function getRecords() {
 export async function saveFile(id, buffer) {
   await init;
   let trans = kanaDB.result.transaction(["file", "file_meta"], "readwrite");
+  let fin = complete(trans);
   let file_store = trans.objectStore("file");
   let meta_store = trans.objectStore("file_meta");
 
@@ -136,7 +149,9 @@ export async function saveFile(id, buffer) {
     };
   });
 
-  return allOK([data_saving, ref_saving]);
+  let output = allOK([data_saving, ref_saving]);
+  await fin;
+  return output;
 }
 
 export async function saveAnalysis(id, state, files, title) {
@@ -145,6 +160,7 @@ export async function saveAnalysis(id, state, files, title) {
     ["analysis", "analysis_meta"],
     "readwrite"
   );
+  let fin = complete(trans);
   let analysis_store = trans.objectStore("analysis");
   let meta_store = trans.objectStore("analysis_meta");
 
@@ -180,11 +196,9 @@ export async function saveAnalysis(id, state, files, title) {
     };
   });
 
-  if (await allOK([data_saving, id_saving])) {
-    return id;
-  } else {
-    return null;
-  }
+  let found = await allOK([data_saving, id_saving]);
+  await fin;
+  return (found ? id : null);
 }
 
 /** Functions to load content **/
@@ -211,6 +225,7 @@ export async function loadAnalysis(id) {
 export async function removeFile(id) {
   await init;
   let trans = kanaDB.result.transaction(["file", "file_meta"], "readwrite");
+  let fin = complete(trans);
   let file_store = trans.objectStore("file");
   let meta_store = trans.objectStore("file_meta");
 
@@ -231,6 +246,7 @@ export async function removeFile(id) {
         };
       })
     );
+
     promises.push(
       new Promise((resolve) => {
         let request = meta_store.delete(id);
@@ -242,6 +258,7 @@ export async function removeFile(id) {
         };
       })
     );
+
   } else {
     promises.push(
       new Promise((resolve) => {
@@ -257,7 +274,9 @@ export async function removeFile(id) {
     );
   }
 
-  return allOK(promises);
+  let output = await allOK(promises);
+  await fin;
+  return output;
 }
 
 export async function removeAnalysis(id) {
@@ -266,6 +285,7 @@ export async function removeAnalysis(id) {
     ["analysis", "analysis_meta"],
     "readwrite"
   );
+  let fin = complete(trans);
   let analysis_store = trans.objectStore("analysis");
   let meta_store = trans.objectStore("analysis_meta");
 
@@ -303,5 +323,7 @@ export async function removeAnalysis(id) {
     })
   );
 
-  return allOK(promises);
+  let output = await allOK(promises);
+  await fin;
+  return output;
 }
