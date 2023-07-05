@@ -32,7 +32,7 @@ export function initialize() {
 
     // Send existing stored analyses, if available.
     kanaDB.onsuccess = () => {
-      resolve(getRecordsInternal());
+      resolve(get_records());
     };
 
     kanaDB.onerror = () => {
@@ -43,7 +43,7 @@ export function initialize() {
   return init;
 }
 
-function getRecordsInternal() {
+function get_records() {
   let store = kanaDB.result
       .transaction(["analysis_meta"], "readonly")
       .objectStore("analysis_meta");
@@ -69,10 +69,11 @@ function getRecordsInternal() {
 
 export async function getRecords() {
   await init;
-  return getRecordsInternal();
+  return get_records();
 }
 
 /** Functions to save content **/
+
 export async function saveFile(id, buffer) {
   await init;
   let trans = kanaDB.result.transaction(["file", "file_meta"], "readwrite");
@@ -98,7 +99,7 @@ export async function saveFile(id, buffer) {
         meta.count++;
       }
 
-      var data_saving = new Promise((resolve) => {
+      var data_saving = new Promise((resolve, reject) => {
         var putrequest = file_store.put({ id: id, payload: buffer.buffer });
         putrequest.onsuccess = event => {
           resolve(true);
@@ -108,7 +109,7 @@ export async function saveFile(id, buffer) {
         };
       });
 
-      var ref_saving = new Promise((resolve) => {
+      var ref_saving = new Promise((resolve, reject) => {
         var putrequest = meta_store.put(meta);
         putrequest.onsuccess = event => {
           resolve(true);
@@ -176,7 +177,8 @@ export async function saveAnalysis(id, state, files, title) {
       };
     });
 
-    return Promise.all([data_saving, id_saving]).then(x => new_id);
+    // DO NOT await the promises here!
+    return [new_id, data_saving, id_saving];
   };
 
   let output_promise;
@@ -197,10 +199,11 @@ export async function saveAnalysis(id, state, files, title) {
   // Only await after attaching all event handlers.
   let output = await output_promise;
   await fin;
-  return output;
+  return output[0];
 }
 
 /** Functions to load content **/
+
 export async function loadFile(id) {
   await init;
   let file_store = kanaDB.result
@@ -219,10 +222,9 @@ export async function loadFile(id) {
 
   var meta = await meta_promise;
   if (meta !== null) {
-    return new Uint8Array(meta["payload"]);
-  } else {
-    return null;
+    meta = new Uint8Array(meta["payload"]);
   }
+  return meta;
 }
 
 export async function loadAnalysis(id) {
@@ -243,13 +245,84 @@ export async function loadAnalysis(id) {
 
   var meta = await ana_promise;
   if (meta !== null) {
-    return new Uint8Array(meta["payload"]);
-  } else {
-    return null;
+    meta = new Uint8Array(meta["payload"]);
   }
+  return meta;
 }
 
-/** Functions to load content **/
+/** Functions to remove content **/
+
+async function superResolver(x) {
+  let resolved = await x;
+  if (resolved instanceof Array) {
+    let replacement = [];
+    for (const y of resolved) {
+      replacement.push(await superResolver(y));
+    }
+    resolved = replacement;
+  }
+  return resolved;
+}
+
+function remove_file(id, file_store, meta_store) {
+  let request = meta_store.get(id);
+
+  return new Promise((resolve, reject) => {
+    request.onsuccess = event => {
+      let meta = request.result;
+      var refcount = meta["count"] - 1;
+      var promises = [];
+
+      if (refcount === 0) {
+        promises.push(
+          new Promise((resolve, reject) => {
+            let request = file_store.delete(id);
+            request.onsuccess = event => {
+              resolve(true);
+            };
+            request.onerror = event => {
+              reject(new Error(`failed to remove file ${id} from KanaDB: ${event.target.errorCode}`));
+            };
+          })
+        );
+    
+        promises.push(
+          new Promise((resolve, reject) => {
+            let request = meta_store.delete(id);
+            request.onsuccess = event => {
+              resolve(true);
+            };
+            request.onerror = event => {
+              reject(new Error(`failed to remove file metadata ${id} from KanaDB: ${event.target.errorCode}`));
+            };
+          })
+        );
+  
+      } else {
+        promises.push(
+          new Promise((resolve, reject) => {
+            meta.count = refcount;
+            let request = meta_store.put(meta);
+            request.onsuccess = event => {
+              resolve(true);
+            };
+            request.onerror = event => {
+              reject(new Error(`failed to update file metadata ${id} in KanaDB: ${event.target.errorCode}`));
+            };
+          })
+        );
+      }
+
+      resolve(promises);
+    };
+
+    request.onerror = event => {
+      console.log(event);
+      reject(new Error(`failed to retrieve file metadata ${id} from KanaDB: ${event.target.errorCode}`));
+    };
+  });
+}
+
 export async function removeFile(id) {
   await init;
   let trans = kanaDB.result.transaction(["file", "file_meta"], "readwrite");
@@ -264,64 +337,10 @@ export async function removeFile(id) {
 
   let file_store = trans.objectStore("file");
   let meta_store = trans.objectStore("file_meta");
-
-  let request = meta_store.get(id);
-  let removal = new Promise((resolve, reject) => {
-    request.onsuccess = event => {
-      let meta = request.result;
-      var refcount = meta["count"] - 1;
-      var promises = [];
-
-      if (refcount === 0) {
-        promises.push(
-          new Promise((resolve) => {
-            let request = file_store.remove(id);
-            request.onsuccess = event => {
-              resolve(true);
-            };
-            request.onerror = event => {
-              reject(new Error(`failed to remove file ${id} from KanaDB: ${event.target.errorCode}`));
-            };
-          })
-        );
-    
-        promises.push(
-          new Promise((resolve) => {
-            let request = meta_store.delete(id);
-            request.onsuccess = event => {
-              resolve(true);
-            };
-            request.onerror = event => {
-              reject(new Error(`failed to remove file metadata ${id} from KanaDB: ${event.target.errorCode}`));
-            };
-          })
-        );
-  
-      } else {
-        promises.push(
-          new Promise((resolve) => {
-            meta.count = refcount;
-            let request = meta_store.put(meta);
-            request.onsuccess = event => {
-              resolve(true);
-            };
-            request.onerror = event => {
-              reject(new Error(`failed to update file metadata ${id} in KanaDB: ${event.target.errorCode}`));
-            };
-          })
-        );
-      }
-
-      resolve(Promise.all(promises));
-    };
-
-    request.onerror = event => {
-      reject(new Error(`failed to retrieve file metadata ${id} from KanaDB: ${event.target.errorCode}`));
-    };
-  });
+  let removal = remove_file(id, file_store, meta_store);
 
   // Only await after attaching all event handlers.
-  await removal;
+  await superResolver(removal);
   await fin;
   return;
 }
@@ -329,7 +348,7 @@ export async function removeFile(id) {
 export async function removeAnalysis(id) {
   await init;
   let trans = kanaDB.result.transaction(
-    ["analysis", "analysis_meta"],
+    ["analysis", "analysis_meta", "file", "file_meta"],
     "readwrite"
   );
   let fin = new Promise((resolve, reject) => {
@@ -342,47 +361,47 @@ export async function removeAnalysis(id) {
   });
 
   let analysis_store = trans.objectStore("analysis");
-  let meta_store = trans.objectStore("analysis_meta");
+  let analysis_meta_store = trans.objectStore("analysis_meta");
+  let file_store = trans.objectStore("file");
+  let file_meta_store = trans.objectStore("file_meta");
 
-  var promises = [];
-
-  promises.push(
-    new Promise((resolve, reject) => {
-      let request = analysis_store.delete(id);
-      request.onsuccess = event => {
-        resolve(true);
-      };
-      request.onerror = event => {
-        reject(new Error(`failed to delete analysis ${id} from KanaDB: ${event.target.errorCode}`));
-      };
-    })
-  );
+  let analysis_removal = new Promise((resolve, reject) => {
+    let request = analysis_store.delete(id);
+    request.onsuccess = event => {
+      resolve(true);
+    };
+    request.onerror = event => {
+      reject(new Error(`failed to delete analysis ${id} from KanaDB: ${event.target.errorCode}`));
+    };
+  })
 
   // Removing all files as well.
-  let request = meta_store.get(id);
-  let removal = new Promise((resolve, reject) => {
+  let request = analysis_meta_store.get(id);
+  let file_removal = new Promise((resolve, reject) => {
     request.onsuccess = event => {
       let meta = request.result;
 
+      let my_promises = [];
       for (const v of Object.values(meta["files"]["datasets"])) {
         for (const f of v["files"]) {
-          promises.push(removeFile(f["id"]));
+          my_promises.push(remove_file(f["id"], file_store, file_meta_store));
         }
       }
-  
-      promises.push(
-        new Promise((resolve) => {
-          let request = meta_store.delete(id);
-          request.onsuccess = event => {
-            resolve(true);
-          };
-          request.onerror = event => {
-            reject(new Error(`failed to delete analysis metadata ${id} from KanaDB: ${event.target.errorCode}`));
-          };
-        })
-      );
 
-      resolve(true);
+      // And THEN removing the analysis metadata, because otherwise
+      // we wouldn't know what the files were, obviously!
+      let deleted = new Promise((resolve, reject) => {
+        let request = analysis_meta_store.delete(id);
+        request.onsuccess = event => {
+          resolve(true);
+        };
+        request.onerror = event => {
+          reject(new Error(`failed to delete analysis metadata ${id} from KanaDB: ${event.target.errorCode}`));
+        };
+      })
+
+      my_promises.push(deleted);
+      resolve(my_promises);
     };
 
     request.onerror = event => {
@@ -391,8 +410,8 @@ export async function removeAnalysis(id) {
   });
 
   // Only await after attaching all event handlers.
-  await removal;
-  await Promise.all(promises);
+  await analysis_removal;
+  await superResolver(file_removal);
   await fin;
-  return;
+  return true;
 }

@@ -628,19 +628,12 @@ onmessage = function (msg) {
         let config = enc.encode(JSON.stringify(collected));
         let id = await kana_db.saveAnalysis(null, config, collected, title);
 
-        if (id !== null) {
-          let recs = await kana_db.getRecords();
-          postMessage({
-            type: "KanaDB_store",
-            resp: recs,
-            msg: `Success: Saved analysis to browser (${id})`,
-          });
-        } else {
-          postMessage({
-            type: "KanaDB_ERROR",
-            msg: `Fail: Cannot save analysis to browser`,
-          });
-        }
+        let recs = await kana_db.getRecords();
+        postMessage({
+          type: "KanaDB_store",
+          resp: recs,
+          msg: `Success: Saved analysis to browser (${id})`,
+        });
       })
       .catch((err) => {
         console.error(err);
@@ -654,19 +647,12 @@ onmessage = function (msg) {
     kana_db
       .removeAnalysis(id)
       .then(async (output) => {
-        if (output) {
-          let recs = await kana_db.getRecords();
-          postMessage({
-            type: "KanaDB_store",
-            resp: recs,
-            msg: `Success: Removed file from cache (${id})`,
-          });
-        } else {
-          postMessage({
-            type: "KanaDB_ERROR",
-            msg: `fail: cannot remove file from cache (${id})`,
-          });
-        }
+        let recs = await kana_db.getRecords();
+        postMessage({
+          type: "KanaDB_store",
+          resp: recs,
+          msg: `Success: Removed file from cache (${id})`,
+        });
       })
       .catch((err) => {
         console.error(err);
