@@ -32,30 +32,24 @@ export function initialize() {
   return init;
 }
 
-export async function list() {
-  await init;
-  let trans = DownloadsDB.result.transaction(["downloads"], "readonly");
-  let download_store = trans.objectStore("downloads");
-  return download_store.getAllKeys();
-}
-
 export async function get(url, params = null, force = false) {
   await init;
 
   if (!force) {
     let trans = DownloadsDB.result.transaction(["downloads"], "readonly");
     let download_store = trans.objectStore("downloads");
-    var data_check = new Promise((resolve) => {
+
+    var data_check = new Promise((resolve, reject) => {
       var already = download_store.get(url);
-      already.onsuccess = function (event) {
+      already.onsuccess = event => {
         if (already.result !== undefined) {
           resolve(already.result.payload);
         } else {
           resolve(null);
         }
       };
-      already.onerror = function (event) {
-        resolve(null);
+      already.onerror = event => {
+        reject(`failed to query DownloadsDB for ${url}: ${event.target.errorCode}`);
       };
     });
 
@@ -74,7 +68,7 @@ export async function get(url, params = null, force = false) {
 
   var res = await req;
   if (!res.ok) {
-    throw "failed to download '" + url + "' (" + res.status + ")";
+    throw new Error("failed to download '" + url + "' (" + res.status + ")");
   }
   var buffer = await res.arrayBuffer();
 
@@ -86,39 +80,61 @@ export async function get(url, params = null, force = false) {
   // we can't do an async fetch while the transaction is still open, because
   // it just closes before the fetch is done.)
   let trans = DownloadsDB.result.transaction(["downloads"], "readwrite");
-  let download_store = trans.objectStore("downloads");
-  var data_saving = new Promise((resolve) => {
-    var putrequest = download_store.put({ url: url, payload: buffer });
-    putrequest.onsuccess = function (event) {
-      resolve(true);
+
+  // The Promise's function should evaluate immediately
+  // (see https://stackoverflow.com/questions/35177230/are-promises-lazily-evaluated) 
+  // so the callbacks should be attached to the transaction before we return to the event loop.
+  let fin = new Promise((resolve, reject) => {
+    trans.oncomplete = (event) => {
+      resolve(null);
     };
-    putrequest.onerror = function (event) {
-      resolve(false);
+    trans.onerror = (event) => {
+      reject(new Error(`transaction error for saving ${url} in DownloadsDB: ${event.target.errorCode}`));
     };
   });
 
-  let success = await data_saving;
-  if (!success) {
-    throw "failed to download resources for '" + url + "'";
-  }
+  let download_store = trans.objectStore("downloads");
+  let saving = new Promise((resolve, reject) => {
+    var putrequest = download_store.put({ url: url, payload: buffer });
+    putrequest.onsuccess = event => {
+      resolve(true);
+    };
+    putrequest.onerror = event => {
+      reject(new Error(`failed to cache ${url} in DownloadsDB: ${event.target.errorCode}`));
+    };
+  });
 
+  // Stack all awaits here, AFTER event handlers have been attached.
+  await saving;
+  await fin;
   return buffer;
 }
 
 export async function remove(url) {
   await init;
   let trans = DownloadsDB.result.transaction(["downloads"], "readwrite");
-  let download_store = trans.objectStore("downloads");
-
-  var removal = new Promise((resolve) => {
-    let request = download_store.delete(url);
-    request.onsuccess = function (event) {
-      resolve(true);
+  let fin = new Promise((resolve, reject) => {
+    trans.oncomplete = (event) => {
+      resolve(null);
     };
-    request.onerror = function (event) {
-      resolve(false);
+    trans.onerror = (event) => {
+      reject(new Error(`transaction error for removing ${url} in DownloadsDB: ${event.target.errorCode}`));
     };
   });
 
-  return await removal;
+  let download_store = trans.objectStore("downloads")
+  let removal = new Promise((resolve, reject) => {
+    let request = download_store.delete(url);
+    request.onsuccess = event => {
+      resolve(true);
+    };
+    request.onerror = event => {
+      reject(new Error(`failed to remove ${url} from DownloadsDB: ${event.target.errorCode}`));
+    };
+  });
+
+  // Only await after attaching event handlers.
+  await removal;
+  await fin;
+  return;
 }
