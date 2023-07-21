@@ -16,7 +16,7 @@ authors:
 affiliations:
   - name: Genentech Inc., South San Francisco, USA
     index: 1
-date: 15 May 2023
+date: 20 July 2023
 bibliography: ref.bib
 ---
 
@@ -32,11 +32,15 @@ Results are presented in an intuitive web interface for further exploration and 
 
 # Statement of need
 
-Single-cell 'omics is routinely used to identify cell subpopulations or states from heterogeneous biological samples [@stegle2015computational].
-This typically involves several iterations of data analysis, visualization and interpretation by biologists who may not be familiar with programming frameworks for bioinformatics.
+Single-cell 'omics is routinely used to identify cell subpopulations with distinct molecular phenotypes in heterogeneous biological samples [@stegle2015computational].
+For example, in single cell RNA sequencing (scRNA-seq), cells are clustered based on their transcriptional profiles and each cluster is characterized based on differential expression of marker genes.
+Changes in expression or cellular abundance for each cluster can then provide some insight into the biological processes associated with the corresponding cell type or state.
+This analysis is often exploratory in nature as the properties of an interesting cell subpopulation are difficult to define _a priori_.
+As a result, each analysis involves several iterations of computation, visualization and interpretation by biologists who may not be familiar with programming frameworks for bioinformatics.
+
 Web applications offer an ideal environment for single-cell analyses, providing a user-friendly interface to the analysis workflow without any installation of additional software (other than a browser).
-Most existing web applications for single-cell analysis [@megill2021cellxgene;@cirrocumulus;@shiny] use a traditional server-based architecture,
-where data is sent to a backend server to compute results that are returned to the client (i.e., the user's machine) for visualization.
+This strategy has been used by tools such as Cellxgene [@megill2021cellxgene], Cirrocumulus [@cirrocumulus], and a variety of R/Shiny applications [@shiny] for processing single-cell data.
+The vast majority of these existing web applications use a traditional server-based architecture, where data is sent to a backend server to compute results that are returned to the client - i.e., the user's machine - for inspection.
 This obviously requires the deployment of a backend server, which has non-negligible cost when scaled to a large number of users.
 It also requires data transfer from the client to the server, which introduces latency as well as invoking concerns over data ownership and privacy.
 
@@ -68,14 +72,20 @@ The entire analysis can then be executed with a single click, though users can e
 Once each step of the analysis is complete, kana visualizes its results in a multi-panel layout (\autoref{screenshot:results}).
 One panel contains a scatter plot for the low-dimensional embeddings, where each cell is a point that is colored by cluster identity or gene expression.
 Another panel contains a table of marker statistics for a selected cluster, where potential marker genes are ranked and filtered according to the magnitude of upregulation over other clusters.
+Scientists can use this interface to examine the cellular heterogeneity in the dataset and to determine which biological processes are most active in each subpopulation.
 We also provide a gallery to visualize miscellaneous details such as the distribution of QC metrics.
 
-![Screenshot showing the multi-panel layout for results in the kana application. The top-left panel is used for the low-dimensional embeddings, the right panel contains the marker table for a selected cluster, and the bottom-left panel contains a gallery of miscellaneous plots.\label{screenshot:results}](screenshots/results.png)
+![Screenshot showing the multi-panel layout for results in the kana application. The left panel is used for the low-dimensional embeddings, the middle panel contains the marker table for a selected cluster, and the right panel contains a gallery of miscellaneous plots.\label{screenshot:results}](screenshots/results.png)
 
 Once the analysis is complete, users can export the analysis configuration and results for later inspection.
 The exported results can be quickly reloaded in a new browser session, allowing users or their collaborators to explore existing results without repeating the computation.
 Indeed, kana's "explore-only" mode can be used more generally for single-cell analysis results in other formats, e.g., to load RDS or H5AD files containing pre-computed clusterings and low-dimensional embeddings.
 Similarly, the exported configuration can be used to restore the analysis session for further parameter tuning and iteration.
+
+From a user perspective, kana's interface is quite similiar to those of other single-cell web applications like Cellxgene.
+In fact, most single-cell user interfaces have very similar layouts and functionality due to the commonality of the analysis steps and the standardized nature of the results.
+kana's novelty comes from how the analysis is performed - unlike most other applications, we do not rely on a backend server, but perform the analysis directly on the user's machine.
+Importantly, this is achieved via the browser and does not require installation of additional software like, e.g., the 10X Genomics Loupe browser.
 
 # Implementation details
 
@@ -87,7 +97,7 @@ For kana, we created C++ implementations of the data representations or algorith
 - CppIrlba [@cppirlba] contains a C++ implementation of the IRLBA algorithm [@baglama2005augmented], based on the C code in the irlba R package [@irlba].
 - CppKmeans [@cppkmeans] implements the several algorithms for k-means clustering [@hartiganwong;@lloyd;@vassilvitskii2006kmeanspp@su2007search], based on R's Fortran code.
 - knncolle [@knncolle] wraps several nearest neighbor detection algorithms [@yianilos1993data;@annoy] in a consistent interface, using the same design as the BiocNeighbors package [@biocneighbors].
-- libscran [@libscran] implements high-level methods for single-cell RNA sequencing data analysis based on code from the scran, scuttle and scater packages [@lun2016step;@lun2017scater].
+- libscran [@libscran] implements high-level methods for scRNA-seq data analysis based on code from the scran, scuttle and scater packages [@lun2016step;@lun2017scater].
 - qdtsne [@qdtsne] contains a C++ implementation of the Barnes-Hut t-SNE algorithm [@maaten2014accelerating], refactored and optimized from code in the Rtsne package [@rtsne].
 - umappp [@umappp] contains a C++ implementation of the UMAP algorithm [@mcinnes2018umap], derived from code in the uwot R package [@uwot].
 - SinglePP [@singlepp] contains a C++ implementation of the SingleR algorithm for cell type annotation [@aran2019reference].
@@ -97,14 +107,19 @@ For kana, we created C++ implementations of the data representations or algorith
 We compiled these libraries to a Wasm binary using the Emscripten toolchain [@zakai2011emscripten], using PThreads to enable parallelization via web workers.
 We then wrapped the binary in the scran.js library [@scran.js] to provide JavaScript bindings for use in web applications.
 kana itself was developed using React with extensive use of WebGL for efficient plotting.
-On a moderately sized single-cell RNA sequencing dataset containing over 170,000 cells [@zilionis2019single],
+On a moderately sized scRNA-seq dataset containing over 170,000 cells [@zilionis2019single],
 kana was able to finish the analysis in under 5 minutes and using less than 3 GB of RAM on a consumer laptop.
 
 # Further comments
 
 kana's key innovation lies in its use of modern web technologies to perform the analysis directly in the browser.
 This eliminates the difficulties of software installation and makes the analysis accessible to a non-programming audience.
-At the same time, we retain all the benefits of client-side operations, i.e., no dependence on a backend server, no latency from data transfer, no issues with data ownership, and (effectively) free compute.
+At the same time, we retain all the benefits of client-side operations, namely:
+
+- No dependence on a backend server, which greatly simplifies application deployment and maintenance for developers.
+- No latency from transfer of data and results to/from the server, which yields a more responsive user experience.
+- No issues with data ownership, enabling users to process sensitive datasets in the privacy of their own machine.
+- Effectively free compute, allowing us to pass on those savings, i.e., offer free access to kana for all users.
 
 Client-side compute has interesting scalability characteristics compared to a traditional backend approach.
 Most obviously, we are constrained by the computational resources available on the client machine, which limits the size of any single dataset that can be analyzed by a particular client.
