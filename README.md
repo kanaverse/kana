@@ -68,6 +68,8 @@ and diagnostic plots from the individual analysis steps.
 
 ## For developers
 
+***Check out [Contributing](./CONTRIBUTING.md) for guidelines on opening issues and pull requests.***
+
 ### Deployment 
 
 Deployment is as easy as serving the static files in this repository via HTTPS.
@@ -154,23 +156,5 @@ We achieve this by using a service worker to cache the resources and load the bl
 - [***kana***val](https://github.com/kanaverse/kanaval): validate the exported analysis results. 
 
 ![Kana Full Architecture](assets/kana.arch.png)
-
-### Contributing
-
-Install dependencies:
-
-```sh
-npm install --force or yarn # depending on what you use
-npm dedupe --force # you might sometimes have to dedupe
-```
-
-To start the app:
-
-```sh
-yarn start # if using yarn, highly recommended
-npm run start # if using npm
-```
-
-This usually runs on port 3000 unless something else is already running on the same port.
 
 For the curious: this project was bootstrapped with the [Create React App](https://github.com/facebook/create-react-app).
