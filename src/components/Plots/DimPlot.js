@@ -19,13 +19,16 @@ import { getFactorsFromArray, getGradient, getMinMax } from "./utils";
 
 import Rainbow from "./rainbowvis";
 import { randomColor } from "randomcolor";
-import { palette, defaultColor } from "./utils";
+import { defaultColor } from "./utils";
 
 import "./DimPlot.css";
 import { AppToaster } from "../../AppToaster";
 
 import WebGLVis from "epiviz.gl";
 import { code } from "../../utils/utils";
+import { generateColors } from "./colors";
+import { SVGDimPlot } from "./SVGDimPlot";
+import { get_image_title } from "../Gallery/utils";
 
 const DimPlot = (props) => {
   const container = useRef();
@@ -546,14 +549,7 @@ const DimPlot = (props) => {
             indices = tmp.index;
           }
 
-          if (levels.length > Object.keys(palette).length) {
-            cluster_colors = randomColor({
-              luminosity: "dark",
-              count: levels.length + 1,
-            });
-          } else {
-            cluster_colors = palette[levels.length.toString()];
-          }
+          cluster_colors = generateColors(levels.length + 1);
 
           setPlotGroups(levels);
           setPlotFactors(indices);
@@ -570,14 +566,7 @@ const DimPlot = (props) => {
 
           let { levels, indices } = getFactorsFromArray(tmp.values);
 
-          if (levels.length > Object.keys(palette).length) {
-            cluster_colors = randomColor({
-              luminosity: "dark",
-              count: levels.length + 1,
-            });
-          } else {
-            cluster_colors = palette[levels.length.toString()];
-          }
+          cluster_colors = generateColors(levels.length + 1);
 
           setPlotGroups(levels);
           setPlotFactors(indices);
@@ -684,11 +673,11 @@ const DimPlot = (props) => {
     if (containerEl) {
       // const iData = scatterplot.canvas.toDataURL();
 
-      let tmp = [...props?.savedPlot];
-
-      tmp.push({
+      let config = {
         color: cellColorArray,
+        coords: props?.redDimsData[props?.selectedRedDim],
         config: {
+          colorArray: cellColorArray,
           embedding: JSON.parse(JSON.stringify(props?.selectedRedDim)),
           annotation: JSON.parse(JSON.stringify(props?.colorByAnnotation)),
           highlight: plotGroups[props?.clusHighlight]
@@ -703,9 +692,122 @@ const DimPlot = (props) => {
             : null,
           geneIdx: props?.gene,
         },
-      });
+      };
+
+      if (showGradient) {
+        if (
+          props?.selectedFsetIndex !== null &&
+          props?.selectedFsetIndex !== undefined
+        ) {
+          config["gradient"] = {
+            factors: exprMinMax,
+            slider: sliderMinMax,
+            type: "single",
+          };
+        } else if (props?.gene !== null && props?.gene !== undefined) {
+          config["gradient"] = {
+            factors: exprMinMax,
+            slider: sliderMinMax,
+            type: "single",
+          };
+        }
+      } else {
+        if (!toggleFactorsGradient) {
+          config["gradient"] = {
+            factors: factorsMinMax,
+            slider: sliderFactorsMinMax,
+            type: "multi",
+          };
+        } else {
+          config["labels"] = {
+            labels: plotGroups,
+            colors: plotColorMappings,
+          };
+        }
+      }
+
+      let tmp = [...props?.savedPlot];
+      tmp.push(config);
 
       props?.setSavedPlot(tmp);
+    }
+  }
+
+  function handleSavePNG() {
+    const containerEl = container.current;
+    if (containerEl) {
+      // const iData = scatterplot.canvas.toDataURL();
+
+      let config = {
+        color: cellColorArray,
+        coords: props?.redDimsData[props?.selectedRedDim],
+        config: {
+          colorArray: cellColorArray,
+          embedding: JSON.parse(JSON.stringify(props?.selectedRedDim)),
+          annotation: JSON.parse(JSON.stringify(props?.colorByAnnotation)),
+          highlight: plotGroups[props?.clusHighlight]
+            ? JSON.parse(JSON.stringify(plotGroups[props?.clusHighlight]))
+            : plotGroups[props?.clusHighlight],
+          gene: props?.gene
+            ? JSON.parse(
+                JSON.stringify(
+                  genesInfo[geneColSel[props?.selectedModality]][props?.gene]
+                )
+              )
+            : null,
+          geneIdx: props?.gene,
+        },
+      };
+
+      if (showGradient) {
+        if (
+          props?.selectedFsetIndex !== null &&
+          props?.selectedFsetIndex !== undefined
+        ) {
+          config["gradient"] = {
+            factors: exprMinMax,
+            slider: sliderMinMax,
+            type: "single",
+          };
+        } else if (props?.gene !== null && props?.gene !== undefined) {
+          config["gradient"] = {
+            factors: exprMinMax,
+            slider: sliderMinMax,
+            type: "single",
+          };
+        }
+      } else {
+        if (!toggleFactorsGradient) {
+          config["gradient"] = {
+            factors: factorsMinMax,
+            slider: sliderFactorsMinMax,
+            type: "multi",
+          };
+        } else {
+          config["labels"] = {
+            labels: plotGroups,
+            colors: plotColorMappings,
+          };
+        }
+      }
+
+      let tmpsvg = SVGDimPlot(
+        config?.color,
+        config?.coords,
+        config?.labels,
+        config?.gradient
+      );
+
+      let tmpLink = document.createElement("a");
+      let fileNew = new Blob([tmpsvg], {
+        type: "text/svg",
+      });
+
+      tmpLink.href = URL.createObjectURL(fileNew);
+      tmpLink.download = `${get_image_title(config)}.svg`;
+      tmpLink.click();
+
+      tmpLink.remove();
     }
   }
 
@@ -790,6 +892,11 @@ const DimPlot = (props) => {
           <Tooltip2 content="Copy embedding to gallery">
             <Button icon="inheritance" onClick={handleSaveEmbedding}>
               Copy to gallery
+            </Button>
+          </Tooltip2>
+          <Tooltip2 content="Save as SVG">
+            <Button icon="media" onClick={handleSavePNG}>
+              Save as SVG
             </Button>
           </Tooltip2>
           <Tooltip2 content="Pan to move the plot">
@@ -892,7 +999,7 @@ const DimPlot = (props) => {
                       {computedCols &&
                         Array.isArray(computedCols) &&
                         computedCols.length > 0 && (
-                          <optgroup label="Supplied">
+                          <optgroup label="Computed">
                             {computedCols.map((x) => (
                               <option value={x} key={x}>
                                 {x.replace(`${code}::`, "")}

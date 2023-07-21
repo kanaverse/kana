@@ -23,12 +23,13 @@ import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { SortableItem } from "./SortableItem";
 
 import { Popover2 } from "@blueprintjs/popover2";
+import { getMinMax } from "../Plots/utils";
 
 const Gallery = (props) => {
   const [defaultItems, setDefaultItems] = useState([]);
   const [items, setItems] = useState([]);
   const [itemContent, setItemContent] = useState({});
-  const { datasetName, annotationObj } = useContext(AppContext);
+  const { datasetName, annotationObj, appMode } = useContext(AppContext);
   const [qcids, setQCids] = useState([]);
   const default_cluster = `${code}::CLUSTERS`;
 
@@ -247,7 +248,6 @@ const Gallery = (props) => {
       };
     }
 
-
     // default plots, tSNE and UMAP
     if (props?.redDimsData && Object.keys(props.redDimsData).length > 0) {
       let actions = ["select", "download"];
@@ -256,11 +256,26 @@ const Gallery = (props) => {
       }
 
       let colors = [];
-      annotationObj[default_cluster]?.forEach(
-        (x, i) => (colors[i] = props?.clusterColors[x])
-      );
+      let clus = [];
+      if (appMode === "analysis") {
+        annotationObj[default_cluster]?.forEach(
+          (x, i) => (colors[i] = props?.clusterColors[x])
+        );
+
+        const max_clus = getMinMax(annotationObj[default_cluster]);
+
+        for (let p = 0; p < max_clus[1]; p++) {
+          clus.push(`Cluster ${p + 1}`);
+        }
+      }
 
       Object.keys(props.redDimsData).map((x, i) => {
+        if (appMode === "explore") {
+          clus = ["all_cells"];
+          colors = [];
+          props.redDimsData[x]?.x?.forEach((x, i) => (colors[i] = "#8ABBFF"));
+        }
+
         if (!tmpItems.includes(`${55 + i}`)) {
           tmpItems.push(`${55 + i}`);
         }
@@ -268,6 +283,10 @@ const Gallery = (props) => {
           // id: 5 + i,
           title: get_image_title({
             color: colors,
+            labels: {
+              labels: clus,
+              colors: props?.clusterColors,
+            },
             config: {
               embedding: x,
               annotation: props?.selectedDimPlotCluster,
@@ -279,6 +298,11 @@ const Gallery = (props) => {
           actions: actions,
           data: {
             color: colors,
+            labels: {
+              labels: clus,
+              colors: props?.clusterColors,
+            },
+            coords: props?.redDimsData[x],
             config: {
               embedding: x,
               annotation: props?.selectedDimPlotCluster,
@@ -295,6 +319,11 @@ const Gallery = (props) => {
               colorByAnnotation={props?.colorByAnnotation}
               data={{
                 color: colors,
+                coords: props?.redDimsData[x],
+                labels: {
+                  labels: clus,
+                  colors: props?.clusterColors,
+                },
                 config: {
                   embedding: x,
                   annotation: props?.selectedDimPlotCluster,

@@ -44,15 +44,13 @@ import { AppToaster } from "../../AppToaster";
 
 import { AppContext } from "../../context/AppContext";
 
-import { palette } from "../Plots/utils";
-import { randomColor } from "randomcolor";
-
 import pkgVersion from "../../../package.json";
 
 import logo from "../../assets/kana-cropped.png";
 import "../../App.css";
 import FeatureSetEnrichment from "../FeatureSets";
 import CellAnnotation from "../CellAnnotation";
+import { generateColors } from "../Plots/colors";
 
 const scranWorker = new Worker(
   new URL("../../workers/scran.worker.js", import.meta.url),
@@ -1136,15 +1134,7 @@ export function AnalysisMode(props) {
       if (customSelection) {
         cluster_count += Object.keys(customSelection).length;
       }
-      let cluster_colors = null;
-      if (cluster_count > Object.keys(palette).length) {
-        cluster_colors = randomColor({
-          luminosity: "dark",
-          count: cluster_count + 1,
-        });
-      } else {
-        cluster_colors = palette[cluster_count.toString()];
-      }
+      let cluster_colors = generateColors(cluster_count + 1);
       setClusterColors(cluster_colors);
 
       // add clusters to annotations
@@ -1265,15 +1255,7 @@ export function AnalysisMode(props) {
         let cluster_count =
           clusterColors.length +
           Object.keys(resp.other.custom_selections).length;
-        let cluster_colors = null;
-        if (cluster_count > Object.keys(palette).length) {
-          cluster_colors = randomColor({
-            luminosity: "dark",
-            count: cluster_count + 1,
-          });
-        } else {
-          cluster_colors = palette[cluster_count.toString()];
-        }
+        let cluster_colors = generateColors(cluster_count + 1);
         setClusterColors(cluster_colors);
 
         setCustomSelection(resp.other.custom_selections);

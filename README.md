@@ -11,7 +11,7 @@ That's right - the calculations are performed client-side, by your browser, on y
 This differs from the usual paradigm of, e.g., Shiny applications where data needs to be sent to a backend server that does the actual analysis.
 Our client-side approach has a number of advantages:
 
-- Your data is never transferred anywhere, so you don't have have to worry about problems with data privacy.
+- Your data is never transferred anywhere, so you don't have to worry about problems with data privacy.
   These can be especially hairy when your backend server lies in a different jurisdiction from your data source.
   By performing the analysis on the client, we avoid all of these issues.
 - **kana** is super-cheap to run and deploy, just serve it as a static website.
@@ -68,11 +68,59 @@ and diagnostic plots from the individual analysis steps.
 
 ## For developers
 
+***Check out [Contributing](./CONTRIBUTING.md) for guidelines on opening issues and pull requests.***
+
 ### Deployment 
 
 Deployment is as easy as serving the static files in this repository via HTTPS.
-Indeed, our [**deployment**](https://kanaverse.org/kana/) is just being served via GitHub Pages.
+Indeed, our [**deployment**](https://kanaverse.org/kana/) is just being served via GitHub Pages. other providers include static hosting on AWS S3, Google buckets, netlify or *name-your-own-provider*.
 As promised, there's no need to set up a backend server.
+
+#### Docker based builds
+
+Thanks to [llewelld](https://github.com/llewelld) for creating a docker image that can generate static HTML files without the hassle of setting up `npm` and `node`.
+
+Build the docker images and tag them as ***kana***. 
+
+```sh
+docker build . -t kana
+
+# if you are on a macos with m1 or m2, you MIGHT have to use the platform tag
+docker build . -t kana --platform linux/arm64
+```
+
+Run the container to generate the production builds,
+
+```sh
+docker run -v .:/kana -t kana
+
+# or depending on your operating system (noticed this on windows with WSL)
+docker run -v $(pwd):/kana -t kana 
+```
+
+and voila, you should now see a builds directory. you can also run the npm commands to generate the builds. checkout either the [Dockerfile](./Dockerfile) or the [contributing section](#contributing) in this README.
+
+
+#### Serving HTML locally
+
+There are numerous options to serve the html files locally using tools that are ***probably*** already available on your machine. 
+
+
+Python's http.server
+
+```sh
+python -m http.server 3000 -d builds
+```
+
+npm's [serve](https://www.npmjs.com/package/serve)
+
+```sh
+npm install -g serve
+serve builds
+```
+
+or [caddy](https://caddyserver.com/docs/quick-starts/static-files),  apache, nginx or static hosting solutions, or anything else you are familiar with.
+
 
 ### Architecture
 
@@ -108,22 +156,5 @@ We achieve this by using a service worker to cache the resources and load the bl
 - [***kana***val](https://github.com/kanaverse/kanaval): validate the exported analysis results. 
 
 ![Kana Full Architecture](assets/kana.arch.png)
-
-### Contributing
-
-Install dependencies:
-
-```
-npm install or yarn # depending on what you use
-```
-
-To start the app:
-
-```
-yarn start # if using yarn, highly recommended
-npm run start # if using npm
-```
-
-This usually runs on port 3000 unless something else is already running on the same port.
 
 For the curious: this project was bootstrapped with the [Create React App](https://github.com/facebook/create-react-app).
