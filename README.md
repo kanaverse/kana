@@ -99,6 +99,27 @@ docker run -v $(pwd):/kana -t kana
 and voila, you should now see a builds directory. you can also run the npm commands to generate the builds. checkout either the [Dockerfile](./Dockerfile) or the [contributing section](#contributing) in this README.
 
 
+#### Serving HTML locally
+
+There are numerous options to serve the html files locally using tools that are ***probably*** already available on your machine. 
+
+
+Python's http.server
+
+```sh
+python -m http.server 3000 -d builds
+```
+
+npm's [serve](https://www.npmjs.com/package/serve)
+
+```sh
+npm install -g serve
+serve builds
+```
+
+or [caddy](https://caddyserver.com/docs/quick-starts/static-files),  apache, nginx or static hosting solutions, or anything else you are familiar with.
+
+
 ### Architecture
 
 ***We have significantly revamped the entire application and the underlying infrastructure to support hybrid compute - either purely client-side with webassembly, or on backend systems through node, or both.***
