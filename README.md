@@ -71,8 +71,33 @@ and diagnostic plots from the individual analysis steps.
 ### Deployment 
 
 Deployment is as easy as serving the static files in this repository via HTTPS.
-Indeed, our [**deployment**](https://kanaverse.org/kana/) is just being served via GitHub Pages.
+Indeed, our [**deployment**](https://kanaverse.org/kana/) is just being served via GitHub Pages. other providers include static hosting on AWS S3, Google buckets, netlify or *name-your-own-provider*.
 As promised, there's no need to set up a backend server.
+
+#### Docker based builds
+
+Thanks to [llewelld](https://github.com/llewelld) for creating a docker image that can generate static HTML files without the hassle of setting up `npm` and `node`.
+
+Build the docker images and tag them as ***kana***. 
+
+```sh
+docker build . -t kana
+
+# if you are on a macos with m1 or m2, you MIGHT have to use the platform tag
+docker build . -t kana --platform linux/arm64
+```
+
+Run the container to generate the production builds,
+
+```sh
+docker run -v .:/kana -t kana
+
+# or depending on your operating system (noticed this on windows with WSL)
+docker run -v $(pwd):/kana -t kana 
+```
+
+and voila, you should now see a builds directory. you can also run the npm commands to generate the builds. checkout either the [Dockerfile](./Dockerfile) or the [contributing section](#contributing) in this README.
+
 
 ### Architecture
 
@@ -113,13 +138,14 @@ We achieve this by using a service worker to cache the resources and load the bl
 
 Install dependencies:
 
-```
-npm install or yarn # depending on what you use
+```sh
+npm install --force or yarn # depending on what you use
+npm dedupe --force # you might sometimes have to dedupe
 ```
 
 To start the app:
 
-```
+```sh
 yarn start # if using yarn, highly recommended
 npm run start # if using npm
 ```
