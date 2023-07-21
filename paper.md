@@ -108,7 +108,8 @@ We compiled these libraries to a Wasm binary using the Emscripten toolchain [@za
 We then wrapped the binary in the scran.js library [@scran.js] to provide JavaScript bindings for use in web applications.
 kana itself was developed using React with extensive use of WebGL for efficient plotting.
 On a moderately sized scRNA-seq dataset containing over 170,000 cells [@zilionis2019single],
-kana was able to finish the analysis in under 5 minutes and using less than 3 GB of RAM on a consumer laptop.
+kana was able to finish the analysis in 4.5 minutes and using less than 3 GB of RAM on a laptop with an Intel Core i7-8850H CPU (2.60GHz, 6 cores) and 32 GB memory running Manjaro Linux.
+This was only 30% slower than the equivalent native executable [@scrancli] on the same machine (3 minutes), indicating that Wasm's promise of near-native execution is feasible.
 
 # Further comments
 
