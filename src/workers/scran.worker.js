@@ -184,34 +184,6 @@ function linkKanaDb(collected) {
 
 bakana.setResolveLink(kana_db.loadFile);
 
-async function unserializeAllSteps(contents) {
-  const h5path = "serialized_out.h5";
-
-  let output;
-  try {
-    let loader = await bakana.parseKanaFile(contents, h5path);
-    let loaded_state = await bakana.loadAnalysis(h5path, loader, {
-      finishFun: postSuccess,
-    });
-
-    if (superstate !== null) {
-      await bakana.freeAnalysis(superstate);
-    }
-    superstate = loaded_state;
-
-    output = {
-      parameters: translate.toUI(bakana.retrieveParameters(superstate)),
-      other: {
-        custom_selections: superstate.custom_selections.fetchSelections(),
-      },
-    };
-  } finally {
-    bakana.callScran((scran) => scran.removeFile(h5path));
-  }
-
-  return output;
-}
-
 async function postStepSummary(step) {
   try {
     let output = await fetchStepSummary(superstate, step);
