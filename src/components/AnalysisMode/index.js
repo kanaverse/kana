@@ -941,7 +941,7 @@ export function AnalysisMode(props) {
         info.push(`${resp.num_genes.ADT} ADTs`);
       }
       if ("CRISPR" in resp.num_genes) {
-        info.push(`${resp.num_genes.ADT} Guides`);
+        info.push(`${resp.num_genes.CRISPR} guides`);
       }
       info.push(`${resp.num_cells} cells`);
 

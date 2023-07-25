@@ -700,17 +700,11 @@ export function ExplorerMode() {
       }
     } else if (type === "inputs_DATA") {
       var info = [];
-      if ("default" in resp.num_genes) {
-        info.push(`${resp.num_genes.default} features`);
-      }
-      if ("RNA" in resp.num_genes) {
-        info.push(`${resp.num_genes.RNA} genes`);
-      }
-      if ("ADT" in resp.num_genes) {
-        info.push(`${resp.num_genes.ADT} ADTs`);
-      }
-      if ("CRISPR" in resp.num_genes) {
-        info.push(`${resp.num_genes.ADT} Guides`);
+      for (var [k, v] of Object.entries(resp.num_genes)) {
+        if (k == "") {
+          k = "unnamed modality"
+        }
+        info.push(`${v} features for ${k}`)
       }
       info.push(`${resp.num_cells} cells`);
 
