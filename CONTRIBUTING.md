@@ -10,7 +10,7 @@ Contributions are made to this repo via [Issues](https://github.com/kanaverse/ka
 A few general guidelines that cover both:
 
 - Search for existing Issues and PRs before creating your own.
-- We try to but resolve bugs as soon as possible.
+- We try to resolve bugs as soon as possible.
 Since web applications have many degrees of freedom, it often helps if you can outline the steps to reproduce the issue.
 Screenshots of errors messages in the [browser console](https://developer.chrome.com/docs/devtools/open/) help narrow down the issue.
 
@@ -41,7 +41,7 @@ If you find an Issue that addresses the problem you're having, please add your o
 ### Pull Requests
 [PRs](https://github.com/kanaverse/kana/pulls) are always welcome and can be a quick way to get your fix or improvement merged. In general, PRs should:
 
-- Only fix/add the functionality in question OR address wide-spread whitespace/style issues, not both.
+- Only fix/add the functionality in question OR address widespread whitespace/style issues, not both.
 - Address a single concern in the least number of changed lines as possible.
 - Include documentation in the repo either in the README or through the wiki page.
   
