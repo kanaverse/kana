@@ -115,22 +115,28 @@ This was only 30% slower than the equivalent native executable [@scrancli] on th
 
 kana's key innovation lies in its use of modern web technologies to perform the analysis directly in the browser.
 This eliminates the difficulties of software installation and makes the analysis accessible to a non-programming audience.
-At the same time, we retain all the benefits of client-side operations, namely:
+At the same time, we retain all the benefits of client-side operation, namely:
 
-- No dependence on a backend server, which greatly simplifies application deployment and maintenance for developers.
+- No dependency on a backend server, which greatly simplifies application deployment and maintenance for developers.
+  For example, we do not need any monitoring, scaling, hardening, or other DevOps processes typically associated with a backend architecture.
 - No latency from transfer of data and results to/from the server, which yields a more responsive user experience.
-- No issues with data ownership, enabling users to process sensitive datasets in the privacy of their own machine.
-- Effectively free compute, allowing us to pass on those savings, i.e., offer free access to kana for all users.
+  In particular, the user does not need to upload large data files (up to 1 GB, depending on the number of cells and sequencing depth), which would otherwise incur a significant delay.
+  Similarly, the app can show results near-instantaneously rather than blocking on multiple network requests of 1-5 MB each.
+- No issues with data ownership, enabling users to process sensitive datasets from the privacy of their own machine.
+  Users are not forced to trust the application maintainers to correctly handle and secure their datasets.
+  This is potentially useful in situations involving commercial secrets or patient data.
+- Effectively free compute, as each client brings its own computing power to the application.
+  No funding is required for a centralized backend, allowing us to pass on those savings to our users, i.e., kana can be used by anyone for free.
 
 Client-side compute has interesting scalability characteristics compared to a traditional backend approach.
 Most obviously, we are constrained by the computational resources available on the client machine, which limits the size of any single dataset that can be analyzed by a particular client.
 From another perspective, though, client-side compute is more scalable as it automatically distributes analyses of many datasets across any number of machines at no cost and with no configuration.
-This is especially relevant for web applications like kana where the maintainers would otherwise be responsible for provisioning backend computing resources.
+This is especially relevant for web applications like kana where the maintainers would otherwise be responsible for provisioning more computing resources to match user demand.
 
 That said, how do we deal with large datasets?
 Our C++ implementations mean that we are not limited to computation in the browser.
 We can easily provide wrappers to the same underlying libraries in any client-side framework, e.g., as a command-line tool or as an extension to existing data science ecosystems [@scranchan].
-Indeed, one could use the wrapped C++ libraries to run large analyses on a sufficiently provisioned backend, export the results in a kana-compatible file format, and then serve them to clients for use in kana's exploration mode.
+Indeed, one could use the wrapped C++ libraries to run large analyses on a sufficiently well-resourced backend, export the results in a kana-compatible file format, and then serve them to clients for use in kana's exploration mode.
 
 # Acknowledgements
 
