@@ -107,9 +107,17 @@ For kana, we created C++ implementations of the data representations or algorith
 We compiled these libraries to a Wasm binary using the Emscripten toolchain [@zakai2011emscripten], using PThreads to enable parallelization via web workers.
 We then wrapped the binary in the scran.js library [@scran.js] to provide JavaScript bindings for use in web applications.
 kana itself was developed using React with extensive use of WebGL for efficient plotting.
-On a moderately sized scRNA-seq dataset containing over 170,000 cells [@zilionis2019single],
-kana was able to finish the analysis in 4.5 minutes and using less than 3 GB of RAM on a laptop with an Intel Core i7-8850H CPU (2.60GHz, 6 cores) and 32 GB memory running Manjaro Linux.
-This was only 30% slower than the equivalent native executable [@scrancli] on the same machine (3 minutes), indicating that Wasm's promise of near-native execution is feasible.
+Testing indicates that kana is only 25-50% slower than an equivalent native executable (\autoref{tab:perf}), indicating that Wasm's promise of near-native execution is feasible.
+
+| Dataset                  | Number of cells | kana runtime   | Native runtime |
+|--------------------------|-----------------|----------------|----------------|
+| @zeisel2015cell          | 3005            |    7.00 ± 0.10 |    5.60 ± 0.05 |
+| @paul2015transcriptional | 10368           |   17.59 ± 0.20 |   13.52 ± 0.38 |
+| @bach2017differentiation | 25806           |   54.96 ± 1.13 |   43.33 ± 0.39 |
+| @ernst2019staged         | 68937           |  157.15 ± 7.39 |  114.67 ± 1.86 |
+| @bacher2020low           | 104417          |  228.02 ± 2.85 |  170.32 ± 1.34 | 
+| @zilionis2019single      | 173954          |  272.26 ± 4.22 |  183.77 ± 2.46 |
+:Performance of kana for analyzing different scRNA-seq datasets, compared to a native executable created from the same C++ libraries. Measurements were taken on a laptop with an Intel Core i7-8850H CPU (2.60GHz, 6 cores) and 32 GB memory running Manjaro Linux. Runtimes are reported in seconds with the mean and standard error across 3 runs. See @otherkana for more details.\label{tab:perf}
 
 # Further comments
 
@@ -120,11 +128,9 @@ At the same time, we retain all the benefits of client-side operation, namely:
 - No dependency on a backend server, which greatly simplifies application deployment and maintenance for developers.
   For example, we do not need any monitoring, scaling, hardening, or other DevOps processes typically associated with a backend architecture.
 - No latency from transfer of data and results to/from the server, which yields a more responsive user experience.
-  In particular, the user does not need to upload large data files (up to 1 GB, depending on the number of cells and sequencing depth), which would otherwise incur a significant delay.
-  Similarly, the app can show results near-instantaneously rather than blocking on multiple network requests of 1-5 MB each.
+  In particular, uploads of large data files (up to 1 GB, depending on the number of cells and sequencing depth) would cause a significant delay.
 - No issues with data ownership, enabling users to process sensitive datasets from the privacy of their own machine.
-  Users are not forced to trust the application maintainers to correctly handle and secure their datasets.
-  This is potentially useful in situations involving commercial secrets or patient data.
+  Users are not forced to trust the application maintainers to correctly handle and secure their datasets on the latter's server.
 - Effectively free compute, as each client brings its own computing power to the application.
   No funding is required for a centralized backend, allowing us to pass on those savings to our users, i.e., kana can be used by anyone for free.
 
