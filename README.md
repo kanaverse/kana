@@ -1,10 +1,12 @@
 # Kana: Single cell analysis in the browser
 
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.05603/status.svg)](https://doi.org/10.21105/joss.05603)
+[![DOI:10.1101/2022.03.02.482701](http://img.shields.io/badge/bioRxiv-10.1101/2022.03.02.482701-B31B1B.svg)](https://doi.org/10.1101/2022.03.02.482701)
+
+
 *Kana* comes from the [Telugu](https://en.wikipedia.org/wiki/Telugu_language) word [kaṇaṁ (కణం)](https://www.shabdkosh.com/dictionary/english-telugu/%E0%B0%95%E0%B0%A3%E0%B0%82/%E0%B0%95%E0%B0%A3%E0%B0%82-meaning-in-telugu), which means ...  drumroll... ***cell***
 
 ## Overview
-
-[Checkout our preprint on bioRxiv](https://www.biorxiv.org/content/10.1101/2022.03.02.482701v1)
 
 **kana** is a web application for single-cell data analysis that works directly in the browser.
 That's right - the calculations are performed client-side, by your browser, on your computer!
