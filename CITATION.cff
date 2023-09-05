@@ -2,39 +2,56 @@
 # Visit https://bit.ly/cffinit to generate yours today!
 
 cff-version: 1.2.0
-title: Single-cell data analysis in the browser
+title: >-
+  Powering single-cell analyses in the browser with
+  WebAssembly
 message: >-
-  If you use this software, please cite it as below.
-url: "https://github.com/kanaverse/kana"
-doi: "10.1101/2022.03.02.482701"
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
 authors:
   - given-names: Aaron
-    name-particle: Lun
+    family-names: Lun
+    name-particle: T.L.
     email: infinite.monkeys.with.keyboards@gmail.com
     affiliation: Genentech
     orcid: 'https://orcid.org/0000-0002-3564-4813'
   - given-names: Jayaram
-    name-particle: Kancherla
+    family-names: Kancherla
     email: jayaram.kancherla@gmail.com
-    affiliation: Genentech
     orcid: 'https://orcid.org/0000-0001-5855-5031'
+    affiliation: Genentech
+identifiers:
+  - type: doi
+    value: 10.21105/joss.05603
+    description: JOSS
+  - type: doi
+    value: 10.1101/2022.03.02.482701
+    description: bioRxiv
+repository-code: 'https://github.com/kanaverse/kana'
+url: 'https://www.kanaverse.org/kana/'
+keywords:
+  - single-cell
+  - visualization
+license: MIT
 preferred-citation:
-  type: article
+  type: software
   authors:
-  - given-names: Aaron
-    name-particle: Lun
-    email: infinite.monkeys.with.keyboards@gmail.com
-    affiliation: Genentech
-    orcid: 'https://orcid.org/0000-0002-3564-4813'
-  - given-names: Jayaram
-    name-particle: Kancherla
-    email: jayaram.kancherla@gmail.com
-    affiliation: Genentech
-    orcid: 'https://orcid.org/0000-0001-5855-5031'
-  doi: "10.1101/2022.03.02.482701"
-  journal: "bioRxiv"
-  publisher: "Cold Spring Harbor Laboratory"
-  title: "Single-cell data analysis in the browser"
-  URL: "https://www.biorxiv.org/content/early/2022/03/04/2022.03.02.482701"
-  eprint: "https://www.biorxiv.org/content/early/2022/03/04/2022.03.02.482701.full.pdf"
-  year: 2022
+    - given-names: Aaron
+      family-names: Lun
+      name-particle: T.L.
+      email: infinite.monkeys.with.keyboards@gmail.com
+      affiliation: Genentech
+      orcid: 'https://orcid.org/0000-0002-3564-4813'
+    - given-names: Jayaram
+      family-names: Kancherla
+      email: jayaram.kancherla@gmail.com
+      orcid: 'https://orcid.org/0000-0001-5855-5031'
+      affiliation: Genentech
+  doi: 10.21105/joss.05603
+  journal: Journal of Open Source Software
+  publisher: 
+    name: The Open Journal
+  title: Powering single-cell analyses in the browser with WebAssembly
+  url: 'https://doi.org/10.21105/joss.05603'
+  year: 2023
