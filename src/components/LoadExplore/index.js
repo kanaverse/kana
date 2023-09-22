@@ -71,7 +71,7 @@ export function LoadExplore({ setShowPanel, ...props }) {
   const handleExplore = () => {
     let mapFiles = {};
     mapFiles[tmpLoadInputs.name] = tmpLoadInputs;
-    mapFiles[tmpLoadInputs.name]["options"] = inputOptions;
+    mapFiles[tmpLoadInputs.name]["options"] = inputOptions[0];
 
     let fInputFiles = { files: mapFiles };
     setExploreFiles(fInputFiles);
