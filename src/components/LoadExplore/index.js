@@ -345,6 +345,7 @@ export function LoadExplore({ setShowPanel, ...props }) {
                     setInputOpts={setInputOptions}
                     inputs={exploreInputs}
                     setInputs={setExploreInputs}
+                    selectedFsetModality={props?.selectedFsetModality}
                     setSelectedFsetModality={props?.setSelectedFsetModality}
                   />
                 );
@@ -365,6 +366,7 @@ export function LoadExplore({ setShowPanel, ...props }) {
                     setInputOpts={setInputOptions}
                     inputs={exploreInputs}
                     setInputs={setExploreInputs}
+                    selectedFsetModality={props?.selectedFsetModality}
                     setSelectedFsetModality={props?.setSelectedFsetModality}
                   />
                 );
@@ -385,6 +387,7 @@ export function LoadExplore({ setShowPanel, ...props }) {
                     setInputOpts={setInputOptions}
                     inputs={exploreInputs}
                     setInputs={setExploreInputs}
+                    selectedFsetModality={props?.selectedFsetModality}
                     setSelectedFsetModality={props?.setSelectedFsetModality}
                   />
                 );
