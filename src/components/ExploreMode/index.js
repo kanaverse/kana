@@ -709,7 +709,6 @@ export function ExplorerMode() {
       info.push(`${resp.num_cells} cells`);
 
       setInitDims(info.join(", "));
-      setInputData(resp);
 
       let pmods = Object.keys(resp.genes);
       setModality(pmods);
@@ -718,6 +717,20 @@ export function ExplorerMode() {
       if (selectedModality === null) {
         setSelectedModality(tmodality);
       }
+
+      // Auto-generating rowdata if the per-modality feature annotation is empty.
+      for (const p of pmods) {
+          let mod_gene_info = resp.genes[p]
+          if (Object.keys(mod_gene_info).length == 0) {
+              let dummy = new Int32Array(resp.num_genes[p])
+              for (var i = 0; i < dummy.length; ++i) {
+                  dummy[i] = i;
+              }
+              mod_gene_info["index"] = dummy
+          }
+      }
+ 
+      setInputData(resp);
 
       if (resp?.annotations) {
         setAnnotationCols(resp.annotations);
