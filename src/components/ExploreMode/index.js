@@ -1424,6 +1424,7 @@ export function ExplorerMode() {
           {showPanel === "explore-import" && (
             <LoadExplore
               setShowPanel={setShowPanel}
+              selectedFsetModality={selectedFsetModality}
               setSelectedFsetModality={setSelectedFsetModality}
             />
           )}
