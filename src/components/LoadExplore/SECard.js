@@ -140,6 +140,7 @@ export function SECard({
                             let tmpOptions = { ...options };
                             if (e.target.value === "none") {
                               delete tmpOptions["primaryAssay"][x];
+                              delete tmpOptions["isPrimaryNormalized"][x];
                             } else {
                               tmpOptions["primaryAssay"][x] = e.target.value;
                             }
