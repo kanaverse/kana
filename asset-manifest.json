@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/kana/static/css/main.3dce6764.css",
-    "main.js": "/kana/static/js/main.5257d044.js",
+    "main.js": "/kana/static/js/main.bec7ebda.js",
     "static/js/612.5966fbd8.chunk.js": "/kana/static/js/612.5966fbd8.chunk.js",
     "static/js/909.ae8cc874.chunk.js": "/kana/static/js/909.ae8cc874.chunk.js",
     "static/js/90.49f03338.chunk.js": "/kana/static/js/90.49f03338.chunk.js",
@@ -32,7 +32,7 @@
     "static/media/blueprint-icons-16.woff2?": "/kana/static/media/blueprint-icons-16.582f87288ff1d1f0dfae.woff2",
     "index.html": "/kana/index.html",
     "main.3dce6764.css.map": "/kana/static/css/main.3dce6764.css.map",
-    "main.5257d044.js.map": "/kana/static/js/main.5257d044.js.map",
+    "main.bec7ebda.js.map": "/kana/static/js/main.bec7ebda.js.map",
     "612.5966fbd8.chunk.js.map": "/kana/static/js/612.5966fbd8.chunk.js.map",
     "909.ae8cc874.chunk.js.map": "/kana/static/js/909.ae8cc874.chunk.js.map",
     "90.49f03338.chunk.js.map": "/kana/static/js/90.49f03338.chunk.js.map",
@@ -52,6 +52,6 @@
   },
   "entrypoints": [
     "static/css/main.3dce6764.css",
-    "static/js/main.5257d044.js"
+    "static/js/main.bec7ebda.js"
   ]
 }
