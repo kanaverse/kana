@@ -831,10 +831,10 @@ const DimPlot = (props) => {
     return Object.keys(annotationCols).filter((x) =>
       !annotationCols[x].name.startsWith(code) &&
       annotationCols[x].name !== "__batch__"
-        ? annotationCols[x]["type"] === "continuous"
-          ? true
-          : !annotationCols[x]["truncated"]
-        : false
+        // ? annotationCols[x]["type"] === "continuous"
+        //   ? true
+        //   : !annotationCols[x]["truncated"]
+        // : false
     );
   }, [annotationCols]);
 
