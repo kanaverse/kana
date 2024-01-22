@@ -5,7 +5,7 @@ tags:
   - bioinformatics
   - single-cell
 authors:
-  - name: Aaron T. L. Lun
+  - name: Aaron Tin Long Lun
     orcid: 0000-0002-3564-4813
     equal-contrib: true
     affiliation: 1
