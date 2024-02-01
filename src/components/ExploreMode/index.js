@@ -639,7 +639,7 @@ export function ExplorerMode() {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    console.log("ON EXPLORE MAIN::RCV::", payload);
+    // console.log("ON EXPLORE MAIN::RCV::", payload);
 
     // process any error messages
     if (payload) {
