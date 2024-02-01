@@ -887,6 +887,13 @@ const FeatureSetEnrichment = (props) => {
                   parseInt(tmpselection.replace("Cluster ", "")) - 1;
               } else if (default_selection === props?.selectedFsetAnnotation) {
                 tmpselection = tmpselection.replace("Custom Selection ", "");
+              } else {
+                // do the best
+                if (annotationObj[props?.selectedFsetAnnotation].values.constructor.name.includes("Float")) {
+                  tmpselection = parseFloat(tmpselection)
+                } else if (annotationObj[props?.selectedFsetAnnotation].values.constructor.name.includes("Int")) {
+                  tmpselection = parseInt(tmpselection)
+                }
               }
 
               props?.setSelectedFsetCluster(tmpselection);
@@ -957,6 +964,13 @@ const FeatureSetEnrichment = (props) => {
                       "Custom Selection ",
                       ""
                     );
+                  } else {
+                    // do the best
+                    if (annotationObj[props?.selectedFsetAnnotation].values.constructor.name.includes("Float")) {
+                      tmpselection = parseFloat(tmpselection)
+                    } else if (annotationObj[props?.selectedFsetAnnotation].values.constructor.name.includes("Int")) {
+                      tmpselection = parseInt(tmpselection)
+                    }
                   }
                   props?.setSelectedFsetVSCluster(tmpselection);
 
