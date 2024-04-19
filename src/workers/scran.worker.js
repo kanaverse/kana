@@ -16,6 +16,7 @@ import {
   fetchStepSummary,
   describeColumn,
   isArrayOrView,
+  fetchWithProgress,
 } from "./helpers.js";
 import { code } from "../utils/utils.js";
 /***************************************/

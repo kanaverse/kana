@@ -6,8 +6,67 @@ import * as downloads from "./DownloadsDBHandler.js";
 // Evade CORS problems and enable caching.
 const proxy = "https://cors-proxy.aaron-lun.workers.dev";
 async function proxyAndCache(url) {
-  let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
-  return new Uint8Array(buffer);
+  console.log("in proxy and Cache..... ", url);
+
+  try {
+    const out = await fetchWithProgress(
+      url,
+      (cl) => {
+        console.log("request body is " + String(cl) + " bytes!");
+        return url;
+      },
+      (id, sofar) => {
+        console.log(
+          "I've gotten " + String(sofar) + " bytes for " + String(id) + "..."
+        );
+      },
+      (id, total) => {
+        console.log(
+          "finished " + String(id) + " with " + String(total) + " bytes!"
+        );
+      }
+    );
+
+    console.log("was successfull, so out", out);
+  } catch (error) {
+    console.log("oops error", error)
+    let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
+    return new Uint8Array(buffer);
+  }
+}
+
+async function fetchWithProgress(url, startFun, iterFun, endFun) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("oops, failed to download '" + url + "'");
+  }
+
+  const cl = res.headers.get("content-length"); // WARNING: this might be NULL!
+  const id = startFun(cl);
+
+  const reader = res.body.getReader();
+  const chunks = [];
+  let total = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    chunks.push(value);
+    total += value.length;
+    iterFun(id, total);
+  }
+
+  let output = new Uint8Array(total);
+  let start = 0;
+  for (const x of chunks) {
+    output.set(x, start);
+    start += x.length;
+  }
+
+  endFun(id, total);
+  return output;
 }
 
 bakana.CellLabellingState.setDownload(proxyAndCache);
