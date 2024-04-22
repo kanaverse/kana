@@ -4,6 +4,9 @@ import {
   ProgressBar,
   Classes,
 } from "@blueprintjs/core";
+
+import { Tooltip2 } from "@blueprintjs/popover2";
+
 import classNames from "classnames";
 
 export const DownloadToaster = OverlayToaster.create({
@@ -27,12 +30,22 @@ export function setProgress(id, total, progress) {
   }
 }
 
-export function renderProgress(progress) {
+export function renderProgress(progress, url) {
   return {
     icon: "cloud-download",
     message: (
       <>
-        <>Downloading dataset</>
+        <>
+          Downloading asset from{" "}
+          <Tooltip2
+            className={Classes.TOOLTIP_INDICATOR}
+            content={<span>{url}</span>}
+            minimal={true}
+            usePortal={false}
+          >
+            {new URL(url).hostname}
+          </Tooltip2>
+        </>
         <ProgressBar
           className={classNames("docs-toast-progress", {
             [Classes.PROGRESS_NO_STRIPES]: progress >= 100,

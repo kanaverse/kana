@@ -918,8 +918,10 @@ export function AnalysisMode(props) {
           progress: 0,
         };
         download_toasters[payload.url]["key"] = DownloadToaster.show(
-          renderProgress(0)
+          renderProgress(0, payload.url)
         );
+
+        add_to_logs("start", `Download asset from ${payload.url}`, "started");
       } else if (payload.download == "PROGRESS") {
         let tprogress =
           (Math.round(
@@ -933,16 +935,23 @@ export function AnalysisMode(props) {
           download_toasters[payload.url]["progress"] = tprogress;
 
           download_toasters[payload.url]["key"] = DownloadToaster.show(
-            renderProgress(tprogress),
+            renderProgress(tprogress, payload.url),
             download_toasters[payload.url]["key"]
           );
         }
+        add_to_logs("progress", `Downloading ${tprogress}% done`, "");
       } else if (payload.download == "COMPLETE") {
         download_toasters[payload.url]["progress"] = 100;
 
         download_toasters[payload.url]["key"] = DownloadToaster.show(
-          renderProgress(100),
+          renderProgress(100, payload.url),
           download_toasters[payload.url]["key"]
+        );
+
+        add_to_logs(
+          "complete",
+          `Asset downloaded from ${payload.url}`,
+          "finished"
         );
 
         setTimeout(() => {
