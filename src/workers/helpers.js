@@ -6,31 +6,55 @@ import * as downloads from "./DownloadsDBHandler.js";
 // Evade CORS problems and enable caching.
 const proxy = "https://cors-proxy.aaron-lun.workers.dev";
 async function proxyAndCache(url) {
-  console.log("in proxy and Cache..... ", url);
+  const url_with_proxy = proxy + "/" + encodeURIComponent(url);
 
   try {
     const out = await fetchWithProgress(
-      url,
+      url_with_proxy,
       (cl) => {
-        console.log("request body is " + String(cl) + " bytes!");
-        return url;
+        postMessage({
+          type: `DOWNLOAD for url: ` + String(url),
+          download: "START",
+          url: String(url),
+          total_bytes: String(cl),
+          msg: "Total size is " + String(cl) + " bytes!",
+        });
+        return url_with_proxy;
       },
       (id, sofar) => {
-        console.log(
-          "I've gotten " + String(sofar) + " bytes for " + String(id) + "..."
-        );
+        postMessage({
+          type: `DOWNLOAD for url: ` + String(url),
+          download: "PROGRESS",
+          url: String(url),
+          downloaded_bytes: String(sofar),
+          msg: "Progress so far, got " + String(sofar) + " bytes!",
+        });
       },
       (id, total) => {
-        console.log(
-          "finished " + String(id) + " with " + String(total) + " bytes!"
-        );
+        postMessage({
+          type: `DOWNLOAD for url: ` + String(url),
+          download: "COMPLETE",
+          url: String(url),
+          msg: "Finished, got " + String(total) + " bytes!",
+        });
       }
     );
 
-    console.log("was successfull, so out", out);
+    return out;
   } catch (error) {
-    console.log("oops error", error)
-    let buffer = await downloads.get(proxy + "/" + encodeURIComponent(url));
+    // console.log("oops error", error)
+    postMessage({
+      type: `DOWNLOAD for url: ` + String(url),
+      download: "START",
+      url: String(url),
+      total_bytes: 100,
+    });
+    let buffer = await downloads.get(url_with_proxy);
+    postMessage({
+      type: `DOWNLOAD for url: ` + String(url),
+      download: "COMPLETE",
+      url: String(url),
+    });
     return new Uint8Array(buffer);
   }
 }
