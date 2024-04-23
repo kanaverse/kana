@@ -32,6 +32,112 @@ export function initialize() {
   return init;
 }
 
+async function fetchWithProgress(url, startFun, iterFun, endFun, params=null) {
+  let res;
+  if (params == null) {
+    res = await fetch(url);
+  } else {
+    res = await fetch(url, params);
+  }
+
+  if (!res.ok) {
+    throw new Error("oops, failed to download '" + url + "'");
+  }
+
+  const cl = res.headers.get("content-length"); // WARNING: this might be NULL!
+  const id = startFun(cl);
+
+  const reader = res.body.getReader();
+  const chunks = [];
+  let total = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    chunks.push(value);
+    total += value.length;
+    iterFun(id, total);
+  }
+
+  let output = new Uint8Array(total);
+  let start = 0;
+  for (const x of chunks) {
+    output.set(x, start);
+    start += x.length;
+  }
+
+  endFun(id, total);
+  return output;
+}
+
+async function fetchWrapper(url, params = null) {
+  try {
+    const out = await fetchWithProgress(
+      url,
+      (cl) => {
+        postMessage({
+          type: `DOWNLOAD for url: ` + String(url),
+          download: "START",
+          url: String(url),
+          total_bytes: String(cl),
+          msg: "Total size is " + String(cl) + " bytes!",
+        });
+        return url;
+      },
+      (id, sofar) => {
+        postMessage({
+          type: `DOWNLOAD for url: ` + String(url),
+          download: "PROGRESS",
+          url: String(url),
+          downloaded_bytes: String(sofar),
+          msg: "Progress so far, got " + String(sofar) + " bytes!",
+        });
+      },
+      (id, total) => {
+        postMessage({
+          type: `DOWNLOAD for url: ` + String(url),
+          download: "COMPLETE",
+          url: String(url),
+          msg: "Finished, got " + String(total) + " bytes!",
+        });
+      },
+      params
+    );
+
+    return out;
+  } catch (error) {
+    // console.log("oops error", error)
+    postMessage({
+      type: `DOWNLOAD for url: ` + String(url),
+      download: "START",
+      url: String(url),
+      total_bytes: 100,
+    });
+
+    let req;
+    if (params == null) {
+      req = fetch(url);
+    } else {
+      req = fetch(url, params);
+    }
+
+    var res = await req;
+    if (!res.ok) {
+      throw new Error("failed to download '" + url + "' (" + res.status + ")");
+    }
+    var buffer = await res.arrayBuffer();
+
+    postMessage({
+      type: `DOWNLOAD for url: ` + String(url),
+      download: "COMPLETE",
+      url: String(url),
+    });
+    return new Uint8Array(buffer);
+  }
+}
+
 export async function get(url, params = null, force = false) {
   await init;
 
@@ -59,18 +165,7 @@ export async function get(url, params = null, force = false) {
     }
   }
 
-  var req;
-  if (params == null) {
-    req = fetch(url);
-  } else {
-    req = fetch(url, params);
-  }
-
-  var res = await req;
-  if (!res.ok) {
-    throw new Error("failed to download '" + url + "' (" + res.status + ")");
-  }
-  var buffer = await res.arrayBuffer();
+  var buffer = await fetchWrapper(url, params)
 
   // Technically, this isn't quite right, because we need to close the read
   // transaction before opening the write transaction; multiple queries to
