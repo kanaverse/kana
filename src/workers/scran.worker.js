@@ -16,6 +16,7 @@ import {
   fetchStepSummary,
   describeColumn,
   isArrayOrView,
+  fetchWithProgress,
 } from "./helpers.js";
 import { code } from "../utils/utils.js";
 /***************************************/
@@ -306,7 +307,7 @@ var loaded;
 onmessage = function (msg) {
   const { type, payload } = msg.data;
 
-  // console.log("WORKER::RCV::", type, payload);
+  // console.log("SCRAN.WORKER ::RCV::", type, payload);
 
   let fatal = false;
   if (type === "INIT") {
