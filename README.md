@@ -70,6 +70,23 @@ and diagnostic plots from the individual analysis steps.
 - Clicking on "What's happening" will show logs describing how long each step of the analysis took (and any errors during the analysis).
 - Clicking Export will save the analysis either to the browser or download the analysis as a .kana file. Loading these files will restore the state of the application
 
+If you use **Kana** for analysis or exploration, consider citing our JOSS publication -
+
+```bibtex
+@article{Kana2023, 
+  doi = {10.21105/joss.05603}, 
+  url = {https://doi.org/10.21105/joss.05603}, 
+  year = {2023}, 
+  publisher = {The Open Journal}, 
+  volume = {8}, 
+  number = {89}, 
+  pages = {5603}, 
+  author = {Aaron Tin Long Lun and Jayaram Kancherla}, 
+  title = {Powering single-cell analyses in the browser with WebAssembly}, 
+  journal = {Journal of Open Source Software} 
+}
+```
+
 ## For developers
 
 ***Check out [Contributing](./CONTRIBUTING.md) for guidelines on opening issues and pull requests.***
