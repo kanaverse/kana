@@ -71,6 +71,10 @@ export function TenxHDF5({
     return `featureType${getCamelCaseKey(mod)}Name`;
   };
 
+  const getAssayNameKey = (mod) => {
+    return `${mod.toLowerCase()}CountAssay`;
+  };
+
   const resetModality = (mod, val) => {
     let tmpOptions = { ...options };
 

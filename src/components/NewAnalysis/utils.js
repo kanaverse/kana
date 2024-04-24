@@ -48,3 +48,14 @@ export function getDefaultFeature(obj) {
 
   return Object.keys(obj.columns)[0];
 }
+
+export function getDefaultAssayName(assaynames) {
+  let _defname = assaynames[0];
+  for (let _aname of assaynames) {
+    if (_aname.toLowerCase() == "counts") {
+      _defname = _aname;
+    }
+  }
+
+  return _defname;
+}

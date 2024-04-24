@@ -17,7 +17,11 @@ import "./index.css";
 
 import { MODALITIES } from "../../utils/utils";
 
-import { getDefaultFeature, reportFeatureTypes } from "./utils";
+import {
+  getDefaultFeature,
+  reportFeatureTypes,
+  getDefaultAssayName,
+} from "./utils";
 
 export function RDSSE({
   resource,
@@ -66,8 +70,9 @@ export function RDSSE({
       options["adtExperiment"] !== null &&
       options["adtExperiment"] !== undefined
     ) {
-      tmpOptions["adtCountAssay"] =
-        preflight.modality_assay_names[options?.["adtExperiment"]][0];
+      tmpOptions["adtCountAssay"] = getDefaultAssayName(
+        preflight.modality_assay_names[options?.["adtExperiment"]]
+      );
 
       tmpOptions["primaryAdtFeatureIdColumn"] = getDefaultFeature(
         preflight.modality_features[options?.["adtExperiment"]]
@@ -88,8 +93,9 @@ export function RDSSE({
       options["crisprExperiment"] !== null &&
       options["crisprExperiment"] !== undefined
     ) {
-      tmpOptions["crisprCountAssay"] =
-        preflight.modality_assay_names[options?.["crisprExperiment"]][0];
+      tmpOptions["crisprCountAssay"] = getDefaultAssayName(
+        preflight.modality_assay_names[options?.["crisprExperiment"]]
+      );
 
       tmpOptions["primaryCrisprFeatureIdColumn"] = getDefaultFeature(
         preflight.modality_features[options?.["crisprExperiment"]]
@@ -110,8 +116,9 @@ export function RDSSE({
       options["rnaExperiment"] !== null &&
       options["rnaExperiment"] !== undefined
     ) {
-      tmpOptions["rnaCountAssay"] =
-        preflight.modality_assay_names[options?.["rnaExperiment"]][0];
+      tmpOptions["rnaCountAssay"] = getDefaultAssayName(
+        preflight.modality_assay_names[options?.["rnaExperiment"]]
+      );
 
       tmpOptions["primaryRnaFeatureIdColumn"] = getDefaultFeature(
         preflight.modality_features[options?.["rnaExperiment"]]
@@ -141,6 +148,10 @@ export function RDSSE({
     return `${mod.toLowerCase()}Experiment`;
   };
 
+  const getAssayNameKey = (mod) => {
+    return `${mod.toLowerCase()}CountAssay`;
+  };
+
   const resetModality = (mod, val) => {
     let tmpOptions = { ...options };
 
@@ -164,7 +175,9 @@ export function RDSSE({
     for (const [k, v] of Object.entries(preflight.modality_features)) {
       if (k === "" || k.toLowerCase().indexOf("gene") > -1) {
         tmpOptions["rnaExperiment"] = k;
-        tmpOptions["rnaCountAssay"] = preflight.modality_assay_names[k][0];
+        tmpOptions["rnaCountAssay"] = getDefaultAssayName(
+          preflight.modality_assay_names[k]
+        );
 
         tmpOptions["primaryRnaFeatureIdColumn"] = getDefaultFeature(v);
       } else if (
@@ -172,11 +185,15 @@ export function RDSSE({
         k.toLowerCase().indexOf("adt") > -1
       ) {
         tmpOptions["adtExperiment"] = k;
-        tmpOptions["adtCountAssay"] = preflight.modality_assay_names[k][0];
+        tmpOptions["adtCountAssay"] = getDefaultAssayName(
+          preflight.modality_assay_names[k]
+        );
         tmpOptions["primaryAdtFeatureIdColumn"] = getDefaultFeature(v);
       } else if (k.toLowerCase().indexOf("crispr") > -1) {
         tmpOptions["crisprExperiment"] = k;
-        tmpOptions["crisprCountAssay"] = preflight.modality_assay_names[k][0];
+        tmpOptions["crisprCountAssay"] = getDefaultAssayName(
+          preflight.modality_assay_names[k]
+        );
         tmpOptions["primaryCrisprFeatureIdColumn"] = getDefaultFeature(v);
       }
     }
@@ -275,13 +292,6 @@ export function RDSSE({
                           <strong>{mod} count assay</strong>
                         </Text>
                         <HTMLSelect
-                          defaultValue={
-                            options?.[getFTypeKey(mod)]
-                              ? dsMeta.modality_assay_names[
-                                  options?.[getFTypeKey(mod)]
-                                ][0]
-                              : null
-                          }
                           onChange={(e) => {
                             if (
                               e.target.value !== undefined &&
@@ -289,10 +299,9 @@ export function RDSSE({
                             ) {
                               let tmpOptions = { ...options };
                               if (e.target.value === "none") {
-                                tmpOptions[`${mod.toLowerCase()}CountAssay`] =
-                                  null;
+                                tmpOptions[getAssayNameKey(mod)] = null;
                               } else {
-                                tmpOptions[`${mod.toLowerCase()}CountAssay`] =
+                                tmpOptions[getAssayNameKey(mod)] =
                                   e.target.value;
                               }
                               setOptions(tmpOptions);
@@ -305,7 +314,11 @@ export function RDSSE({
                             dsMeta.modality_assay_names[
                               options[getFTypeKey(mod)]
                             ].map((x, i) => (
-                              <option key={i} value={x}>
+                              <option
+                                key={i}
+                                value={x}
+                                selected={x === options?.[getAssayNameKey(mod)]}
+                              >
                                 {x}
                               </option>
                             ))}
