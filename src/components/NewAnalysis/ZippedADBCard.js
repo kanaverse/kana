@@ -294,9 +294,9 @@ export function ZippedADB({
                             ) {
                               let tmpOptions = { ...options };
                               if (e.target.value === "none") {
-                                tmpOptions[getAssayNameKey] = null;
+                                tmpOptions[getAssayNameKey(mod)] = null;
                               } else {
-                                tmpOptions[getAssayNameKey] = e.target.value;
+                                tmpOptions[getAssayNameKey(mod)] = e.target.value;
                               }
                               setOptions(tmpOptions);
                             }
