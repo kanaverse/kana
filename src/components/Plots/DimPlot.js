@@ -11,6 +11,7 @@ import {
   Tag,
   HTMLSelect,
   Switch,
+  NumericInput,
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
@@ -73,6 +74,10 @@ const DimPlot = (props) => {
 
   const [cellColorArray, setCellColorArray] = useState(null);
   const [spec, setSpec] = useState(null);
+
+  // point size
+  const [pointSize, setPointSize] = useState(3);
+
   // const [resizeObserver, setResizeObserver] = useState(null);
 
   // const [resizeTimeout, setResizeTimeout] = useState(null);
@@ -329,7 +334,7 @@ const DimPlot = (props) => {
             }
           }
 
-          if (props?.gene !== null) {
+          if (props?.gene !== null && props?.gene !== undefined) {
             let index = props?.selectedClusterIndex?.[props?.gene];
             let expr = props?.selectedClusterSummary?.[index]?.expr;
 
@@ -351,6 +356,7 @@ const DimPlot = (props) => {
 
           if (
             props?.selectedFsetIndex !== null &&
+            props?.selectedFsetIndex !== undefined &&
             (props?.featureScoreCache?.[props?.selectedFsetIndex] !== null ||
               props?.featureScoreCache?.[props?.selectedFsetIndex] !==
                 undefined)
@@ -416,7 +422,7 @@ const DimPlot = (props) => {
                 attribute: "color",
                 type: "inline",
               },
-              size: { value: 3 },
+              size: { value: pointSize },
               opacity: { value: 0.8 },
             },
           ],
@@ -445,6 +451,7 @@ const DimPlot = (props) => {
 
           uspec["tracks"][0].x.domain = [-xBound, xBound];
           uspec["tracks"][0].y.domain = [-yBound, yBound];
+          uspec["tracks"][0].size.value = pointSize;
 
           tmp_scatterplot.setSpecification(uspec);
           setSpec(uspec);
@@ -488,6 +495,7 @@ const DimPlot = (props) => {
       }
     }
   }, [
+    pointSize,
     props?.redDimsData,
     props?.animateData,
     props?.selectedRedDim,
@@ -828,13 +836,14 @@ const DimPlot = (props) => {
   // }, [props?.clusHighlight]);
 
   const suppliedCols = useMemo(() => {
-    return Object.keys(annotationCols).filter((x) =>
-      !annotationCols[x].name.startsWith(code) &&
-      annotationCols[x].name !== "__batch__"
-        // ? annotationCols[x]["type"] === "continuous"
-        //   ? true
-        //   : !annotationCols[x]["truncated"]
-        // : false
+    return Object.keys(annotationCols).filter(
+      (x) =>
+        !annotationCols[x].name.startsWith(code) &&
+        annotationCols[x].name !== "__batch__"
+      // ? annotationCols[x]["type"] === "continuous"
+      //   ? true
+      //   : !annotationCols[x]["truncated"]
+      // : false
     );
   }, [annotationCols]);
 
@@ -1251,6 +1260,35 @@ const DimPlot = (props) => {
             )}
           </div>
         }
+        <Callout style={{ marginTop: "5px" }}>
+          <Label style={{ marginBottom: "0", fontSize: "x-small" }}>
+            Point Size:
+            <NumericInput
+              small
+              fill
+              size={"small"}
+              value={pointSize}
+              onValueChange={(valueAsNumber) => {
+                if (
+                  !isNaN(valueAsNumber) &&
+                  valueAsNumber > 0 &&
+                  valueAsNumber <= 10
+                ) {
+                  setPointSize(valueAsNumber);
+                } else if (valueAsNumber <= 0) {
+                  setPointSize(1);
+                } else if (valueAsNumber > 10) {
+                  setPointSize(10);
+                }
+              }}
+              min={1}
+              max={10}
+              stepSize={0.5}
+              minorStepSize={0.1}
+              // style={{ width: "70px", marginLeft: "5px" }}
+            />
+          </Label>
+        </Callout>
         {showGradient &&
           props?.selectedFsetIndex !== null &&
           props?.selectedFsetIndex !== undefined && (

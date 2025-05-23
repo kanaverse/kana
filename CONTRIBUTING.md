@@ -19,8 +19,8 @@ Screenshots of errors messages in the [browser console](https://developer.chrome
 You should already have node available on your machine. Install dependencies:
 
 ```sh
-npm install --force or yarn # depending on what you use
-npm dedupe --force # you might sometimes have to dedupe
+npm install --legacy-peer-deps or yarn # depending on what you use
+npm dedupe # you might sometimes have to dedupe
 ```
 
 To start the app:
