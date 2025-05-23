@@ -1,3 +1,4 @@
+// kana/src/App.js
 import { useContext } from "react";
 
 import {
@@ -9,6 +10,10 @@ import {
   Classes,
   Callout,
   H2,
+  Card,
+  Icon,
+  H5,
+  Elevation,
 } from "@blueprintjs/core";
 
 import pkgVersion from "../package.json";
@@ -35,7 +40,7 @@ function App() {
             <NavbarGroup align={Alignment.LEFT}>
               <NavbarHeading>
                 <div style={{ cursor: "pointer" }} onClick={resetApp}>
-                  <img height="20px" src={logo}></img>{" "}
+                  <img height="20px" src={logo} alt="Kana logo"></img>{" "}
                   <span
                     style={{
                       fontSize: "8px",
@@ -57,6 +62,7 @@ function App() {
                 style={{ border: "5px solid #eeeeee" }}
                 width={245}
                 height={245}
+                alt="Kana animation"
               />
             </div>
             <div className="frontpage-content">
@@ -75,15 +81,28 @@ function App() {
               </ul>
               <p>
                 Check out our{" "}
-                <a href="https://github.com/kanaverse" target="_blank">
+                <a
+                  href="https://github.com/kanaverse"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   GitHub page
-                </a>{" "}
-                or our{" "}
+                </a>
+                ,{" "}
                 <a
                   href="https://doi.org/10.1101/2022.03.02.482701"
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
                   bioRxiv manuscript
+                </a>{" "}
+                or{" "}
+                <a
+                  hred="https://doi.org/10.21105/joss.05603"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  JOSS publication
                 </a>{" "}
                 for more details.
               </p>
@@ -91,6 +110,7 @@ function App() {
                 Download some of our test datasets{" "}
                 <a
                   target="_blank"
+                  rel="noopener noreferrer"
                   href="https://github.com/kanaverse/random-test-files/releases"
                 >
                   here
@@ -137,74 +157,91 @@ function App() {
                     )}
                   </>
                 )}
-              <Callout
-                title="I want to analyze a new dataset"
-                onClick={() => setAppMode("analysis")}
-                className="frontpage-rowitem"
-                icon="function"
-                intent="primary"
-                style={{ cursor: "pointer" }}
-              >
-                <p>
-                  Provide a single-cell dataset in one of the accepted formats
-                  and <strong>kana</strong> will perform a standard single-cell
-                  data analysis. Get your UMAPs, t-SNEs, clusters and marker
-                  genes with a click of a button.
-                </p>
-              </Callout>
-              <Callout
-                title="I want to explore existing analysis results"
-                onClick={() => setAppMode("explore")}
-                className="frontpage-rowitem"
-                icon="geosearch"
-                intent="success"
-                style={{ cursor: "pointer" }}
-              >
-                <p>
-                  Provide a pre-analyzed single-cell dataset in one of the
-                  accepted formats and <strong>kana</strong> will load the
-                  existing results into the browser for further exploration.
-                </p>
-              </Callout>
-              <Callout
-                title="I just want to try it out"
-                onClick={() => {
-                  setAppMode("analysis");
-                  setLoadZiesel(true);
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "20px",
+                  width: "100%",
                 }}
-                className="frontpage-rowitem"
-                icon="clean"
-                intent="warning"
-                style={{ cursor: "pointer" }}
               >
-                <p>
-                  Try out <strong>kana</strong> using the Zeisel mouse brain
-                  dataset from Bioconductor's ExperimentHub. No lock-in
-                  contract, no credit check required.
-                </p>
-              </Callout>
-              <Callout
-                title="I want to go back to the old version!"
-                onClick={() => {
-                  window.open("https://jkanche.com/kana", "_blank");
-                }}
-                className="frontpage-rowitem"
-                icon="heart-broken"
-                style={{ cursor: "pointer" }}
-              >
-                <p>
-                  Sometimes it's time to move on, but for all other times,
-                  there's <strong>kana</strong> <em>2.0</em>.
-                </p>
-              </Callout>
+                <Callout
+                  title="I want to analyze a new dataset"
+                  onClick={() => setAppMode("analysis")}
+                  className="frontpage-rowitem"
+                  icon="function"
+                  intent="primary"
+                  style={{ cursor: "pointer" }}
+                >
+                  <p>
+                    Provide a single-cell dataset in one of the accepted formats
+                    and <strong>kana</strong> will perform a standard
+                    single-cell data analysis. Get your UMAPs, t-SNEs, clusters
+                    and marker genes with a click of a button.
+                  </p>
+                </Callout>
+                <Callout
+                  title="I want to explore existing analysis results"
+                  onClick={() => setAppMode("explore")}
+                  className="frontpage-rowitem"
+                  icon="geosearch"
+                  intent="success"
+                  style={{ cursor: "pointer" }}
+                >
+                  <p>
+                    Provide a pre-analyzed single-cell dataset in one of the
+                    accepted formats and <strong>kana</strong> will load the
+                    existing results for further exploration.
+                  </p>
+                </Callout>
+                <Callout
+                  title="I just want to try it out"
+                  onClick={() => {
+                    setAppMode("analysis");
+                    setLoadZiesel(true);
+                  }}
+                  className="frontpage-rowitem"
+                  icon="clean"
+                  intent="warning"
+                  style={{ cursor: "pointer" }}
+                >
+                  <p>
+                    Quickly try <strong>kana</strong> using the Zeisel mouse brain
+                    dataset from Bioconductor's ExperimentHub. No lock-in
+                    contract, no credit check required.
+                  </p>
+                </Callout>
+                <Callout
+                  title="I want to go back to the old version!"
+                  onClick={() => {
+                    window.open("https://jkanche.com/kana", "_blank");
+                  }}
+                  className="frontpage-rowitem"
+                  icon="heart-broken"
+                  style={{ cursor: "pointer" }}
+                >
+                  <p>
+                    Sometimes it's time to move on, but for all other times,
+                    there's <strong>kana</strong> <em>2.0</em>.
+                  </p>
+                </Callout>
+              </div>
             </div>
             <div className="frontpage-footer">
               Kana is developed by Jayaram Kancherla (
-              <a href="https://github.com/jkanche" target="_blank">
+              <a
+                href="https://github.com/jkanche"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <strong>@jkanche</strong>
               </a>
               ), Aaron Lun (
-              <a href="https://github.com/LTLA" target="_blank">
+              <a
+                href="https://github.com/LTLA"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <strong>@LTLA</strong>
               </a>
               ).
