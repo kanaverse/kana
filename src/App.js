@@ -165,85 +165,66 @@ function App() {
                   width: "100%",
                 }}
               >
-                <Card
-                  interactive={true}
-                  elevation={Elevation.TWO}
+                <Callout
+                  title="I want to analyze a new dataset"
                   onClick={() => setAppMode("analysis")}
+                  className="frontpage-rowitem"
+                  icon="function"
+                  intent="primary"
                   style={{ cursor: "pointer" }}
                 >
-                  <H5>
-                    <Icon
-                      icon="function"
-                      intent="primary"
-                      style={{ marginRight: "10px" }}
-                    />
-                    Analyze new dataset
-                  </H5>
                   <p>
-                    Provide a single-cell dataset and <strong>kana</strong> will
-                    perform a standard analysis. Get UMAPs, t-SNEs, clusters,
-                    and marker genes.
+                    Provide a single-cell dataset in one of the accepted formats
+                    and <strong>kana</strong> will perform a standard
+                    single-cell data analysis. Get your UMAPs, t-SNEs, clusters
+                    and marker genes with a click of a button.
                   </p>
-                </Card>
-                <Card
-                  interactive={true}
-                  elevation={Elevation.TWO}
+                </Callout>
+                <Callout
+                  title="I want to explore existing analysis results"
                   onClick={() => setAppMode("explore")}
+                  className="frontpage-rowitem"
+                  icon="geosearch"
+                  intent="success"
                   style={{ cursor: "pointer" }}
                 >
-                  <H5>
-                    <Icon
-                      icon="geosearch"
-                      intent="success"
-                      style={{ marginRight: "10px" }}
-                    />
-                    Explore existing results
-                  </H5>
                   <p>
-                    Load a pre-analyzed dataset to explore existing UMAPs,
-                    t-SNEs, clusters, and marker genes.
+                    Provide a pre-analyzed single-cell dataset in one of the
+                    accepted formats and <strong>kana</strong> will load the
+                    existing results for further exploration.
                   </p>
-                </Card>
-                <Card
-                  interactive={true}
-                  elevation={Elevation.TWO}
+                </Callout>
+                <Callout
+                  title="I just want to try it out"
                   onClick={() => {
                     setAppMode("analysis");
                     setLoadZiesel(true);
                   }}
+                  className="frontpage-rowitem"
+                  icon="clean"
+                  intent="warning"
                   style={{ cursor: "pointer" }}
                 >
-                  <H5>
-                    <Icon
-                      icon="clean"
-                      intent="warning"
-                      style={{ marginRight: "10px" }}
-                    />
-                    Try with Zeisel dataset
-                  </H5>
                   <p>
-                    Quickly try <strong>kana</strong> using the Zeisel mouse
-                    brain dataset from Bioconductor's ExperimentHub. No setup
-                    required!
+                    Quickly try <strong>kana</strong> using the Zeisel mouse brain
+                    dataset from Bioconductor's ExperimentHub. No lock-in
+                    contract, no credit check required.
                   </p>
-                </Card>
-                <Card
-                  interactive={true}
-                  elevation={Elevation.TWO}
+                </Callout>
+                <Callout
+                  title="I want to go back to the old version!"
                   onClick={() => {
                     window.open("https://jkanche.com/kana", "_blank");
                   }}
+                  className="frontpage-rowitem"
+                  icon="heart-broken"
                   style={{ cursor: "pointer" }}
                 >
-                  <H5>
-                    <Icon icon="history" style={{ marginRight: "10px" }} />
-                    Access Old Version (2.0)
-                  </H5>
                   <p>
-                    Need to go back? The previous version of{" "}
-                    <strong>kana</strong> is still available.
+                    Sometimes it's time to move on, but for all other times,
+                    there's <strong>kana</strong> <em>2.0</em>.
                   </p>
-                </Card>
+                </Callout>
               </div>
             </div>
             <div className="frontpage-footer">
