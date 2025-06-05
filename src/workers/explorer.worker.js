@@ -208,7 +208,7 @@ onmessage = function (msg) {
               delete preflights[k];
             }
             current[k] = createDataset(v, true);
-            current[k].setOptions(v.options);
+            current[k].setOptions(v.options[0]);
           }
 
           for (const [k, v] of Object.entries(current)) {
