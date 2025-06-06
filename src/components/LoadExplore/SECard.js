@@ -62,8 +62,7 @@ export function SECard({
   // when options change
   useEffect(() => {
     if (options !== {}) {
-      let tmpInputOpts = { ...inputOpts };
-      tmpInputOpts[index] = options;
+      let tmpInputOpts = { ...inputOpts, ...options };
       setInputOpts(tmpInputOpts);
     }
   }, [options]);
