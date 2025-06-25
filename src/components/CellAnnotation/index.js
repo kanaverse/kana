@@ -507,13 +507,13 @@ const CellAnnotation = (props) => {
                 props?.setSelectedCellAnnCluster(tmpselection);
                 setClusIdx(1);
               } else {
-                if ("type" in annotationObj[props?.selectedMarkerAnnotation] && annotationObj[props?.selectedMarkerAnnotation]["type"] == "factor") {
+                if ("type" in annotationObj[props?.selectedCellAnnAnnotation] && annotationObj[props?.selectedCellAnnAnnotation]["type"] == "factor") {
                   tmpselection = tmpselection
                 } else {
                   // do the best
-                  if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Float")) {
+                  if (annotationObj[props?.selectedCellAnnAnnotation].values.constructor.name.includes("Float")) {
                     tmpselection = parseFloat(tmpselection)
-                  } else if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Int")) {
+                  } else if (annotationObj[props?.selectedCellAnnAnnotation].values.constructor.name.includes("Int")) {
                     tmpselection = parseInt(tmpselection)
                   }
                 }

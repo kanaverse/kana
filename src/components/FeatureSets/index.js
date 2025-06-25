@@ -888,13 +888,13 @@ const FeatureSetEnrichment = (props) => {
               } else if (default_selection === props?.selectedFsetAnnotation) {
                 tmpselection = tmpselection.replace("Custom Selection ", "");
               } else {
-                if ("type" in annotationObj[props?.selectedMarkerAnnotation] && annotationObj[props?.selectedMarkerAnnotation]["type"] == "factor") {
+                if ("type" in annotationObj[props?.selectedFsetAnnotation] && annotationObj[props?.selectedFsetAnnotation]["type"] == "factor") {
                   tmpselection = tmpselection
                 } else {
                   // do the best
-                  if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Float")) {
+                  if (annotationObj[props?.selectedFsetAnnotation].values.constructor.name.includes("Float")) {
                     tmpselection = parseFloat(tmpselection)
-                  } else if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Int")) {
+                  } else if (annotationObj[props?.selectedFsetAnnotation].values.constructor.name.includes("Int")) {
                     tmpselection = parseInt(tmpselection)
                   }
                 }
@@ -969,13 +969,13 @@ const FeatureSetEnrichment = (props) => {
                       ""
                     );
                   } else {
-                    if ("type" in annotationObj[props?.selectedMarkerAnnotation] && annotationObj[props?.selectedMarkerAnnotation]["type"] == "factor") {
+                    if ("type" in annotationObj[props?.selectedFsetAnnotation] && annotationObj[props?.selectedFsetAnnotation]["type"] == "factor") {
                       tmpselection = tmpselection
                     } else {
                       // do the best
-                      if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Float")) {
+                      if (annotationObj[props?.selectedFsetAnnotation].values.constructor.name.includes("Float")) {
                         tmpselection = parseFloat(tmpselection)
-                      } else if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Int")) {
+                      } else if (annotationObj[props?.selectedFsetAnnotation].values.constructor.name.includes("Int")) {
                         tmpselection = parseInt(tmpselection)
                       }
                     }
