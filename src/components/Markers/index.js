@@ -810,11 +810,15 @@ const MarkerPlot = (props) => {
               ) {
                 tmpselection = tmpselection.replace("Custom Selection ", "");
               } else {
-                // do the best
-                if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Float")) {
-                  tmpselection = parseFloat(tmpselection)
-                } else if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Int")) {
-                  tmpselection = parseInt(tmpselection)
+                if ("type" in annotationObj[props?.selectedMarkerAnnotation] && annotationObj[props?.selectedMarkerAnnotation]["type"] == "factor") {
+                  tmpselection = tmpselection
+                } else {
+                  // do the best
+                  if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Float")) {
+                    tmpselection = parseFloat(tmpselection)
+                  } else if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Int")) {
+                    tmpselection = parseInt(tmpselection)
+                  }
                 }
               }
 
@@ -886,11 +890,15 @@ const MarkerPlot = (props) => {
                       ""
                     );
                   } else {
-                    // do the best
-                    if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Float")) {
-                      tmpselection = parseFloat(tmpselection)
-                    } else if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Int")) {
-                      tmpselection = parseInt(tmpselection)
+                    if ("type" in annotationObj[props?.selectedMarkerAnnotation] && annotationObj[props?.selectedMarkerAnnotation]["type"] == "factor") {
+                      tmpselection = tmpselection
+                    } else {
+                      // do the best
+                      if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Float")) {
+                        tmpselection = parseFloat(tmpselection)
+                      } else if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Int")) {
+                        tmpselection = parseInt(tmpselection)
+                      }
                     }
                   }
                   props?.setSelectedVSCluster(tmpselection);
