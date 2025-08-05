@@ -62,8 +62,7 @@ export function SECard({
   // when options change
   useEffect(() => {
     if (options !== {}) {
-      let tmpInputOpts = { ...inputOpts };
-      tmpInputOpts[index] = options;
+      let tmpInputOpts = { ...inputOpts, ...options };
       setInputOpts(tmpInputOpts);
     }
   }, [options]);
@@ -140,6 +139,7 @@ export function SECard({
                             let tmpOptions = { ...options };
                             if (e.target.value === "none") {
                               delete tmpOptions["primaryAssay"][x];
+                              delete tmpOptions["isPrimaryNormalized"][x];
                             } else {
                               tmpOptions["primaryAssay"][x] = e.target.value;
                             }

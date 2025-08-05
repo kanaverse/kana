@@ -1,5 +1,16 @@
 # Changelog
 
+## V3.0.0 - 3.0.26
+
+- Overhaul the entire application from scratch (expect a few bugs :fingerscrossed:)
+- Officially support explore mode to visually explore pre-analyzed datasets
+- Gene set enrichment to identify enriched gene sets among the top markers for each cluster
+- Markers and gene set panels can be used on any annotation and not just the kana-identified clusters
+- Download results as CSV for both markers and gene sets
+- Support Perturb-seq and similar CRISPR based modalities
+- Gallery orients vertically or horizontally based on browser and available screen widths
+- UX improvements, text edits to various components for new functionality
+
 ## V2.2.0
 - Perform analysis on a subset of cells
 

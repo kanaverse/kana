@@ -845,7 +845,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                 if (col.type === "categorical") {
                   return (
                     <div className="subset-section">
-                      {col.__unique__.map((x) => (
+                      {col.values.map((x) => (
                         <Checkbox
                           key={"subset-" + x}
                           checked={subset.values.includes(x)}
@@ -950,7 +950,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                         <>
                           <Divider />
                           <div className="subset-section">
-                            {col.__unique__.map((x) => (
+                            {col.values.map((x) => (
                               <Checkbox
                                 key={"subset-" + x}
                                 checked={subset.values.includes(x)}

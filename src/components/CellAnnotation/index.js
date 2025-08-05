@@ -507,6 +507,17 @@ const CellAnnotation = (props) => {
                 props?.setSelectedCellAnnCluster(tmpselection);
                 setClusIdx(1);
               } else {
+                if ("type" in annotationObj[props?.selectedCellAnnAnnotation] && annotationObj[props?.selectedCellAnnAnnotation]["type"] == "factor") {
+                  tmpselection = tmpselection
+                } else {
+                  // do the best
+                  if (annotationObj[props?.selectedCellAnnAnnotation].values.constructor.name.includes("Float")) {
+                    tmpselection = parseFloat(tmpselection)
+                  } else if (annotationObj[props?.selectedCellAnnAnnotation].values.constructor.name.includes("Int")) {
+                    tmpselection = parseInt(tmpselection)
+                  }
+                }
+
                 props?.setSelectedCellAnnCluster(tmpselection);
                 setClusIdx(clusSel.map((x) => String(x)).indexOf(tmpselection));
               }

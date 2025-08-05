@@ -16,7 +16,7 @@ import {
 import "./index.css";
 
 import { MODALITIES } from "../../utils/utils";
-import { getDefaultFeature } from "./utils";
+import { getDefaultFeature, getDefaultAssayName } from "./utils";
 
 export function H5AD({
   resource,
@@ -50,7 +50,10 @@ export function H5AD({
           preflight.all_features
         );
 
-        tmpOptions["countMatrixName"] = preflight.all_assay_names[0];
+        // Default assignment to
+        tmpOptions["countMatrixName"] = getDefaultAssayName(
+          preflight.all_assay_names
+        );
 
         setOptions(tmpOptions);
         setInit2(false);

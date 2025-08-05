@@ -16,6 +16,7 @@ import {
   fetchStepSummary,
   describeColumn,
   isArrayOrView,
+  fetchWithProgress,
 } from "./helpers.js";
 import { code } from "../utils/utils.js";
 /***************************************/
@@ -223,16 +224,16 @@ const getAnnotation = (annotation, unfiltered = false) => {
       ].fetchMetrics();
 
     if (split_metric[1] === "sums") {
-      vec = metrics.sums();
+      vec = metrics.sum();
     } else if (split_metric[1] === "detected") {
       vec = metrics.detected();
     } else if (split_metric[1] === "proportion") {
       if (split_metric[0].toLowerCase() === "rna") {
-        vec = metrics.subsetProportions(0);
+        vec = metrics.subsetProportion(0);
       } else if (split_metric[0].toLowerCase() === "adt") {
-        vec = metrics.subsetTotals(0);
+        vec = metrics.subsetSum(0);
       } else if (split_metric[0].toLowerCase() === "crispr") {
-        vec = metrics.maxProportions(0);
+        vec = metrics.maxProportion(0);
       }
     }
   } else {
@@ -278,7 +279,7 @@ var loaded;
 onmessage = function (msg) {
   const { type, payload } = msg.data;
 
-  // console.log("WORKER::RCV::", type, payload);
+  // console.log("SCRAN.WORKER ::RCV::", type, payload);
 
   let fatal = false;
   if (type === "INIT") {

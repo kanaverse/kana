@@ -17,7 +17,7 @@ import "./index.css";
 
 import { MODALITIES } from "../../utils/utils";
 
-import { reportFeatureTypes } from "./utils";
+import { reportFeatureTypes, getDefaultAssayName } from "./utils";
 
 export function ZippedADB({
   resource,
@@ -66,8 +66,10 @@ export function ZippedADB({
       options["adtExperiment"] !== null &&
       options["adtExperiment"] !== undefined
     ) {
-      tmpOptions["adtCountAssay"] =
-        preflight.modality_assay_names[options?.["adtExperiment"]][0];
+      tmpOptions["adtCountAssay"] = getDefaultAssayName(
+        preflight.modality_assay_names[options?.["adtExperiment"]]
+      );
+
       tmpOptions["primaryAdtFeatureIdColumn"] = Object.keys(
         preflight.modality_features[options?.["adtExperiment"]].columns
       )[0];
@@ -87,8 +89,10 @@ export function ZippedADB({
       options["crisprExperiment"] !== null &&
       options["crisprExperiment"] !== undefined
     ) {
-      tmpOptions["crisprCountAssay"] =
-        preflight.modality_assay_names[options?.["crisprExperiment"]][0];
+      tmpOptions["crisprCountAssay"] = getDefaultAssayName(
+        preflight.modality_assay_names[options?.["crisprExperiment"]]
+      );
+
       tmpOptions["primaryCrisprFeatureIdColumn"] = Object.keys(
         preflight.modality_features[options?.["crisprExperiment"]].columns
       )[0];
@@ -108,8 +112,10 @@ export function ZippedADB({
       options["rnaExperiment"] !== null &&
       options["rnaExperiment"] !== undefined
     ) {
-      tmpOptions["rnaCountAssay"] =
-        preflight.modality_assay_names[options?.["rnaExperiment"]][0];
+      tmpOptions["rnaCountAssay"] = getDefaultAssayName(
+        preflight.modality_assay_names[options?.["rnaExperiment"]]
+      );
+
       tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(
         preflight.modality_features[options?.["rnaExperiment"]].columns
       )[0];
@@ -138,6 +144,10 @@ export function ZippedADB({
     return `${mod.toLowerCase()}Experiment`;
   };
 
+  const getAssayNameKey = (mod) => {
+    return `${mod.toLowerCase()}CountAssay`;
+  };
+
   const resetModality = (mod, val) => {
     let tmpOptions = { ...options };
 
@@ -161,18 +171,24 @@ export function ZippedADB({
     for (const [k, v] of Object.entries(preflight.modality_features)) {
       if (k === "" || k.toLowerCase().indexOf("gene") > -1) {
         tmpOptions["rnaExperiment"] = k;
-        tmpOptions["rnaCountAssay"] = preflight.modality_assay_names[k][0];
+        tmpOptions["rnaCountAssay"] = getDefaultAssayName(
+          preflight.modality_assay_names[k]
+        );
         tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
       } else if (
         k.toLowerCase().indexOf("antibody") > -1 ||
         k.toLowerCase().indexOf("adt") > -1
       ) {
         tmpOptions["adtExperiment"] = k;
-        tmpOptions["adtCountAssay"] = preflight.modality_assay_names[k][0];
+        tmpOptions["adtCountAssay"] = getDefaultAssayName(
+          preflight.modality_assay_names[k]
+        );
         tmpOptions["primaryAdtFeatureIdColumn"] = Object.keys(v.columns)[0];
       } else if (k.toLowerCase().indexOf("crispr") > -1) {
         tmpOptions["crisprExperiment"] = k;
-        tmpOptions["crisprCountAssay"] = preflight.modality_assay_names[k][0];
+        tmpOptions["crisprCountAssay"] = getDefaultAssayName(
+          preflight.modality_assay_names[k]
+        );
         tmpOptions["primaryCrisprFeatureIdColumn"] = Object.keys(v.columns)[0];
       }
     }
@@ -271,13 +287,6 @@ export function ZippedADB({
                           <strong>{mod} count assay</strong>
                         </Text>
                         <HTMLSelect
-                          defaultValue={
-                            options?.[getFTypeKey(mod)]
-                              ? dsMeta.modality_assay_names[
-                                  options?.[getFTypeKey(mod)]
-                                ][0]
-                              : null
-                          }
                           onChange={(e) => {
                             if (
                               e.target.value !== undefined &&
@@ -285,11 +294,9 @@ export function ZippedADB({
                             ) {
                               let tmpOptions = { ...options };
                               if (e.target.value === "none") {
-                                tmpOptions[`${mod.toLowerCase()}CountAssay`] =
-                                  null;
+                                tmpOptions[getAssayNameKey(mod)] = null;
                               } else {
-                                tmpOptions[`${mod.toLowerCase()}CountAssay`] =
-                                  e.target.value;
+                                tmpOptions[getAssayNameKey(mod)] = e.target.value;
                               }
                               setOptions(tmpOptions);
                             }
@@ -301,7 +308,11 @@ export function ZippedADB({
                             dsMeta.modality_assay_names[
                               options[getFTypeKey(mod)]
                             ].map((x, i) => (
-                              <option key={i} value={x}>
+                              <option
+                                key={i}
+                                value={x}
+                                selected={x === options?.[getAssayNameKey(mod)]}
+                              >
                                 {x}
                               </option>
                             ))}

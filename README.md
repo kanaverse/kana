@@ -1,10 +1,12 @@
 # Kana: Single cell analysis in the browser
 
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.05603/status.svg)](https://doi.org/10.21105/joss.05603)
+[![DOI:10.1101/2022.03.02.482701](http://img.shields.io/badge/bioRxiv-10.1101/2022.03.02.482701-B31B1B.svg)](https://doi.org/10.1101/2022.03.02.482701)
+
+
 *Kana* comes from the [Telugu](https://en.wikipedia.org/wiki/Telugu_language) word [kaṇaṁ (కణం)](https://www.shabdkosh.com/dictionary/english-telugu/%E0%B0%95%E0%B0%A3%E0%B0%82/%E0%B0%95%E0%B0%A3%E0%B0%82-meaning-in-telugu), which means ...  drumroll... ***cell***
 
 ## Overview
-
-[Checkout our preprint on bioRxiv](https://www.biorxiv.org/content/10.1101/2022.03.02.482701v1)
 
 **kana** is a web application for single-cell data analysis that works directly in the browser.
 That's right - the calculations are performed client-side, by your browser, on your computer!
@@ -52,6 +54,8 @@ The interface provides a depiction of the dimensionality reduction of choice,
 a ranking of marker genes for the cluster of interest,
 and diagnostic plots from the individual analysis steps.
 
+***Checkout the [wiki](https://github.com/kanaverse/kana/wiki) for tutorials on the functionality Kana provides.***
+
 ![Features](assets/v3_release.png)
 
 **Tips and tricks:**
@@ -65,6 +69,23 @@ and diagnostic plots from the individual analysis steps.
 - Clicking on Animate will interactively visualize dimensions at various iterations as the t-SNE or UMAP algorithms computes these embeddings
 - Clicking on "What's happening" will show logs describing how long each step of the analysis took (and any errors during the analysis).
 - Clicking Export will save the analysis either to the browser or download the analysis as a .kana file. Loading these files will restore the state of the application
+
+If you use **Kana** for analysis or exploration, consider citing our JOSS publication -
+
+```bibtex
+@article{Kana2023, 
+  doi = {10.21105/joss.05603}, 
+  url = {https://doi.org/10.21105/joss.05603}, 
+  year = {2023}, 
+  publisher = {The Open Journal}, 
+  volume = {8}, 
+  number = {89}, 
+  pages = {5603}, 
+  author = {Aaron Tin Long Lun and Jayaram Kancherla}, 
+  title = {Powering single-cell analyses in the browser with WebAssembly}, 
+  journal = {Journal of Open Source Software} 
+}
+```
 
 ## For developers
 

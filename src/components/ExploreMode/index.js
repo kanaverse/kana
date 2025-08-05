@@ -639,7 +639,7 @@ export function ExplorerMode() {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    console.log("ON EXPLORE MAIN::RCV::", payload);
+    // console.log("ON EXPLORE MAIN::RCV::", payload);
 
     // process any error messages
     if (payload) {
@@ -700,22 +700,15 @@ export function ExplorerMode() {
       }
     } else if (type === "inputs_DATA") {
       var info = [];
-      if ("default" in resp.num_genes) {
-        info.push(`${resp.num_genes.default} features`);
-      }
-      if ("RNA" in resp.num_genes) {
-        info.push(`${resp.num_genes.RNA} genes`);
-      }
-      if ("ADT" in resp.num_genes) {
-        info.push(`${resp.num_genes.ADT} ADTs`);
-      }
-      if ("CRISPR" in resp.num_genes) {
-        info.push(`${resp.num_genes.ADT} Guides`);
+      for (var [k, v] of Object.entries(resp.num_genes)) {
+        if (k == "") {
+          k = "unnamed modality"
+        }
+        info.push(`${v} features for ${k}`)
       }
       info.push(`${resp.num_cells} cells`);
 
       setInitDims(info.join(", "));
-      setInputData(resp);
 
       let pmods = Object.keys(resp.genes);
       setModality(pmods);
@@ -724,6 +717,20 @@ export function ExplorerMode() {
       if (selectedModality === null) {
         setSelectedModality(tmodality);
       }
+
+      // Auto-generating rowdata if the per-modality feature annotation is empty.
+      for (const p of pmods) {
+          let mod_gene_info = resp.genes[p]
+          if (Object.keys(mod_gene_info).length == 0) {
+              let dummy = new Int32Array(resp.num_genes[p])
+              for (var i = 0; i < dummy.length; ++i) {
+                  dummy[i] = i;
+              }
+              mod_gene_info["index"] = dummy
+          }
+      }
+ 
+      setInputData(resp);
 
       if (resp?.annotations) {
         setAnnotationCols(resp.annotations);
@@ -1417,6 +1424,7 @@ export function ExplorerMode() {
           {showPanel === "explore-import" && (
             <LoadExplore
               setShowPanel={setShowPanel}
+              selectedFsetModality={selectedFsetModality}
               setSelectedFsetModality={setSelectedFsetModality}
             />
           )}

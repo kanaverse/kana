@@ -203,18 +203,18 @@ export async function fetchStepSummary(state, step) {
     }
 
     let listed = {
-      sums: state[step].fetchFilters().thresholdsSums(),
-      detected: state[step].fetchFilters().thresholdsDetected(),
-      proportion: state[step].fetchFilters().thresholdsSubsetProportions(0),
+      sums: state[step].fetchFilters().sum(),
+      detected: state[step].fetchFilters().detected(),
+      proportion: state[step].fetchFilters().subsetProportion(0),
     };
     output.thresholds = splitThresholdsByBlock(listed, blocks);
 
     return output;
   } else if (step === "adt_quality_control") {
     let metrics = {
-      sums: state[step].fetchMetrics().sums(),
+      sums: state[step].fetchMetrics().sum(),
       detected: state[step].fetchMetrics().detected(),
-      proportion: state[step].fetchMetrics().subsetTotals(0),
+      proportion: state[step].fetchMetrics().subsetSum(0),
     };
 
     var output = {};
@@ -228,8 +228,8 @@ export async function fetchStepSummary(state, step) {
     }
 
     let listed = {
-      detected: state[step].fetchFilters().thresholdsDetected(),
-      proportion: state[step].fetchFilters().thresholdsSubsetTotals(0),
+      detected: state[step].fetchFilters().detected(),
+      proportion: state[step].fetchFilters().subsetSum(0),
     };
     output.thresholds = splitThresholdsByBlock(listed, blocks);
 
@@ -242,9 +242,9 @@ export async function fetchStepSummary(state, step) {
     return output;
   } else if (step === "crispr_quality_control") {
     let metrics = {
-      sums: state[step].fetchMetrics().sums(),
+      sums: state[step].fetchMetrics().sum(),
       detected: state[step].fetchMetrics().detected(),
-      proportion: state[step].fetchMetrics().maxProportions(),
+      proportion: state[step].fetchMetrics().maxProportion(),
     };
 
     let output = {};
@@ -258,24 +258,24 @@ export async function fetchStepSummary(state, step) {
     }
 
     let listed = {
-      count: state[step].fetchFilters().thresholdsMaxCount(0),
+      count: state[step].fetchFilters().maxValue(0),
     };
     output.thresholds = splitThresholdsByBlock(listed, blocks);
 
     return output;
   } else if (step === "cell_filtering") {
     let remaining = 0,
-      discard_vec = null;
-    const discardBuff = state[step].fetchDiscards();
-    if (discardBuff) {
-      discardBuff.forEach((x) => {
-        remaining += x == 0;
+      keep_vec = null;
+    const keepBuff = state[step].fetchKeep();
+    if (keepBuff) {
+      keepBuff.forEach((x) => {
+        remaining += (x != 0);
       });
-      discard_vec = discardBuff.slice();
+      keep_vec = keepBuff.slice();
     } else {
       remaining = state.inputs.fetchCountMatrix().numberOfColumns();
     }
-    let output = { retained: remaining, discard: discard_vec };
+    let output = { retained: remaining, keep: keep_vec };
     return output;
   } else if (step === "rna_normalization") {
     return {};
@@ -367,7 +367,7 @@ export function describeColumn(
     const uqVals = new Set(col);
     res["num_unique"] = uqVals.size;
 
-    if ((uqVals.size <= 50) & unique) res["__unique__"] = [...uqVals].sort();
+    if ((uqVals.size <= 50) & unique) res["values"] = [...uqVals].sort();
     if (all) res["_all_"] = col;
 
     // if type is continous and unique values is less than 50, type is both

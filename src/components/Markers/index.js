@@ -809,6 +809,17 @@ const MarkerPlot = (props) => {
                 default_selection === props?.selectedMarkerAnnotation
               ) {
                 tmpselection = tmpselection.replace("Custom Selection ", "");
+              } else {
+                if ("type" in annotationObj[props?.selectedMarkerAnnotation] && annotationObj[props?.selectedMarkerAnnotation]["type"] == "factor") {
+                  tmpselection = tmpselection
+                } else {
+                  // do the best
+                  if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Float")) {
+                    tmpselection = parseFloat(tmpselection)
+                  } else if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Int")) {
+                    tmpselection = parseInt(tmpselection)
+                  }
+                }
               }
 
               props?.setSelectedCluster(tmpselection);
@@ -878,6 +889,17 @@ const MarkerPlot = (props) => {
                       "Custom Selection ",
                       ""
                     );
+                  } else {
+                    if ("type" in annotationObj[props?.selectedMarkerAnnotation] && annotationObj[props?.selectedMarkerAnnotation]["type"] == "factor") {
+                      tmpselection = tmpselection
+                    } else {
+                      // do the best
+                      if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Float")) {
+                        tmpselection = parseFloat(tmpselection)
+                      } else if (annotationObj[props?.selectedMarkerAnnotation].values.constructor.name.includes("Int")) {
+                        tmpselection = parseInt(tmpselection)
+                      }
+                    }
                   }
                   props?.setSelectedVSCluster(tmpselection);
 

@@ -42,6 +42,8 @@ import Gallery from "../Gallery/index";
 
 import { AppToaster } from "../../AppToaster";
 
+import { renderProgress, DownloadToaster } from "../../DownloadToaster";
+
 import { AppContext } from "../../context/AppContext";
 
 import pkgVersion from "../../../package.json";
@@ -58,6 +60,8 @@ const scranWorker = new Worker(
 );
 
 let logs = [];
+
+let download_toasters = {};
 
 export function AnalysisMode(props) {
   // true until wasm is initialized
@@ -134,6 +138,8 @@ export function AnalysisMode(props) {
   // dim sizes
   const [initDims, setInitDims] = useState(null);
   const [inputData, setInputData] = useState(null);
+
+  const [preInputDone, setPreInputDone] = useState(false);
 
   // STEP: QC; for all three, RNA, ADT, CRISPR
   // dim sizes
@@ -307,6 +313,7 @@ export function AnalysisMode(props) {
   useEffect(() => {
     if (wasmInitialized && preInputFiles) {
       if (preInputFiles.files) {
+        setPreInputDone(false);
         scranWorker.postMessage({
           type: "PREFLIGHT_INPUT",
           payload: {
@@ -318,7 +325,7 @@ export function AnalysisMode(props) {
   }, [preInputFiles, wasmInitialized]);
 
   useEffect(() => {
-    if (wasmInitialized && preInputFiles) {
+    if (wasmInitialized && preInputFiles && preInputDone && preInputOptions) {
       if (preInputFiles.files && preInputOptions.options.length > 0) {
         scranWorker.postMessage({
           type: "PREFLIGHT_OPTIONS",
@@ -329,7 +336,7 @@ export function AnalysisMode(props) {
         });
       }
     }
-  }, [preInputOptions, wasmInitialized]);
+  }, [preInputOptions, wasmInitialized, preInputDone]);
 
   // NEW analysis: files are imported into Kana
   useEffect(() => {
@@ -854,7 +861,7 @@ export function AnalysisMode(props) {
   scranWorker.onmessage = (msg) => {
     const payload = msg.data;
 
-    // console.log("ON MAIN::RCV::", payload);
+    // console.log("IN ANALYSIS MODE, ON MAIN::RCV::", payload);
 
     // process any error messages
     if (payload) {
@@ -904,6 +911,57 @@ export function AnalysisMode(props) {
       }
     }
 
+    if (payload.type.startsWith("DOWNLOAD")) {
+      if (payload.download == "START") {
+        download_toasters[payload.url] = {
+          total: payload.total_bytes,
+          progress: 0,
+        };
+        download_toasters[payload.url]["key"] = DownloadToaster.show(
+          renderProgress(0, payload.url)
+        );
+
+        add_to_logs("start", `Download asset from ${payload.url}`, "started");
+      } else if (payload.download == "PROGRESS") {
+        let tprogress =
+          (Math.round(
+            (payload.downloaded_bytes * 100) /
+              download_toasters[payload.url]["total"]
+          ) /
+            100) *
+          100;
+
+        if (tprogress < 100) {
+          download_toasters[payload.url]["progress"] = tprogress;
+
+          download_toasters[payload.url]["key"] = DownloadToaster.show(
+            renderProgress(tprogress, payload.url),
+            download_toasters[payload.url]["key"]
+          );
+        }
+        add_to_logs("progress", `Downloading ${tprogress}% done`, "");
+      } else if (payload.download == "COMPLETE") {
+        download_toasters[payload.url]["progress"] = 100;
+
+        download_toasters[payload.url]["key"] = DownloadToaster.show(
+          renderProgress(100, payload.url),
+          download_toasters[payload.url]["key"]
+        );
+
+        add_to_logs(
+          "complete",
+          `Asset downloaded from ${payload.url}`,
+          "finished"
+        );
+
+        setTimeout(() => {
+          delete download_toasters[payload.url];
+        }, 500);
+      }
+
+      return;
+    }
+
     const { resp, type } = payload;
 
     if (type === "INIT") {
@@ -927,6 +985,7 @@ export function AnalysisMode(props) {
     } else if (type === "PREFLIGHT_INPUT_DATA") {
       if (resp.details) {
         setPreInputFilesStatus(resp.details);
+        setPreInputDone(true);
       }
     } else if (type === "PREFLIGHT_OPTIONS_DATA") {
       if (resp) {
@@ -941,7 +1000,7 @@ export function AnalysisMode(props) {
         info.push(`${resp.num_genes.ADT} ADTs`);
       }
       if ("CRISPR" in resp.num_genes) {
-        info.push(`${resp.num_genes.ADT} Guides`);
+        info.push(`${resp.num_genes.CRISPR} guides`);
       }
       info.push(`${resp.num_cells} cells`);
 

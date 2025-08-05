@@ -317,7 +317,7 @@ function remove_file(id, file_store, meta_store) {
     };
 
     request.onerror = event => {
-      console.log(event);
+      // console.log(event);
       reject(new Error(`failed to retrieve file metadata ${id} from KanaDB: ${event.target.errorCode}`));
     };
   });
