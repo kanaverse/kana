@@ -27,7 +27,7 @@ import { SECard } from "./SECard";
 import { ZippedADBCard } from "./ZippedADBCard";
 
 import JSZip from "jszip";
-import { searchZippedArtifactdb } from "bakana";
+import { searchZippedArtifactdb, searchZippedAlabaster } from "bakana";
 
 export function LoadExplore({ setShowPanel, ...props }) {
   // clear the entire panel
@@ -260,7 +260,12 @@ export function LoadExplore({ setShowPanel, ...props }) {
                       if (msg.target.files) {
                         JSZip.loadAsync(msg.target.files[0]).then(
                           async (zip) => {
-                            const objs = await searchZippedArtifactdb(zip);
+                            let objs = await searchZippedAlabaster(zip);
+                            let legacy = false;
+                            if (objs.size == 0) {
+                              objs = await searchZippedArtifactdb(zip);
+                              legacy = true;
+                            }
                             setJSZipObjs(objs);
 
                             const objNames = Array.from(objs.keys());
@@ -272,6 +277,7 @@ export function LoadExplore({ setShowPanel, ...props }) {
                               ...tmpLoadInputs,
                               zipfile: msg.target.files[0],
                               zipname: objNames[0],
+                              ziplegacy: legacy
                             });
                           },
                           function (e) {

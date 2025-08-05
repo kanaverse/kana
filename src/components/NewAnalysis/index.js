@@ -39,7 +39,7 @@ import { RDSSE } from "./RDSSECard";
 import { ZippedADB } from "./ZippedADBCard";
 
 import JSZip from "jszip";
-import { searchZippedArtifactdb } from "bakana";
+import { searchZippedArtifactdb, searchZippedAlabaster } from "bakana";
 
 export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   // close the entire panel
@@ -665,7 +665,7 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
                               ...tmpNewInputs,
                               zipfile: msg.target.files[0],
                               zipname: objNames[0],
-                              ziplegacy: legacy
+                              ziplegacy: legacy,
                             });
                           },
                           function (e) {
