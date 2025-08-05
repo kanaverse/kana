@@ -21,6 +21,7 @@ import {
   getDefaultFeature,
   reportFeatureTypes,
   getDefaultAssayName,
+  guessModalitiesFromExperiments,
 } from "./utils";
 
 export function RDSSE({
@@ -45,7 +46,7 @@ export function RDSSE({
 
       // set some defaults
       if (init2) {
-        let tmpOptions = guessModalities(preflight);
+        let tmpOptions = guessModalitiesFromExperiments(preflight);
         setOptions(tmpOptions);
         setInit2(false);
       }
@@ -138,12 +139,6 @@ export function RDSSE({
     return Object.keys(dsMeta.modality_features);
   };
 
-  const getCamelCaseKey = (mod) => {
-    return (
-      mod.toLowerCase().charAt(0).toUpperCase() + mod.toLowerCase().slice(1)
-    );
-  };
-
   const getFTypeKey = (mod) => {
     return `${mod.toLowerCase()}Experiment`;
   };
@@ -165,40 +160,6 @@ export function RDSSE({
 
     return tmpOptions;
   };
-
-  function guessModalities(preflight) {
-    let tmpOptions = {
-      rnaExperiment: null,
-      adtExperiment: null,
-      crisprExperiment: null,
-    };
-    for (const [k, v] of Object.entries(preflight.modality_features)) {
-      if (k === "" || k.toLowerCase().indexOf("gene") > -1) {
-        tmpOptions["rnaExperiment"] = k;
-        tmpOptions["rnaCountAssay"] = getDefaultAssayName(
-          preflight.modality_assay_names[k]
-        );
-
-        tmpOptions["primaryRnaFeatureIdColumn"] = getDefaultFeature(v);
-      } else if (
-        k.toLowerCase().indexOf("antibody") > -1 ||
-        k.toLowerCase().indexOf("adt") > -1
-      ) {
-        tmpOptions["adtExperiment"] = k;
-        tmpOptions["adtCountAssay"] = getDefaultAssayName(
-          preflight.modality_assay_names[k]
-        );
-        tmpOptions["primaryAdtFeatureIdColumn"] = getDefaultFeature(v);
-      } else if (k.toLowerCase().indexOf("crispr") > -1) {
-        tmpOptions["crisprExperiment"] = k;
-        tmpOptions["crisprCountAssay"] = getDefaultAssayName(
-          preflight.modality_assay_names[k]
-        );
-        tmpOptions["primaryCrisprFeatureIdColumn"] = getDefaultFeature(v);
-      }
-    }
-    return tmpOptions;
-  }
 
   const handleRemove = () => {
     let tmpInputs = [...inputs];

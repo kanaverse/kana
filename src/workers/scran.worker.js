@@ -144,7 +144,8 @@ function summarizeDataset(summary, args) {
     tmp_meta["all_assay_names"] = summary.all_assay_names;
   } else if (
     args.format === "SummarizedExperiment" ||
-    args.format === "ZippedADB"
+    args.format === "ZippedADB" ||
+    args.format === "ExperimentHub"
   ) {
     tmp_meta["modality_assay_names"] = summary.modality_assay_names;
   }
@@ -265,12 +266,12 @@ const resetMarkerState = () => {
 };
 
 const ExperimentHub_registry = {
-  "zeisel-brain": "2023-12-14",
-  "segerstolpe-pancreas": "2023-12-19",
-  "nestorowa-hsc": "2024-04-18",
-  "aztekin-tail": "2023-12-14",
-  "wu-kidney": "2023-12-20",
-  "zilionis-mouse-lung": "2023-12-20"
+  "zeisel-brain-2015": "2023-12-14",
+  "segerstolpe-pancreas-2016": "2023-12-19",
+  "nestorowa-hsc-2016": "2024-04-18",
+  "aztekin-tail-2019": "2023-12-14",
+  "wu-kidney-2019": "2023-12-20",
+  "zilionis-lung-2019": "2023-12-20"
 };
 
 /***************************************/

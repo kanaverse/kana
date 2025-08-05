@@ -41,7 +41,7 @@ export function ZippedADB({
 
       // set some defaults
       if (init2) {
-        let tmpOptions = guessModalities(preflight);
+        let tmpOptions = guessModalitiesFromExperiments(preflight);
         setOptions(tmpOptions);
         setInit2(false);
       }
@@ -162,7 +162,7 @@ export function ZippedADB({
     return tmpOptions;
   };
 
-  function guessModalities(preflight) {
+  function guessModalitiesFromExperiments(preflight) {
     let tmpOptions = {
       rnaExperiment: null,
       adtExperiment: null,
