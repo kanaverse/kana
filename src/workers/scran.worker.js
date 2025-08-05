@@ -1,4 +1,4 @@
-amport * as bakana from "bakana";
+import * as bakana from "bakana";
 import * as scran from "scran.js";
 import * as kana_db from "./KanaDBHandler.js";
 import * as gesel from "gesel";
@@ -47,7 +47,7 @@ function createDataset(args) {
       output = new bakana.ZippedAlabasterDataset(args.zipname, args.zipfile);
     }
   } else if (args.format === "ExperimentHub") {
-    output = new remotes.ExperimentHubDataset(args.id);
+    output = new remotes.GypsumDataset("scRNAseq", args.id, ExperimentHub_registry[args.id], null);
   } else {
     throw new Error("unknown format '" + args.format + "'");
   }
@@ -264,6 +264,15 @@ const resetMarkerState = () => {
   cache_anno_markers = {};
 };
 
+const ExperimentHub_registry = {
+  "zeisel-brain": "2023-12-14",
+  "segerstolpe-pancreas": "2023-12-19",
+  "nestorowa-hsc": "2024-04-18",
+  "aztekin-tail": "2023-12-14",
+  "wu-kidney": "2023-12-20",
+  "zilionis-mouse-lung": "2023-12-20"
+};
+
 /***************************************/
 
 var loaded;
@@ -327,10 +336,9 @@ onmessage = function (msg) {
       });
 
     try {
-      let ehub_ids = remotes.ExperimentHubDataset.availableDatasets();
       postMessage({
         type: "ExperimentHub_store",
-        resp: ehub_ids,
+        resp: Array.from(Object.keys(ExperimentHub_registry)),
         msg: "Success: ExperimentHub initialized",
       });
     } catch (err) {
@@ -555,7 +563,7 @@ onmessage = function (msg) {
         for (const [k, v] of Object.entries(gene_files)) {
           zipper.file(k, v);
         }
-        let zipbuffer = zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+        let zipbuffer = zipper.generateAsync({ type: "uint8array", compression: "DEFLATE" });
 
         postMessage(
           {

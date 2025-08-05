@@ -31,8 +31,9 @@ gesel.geneDownload(async (file) => {
   return new Response(buffer);
 });
 
-remotes.ExperimentHubDataset.setDownloadFun(proxyAndCache);
-bakana.availableReaders["ExperimentHub"] = remotes.ExperimentHubDataset;
+remotes.GypsumDataset.setDownloadFun(proxyAndCache);
+bakana.availableReaders["ExperimentHub"] = remotes.GypsumDataset;
+bakana.availableReaders["gypsum"] = remotes.GypsumDataset;
 
 export function extractBuffers(object, store) {
   if (!object) {

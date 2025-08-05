@@ -31,7 +31,7 @@ function createDataset(args, setOpts = false) {
   } else if (args.format === "SummarizedExperiment") {
     result = new bakana.SummarizedExperimentResult(args.rds);
   } else if (args.format === "ZippedArtifactdb") {
-    let zipfile = new bakana.SimpleFile(args.zipfile));
+    let zipfile = new bakana.SimpleFile(args.zipfile);
     if (args.ziplegacy) {
       result = new bakana.ZippedArtifactdbResult(args.zipname, zipfile);
     } else {
@@ -41,9 +41,9 @@ function createDataset(args, setOpts = false) {
     throw new Error("unknown format '" + args.format + "'");
   }
   if (setOpts) {
-    output.setOptions(args.options);
+    result.setOptions(args.options);
   }
-  return output;
+  return result;
 }
 
 function summarizeResult(summary, args) {
