@@ -751,7 +751,7 @@ onmessage = function (msg) {
             rank_type
           );
         } else {
-          let annotation_vec = scran.factorize(getAnnotation(annotation));
+          let annotation_vec = scran.convertToFactor(getAnnotation(annotation));
 
           let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
           raw_res = mds.computeVersus(
@@ -824,7 +824,7 @@ onmessage = function (msg) {
           raw_res = superstate.marker_detection.fetchResults()[modality];
           resp = bakana.formatMarkerResults(raw_res, cluster, rank_type);
         } else {
-          let annotation_vec = scran.factorize(getAnnotation(annotation));
+          let annotation_vec = scran.convertToFactor(getAnnotation(annotation));
           let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
 
           raw_res = mds.fetchResults()[modality];
@@ -1027,7 +1027,7 @@ onmessage = function (msg) {
 
           let arr_sel_indices = new Uint8Array(num_cells);
           sel_indices.map((x) => arr_sel_indices.set([1], x));
-          let annotation_vec = scran.factorize(arr_sel_indices);
+          let annotation_vec = scran.convertToFactor(arr_sel_indices);
 
           let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
           let anno_markers = mds.fetchResults()["RNA"];
@@ -1040,7 +1040,7 @@ onmessage = function (msg) {
           );
           postSuccess("computeFeaturesetSummary", resp);
         } else {
-          let annotation_vec = scran.factorize(getAnnotation(annotation));
+          let annotation_vec = scran.convertToFactor(getAnnotation(annotation));
 
           let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
           let anno_markers = mds.fetchResults()["RNA"];
@@ -1086,7 +1086,7 @@ onmessage = function (msg) {
           );
           postSuccess("computeFeaturesetVSSummary", resp);
         } else {
-          let annotation_vec = scran.factorize(getAnnotation(annotation));
+          let annotation_vec = scran.convertToFactor(getAnnotation(annotation));
 
           let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
 
@@ -1144,7 +1144,7 @@ onmessage = function (msg) {
             payload.rank_type
           );
         } else {
-          let annotation_vec = scran.factorize(getAnnotation(annotation));
+          let annotation_vec = scran.convertToFactor(getAnnotation(annotation));
           let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
 
           raw_res = mds.fetchResults()[modality];
@@ -1183,7 +1183,7 @@ onmessage = function (msg) {
     } else if (default_selection === annotation) {
       markers = superstate.custom_selections.fetchResults(cluster);
     } else {
-      let annotation_vec = scran.factorize(getAnnotation(annotation));
+      let annotation_vec = scran.convertToFactor(getAnnotation(annotation));
       let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
       markers = mds.fetchResults();
     }
