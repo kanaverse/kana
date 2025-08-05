@@ -25,22 +25,25 @@ let feature_set_enrich_state = null;
 let cell_labelling_state = null;
 
 function createDataset(args, setOpts = false) {
+  let result;
   if (args.format === "H5AD") {
-    return new bakana.H5adResult(args.h5, setOpts ? args.options : {});
+    result = new bakana.H5adResult(args.h5);
   } else if (args.format === "SummarizedExperiment") {
-    return new bakana.SummarizedExperimentResult(
-      args.rds,
-      setOpts ? args.options : {}
-    );
+    result = new bakana.SummarizedExperimentResult(args.rds);
   } else if (args.format === "ZippedArtifactdb") {
-    return new bakana.ZippedArtifactdbResult(
-      args.zipname,
-      new bakana.SimpleFile(args.zipfile),
-      setOpts ? args.options : {}
-    );
+    let zipfile = new bakana.SimpleFile(args.zipfile));
+    if (args.ziplegacy) {
+      result = new bakana.ZippedArtifactdbResult(args.zipname, zipfile);
+    } else {
+      result = new bakana.ZippedAlabasterResult(args.zipname, zipfile);
+    }
   } else {
     throw new Error("unknown format '" + args.format + "'");
   }
+  if (setOpts) {
+    output.setOptions(args.options);
+  }
+  return output;
 }
 
 function summarizeResult(summary, args) {

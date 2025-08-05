@@ -1,4 +1,4 @@
-import * as bakana from "bakana";
+amport * as bakana from "bakana";
 import * as scran from "scran.js";
 import * as kana_db from "./KanaDBHandler.js";
 import * as gesel from "gesel";
@@ -31,39 +31,30 @@ let cache_matrix = null;
 let cache_anno_markers = {};
 
 function createDataset(args) {
+  let output;
   if (args.format === "10X") {
-    return new bakana.TenxHdf5Dataset(
-      args.h5,
-      args.options ? args.options : {}
-    );
+    output = new bakana.TenxHdf5Dataset(args.h5);
   } else if (args.format === "MatrixMarket") {
-    return new bakana.TenxMatrixMarketDataset(
-      args.mtx,
-      args.genes || null,
-      args.annotations || null,
-      args.options ? args.options : {}
-    );
+    output = new bakana.TenxMatrixMarketDataset(args.mtx, args.genes || null, args.annotations || null);
   } else if (args.format === "H5AD") {
-    return new bakana.H5adDataset(args.h5, args.options ? args.options : {});
+    output = new bakana.H5adDataset(args.h5);
   } else if (args.format === "SummarizedExperiment") {
-    return new bakana.SummarizedExperimentDataset(
-      args.rds,
-      args.options ? args.options : {}
-    );
+    output = new bakana.SummarizedExperimentDataset(args.rds);
   } else if (args.format === "ZippedADB") {
-    return new bakana.ZippedArtifactdbDataset(
-      args.zipname,
-      args.zipfile,
-      args.options ? args.options : {}
-    );
+    if (args.ziplegacy) {
+      output = new bakana.ZippedArtifactdbDataset(args.zipname, args.zipfile);
+    } else {
+      output = new bakana.ZippedAlabasterDataset(args.zipname, args.zipfile);
+    }
   } else if (args.format === "ExperimentHub") {
-    return new remotes.ExperimentHubDataset(
-      args.id,
-      args.options ? args.options : {}
-    );
+    output = new remotes.ExperimentHubDataset(args.id);
   } else {
     throw new Error("unknown format '" + args.format + "'");
   }
+  if (args.options) {
+    output.setOptions(args.options);
+  }
+  return output;
 }
 
 function summarizeDataset(summary, args) {
@@ -554,18 +545,17 @@ onmessage = function (msg) {
   } else if (type === "EXPORT_RDS") {
     loaded
       .then(async (x) => {
-        let files = await bakana.saveSingleCellExperiment(superstate, "sce", {
-          forceBuffer: true,
-        });
+        let files = await bakana.saveSingleCellExperiment(superstate, "sce");
+        let gene_files = await bakana.saveGenewiseResults(superstate, null);
 
-        let gene_files = await bakana.saveGenewiseResults(superstate, "", {
-          forceBuffer: true,
-        });
-
-        for (const f of gene_files) {
-          files.push(f);
+        let zipper = new JSZip;
+        for (const [k, v] of Object.entries(files)) {
+          zipper.file(k, v);
         }
-        let zipbuffer = await bakana.zipFiles(files);
+        for (const [k, v] of Object.entries(gene_files)) {
+          zipper.file(k, v);
+        }
+        let zipbuffer = zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
 
         postMessage(
           {
