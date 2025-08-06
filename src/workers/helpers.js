@@ -187,9 +187,9 @@ export async function fetchStepSummary(state, step) {
     return output;
   } else if (step === "rna_quality_control") {
     let metrics = {
-      sums: state[step].fetchMetrics().sums(),
+      sums: state[step].fetchMetrics().sum(),
       detected: state[step].fetchMetrics().detected(),
-      proportion: state[step].fetchMetrics().subsetProportions(0),
+      proportion: state[step].fetchMetrics().subsetProportion(0),
     };
 
     let output = {};
@@ -379,4 +379,74 @@ export function describeColumn(
   }
 
   return res;
+}
+
+export function formatMarkerResults(results, group, rankEffect) {
+    if (!rankEffect || rankEffect === undefined) {
+        rankEffect = "cohen-min-rank";
+    }
+
+    var ordering;
+    {
+        // Choosing the ranking statistic. Do NOT do any Wasm allocations
+        // until 'ranking' is fully consumed!
+        let increasing = false;
+        let summary; 
+        if (rankEffect.match(/-min$/)) {
+            summary = "mean";
+        } else if (rankEffect.match(/-min$/)) {
+            summary = "min";
+        } else if (rankEffect.match(/-min-rank$/)) {
+            summary = "min-rank";
+            increasing = true;
+        } else {
+            throw "unknown rank type '" + rankEffect + "'";
+        }
+
+        let ranking;
+        if (rankEffect.match(/^cohen-/)) {
+            ranking = results.cohensD(group, { summary: summary, copy: false });
+        } else if (rankEffect.match(/^auc-/)) {
+            ranking = results.auc(group, { summary: summary, copy: false });
+        } else if (rankEffect.match(/^lfc-/)) {
+            ranking = results.deltaMean(group, { summary: summary, copy: false });
+        } else if (rankEffect.match(/^delta-d-/)) {
+            ranking = results.deltaDetected(group, { summary: summary, copy: false });
+        } else {
+            throw "unknown rank type '" + rankEffect + "'";
+        }
+  
+        // Computing the ordering based on the ranking statistic.
+        ordering = new Int32Array(ranking.length);
+        for (var i = 0; i < ordering.length; i++) {
+            ordering[i] = i;
+        }
+        if (increasing) {
+            ordering.sort((f, s) => (ranking[f] - ranking[s]));
+        } else {
+            ordering.sort((f, s) => (ranking[s] - ranking[f]));
+        }
+    }
+  
+    // Apply that ordering to each statistic of interest.
+    var reorder = function(stats) {
+        var thing = new Float64Array(stats.length);
+        for (var i = 0; i < ordering.length; i++) {
+            thing[i] = stats[ordering[i]];
+        }
+        return thing;
+    };
+  
+    var stat_mean = reorder(results.mean(group, { copy: false }));
+    var stat_detected = reorder(results.detected(group, { copy: false }));
+    var stat_lfc = reorder(results.deltaMean(group, { summary: "mean", copy: false }));
+    var stat_delta_d = reorder(results.deltaDetected(group, { summary: "mean", copy: false }));
+
+    return {
+        "ordering": ordering,
+        "means": stat_mean,
+        "detected": stat_detected,
+        "lfc": stat_lfc,
+        "delta_detected": stat_delta_d
+    };
 }

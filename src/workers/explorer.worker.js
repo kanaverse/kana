@@ -8,6 +8,7 @@ import {
   postError,
   describeColumn,
   isArrayOrView,
+  formatMarkerResults,
 } from "./helpers.js";
 import { code } from "../utils/utils.js";
 /***************************************/
@@ -346,7 +347,7 @@ onmessage = function (msg) {
           annotation_vec.levels.indexOf(payload.left),
           annotation_vec.levels.indexOf(payload.right)
         );
-        let resp = bakana.formatMarkerResults(
+        let resp = formatMarkerResults(
           raw_res.results[modality],
           raw_res.left,
           rank_type
@@ -375,7 +376,7 @@ onmessage = function (msg) {
           payload.left,
           payload.right
         );
-        let resp = bakana.formatMarkerResults(
+        let resp = formatMarkerResults(
           res["results"][payload.modality],
           payload.left,
           rank_type
@@ -411,7 +412,7 @@ onmessage = function (msg) {
 
         let raw_res = mds.fetchResults()[modality];
 
-        let resp = bakana.formatMarkerResults(
+        let resp = formatMarkerResults(
           raw_res,
           annotation_vec.levels.indexOf(cluster),
           rank_type
@@ -477,7 +478,7 @@ onmessage = function (msg) {
         let raw_res = custom_selection_state.fetchResults(payload.cluster)[
           payload.modality
         ];
-        let resp = bakana.formatMarkerResults(raw_res, 1, rank_type);
+        let resp = formatMarkerResults(raw_res, 1, rank_type);
 
         var transferrable = [];
         extractBuffers(resp, transferrable);
@@ -661,7 +662,7 @@ onmessage = function (msg) {
           raw_res = custom_selection_state.fetchResults(payload.cluster)[
             payload.modality
           ];
-          marker_resp = bakana.formatMarkerResults(
+          marker_resp = formatMarkerResults(
             raw_res,
             1,
             payload.rank_type
@@ -673,7 +674,7 @@ onmessage = function (msg) {
           raw_res = mds.fetchResults()[modality];
           // cache_anno_markers[annotation][modality];
 
-          marker_resp = bakana.formatMarkerResults(
+          marker_resp = formatMarkerResults(
             raw_res,
             annotation_vec.levels.indexOf(cluster),
             rank_type

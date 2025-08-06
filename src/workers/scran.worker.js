@@ -17,6 +17,7 @@ import {
   describeColumn,
   isArrayOrView,
   fetchWithProgress,
+  formatMarkerResults,
 } from "./helpers.js";
 import { code } from "../utils/utils.js";
 /***************************************/
@@ -746,7 +747,7 @@ onmessage = function (msg) {
             payload.right
           );
 
-          resp = bakana.formatMarkerResults(
+          resp = formatMarkerResults(
             raw_res.results[modality],
             raw_res.left,
             rank_type
@@ -759,7 +760,7 @@ onmessage = function (msg) {
             annotation_vec.levels.indexOf(payload.left),
             annotation_vec.levels.indexOf(payload.right)
           );
-          resp = bakana.formatMarkerResults(
+          resp = formatMarkerResults(
             raw_res.results[modality],
             raw_res.left,
             rank_type
@@ -789,7 +790,7 @@ onmessage = function (msg) {
           payload.left,
           payload.right
         );
-        let resp = bakana.formatMarkerResults(
+        let resp = formatMarkerResults(
           res["results"][payload.modality],
           res.left,
           rank_type
@@ -823,7 +824,7 @@ onmessage = function (msg) {
         let raw_res;
         if (default_cluster === annotation) {
           raw_res = superstate.marker_detection.fetchResults()[modality];
-          resp = bakana.formatMarkerResults(raw_res, cluster, rank_type);
+          resp = formatMarkerResults(raw_res, cluster, rank_type);
         } else {
           let annotation_vec = scran.convertToFactor(getAnnotation(annotation));
           let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
@@ -831,7 +832,7 @@ onmessage = function (msg) {
           raw_res = mds.fetchResults()[modality];
           // cache_anno_markers[annotation][modality];
 
-          resp = bakana.formatMarkerResults(
+          resp = formatMarkerResults(
             raw_res,
             annotation_vec.levels.indexOf(cluster),
             rank_type
@@ -909,7 +910,7 @@ onmessage = function (msg) {
         let raw_res = superstate.custom_selections.fetchResults(
           payload.cluster
         )[payload.modality];
-        let resp = bakana.formatMarkerResults(raw_res, 1, payload.rank_type);
+        let resp = formatMarkerResults(raw_res, 1, payload.rank_type);
 
         var transferrable = [];
         extractBuffers(resp, transferrable);
@@ -1134,12 +1135,12 @@ onmessage = function (msg) {
 
         if (default_cluster === annotation) {
           raw_res = superstate.marker_detection.fetchResults()[modality];
-          marker_resp = bakana.formatMarkerResults(raw_res, cluster, rank_type);
+          marker_resp = formatMarkerResults(raw_res, cluster, rank_type);
         } else if (default_selection === annotation) {
           raw_res = superstate.custom_selections.fetchResults(payload.cluster)[
             payload.modality
           ];
-          marker_resp = bakana.formatMarkerResults(
+          marker_resp = formatMarkerResults(
             raw_res,
             1,
             payload.rank_type
@@ -1151,7 +1152,7 @@ onmessage = function (msg) {
           raw_res = mds.fetchResults()[modality];
           // cache_anno_markers[annotation][modality];
 
-          marker_resp = bakana.formatMarkerResults(
+          marker_resp = formatMarkerResults(
             raw_res,
             annotation_vec.levels.indexOf(cluster),
             rank_type
