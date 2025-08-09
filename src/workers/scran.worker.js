@@ -565,7 +565,7 @@ onmessage = function (msg) {
         for (const [k, v] of Object.entries(gene_files)) {
           zipper.file(k, v);
         }
-        let zipbuffer = zipper.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+        let zipbuffer = await zipper.generateAsync({ type: "uint8array", compression: "DEFLATE" });
 
         postMessage(
           {

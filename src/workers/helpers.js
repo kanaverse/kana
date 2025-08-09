@@ -392,10 +392,10 @@ export function formatMarkerResults(results, group, rankEffect) {
         // until 'ranking' is fully consumed!
         let increasing = false;
         let summary; 
-        if (rankEffect.match(/-min$/)) {
+        if (rankEffect.match(/-mean$/)) {
             summary = "mean";
         } else if (rankEffect.match(/-min$/)) {
-            summary = "min";
+            summary = "minimum";
         } else if (rankEffect.match(/-min-rank$/)) {
             summary = "min-rank";
             increasing = true;
