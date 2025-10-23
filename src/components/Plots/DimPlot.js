@@ -151,8 +151,8 @@ const DimPlot = (props) => {
       tmpgradient.setNumberRange(0, val);
       if (exprMinMax[0] !== exprMinMax[1]) {
         setShowGradient(true);
-        setSliderMinMax([0, val]);
-        setExprMinMax([0, val]);
+        setSliderMinMax([exprMinMax[0], val]);
+        setExprMinMax([exprMinMax[0], val]);
       } else {
         setShowGradient(false);
         // AppToaster.show({
