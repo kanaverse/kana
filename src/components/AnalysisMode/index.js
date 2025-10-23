@@ -1342,7 +1342,7 @@ export function AnalysisMode(props) {
       tmpLink.download = datasetName.split(" ").join("_") + "_results.zip";
       tmpLink.click();
 
-      setExportState(false);
+      setExportRDSState(false);
     } else if (type === "KanaDB") {
       setIndexedDBState(false);
     } else if (type === "feature_set_enrichment_START") {
