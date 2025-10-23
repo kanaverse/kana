@@ -74,7 +74,9 @@ const AppContextProvider = ({ children }) => {
   const [annotationObj, setAnnotationObj] = useState({});
 
   // default params
-  const [params, setParams] = useState(analysisDefaults());
+  var _defaults = analysisDefaults();
+  _defaults["cell_labelling"]["references"] = [];
+  const [params, setParams] = useState(_defaults);
 
   // load params from pre-saved analysis
   // params from worker for stored analysis (kana file)

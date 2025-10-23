@@ -1950,6 +1950,7 @@ export function AnalysisMode(props) {
                             setMarkersOrFsets={setMarkersOrFsets}
                             markersORFSets={markersORFSets}
                             cellLabelData={cellLabelData}
+                            fsetEnirchDetails={fsetEnirchDetails}
                           />
                         )}
                     </div>
