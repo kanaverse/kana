@@ -75,7 +75,15 @@ const AppContextProvider = ({ children }) => {
 
   // default params
   var _defaults = analysisDefaults();
-  _defaults["cell_labelling"]["references"] = [];
+  _defaults["cell_labelling"]["references"] = [
+    "ImmGen",
+    "MouseRNAseq",
+    "BlueprintEncode",
+    "DatabaseImmuneCellExpression",
+    "HumanPrimaryCellAtlas",
+    "MonacoImmune",
+    "NovershternHematopoietic",
+  ];
   const [params, setParams] = useState(_defaults);
 
   // load params from pre-saved analysis
