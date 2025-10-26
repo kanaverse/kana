@@ -1,0 +1,5 @@
+/*!
+ * hash-wasm (https://www.npmjs.com/package/hash-wasm)
+ * (c) Dani Biro
+ * @license MIT
+ */
