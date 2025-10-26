@@ -1465,14 +1465,12 @@ const FeatureSetEnrichment = (props) => {
                           intent={order === props?.gene ? "primary" : null}
                           onClick={() => {
                             props?.setSelectedFsetIndex(null);
-                            setTimeout(() => {
-                              if (order === props?.gene) {
-                                props?.setGene(null);
-                              } else {
-                                props?.setGene(order);
-                                props?.setReqGene(order);
-                              }
-                            }, 500);
+                            if (order === props?.gene) {
+                              props?.setGene(null);
+                            } else {
+                              props?.setGene(order);
+                              props?.setReqGene(order);
+                            }
                           }}
                         >
                           <Icon size={16} icon={"tint"}></Icon>
