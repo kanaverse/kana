@@ -17,7 +17,7 @@ import {
 import "./index.css";
 
 import { MODALITIES } from "../../utils/utils";
-import { getDefaultFeature, guessModalities } from "./utils";
+import { getDefaultFeature, guessModalitiesFromFeatureTypes } from "./utils";
 
 export function MatrixMarket({
   resource,
@@ -41,7 +41,7 @@ export function MatrixMarket({
 
       // set some defaults
       if (init2) {
-        let tmpOptions = guessModalities(preflight);
+        let tmpOptions = guessModalitiesFromFeatureTypes(preflight);
         setOptions(tmpOptions);
         setInit2(false);
       }

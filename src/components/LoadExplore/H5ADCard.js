@@ -157,38 +157,6 @@ export function H5ADCard({
                   ))}
                 </HTMLSelect>
               </Label>
-              {options["featureTypeColumnName"] !== "none" &&
-                options["featureTypeColumnName"] !== null &&
-                options["featureTypeColumnName"] !== undefined &&
-                sortedFeatureVals && (
-                  <Label className="row-input">
-                    <Text>
-                      <strong>Name of the RNA feature type</strong>
-                    </Text>
-                    <HTMLSelect
-                      defaultValue={sortedFeatureVals[0]}
-                      onChange={(e) => {
-                        if (e.target.value === "none") {
-                          props?.setSelectedFsetModality(null);
-                        } else {
-                          props?.setSelectedFsetModality(e.target.value);
-                        }
-                      }}
-                    >
-                      {sortedFeatureVals.map((x, i) => (
-                        <option key={i} value={x}>
-                          {x === "" ? (
-                            <em>
-                              <code>unnamed</code>
-                            </em>
-                          ) : (
-                            <code>{x}</code>
-                          )}
-                        </option>
-                      ))}
-                    </HTMLSelect>
-                  </Label>
-                )}
             </div>
           )}
         </Collapse>

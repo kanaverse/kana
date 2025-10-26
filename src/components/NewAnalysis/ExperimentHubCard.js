@@ -9,12 +9,21 @@ import {
   Divider,
   Callout,
   Collapse,
+  FormGroup,
   EditableText,
 } from "@blueprintjs/core";
 
 import "./index.css";
 
-import { reportFeatureTypes, getDefaultFeature } from "./utils";
+import { MODALITIES } from "../../utils/utils";
+
+import {
+  reportFeatureTypes,
+  getDefaultFeature,
+  getDefaultAssayName,
+  getCamelCaseKey,
+  guessModalitiesFromExperiments,
+} from "./utils";
 
 export function ExperimentHub({
   resource,
@@ -38,17 +47,7 @@ export function ExperimentHub({
 
       // set some defaults
       if (init2) {
-        let tmpOptions = {};
-
-        tmpOptions["primaryRnaFeatureIdColumn"] = getDefaultFeature(
-          preflight.modality_features["RNA"]
-        );
-        // for (const [k, v] of Object.entries(preflight.modality_features)) {
-        //   if (k.toLowerCase().indexOf("rna") > -1) {
-        //     tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
-        //   }
-        // }
-
+        let tmpOptions = guessModalitiesFromExperiments(preflight);
         setOptions(tmpOptions);
         setInit2(false);
       }
@@ -57,12 +56,43 @@ export function ExperimentHub({
 
   // when options change
   useEffect(() => {
-    if (options !== null && options !== undefined && options !== {}) {
+    if (options !== {}) {
       let tmpInputOpts = [...inputOpts];
       tmpInputOpts[index] = options;
       setInputOpts(tmpInputOpts);
     }
   }, [options]);
+
+  const SetupEffectHelper = mod => {
+    let expfield = mod + "Experiment";
+    let assfield = mod + "CountAssay";
+    let featfield = "primary" + getCamelCaseKey(mod) + "FeatureIdColumn";
+    useEffect(() => {
+      let tmpOptions = { ...options };
+      if (
+        options !== {} &&
+        expfield in options &&
+        options[expfield] !== "none" &&
+        options[expfield] !== null &&
+        options[expfield] !== undefined
+      ) {
+        tmpOptions[assfield] = getDefaultAssayName(
+          preflight.modality_assay_names[options?.[expfield]]
+        );
+        tmpOptions[featfield] = getDefaultFeature(
+          preflight.modality_features[options?.[expfield]]
+        );
+      } else {
+        delete tmpOptions[assfield];
+        delete tmpOptions[featfield];
+      }
+      setOptions(tmpOptions);
+    }, [options?.[expfield]]);
+  }
+
+  SetupEffectHelper("rna");
+  SetupEffectHelper("adt");
+  SetupEffectHelper("crispr");
 
   useEffect(() => {
     setCollapse(props?.expand);
@@ -76,6 +106,32 @@ export function ExperimentHub({
     let tmpInputOpts = [...inputOpts];
     tmpInputOpts.splice(index, 1);
     setInputOpts(tmpInputOpts);
+  };
+
+  const getFTypeKey = (mod) => {
+    return `${mod.toLowerCase()}Experiment`;
+  };
+
+  const getAssayNameKey = (mod) => {
+    return `${mod.toLowerCase()}CountAssay`;
+  };
+
+  const getAvailableModalities = (modality) => {
+    return Object.keys(dsMeta.modality_features);
+  };
+
+  const resetModality = (mod, val) => {
+    let tmpOptions = { ...options };
+
+    const remaining_modalities = MODALITIES.filter((x) => x !== mod);
+
+    for (const rm of remaining_modalities) {
+      if (val === tmpOptions?.[getFTypeKey(rm)]) {
+        tmpOptions[getFTypeKey(rm)] = null;
+      }
+    }
+
+    return tmpOptions;
   };
 
   return (
@@ -100,50 +156,171 @@ export function ExperimentHub({
       </div>
       <div className={dsMeta ? "" : "bp4-skeleton"}>
         <p>
-          This <strong>{resource.format}</strong> dataset contains{" "}
+          This <strong>ExperimentHub</strong> dataset contains{" "}
           {dsMeta && dsMeta.cells.numberOfCells} cells and the following feature
           types: {dsMeta && reportFeatureTypes(dsMeta.modality_features)}
         </p>
         <Divider />
         <Collapse isOpen={collapse}>
-          {dsMeta && (
-            <div>
-              <Label className="row-input">
-                <Text>
-                  <strong>RNA primary feature ID</strong>
-                </Text>
-                <HTMLSelect
-                  defaultValue={options["primaryRnaFeatureIdColumn"]}
-                  onChange={(e) => {
-                    if (
-                      e.target.value !== undefined &&
-                      e.target.value !== null
-                    ) {
-                      let tmpOptions = { ...options };
-                      if (e.target.value === "none") {
-                        tmpOptions["primaryRnaFeatureIdColumn"] = null;
-                      } else {
-                        tmpOptions["primaryRnaFeatureIdColumn"] =
-                          e.target.value;
+          <div>
+            {dsMeta &&
+              MODALITIES.map((mod, i) => {
+                return (
+                  <div key={options[getFTypeKey(mod)] + i}>
+                    <Divider />
+                    <Label className="row-input">
+                      <Text>
+                        <strong>{mod} modality</strong>
+                      </Text>
+                      <HTMLSelect
+                        defaultValue={
+                          options[getFTypeKey(mod)] !== null &&
+                          options[getFTypeKey(mod)] !== undefined
+                            ? options[getFTypeKey(mod)]
+                            : "none"
+                        }
+                        onChange={(e) => {
+                          if (
+                            e.target.value !== undefined &&
+                            e.target.value !== null
+                          ) {
+                            let tmpOptions = resetModality(
+                              mod,
+                              e.target.value === "none" ? null : e.target.value
+                            );
+                            if (e.target.value === "none") {
+                              tmpOptions[getFTypeKey(mod)] = null;
+                            } else {
+                              tmpOptions[getFTypeKey(mod)] = e.target.value;
+                            }
+                            setOptions(tmpOptions);
+                          }
+                        }}
+                      >
+                        <option value="none">--- no selection ---</option>
+                        {getAvailableModalities(mod).map((x, i) => (
+                          <option key={i} value={x}>
+                            {x === "" ? "unnamed" : x}
+                          </option>
+                        ))}
+                      </HTMLSelect>
+                    </Label>
+                    <FormGroup
+                      disabled={
+                        options?.[getFTypeKey(mod)] === undefined ||
+                        options?.[getFTypeKey(mod)] === null ||
+                        options?.[getFTypeKey(mod)] === "none"
                       }
-                      setOptions(tmpOptions);
-                    }
-                  }}
-                >
-                  {dsMeta.modality_features["RNA"].rownames === true && (
-                    <option value="none">rownames</option>
-                  )}
-                  {Object.keys(dsMeta.modality_features["RNA"]["columns"]).map(
-                    (x, i) => (
-                      <option key={i} value={x}>
-                        {x}
-                      </option>
-                    )
-                  )}
-                </HTMLSelect>
-              </Label>
-            </div>
-          )}
+                    >
+                      <Label className="row-input">
+                        <Text>
+                          <strong>{mod} count assay</strong>
+                        </Text>
+                        <HTMLSelect
+                          onChange={(e) => {
+                            if (
+                              e.target.value !== undefined &&
+                              e.target.value !== null
+                            ) {
+                              let tmpOptions = { ...options };
+                              if (e.target.value === "none") {
+                                tmpOptions[getAssayNameKey(mod)] = null;
+                              } else {
+                                tmpOptions[getAssayNameKey(mod)] =
+                                  e.target.value;
+                              }
+                              setOptions(tmpOptions);
+                            }
+                          }}
+                        >
+                          {dsMeta.modality_assay_names[
+                            options?.[getFTypeKey(mod)]
+                          ] &&
+                            dsMeta.modality_assay_names[
+                              options[getFTypeKey(mod)]
+                            ].map((x, i) => (
+                              <option
+                                key={i}
+                                value={x}
+                                selected={x === options?.[getAssayNameKey(mod)]}
+                              >
+                                {x}
+                              </option>
+                            ))}
+                        </HTMLSelect>
+                      </Label>
+                    </FormGroup>
+                    <FormGroup
+                      disabled={
+                        options?.[getFTypeKey(mod)] === undefined ||
+                        options?.[getFTypeKey(mod)] === null ||
+                        options?.[getFTypeKey(mod)] === "none"
+                      }
+                    >
+                      <Label className="row-input">
+                        <Text>
+                          <strong>{mod} primary feature ID</strong>
+                        </Text>
+                        <HTMLSelect
+                          disabled={
+                            options?.[getFTypeKey(mod)] === undefined ||
+                            options?.[getFTypeKey(mod)] === null ||
+                            options?.[getFTypeKey(mod)] === "none"
+                          }
+                          defaultValue={
+                            options[
+                              `primary${
+                                mod.toLowerCase().charAt(0).toUpperCase() +
+                                mod.toLowerCase().slice(1)
+                              }FeatureIdColumn`
+                            ]
+                          }
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              let tmpOptions = { ...options };
+                              if (e.target.value === "none") {
+                                tmpOptions[
+                                  `primary${
+                                    mod.toLowerCase().charAt(0).toUpperCase() +
+                                    mod.toLowerCase().slice(1)
+                                  }FeatureIdColumn`
+                                ] = null;
+                              } else {
+                                tmpOptions[
+                                  `primary${
+                                    mod.toLowerCase().charAt(0).toUpperCase() +
+                                    mod.toLowerCase().slice(1)
+                                  }FeatureIdColumn`
+                                ] = e.target.value;
+                              }
+                              setOptions(tmpOptions);
+                            }
+                          }}
+                        >
+                          {dsMeta.modality_features[options?.[getFTypeKey(mod)]]
+                            ?.rownames === true && (
+                            <option value="none">rownames</option>
+                          )}
+
+                          {dsMeta.modality_features[
+                            options?.[getFTypeKey(mod)]
+                          ]?.["columns"] &&
+                            Object.keys(
+                              dsMeta.modality_features[
+                                options[getFTypeKey(mod)]
+                              ]["columns"]
+                            ).map((x, i) => (
+                              <option key={i} value={x}>
+                                {x}
+                              </option>
+                            ))}
+                        </HTMLSelect>
+                      </Label>
+                    </FormGroup>
+                  </div>
+                );
+              })}
+          </div>
         </Collapse>
       </div>
     </Callout>

@@ -2027,8 +2027,7 @@ export function ParameterSelection({
               panel={
                 <>
                   {render_stepinfo()}
-                  {tmpParams["cell_labelling"]["references"] &&
-                    render_cellann()}
+                  {render_cellann()}
                 </>
               }
             ></Tab>

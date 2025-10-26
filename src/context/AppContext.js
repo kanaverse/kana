@@ -1,3 +1,4 @@
+import { analysisDefaults } from "bakana";
 import React, { createContext, useState } from "react";
 
 export const AppContext = createContext(null);
@@ -73,136 +74,17 @@ const AppContextProvider = ({ children }) => {
   const [annotationObj, setAnnotationObj] = useState({});
 
   // default params
-  const [params, setParams] = useState({
-    feature_selection: {
-      span: 0.3,
-    },
-    combine_embeddings: {
-      rna_weight: 1,
-      adt_weight: 1,
-      crispr_weight: 0,
-      approximate: true,
-    },
-    batch_correction: {
-      method: "mnn",
-      num_neighbors: 15,
-      approximate: true,
-    },
-    tsne: {
-      perplexity: 30,
-      iterations: 500,
-      animate: false,
-    },
-    umap: {
-      num_neighbors: 15,
-      num_epochs: 500,
-      min_dist: 0.1,
-      animate: false,
-    },
-    kmeans_cluster: {
-      k: 10,
-    },
-    choose_clustering: {
-      method: "snn_graph",
-    },
-    cell_labelling: {
-      references: [
-        "BlueprintEncode",
-        "DatabaseImmuneCellExpression",
-        "HumanPrimaryCellAtlas",
-        "MonacoImmune",
-        "NovershternHematopoietic",
-        "ImmGen",
-        "MouseRNAseq",
-      ],
-      automatic: true,
-      species: [],
-      gene_id_column: null,
-      gene_id_type: "ENSEMBL",
-    },
-    inputs: {
-      block_factor: null,
-      subset: null,
-    },
-    rna_quality_control: {
-      use_reference_mito: true,
-      mito_prefix: "mt-",
-      nmads: 3,
-      automatic: true,
-      gene_id_column: null,
-      gene_id_type: "ENSEMBL",
-      species: [],
-    },
-    adt_quality_control: {
-      igg_prefix: "IgG",
-      nmads: 3,
-      min_detected_drop: 0.1,
-      automatic: true,
-      tag_id_column: null,
-    },
-    crispr_quality_control: {
-      nmads: 3,
-    },
-    cell_filtering: {
-      use_rna: true,
-      use_adt: true,
-      use_crispr: true,
-    },
-    rna_normalization: {},
-    adt_normalization: {
-      num_pcs: 25,
-      num_clusters: 20,
-    },
-    crispr_normalization: {},
-    rna_pca: {
-      num_hvgs: 2000,
-      num_pcs: 20,
-      block_method: "none",
-    },
-    adt_pca: {
-      num_pcs: 20,
-      block_method: "none",
-    },
-    crispr_pca: {
-      num_pcs: 20,
-      block_method: "none",
-    },
-    neighbor_index: {
-      approximate: true,
-    },
-    snn_graph_cluster: {
-      k: 10,
-      scheme: "rank",
-      algorithm: "multilevel",
-      multilevel_resolution: 1,
-      leiden_resolution: 1,
-      walktrap_steps: 4,
-    },
-    marker_detection: {
-      lfc_threshold: 0,
-      compute_auc: true,
-    },
-    custom_selections: {
-      lfc_threshold: 0,
-      compute_auc: true,
-    },
-    feature_set_enrichment: {
-      collections: [
-        "mouse-GO",
-        "human-GO",
-        "worm-GO",
-        "rat-GO",
-        "fly-GO",
-        "zebrafish-GO",
-        "chimp-GO",
-      ],
-      species: null,
-      automatic: true,
-      gene_id_column: null,
-      gene_id_type: "ENSEMBL",
-      top_markers: 100,
-    },
-  });
+  var _defaults = analysisDefaults();
+  _defaults["cell_labelling"]["references"] = [
+    "ImmGen",
+    "MouseRNAseq",
+    "BlueprintEncode",
+    "DatabaseImmuneCellExpression",
+    "HumanPrimaryCellAtlas",
+    "MonacoImmune",
+    "NovershternHematopoietic",
+  ];
+  const [params, setParams] = useState(_defaults);
 
   // load params from pre-saved analysis
   // params from worker for stored analysis (kana file)

@@ -31,8 +31,9 @@ gesel.geneDownload(async (file) => {
   return new Response(buffer);
 });
 
-remotes.ExperimentHubDataset.setDownloadFun(proxyAndCache);
-bakana.availableReaders["ExperimentHub"] = remotes.ExperimentHubDataset;
+remotes.GypsumDataset.setDownloadFun(proxyAndCache);
+bakana.availableReaders["ExperimentHub"] = remotes.GypsumDataset;
+bakana.availableReaders["gypsum"] = remotes.GypsumDataset;
 
 export function extractBuffers(object, store) {
   if (!object) {
@@ -186,9 +187,9 @@ export async function fetchStepSummary(state, step) {
     return output;
   } else if (step === "rna_quality_control") {
     let metrics = {
-      sums: state[step].fetchMetrics().sums(),
+      sums: state[step].fetchMetrics().sum(),
       detected: state[step].fetchMetrics().detected(),
-      proportion: state[step].fetchMetrics().subsetProportions(0),
+      proportion: state[step].fetchMetrics().subsetProportion(0),
     };
 
     let output = {};
@@ -203,18 +204,18 @@ export async function fetchStepSummary(state, step) {
     }
 
     let listed = {
-      sums: state[step].fetchFilters().thresholdsSums(),
-      detected: state[step].fetchFilters().thresholdsDetected(),
-      proportion: state[step].fetchFilters().thresholdsSubsetProportions(0),
+      sums: state[step].fetchFilters().sum(),
+      detected: state[step].fetchFilters().detected(),
+      proportion: state[step].fetchFilters().subsetProportion(0),
     };
     output.thresholds = splitThresholdsByBlock(listed, blocks);
 
     return output;
   } else if (step === "adt_quality_control") {
     let metrics = {
-      sums: state[step].fetchMetrics().sums(),
+      sums: state[step].fetchMetrics().sum(),
       detected: state[step].fetchMetrics().detected(),
-      proportion: state[step].fetchMetrics().subsetTotals(0),
+      proportion: state[step].fetchMetrics().subsetSum(0),
     };
 
     var output = {};
@@ -228,8 +229,8 @@ export async function fetchStepSummary(state, step) {
     }
 
     let listed = {
-      detected: state[step].fetchFilters().thresholdsDetected(),
-      proportion: state[step].fetchFilters().thresholdsSubsetTotals(0),
+      detected: state[step].fetchFilters().detected(),
+      proportion: state[step].fetchFilters().subsetSum(0),
     };
     output.thresholds = splitThresholdsByBlock(listed, blocks);
 
@@ -242,9 +243,9 @@ export async function fetchStepSummary(state, step) {
     return output;
   } else if (step === "crispr_quality_control") {
     let metrics = {
-      sums: state[step].fetchMetrics().sums(),
+      sums: state[step].fetchMetrics().sum(),
       detected: state[step].fetchMetrics().detected(),
-      proportion: state[step].fetchMetrics().maxProportions(),
+      proportion: state[step].fetchMetrics().maxProportion(),
     };
 
     let output = {};
@@ -258,24 +259,24 @@ export async function fetchStepSummary(state, step) {
     }
 
     let listed = {
-      count: state[step].fetchFilters().thresholdsMaxCount(0),
+      count: state[step].fetchFilters().maxValue(0),
     };
     output.thresholds = splitThresholdsByBlock(listed, blocks);
 
     return output;
   } else if (step === "cell_filtering") {
     let remaining = 0,
-      discard_vec = null;
-    const discardBuff = state[step].fetchDiscards();
-    if (discardBuff) {
-      discardBuff.forEach((x) => {
-        remaining += x == 0;
+      keep_vec = null;
+    const keepBuff = state[step].fetchKeep();
+    if (keepBuff) {
+      keepBuff.forEach((x) => {
+        remaining += (x != 0);
       });
-      discard_vec = discardBuff.slice();
+      keep_vec = keepBuff.slice();
     } else {
       remaining = state.inputs.fetchCountMatrix().numberOfColumns();
     }
-    let output = { retained: remaining, discard: discard_vec };
+    let output = { retained: remaining, keep: keep_vec };
     return output;
   } else if (step === "rna_normalization") {
     return {};
@@ -378,4 +379,74 @@ export function describeColumn(
   }
 
   return res;
+}
+
+export function formatMarkerResults(results, group, rankEffect) {
+    if (!rankEffect || rankEffect === undefined) {
+        rankEffect = "cohen-min-rank";
+    }
+
+    var ordering;
+    {
+        // Choosing the ranking statistic. Do NOT do any Wasm allocations
+        // until 'ranking' is fully consumed!
+        let increasing = false;
+        let summary; 
+        if (rankEffect.match(/-mean$/)) {
+            summary = "mean";
+        } else if (rankEffect.match(/-min$/)) {
+            summary = "minimum";
+        } else if (rankEffect.match(/-min-rank$/)) {
+            summary = "min-rank";
+            increasing = true;
+        } else {
+            throw "unknown rank type '" + rankEffect + "'";
+        }
+
+        let ranking;
+        if (rankEffect.match(/^cohen-/)) {
+            ranking = results.cohensD(group, { summary: summary, copy: false });
+        } else if (rankEffect.match(/^auc-/)) {
+            ranking = results.auc(group, { summary: summary, copy: false });
+        } else if (rankEffect.match(/^lfc-/)) {
+            ranking = results.deltaMean(group, { summary: summary, copy: false });
+        } else if (rankEffect.match(/^delta-d-/)) {
+            ranking = results.deltaDetected(group, { summary: summary, copy: false });
+        } else {
+            throw "unknown rank type '" + rankEffect + "'";
+        }
+  
+        // Computing the ordering based on the ranking statistic.
+        ordering = new Int32Array(ranking.length);
+        for (var i = 0; i < ordering.length; i++) {
+            ordering[i] = i;
+        }
+        if (increasing) {
+            ordering.sort((f, s) => (ranking[f] - ranking[s]));
+        } else {
+            ordering.sort((f, s) => (ranking[s] - ranking[f]));
+        }
+    }
+  
+    // Apply that ordering to each statistic of interest.
+    var reorder = function(stats) {
+        var thing = new Float64Array(stats.length);
+        for (var i = 0; i < ordering.length; i++) {
+            thing[i] = stats[ordering[i]];
+        }
+        return thing;
+    };
+  
+    var stat_mean = reorder(results.mean(group, { copy: false }));
+    var stat_detected = reorder(results.detected(group, { copy: false }));
+    var stat_lfc = reorder(results.deltaMean(group, { summary: "mean", copy: false }));
+    var stat_delta_d = reorder(results.deltaDetected(group, { summary: "mean", copy: false }));
+
+    return {
+        "ordering": ordering,
+        "means": stat_mean,
+        "detected": stat_detected,
+        "lfc": stat_lfc,
+        "delta_detected": stat_delta_d
+    };
 }

@@ -8,6 +8,7 @@ import {
   postError,
   describeColumn,
   isArrayOrView,
+  formatMarkerResults,
 } from "./helpers.js";
 import { code } from "../utils/utils.js";
 /***************************************/
@@ -25,22 +26,25 @@ let feature_set_enrich_state = null;
 let cell_labelling_state = null;
 
 function createDataset(args, setOpts = false) {
+  let result;
   if (args.format === "H5AD") {
-    return new bakana.H5adResult(args.h5, setOpts ? args.options : {});
+    result = new bakana.H5adResult(args.h5);
   } else if (args.format === "SummarizedExperiment") {
-    return new bakana.SummarizedExperimentResult(
-      args.rds,
-      setOpts ? args.options : {}
-    );
+    result = new bakana.SummarizedExperimentResult(args.rds);
   } else if (args.format === "ZippedArtifactdb") {
-    return new bakana.ZippedArtifactdbResult(
-      args.zipname,
-      new bakana.SimpleFile(args.zipfile),
-      setOpts ? args.options : {}
-    );
+    let zipfile = new bakana.SimpleFile(args.zipfile);
+    if (args.ziplegacy) {
+      result = new bakana.ZippedArtifactdbResult(args.zipname, zipfile);
+    } else {
+      result = new bakana.ZippedAlabasterResult(args.zipname, zipfile);
+    }
   } else {
     throw new Error("unknown format '" + args.format + "'");
   }
+  if (setOpts) {
+    result.setOptions(args.options);
+  }
+  return result;
 }
 
 function summarizeResult(summary, args) {
@@ -336,14 +340,14 @@ onmessage = function (msg) {
         let modality = payload.modality;
         let annotation = payload.annotation;
 
-        let annotation_vec = scran.factorize(getAnnotation(annotation));
+        let annotation_vec = scran.convertToFactor(getAnnotation(annotation));
 
         let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
         let raw_res = mds.computeVersus(
           annotation_vec.levels.indexOf(payload.left),
           annotation_vec.levels.indexOf(payload.right)
         );
-        let resp = bakana.formatMarkerResults(
+        let resp = formatMarkerResults(
           raw_res.results[modality],
           raw_res.left,
           rank_type
@@ -372,7 +376,7 @@ onmessage = function (msg) {
           payload.left,
           payload.right
         );
-        let resp = bakana.formatMarkerResults(
+        let resp = formatMarkerResults(
           res["results"][payload.modality],
           payload.left,
           rank_type
@@ -403,12 +407,12 @@ onmessage = function (msg) {
         let modality = payload.modality;
         let annotation = payload.annotation;
 
-        let annotation_vec = scran.factorize(getAnnotation(annotation));
+        let annotation_vec = scran.convertToFactor(getAnnotation(annotation));
         let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
 
         let raw_res = mds.fetchResults()[modality];
 
-        let resp = bakana.formatMarkerResults(
+        let resp = formatMarkerResults(
           raw_res,
           annotation_vec.levels.indexOf(cluster),
           rank_type
@@ -474,7 +478,7 @@ onmessage = function (msg) {
         let raw_res = custom_selection_state.fetchResults(payload.cluster)[
           payload.modality
         ];
-        let resp = bakana.formatMarkerResults(raw_res, 1, rank_type);
+        let resp = formatMarkerResults(raw_res, 1, rank_type);
 
         var transferrable = [];
         extractBuffers(resp, transferrable);
@@ -572,7 +576,7 @@ onmessage = function (msg) {
             postSuccess("computeFeaturesetSummary", resp);
           });
         } else {
-          let annotation_vec = scran.factorize(getAnnotation(annotation));
+          let annotation_vec = scran.convertToFactor(getAnnotation(annotation));
           let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
           let anno_markers = mds.fetchResults()[modality];
 
@@ -610,7 +614,7 @@ onmessage = function (msg) {
             postSuccess("computeFeaturesetVSSummary", resp);
           });
         } else {
-          let annotation_vec = scran.factorize(getAnnotation(annotation));
+          let annotation_vec = scran.convertToFactor(getAnnotation(annotation));
           let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
 
           let raw_res = mds.computeVersus(
@@ -658,19 +662,19 @@ onmessage = function (msg) {
           raw_res = custom_selection_state.fetchResults(payload.cluster)[
             payload.modality
           ];
-          marker_resp = bakana.formatMarkerResults(
+          marker_resp = formatMarkerResults(
             raw_res,
             1,
             payload.rank_type
           );
         } else {
-          let annotation_vec = scran.factorize(getAnnotation(annotation));
+          let annotation_vec = scran.convertToFactor(getAnnotation(annotation));
           let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
 
           raw_res = mds.fetchResults()[modality];
           // cache_anno_markers[annotation][modality];
 
-          marker_resp = bakana.formatMarkerResults(
+          marker_resp = formatMarkerResults(
             raw_res,
             annotation_vec.levels.indexOf(cluster),
             rank_type
@@ -729,7 +733,7 @@ onmessage = function (msg) {
     if (default_selection === annotation) {
       markers = custom_selection_state.fetchResults(cluster);
     } else {
-      let annotation_vec = scran.factorize(getAnnotation(annotation));
+      let annotation_vec = scran.convertToFactor(getAnnotation(annotation));
       let mds = getMarkerStandAloneForAnnot(annotation, annotation_vec);
       markers = mds.fetchResults();
     }

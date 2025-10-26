@@ -1,6 +1,6 @@
 import { Code } from "@blueprintjs/core";
 
-export function guessModalities(preflight) {
+export function guessModalitiesFromFeatureTypes(preflight) {
   let tmpOptions = {
     featureTypeRnaName: null,
     featureTypeAdtName: null,
@@ -9,19 +9,53 @@ export function guessModalities(preflight) {
   for (const [k, v] of Object.entries(preflight.modality_features)) {
     if (k.toLowerCase() === "" || k.toLowerCase().indexOf("gene") > -1) {
       tmpOptions["featureTypeRnaName"] = k;
-      // tmpOptions["primaryRnaFeatureIdColumn"] = Object.keys(v.columns)[0];
+      tmpOptions["primaryRnaFeatureIdColumn"] = getDefaultFeature(v);
     } else if (
       k.toLowerCase().indexOf("antibody") > -1 ||
       k.toLowerCase().indexOf("adt") > -1
     ) {
       tmpOptions["featureTypeAdtName"] = k;
-      // tmpOptions["primaryAdtFeatureIdColumn"] = Object.keys(v.columns)[0];
+      tmpOptions["primaryAdtFeatureIdColumn"] = getDefaultFeature(v);
     } else if (k.toLowerCase().indexOf("crispr") > -1) {
       tmpOptions["featureTypeCrisprName"] = k;
-      // tmpOptions["primaryCrisprFeatureIdColumn"] = Object.keys(v.columns)[0];
+      tmpOptions["primaryCrisprFeatureIdColumn"] = getDefaultFeature(v);
     }
   }
 
+  return tmpOptions;
+}
+
+export function guessModalitiesFromExperiments(preflight) {
+  let tmpOptions = {
+    rnaExperiment: null,
+    adtExperiment: null,
+    crisprExperiment: null,
+  };
+  for (const [k, v] of Object.entries(preflight.modality_features)) {
+    if (k === "" || k.toLowerCase().indexOf("gene") > -1) {
+      tmpOptions["rnaExperiment"] = k;
+      tmpOptions["rnaCountAssay"] = getDefaultAssayName(
+        preflight.modality_assay_names[k]
+      );
+
+      tmpOptions["primaryRnaFeatureIdColumn"] = getDefaultFeature(v);
+    } else if (
+      k.toLowerCase().indexOf("antibody") > -1 ||
+      k.toLowerCase().indexOf("adt") > -1
+    ) {
+      tmpOptions["adtExperiment"] = k;
+      tmpOptions["adtCountAssay"] = getDefaultAssayName(
+        preflight.modality_assay_names[k]
+      );
+      tmpOptions["primaryAdtFeatureIdColumn"] = getDefaultFeature(v);
+    } else if (k.toLowerCase().indexOf("crispr") > -1) {
+      tmpOptions["crisprExperiment"] = k;
+      tmpOptions["crisprCountAssay"] = getDefaultAssayName(
+        preflight.modality_assay_names[k]
+      );
+      tmpOptions["primaryCrisprFeatureIdColumn"] = getDefaultFeature(v);
+    }
+  }
   return tmpOptions;
 }
 
@@ -52,10 +86,14 @@ export function getDefaultFeature(obj) {
 export function getDefaultAssayName(assaynames) {
   let _defname = assaynames[0];
   for (let _aname of assaynames) {
-    if (_aname.toLowerCase() == "counts") {
+    if (_aname.toLowerCase() === "counts") {
       _defname = _aname;
     }
   }
 
   return _defname;
+}
+
+export function getCamelCaseKey(mod) {
+  return mod.toLowerCase().charAt(0).toUpperCase() + mod.toLowerCase().slice(1);
 }

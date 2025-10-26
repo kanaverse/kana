@@ -738,15 +738,15 @@ export function AnalysisMode(props) {
         "dataset-1": {
           name: "dataset-1",
           format: "ExperimentHub",
-          id: "zeisel-brain",
+          id: "zeisel-brain-2015",
           options: {
-            primaryRNAFeatureColumn: "id",
+            rnaExperiment: "gene",
+            adtExperiment: null,
+            crisprExperiment: null,
+            rnaCountAssay: "counts",
+            primaryRnaFeatureIdColumn: null,
           },
         },
-      };
-
-      let options = {
-        primaryRNAFeatureColumn: "id",
       };
 
       setShowPanel("results");
@@ -765,7 +765,7 @@ export function AnalysisMode(props) {
       // Hard coding the response
       // so we do not have to time
       // the options request
-      setPreInputOptionsStatus({ RNA: 21135 });
+      setPreInputOptionsStatus({ RNA: 20006 });
     }
   }, [loadZiesel, wasmInitialized]);
 
@@ -1342,7 +1342,7 @@ export function AnalysisMode(props) {
       tmpLink.download = datasetName.split(" ").join("_") + "_results.zip";
       tmpLink.click();
 
-      setExportState(false);
+      setExportRDSState(false);
     } else if (type === "KanaDB") {
       setIndexedDBState(false);
     } else if (type === "feature_set_enrichment_START") {
@@ -1950,6 +1950,7 @@ export function AnalysisMode(props) {
                             setMarkersOrFsets={setMarkersOrFsets}
                             markersORFSets={markersORFSets}
                             cellLabelData={cellLabelData}
+                            fsetEnirchDetails={fsetEnirchDetails}
                           />
                         )}
                     </div>

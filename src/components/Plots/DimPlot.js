@@ -93,6 +93,9 @@ const DimPlot = (props) => {
     if (props?.gene === null || props?.gene === undefined) {
       setShowGradient(false);
       setGradient(null);
+      setExprMinMax(null);
+      setSliderMinMax(null);
+      setSliderFactorsMinMax(null);
       return;
     }
 
@@ -138,6 +141,9 @@ const DimPlot = (props) => {
     ) {
       setShowGradient(false);
       setGradient(null);
+      setExprMinMax(null);
+      setSliderMinMax(null);
+      setSliderFactorsMinMax(null);
       return;
     }
 
@@ -151,8 +157,8 @@ const DimPlot = (props) => {
       tmpgradient.setNumberRange(0, val);
       if (exprMinMax[0] !== exprMinMax[1]) {
         setShowGradient(true);
-        setSliderMinMax([0, val]);
-        setExprMinMax([0, val]);
+        setSliderMinMax([exprMinMax[0], val]);
+        setExprMinMax([exprMinMax[0], val]);
       } else {
         setShowGradient(false);
         // AppToaster.show({
@@ -1421,7 +1427,10 @@ const DimPlot = (props) => {
                   <RangeSlider
                     min={exprMinMax[0]}
                     max={exprMinMax[1]}
-                    stepSize={Math.round(exprMinMax[1] - exprMinMax[0]) / 10}
+                    stepSize={Math.max(
+                      0.0001,
+                      Math.round(exprMinMax[1] - exprMinMax[0]) / 10
+                    )}
                     labelValues={exprMinMax}
                     onChange={(range) => {
                       setSliderMinMax(range);
