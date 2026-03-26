@@ -157,6 +157,32 @@ export function H5ADCard({
                   ))}
                 </HTMLSelect>
               </Label>
+              <Label className="row-input">
+                <Text>
+                  <strong>Select reduced dimensions</strong>{" "}
+                  <small>
+                    (for exploration)
+                  </small>
+                </Text>
+                <MultiSelect
+                  createNewItemFromQuery={false}
+                  fill={true}
+                  items={items}
+                  onClear={showClearButton ? handleClear : undefined}
+                  onItemSelect={handleFilmSelect}
+                  onItemsPaste={handleFilmsPaste}
+                  openOnKeyDown={openOnKeyDown}
+                  popoverProps={{ matchTargetWidth, minimal: popoverMinimal }}
+                  popoverRef={popoverRef}
+                  resetOnSelect={resetOnSelect}
+                  selectedItems={films}
+                  tagInputProps={{
+                    onRemove: handleTagRemove,
+                    tagProps: getTagProps,
+                  }}
+                  tagRenderer={renderTag}
+                />
+              </Label>
             </div>
           )}
         </Collapse>
