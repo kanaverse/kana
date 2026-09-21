@@ -48,7 +48,8 @@ function createDataset(args) {
       output = new bakana.ZippedAlabasterDataset(args.zipname, args.zipfile);
     }
   } else if (args.format === "ExperimentHub") {
-    output = new remotes.GypsumDataset("scRNAseq", args.id, ExperimentHub_registry[args.id], null);
+    let chosen = ExperimentHub_registry[args.id];
+    output = new remotes.GypsumDataset("scRNAseq", chosen.name, chosen.version, chosen.path);
   } else {
     throw new Error("unknown format '" + args.format + "'");
   }
@@ -267,12 +268,14 @@ const resetMarkerState = () => {
 };
 
 const ExperimentHub_registry = {
-  "zeisel-brain-2015": "2023-12-14",
-  "segerstolpe-pancreas-2016": "2023-12-19",
-  "nestorowa-hsc-2016": "2024-04-18",
-  "aztekin-tail-2019": "2023-12-14",
-  "wu-kidney-2019": "2023-12-20",
-  "zilionis-lung-2019": "2023-12-20"
+  "Mouse brain (Zeisel et al., 2015)": { name: "zeisel-mouse-2015", version: "2023-12-14", path: null },
+  "Human pancreas (Segerstolpe et al., 2017)": { name: "segerstolpe-pancreas-2017", version: "2023-12-19", path: null },
+  "Mouse HSC (Nestorowa et al., 2016)": { name: "nestorowa-hsc-2016", version: "2024-04-18", path: null },
+  "Xenopus tail (Aztekin et al., 2019)": { name: "aztekin-tail-2019", version: "2023-12-14", path: null },
+  "Healthy mouse kidney, nuclei (Wu et al., 2019)": { name: "wu-kidney-2019", version: "2023-12-20", path: "healthy" },
+  "Diseased mouse kidney, nuclei (Wu et al., 2019)": { name: "wu-kidney-2019", version: "2023-12-20", path: "disease" },
+  "Human lung (Zilionis et al., 2019)": { name: "zilionis-lung-2019", version: "2023-12-20", path: "human" },
+  "Mouse lung (Zilionis et al., 2019)": { name: "zilionis-lung-2019", version: "2023-12-20", path: "mouse" },
 };
 
 /***************************************/
