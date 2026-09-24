@@ -267,8 +267,8 @@ const resetMarkerState = () => {
 };
 
 const ExperimentHub_registry = {
-  "Mouse brain (Zeisel et al., 2015)": { name: "zeisel-mouse-2015", version: "2023-12-14", path: null },
-  "Human pancreas (Segerstolpe et al., 2017)": { name: "segerstolpe-pancreas-2017", version: "2023-12-19", path: null },
+  "Mouse brain (Zeisel et al., 2015)": { name: "zeisel-brain-2015", version: "2023-12-14", path: null },
+  "Human pancreas (Segerstolpe et al., 2016)": { name: "segerstolpe-pancreas-2016", version: "2023-12-19", path: null },
   "Mouse HSC (Nestorowa et al., 2016)": { name: "nestorowa-hsc-2016", version: "2024-04-18", path: null },
   "Xenopus tail (Aztekin et al., 2019)": { name: "aztekin-tail-2019", version: "2023-12-14", path: null },
   "Healthy mouse kidney, nuclei (Wu et al., 2019)": { name: "wu-kidney-2019", version: "2023-12-20", path: "healthy" },
