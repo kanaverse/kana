@@ -748,6 +748,8 @@ export function NewAnalysis({ setShowPanel, setStateIndeterminate, ...props }) {
   // }, [toggleFactorsGradient]);
 
   const render_batch_correction = () => {
+    if (!preInputFilesStatus || !tmpFiles || tmpFiles.length === 0 || !preInputFilesStatus[tmpFiles[0].name]) return null;
+
     return (
       <>
         <Callout

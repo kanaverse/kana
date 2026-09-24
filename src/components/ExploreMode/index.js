@@ -40,7 +40,7 @@ import { AppContext } from "../../context/AppContext";
 
 import pkgVersion from "../../../package.json";
 
-import logo from "../../assets/kana-cropped.png";
+import logo from "../../assets/logo/logo.svg";
 import "../../App.css";
 import FeatureSetEnrichment from "../FeatureSets";
 import CellAnnotation from "../CellAnnotation";
@@ -720,16 +720,16 @@ export function ExplorerMode() {
 
       // Auto-generating rowdata if the per-modality feature annotation is empty.
       for (const p of pmods) {
-          let mod_gene_info = resp.genes[p]
-          if (Object.keys(mod_gene_info).length == 0) {
-              let dummy = new Int32Array(resp.num_genes[p])
-              for (var i = 0; i < dummy.length; ++i) {
-                  dummy[i] = i;
-              }
-              mod_gene_info["index"] = dummy
+        let mod_gene_info = resp.genes[p]
+        if (Object.keys(mod_gene_info).length == 0) {
+          let dummy = new Int32Array(resp.num_genes[p])
+          for (var i = 0; i < dummy.length; ++i) {
+            dummy[i] = i;
           }
+          mod_gene_info["index"] = dummy
+        }
       }
- 
+
       setInputData(resp);
 
       if (resp?.annotations) {
@@ -928,11 +928,11 @@ export function ExplorerMode() {
       <Navbar className={Classes.DARK}>
         <NavbarGroup align={Alignment.LEFT}>
           <NavbarHeading>
-            <div style={{ cursor: "pointer" }} onClick={resetApp}>
-              <img height="20px" src={logo}></img>{" "}
+            <div style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }} onClick={resetApp}>
+              <img height="100px" src={logo} alt="Kana logo" />
               <span
                 style={{
-                  fontSize: "8px",
+                  fontSize: "12px",
                 }}
               >
                 v{pkgVersion.version}

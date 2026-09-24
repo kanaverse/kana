@@ -48,7 +48,7 @@ import { AppContext } from "../../context/AppContext";
 
 import pkgVersion from "../../../package.json";
 
-import logo from "../../assets/kana-cropped.png";
+import logo from "../../assets/logo/logo.svg";
 import "../../App.css";
 import FeatureSetEnrichment from "../FeatureSets";
 import CellAnnotation from "../CellAnnotation";
@@ -738,7 +738,7 @@ export function AnalysisMode(props) {
         "dataset-1": {
           name: "dataset-1",
           format: "ExperimentHub",
-          id: "zeisel-brain-2015",
+          id: "Mouse brain (Zeisel et al., 2015)",
           options: {
             rnaExperiment: "gene",
             adtExperiment: null,
@@ -926,7 +926,7 @@ export function AnalysisMode(props) {
         let tprogress =
           (Math.round(
             (payload.downloaded_bytes * 100) /
-              download_toasters[payload.url]["total"]
+            download_toasters[payload.url]["total"]
           ) /
             100) *
           100;
@@ -1420,11 +1420,11 @@ export function AnalysisMode(props) {
       <Navbar className={Classes.DARK}>
         <NavbarGroup align={Alignment.LEFT}>
           <NavbarHeading>
-            <div style={{ cursor: "pointer" }} onClick={resetApp}>
-              <img height="20px" src={logo} alt="Kana"></img>{" "}
+            <div style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }} onClick={resetApp}>
+              <img height="100px" src={logo} alt="Kana logo" />
               <span
                 style={{
-                  fontSize: "8px",
+                  fontSize: "12px",
                 }}
               >
                 v{pkgVersion.version}
@@ -1690,7 +1690,7 @@ export function AnalysisMode(props) {
               >
                 <div className="item-button-group">
                   {(inputFiles?.files === null && loadFiles?.files === null) ||
-                  stateIndeterminate ? (
+                    stateIndeterminate ? (
                     <Button
                       outlined={false}
                       large={false}

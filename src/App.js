@@ -18,7 +18,7 @@ import {
 
 import pkgVersion from "../package.json";
 
-import logo from "./assets/kana-cropped.png";
+import logo from "./assets/logo/logo.svg";
 import gif from "./assets/logo.gif";
 
 import "./App.css";
@@ -39,11 +39,11 @@ function App() {
           <Navbar className={Classes.DARK}>
             <NavbarGroup align={Alignment.LEFT}>
               <NavbarHeading>
-                <div style={{ cursor: "pointer" }} onClick={resetApp}>
-                  <img height="20px" src={logo} alt="Kana logo"></img>{" "}
+                <div style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }} onClick={resetApp}>
+                  <img height="100px" src={logo} alt="Kana logo" />
                   <span
                     style={{
-                      fontSize: "8px",
+                      fontSize: "12px",
                     }}
                   >
                     v{pkgVersion.version}
@@ -122,11 +122,11 @@ function App() {
               {window.navigator.userAgent.toLowerCase().indexOf("macintosh") !==
                 -1 &&
                 window.navigator.userAgent.toLowerCase().indexOf("safari") !==
-                  -1 &&
+                -1 &&
                 window.navigator.userAgent.toLowerCase().indexOf("firefox") ===
-                  -1 &&
+                -1 &&
                 window.navigator.userAgent.toLowerCase().indexOf("chrome") ===
-                  -1 && (
+                -1 && (
                   <>
                     <Callout
                       title="For Safari users"
